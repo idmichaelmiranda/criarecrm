@@ -23,7 +23,7 @@ export default function Login() {
       await login(email, senha);
       navigate(from, { replace: true });
     } catch (err) {
-      setError(err.message || "Credenciais inválidas");
+      setError(err.message || "E-mail ou senha incorretos. Verifique suas credenciais e tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -140,12 +140,12 @@ export default function Login() {
                 type="email"
                 autoComplete="email"
                 value={email}
-                onChange={(e) => { setEmail(e.target.value); setError(""); }}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="seu@email.com"
                 className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-slate-600 outline-none transition-all"
-                style={{ background: "#161B2E", border: "1px solid #2A3356" }}
-                onFocus={(e) => e.target.style.borderColor = "#F56316"}
-                onBlur={(e)  => e.target.style.borderColor = "#2A3356"}
+                style={{ background: "#161B2E", border: `1px solid ${error ? "#ef4444" : "#2A3356"}` }}
+                onFocus={(e) => e.target.style.borderColor = error ? "#ef4444" : "#F56316"}
+                onBlur={(e)  => e.target.style.borderColor = error ? "#ef4444" : "#2A3356"}
               />
             </div>
 
@@ -159,12 +159,12 @@ export default function Login() {
                   type={showPass ? "text" : "password"}
                   autoComplete="current-password"
                   value={senha}
-                  onChange={(e) => { setSenha(e.target.value); setError(""); }}
+                  onChange={(e) => setSenha(e.target.value)}
                   placeholder="••••••••"
                   className="w-full px-4 py-3 pr-11 rounded-xl text-sm text-white placeholder-slate-600 outline-none transition-all"
-                  style={{ background: "#161B2E", border: "1px solid #2A3356" }}
-                  onFocus={(e) => e.target.style.borderColor = "#F56316"}
-                  onBlur={(e)  => e.target.style.borderColor = "#2A3356"}
+                  style={{ background: "#161B2E", border: `1px solid ${error ? "#ef4444" : "#2A3356"}` }}
+                  onFocus={(e) => e.target.style.borderColor = error ? "#ef4444" : "#F56316"}
+                  onBlur={(e)  => e.target.style.borderColor = error ? "#ef4444" : "#2A3356"}
                 />
                 <button
                   type="button"
@@ -187,12 +187,18 @@ export default function Login() {
 
             {/* Erro */}
             {error && (
-              <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm text-red-400"
-                style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
-                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <div className="flex items-start gap-3 px-4 py-3 rounded-xl text-sm text-red-400"
+                style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}>
+                <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                {error}
+                <span className="flex-1 leading-snug">{error}</span>
+                <button type="button" onClick={() => setError("")}
+                  className="shrink-0 text-red-400/60 hover:text-red-400 transition-colors mt-0.5">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
             )}
 
