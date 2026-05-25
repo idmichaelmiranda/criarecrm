@@ -87,30 +87,24 @@ def _condicao_st(val: str | None) -> str:
     return "NULL"
 
 
-def _get_cert_path(cliente: Cliente, db: Optional[Session]) -> Optional[Path]:
+def _get_cert_bytes(cliente: Cliente, db: Optional[Session]) -> Optional[bytes]:
+    """Baixa o certificado do storage (Supabase ou local) e retorna os bytes."""
     if not db or not cliente.solicitacao_id:
         return None
     from app.models.solicitacao import Solicitacao
+    from app.services import storage_service as storage
     sol = db.get(Solicitacao, cliente.solicitacao_id)
     if not sol or not sol.certificado_path:
         return None
-    p = Path(sol.certificado_path)
-    return p if p.exists() else None
+    sp = storage._to_storage_path(sol.certificado_path)
+    return storage.download_sync(sp)
 
 
-def _load_certificate(cliente: Cliente, db: Optional[Session]) -> Optional[str]:
-    p = _get_cert_path(cliente, db)
-    if not p:
-        return None
-    return "0x" + p.read_bytes().hex().upper()
-
-
-def _extract_serial(cert_path: Path, password: Optional[str]) -> Optional[str]:
+def _extract_serial(cert_bytes: bytes, password: Optional[str]) -> Optional[str]:
     try:
         from cryptography.hazmat.primitives.serialization import pkcs12
-        data = cert_path.read_bytes()
         pwd_bytes = password.encode() if password else None
-        _, cert, _ = pkcs12.load_key_and_certificates(data, pwd_bytes)
+        _, cert, _ = pkcs12.load_key_and_certificates(cert_bytes, pwd_bytes)
         if cert:
             return format(cert.serial_number, "X")
         return None
@@ -197,9 +191,9 @@ def gerar_sql(cliente: Cliente, db: Optional[Session] = None, ambiente: int = 1)
         pairs.append(("`ENQUADRADOSPED`",               "'S'"))
         pairs.append(("`ENQUADRADO_SPED_CONTRIBUICOES`", "'S'"))
 
-    cert_path   = _get_cert_path(cliente, db)
-    cert_hex    = ("0x" + cert_path.read_bytes().hex().upper()) if cert_path else None
-    cert_serial = _extract_serial(cert_path, senha_cert) if cert_path else None
+    cert_bytes  = _get_cert_bytes(cliente, db)
+    cert_hex    = ("0x" + cert_bytes.hex().upper()) if cert_bytes else None
+    cert_serial = _extract_serial(cert_bytes, senha_cert) if cert_bytes else None
     if cert_hex:
         pairs.append(("`DADOSPFX`",           cert_hex))
     if cert_serial:
