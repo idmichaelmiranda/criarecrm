@@ -133,7 +133,7 @@ def gerar_sql(cliente: Cliente, db: Optional[Session] = None, ambiente: int = 1)
 
     pairs: list[tuple[str, str]] = [
         ("`SIMPLES_MINAS`",    "'N'"),
-        ("`NOME`",             _esc(cliente.razao_social or "", 60)),
+        ("`NOME`",             _esc(cliente.nome_fantasia or cliente.razao_social or "", 60)),
         ("`RAZAO`",            _esc(cliente.razao_social or "", 60)),
         ("`CGC`",              _esc(cliente.cnpj or "", 18)),
         ("`INSCRICAO`",        _esc(cliente.ie or "", 15)),
