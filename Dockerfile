@@ -1,12 +1,16 @@
 FROM python:3.12-slim
 
-# Firebird client library — necessária para o pacote fdb (BD Restore)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libfbclient2 \
-    && ldconfig \
-    && ln -sf "$(find /usr/lib -name 'libfbclient.so.2' | head -1)" /usr/local/lib/libfbclient.so \
-    && ldconfig \
+# Instala Firebird 3.0 server (necessário para fdb abrir arquivos .fdb locais)
+RUN echo "firebird3.0-server-core firebird3.0-server-core/sysdba-password password masterkey" | debconf-set-selections && \
+    apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        firebird3.0-server-core \
+        libfbclient2 \
     && rm -rf /var/lib/apt/lists/*
+
+# Habilita autenticação Legacy para compatibilidade com fdb (SYSDBA/masterkey)
+RUN printf "\n# fdb compatibility\nAuthServer = Legacy_Auth, Srp\nAuthClient = Legacy_Auth, Srp\nWireCrypt = Disabled\n" \
+    >> /etc/firebird/3.0/firebird.conf
 
 WORKDIR /app
 
@@ -19,4 +23,7 @@ RUN mkdir -p uploads/avatars
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
+CMD ["/start.sh"]

@@ -566,7 +566,8 @@ async def analisar(arquivo: UploadFile = File(...)):
 
         try:
             con = fdb.connect(
-                dsn=tmp_path,
+                host="localhost",
+                database=tmp_path,
                 user="SYSDBA",
                 password="masterkey",
                 sql_dialect=3,
