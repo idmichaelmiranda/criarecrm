@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { solicitacoesApi } from "../services/api";
 import { useCep } from "../hooks/useCep";
-import { useCnpj } from "../hooks/useCnpj";
+import { useCnpj, validateCnpj, maskCnpj } from "../hooks/useCnpj";
 import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
 import { Checkbox } from "../components/ui/Checkbox";
@@ -70,7 +70,10 @@ const CONTA_OPTIONS = [
 
 function CnpjInput({ register, errors, setValue }) {
   const { fetchCnpj, status } = useCnpj();
-  const { ref, onChange: regOnChange, ...rest } = register("cnpj", { required: "CNPJ obrigatório" });
+  const { ref, onChange: regOnChange, ...rest } = register("cnpj", {
+    required: "CNPJ obrigatório",
+    validate: (v) => validateCnpj(v) || "CNPJ inválido",
+  });
 
   return (
     <div className="space-y-1.5">
@@ -79,8 +82,13 @@ function CnpjInput({ register, errors, setValue }) {
           ref={ref}
           label="CNPJ *"
           placeholder="00.000.000/0001-00"
+          maxLength={18}
           error={errors.cnpj?.message}
-          onChange={(e) => { regOnChange(e); fetchCnpj(e.target.value, setValue); }}
+          onChange={(e) => {
+            e.target.value = maskCnpj(e.target.value);
+            regOnChange(e);
+            fetchCnpj(e.target.value, setValue);
+          }}
           {...rest}
         />
         {status === "loading" && (

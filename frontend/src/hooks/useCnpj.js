@@ -1,5 +1,34 @@
 import { useState } from "react";
 
+export function validateCnpj(raw) {
+  const d = (raw || "").replace(/\D/g, "");
+  if (d.length !== 14) return false;
+  if (/^(\d)\1{13}$/.test(d)) return false; // todos dígitos iguais
+  const calc = (n) => {
+    let s = 0, p = n + 1;
+    for (let i = 0; i < n; i++) { s += parseInt(d[i]) * (p - i > 1 ? p - i : p - i + n); }
+    // use standard weights
+    return s;
+  };
+  const w = (offset) => {
+    let s = 0;
+    const weights = offset === 0 ? [5,4,3,2,9,8,7,6,5,4,3,2] : [6,5,4,3,2,9,8,7,6,5,4,3,2];
+    for (let i = 0; i < weights.length; i++) s += parseInt(d[i]) * weights[i];
+    const r = s % 11;
+    return r < 2 ? 0 : 11 - r;
+  };
+  return w(0) === parseInt(d[12]) && w(1) === parseInt(d[13]);
+}
+
+export function maskCnpj(raw) {
+  const d = (raw || "").replace(/\D/g, "").slice(0, 14);
+  if (d.length <= 2)  return d;
+  if (d.length <= 5)  return `${d.slice(0,2)}.${d.slice(2)}`;
+  if (d.length <= 8)  return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5)}`;
+  if (d.length <= 12) return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5,8)}/${d.slice(8)}`;
+  return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5,8)}/${d.slice(8,12)}-${d.slice(12)}`;
+}
+
 function formatPhone(raw) {
   const d = (raw || "").replace(/\D/g, "");
   if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
