@@ -618,15 +618,16 @@ function Confirmation({ getValues, certFile }) {
 // ─── Build payload ────────────────────────────────────────────────────────────
 
 const digits = (v) => (v || "").replace(/\D/g, "") || null;
+const up = (v) => v ? String(v).toUpperCase() : null;
 
 function buildPayload(d) {
   return {
-    cliente: { razao_social: d.razao_social, nome_fantasia: d.nome_fantasia || null, cnpj: d.cnpj.replace(/\D/g,""), ie: d.ie || null, email: d.email, telefone_fixo: digits(d.telefone_fixo), telefone_celular: digits(d.telefone_celular), responsavel: d.responsavel || null },
-    endereco: { cep: d.cep, endereco: d.endereco, numero: d.numero, bairro: d.bairro, cidade: d.cidade, estado: (d.estado || "").toUpperCase() },
-    contabilidade: { nome_contador: d.nome_contador, cpf: d.cpf_contador, crc: d.crc || null, cnpj: d.cnpj_contador || null, cep: d.cep_contador || null, endereco: d.end_contador || null, numero: d.num_contador || null, bairro: d.bairro_contador || null, cidade: d.cidade_contador || null, estado: d.estado_contador ? d.estado_contador.toUpperCase() : null, telefone_fixo: d.tel_fixo_contador || null, telefone_celular: d.tel_cel_contador || null, email: d.email_contador || null },
-    dados_bancarios: { nome_banco: d.nome_banco || null, cnpj_banco: d.cnpj_banco || null, codigo_banco: d.codigo_banco || null, inscricao_estadual: d.ie_banco || null, agencia: d.agencia || null, dv_agencia: d.dv_agencia || null, conta: d.conta || null, dv_conta: d.dv_conta || null, tipo_conta: d.tipo_conta || null },
+    cliente: { razao_social: up(d.razao_social), nome_fantasia: up(d.nome_fantasia), cnpj: d.cnpj.replace(/\D/g,""), ie: up(d.ie), email: d.email, telefone_fixo: digits(d.telefone_fixo), telefone_celular: digits(d.telefone_celular), responsavel: up(d.responsavel) },
+    endereco: { cep: d.cep, endereco: up(d.endereco), numero: d.numero, bairro: up(d.bairro), cidade: up(d.cidade), estado: up(d.estado) },
+    contabilidade: { nome_contador: up(d.nome_contador), cpf: d.cpf_contador, crc: up(d.crc), cnpj: d.cnpj_contador || null, cep: d.cep_contador || null, endereco: up(d.end_contador), numero: d.num_contador || null, bairro: up(d.bairro_contador), cidade: up(d.cidade_contador), estado: up(d.estado_contador), telefone_fixo: d.tel_fixo_contador || null, telefone_celular: d.tel_cel_contador || null, email: d.email_contador || null },
+    dados_bancarios: { nome_banco: up(d.nome_banco), cnpj_banco: d.cnpj_banco || null, codigo_banco: d.codigo_banco || null, inscricao_estadual: up(d.ie_banco), agencia: d.agencia || null, dv_agencia: d.dv_agencia || null, conta: d.conta || null, dv_conta: d.dv_conta || null, tipo_conta: d.tipo_conta || null },
     dados_contabeis: { ramo_atividade: d.ramo_atividade || null, crt: d.crt || null, regime_tributario: d.regime_tributario || null, condicao_st: d.condicao_st || null, aliq_simples: d.aliq_simples || null, receita_bruta: d.receita_bruta || null, imposto_renda: d.imposto_renda || null, csll: d.csll || null },
-    formas_pagamento: { dinheiro: !!d.dinheiro, cheque: !!d.cheque, cartao_pos: !!d.cartao_pos, pagamento_prazo: !!d.pagamento_prazo, pix: !!d.pix, cartao_tef: !!d.cartao_tef, integradora: d.integradora || null },
+    formas_pagamento: { dinheiro: !!d.dinheiro, cheque: !!d.cheque, cartao_pos: !!d.cartao_pos, pagamento_prazo: !!d.pagamento_prazo, pix: !!d.pix, cartao_tef: !!d.cartao_tef, integradora: up(d.integradora) },
     dados_fiscais: { csc: d.csc || null, token: d.token || null, ultima_serie_nfce: d.ultima_serie_nfce || null, serie_nfe: d.serie_nfe || null, ultima_nfe_emitida: d.ultima_nfe_emitida || null, senha_certificado: d.senha_certificado || null },
     adquirentes: [],
     implantacao: { status: "pendente" },
@@ -798,7 +799,8 @@ export default function Solicitar() {
           </div>
 
           {/* Form content */}
-          <form onSubmit={(e) => { e.preventDefault(); }}>
+          <form onSubmit={(e) => { e.preventDefault(); }}
+            className="[&_input:not([type='email']):not([type='password'])]:uppercase">
             {step === 0  && <Step0 r={r} e={e} sv={sv} />}
             {step === 1  && <Step1 r={r} e={e} />}
             {step === 2  && <Step2 r={r} e={e} sv={sv} />}
