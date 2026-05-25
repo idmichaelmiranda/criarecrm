@@ -18,10 +18,13 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      sessionStorage.removeItem(TOKEN_KEY);
-      sessionStorage.removeItem("crm_user");
-      window.location.href = "/login";
-      return Promise.reject(new Error("Sessão expirada. Faça login novamente."));
+      const isLoginAttempt = err.config?.url?.includes("/auth/login");
+      if (!isLoginAttempt) {
+        sessionStorage.removeItem(TOKEN_KEY);
+        sessionStorage.removeItem("crm_user");
+        window.location.href = "/login";
+        return Promise.reject(new Error("Sessão expirada. Faça login novamente."));
+      }
     }
     const detail = err.response?.data?.detail;
     let msg;
