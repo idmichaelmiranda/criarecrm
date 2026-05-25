@@ -67,7 +67,7 @@ def download_sync(storage_path: str) -> Optional[bytes]:
     url = f"{SUPABASE_URL}/storage/v1/object/{BUCKET}/{storage_path}"
     with httpx.Client(timeout=60) as client:
         r = client.get(url, headers=_AUTH_HEADERS)
-        if r.status_code == 404:
+        if r.status_code in (400, 404):
             return None
         r.raise_for_status()
         return r.content
@@ -131,7 +131,7 @@ async def download_async(storage_path: str) -> Optional[bytes]:
     url = f"{SUPABASE_URL}/storage/v1/object/{BUCKET}/{storage_path}"
     async with httpx.AsyncClient(timeout=60) as client:
         r = await client.get(url, headers=_AUTH_HEADERS)
-        if r.status_code == 404:
+        if r.status_code in (400, 404):
             return None
         r.raise_for_status()
         return r.content
