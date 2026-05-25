@@ -4,7 +4,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 from app.database.connection import get_db
 from app.models.usuario import Usuario
@@ -33,7 +33,7 @@ def _usuario_data(user: Usuario) -> UsuarioTokenData:
 @router.post("/login", response_model=TokenResponse)
 def login(data: LoginRequest, db: Session = Depends(get_db)):
     user = db.execute(
-        select(Usuario).where(Usuario.email == data.email)
+        select(Usuario).where(func.lower(Usuario.email) == data.email.strip().lower())
     ).scalar_one_or_none()
 
     if not user or not verify_password(data.senha, user.senha_hash):
