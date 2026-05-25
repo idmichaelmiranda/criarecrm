@@ -3,6 +3,9 @@ FROM python:3.12-slim
 # Firebird client library — necessária para o pacote fdb (BD Restore)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libfbclient2 \
+    && ldconfig \
+    && ln -sf "$(find /usr/lib -name 'libfbclient.so.2' | head -1)" /usr/local/lib/libfbclient.so \
+    && ldconfig \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
