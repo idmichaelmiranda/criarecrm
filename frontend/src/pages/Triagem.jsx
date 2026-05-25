@@ -6,6 +6,7 @@ import { solicitacoesApi, templatesApi, clientesApi } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { BANCOS_BR } from "../data/bancos";
 import { fmtDate, fmtDateTime } from "../utils/dateUtils";
+import { maskPhone, maskCnpj, maskCpf } from "../hooks/useCnpj";
 
 const TERMINAL_STATUSES = ["aprovada", "recusada", "cancelada"];
 
@@ -798,11 +799,11 @@ function EditModal({ sol, onClose, onSaved }) {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">Celular *</label>
-                <input value={form.telefone_celular} onChange={(ev) => set("telefone_celular", ev.target.value)} className={inp} />
+                <input value={form.telefone_celular} maxLength={15} onChange={(ev) => set("telefone_celular", maskPhone(ev.target.value))} className={inp} />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">Telefone Fixo</label>
-                <input value={form.telefone_fixo} onChange={(ev) => set("telefone_fixo", ev.target.value)} className={inp} />
+                <input value={form.telefone_fixo} maxLength={15} onChange={(ev) => set("telefone_fixo", maskPhone(ev.target.value))} className={inp} />
               </div>
             </div>
           )}
@@ -844,7 +845,7 @@ function EditModal({ sol, onClose, onSaved }) {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">CPF</label>
-                <input value={form.cpf_contador} onChange={(ev) => set("cpf_contador", ev.target.value)} className={`${inp} font-mono`} />
+                <input value={form.cpf_contador} maxLength={14} onChange={(ev) => set("cpf_contador", maskCpf(ev.target.value))} className={`${inp} font-mono`} />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">CRC</label>
@@ -852,7 +853,7 @@ function EditModal({ sol, onClose, onSaved }) {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">CNPJ do Escritório</label>
-                <input value={form.cnpj_contador} onChange={(ev) => set("cnpj_contador", ev.target.value)} className={`${inp} font-mono`} />
+                <input value={form.cnpj_contador} maxLength={18} onChange={(ev) => set("cnpj_contador", maskCnpj(ev.target.value))} className={`${inp} font-mono`} />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">E-mail</label>
@@ -860,11 +861,11 @@ function EditModal({ sol, onClose, onSaved }) {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">Tel. Fixo</label>
-                <input value={form.tel_fixo_contador} onChange={(ev) => set("tel_fixo_contador", ev.target.value)} className={inp} />
+                <input value={form.tel_fixo_contador} maxLength={15} onChange={(ev) => set("tel_fixo_contador", maskPhone(ev.target.value))} className={inp} />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">Celular</label>
-                <input value={form.tel_cel_contador} onChange={(ev) => set("tel_cel_contador", ev.target.value)} className={inp} />
+                <input value={form.tel_cel_contador} maxLength={15} onChange={(ev) => set("tel_cel_contador", maskPhone(ev.target.value))} className={inp} />
               </div>
               <div className="col-span-2 pt-2 border-t border-gray-100">
                 <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Endereço do Contador</p>

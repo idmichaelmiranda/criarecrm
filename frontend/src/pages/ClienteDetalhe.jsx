@@ -9,6 +9,7 @@ import { Checkbox } from "../components/ui/Checkbox";
 import { clientesApi, implantacoesApi } from "../services/api";
 import { fmtDate } from "../utils/dateUtils";
 import { useCep } from "../hooks/useCep";
+import { maskPhone, maskCnpj, maskCpf } from "../hooks/useCnpj";
 import { BANCOS_BR } from "../data/bancos";
 
 
@@ -477,9 +478,10 @@ function TabCadastroEdit({ r, fe, sv, cnpj }) {
         <Input label="E-mail *" type="email" error={fe.email?.message}
           {...r("email", { required: "Obrigatório", pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/, message: "E-mail inválido" } })} />
         <Input label="Responsável" {...r("responsavel")} />
-        <Input label="Telefone Fixo" placeholder="(00) 0000-0000" {...r("telefone_fixo")} />
-        <Input label="Celular *" placeholder="(00) 00000-0000" error={fe.telefone_celular?.message}
-          {...r("telefone_celular", { required: "Obrigatório" })} />
+        <Input label="Telefone Fixo" placeholder="(00) 0000-0000" maxLength={15}
+          {...r("telefone_fixo")} onChange={(e) => { e.target.value = maskPhone(e.target.value); r("telefone_fixo").onChange(e); }} />
+        <Input label="Celular *" placeholder="(00) 00000-0000" maxLength={15} error={fe.telefone_celular?.message}
+          {...r("telefone_celular", { required: "Obrigatório" })} onChange={(e) => { e.target.value = maskPhone(e.target.value); r("telefone_celular", { required: "Obrigatório" }).onChange(e); }} />
       </EditGrid>
       <Divider title="Endereço" />
       <EditGrid>
@@ -505,12 +507,16 @@ function TabContabilidadeEdit({ r, fe, sv }) {
           <Input label="Nome do Contador *" error={fe.nome_contador?.message}
             {...r("nome_contador", { required: "Obrigatório" })} />
         </div>
-        <Input label="CPF" placeholder="000.000.000-00" {...r("cpf_contador")} />
+        <Input label="CPF" placeholder="000.000.000-00" maxLength={14}
+          {...r("cpf_contador")} onChange={(e) => { e.target.value = maskCpf(e.target.value); r("cpf_contador").onChange(e); }} />
         <Input label="CRC" placeholder="CRC-MG 123456" {...r("crc")} />
-        <Input label="CNPJ do Escritório" placeholder="00.000.000/0001-00" {...r("cnpj_contador")} />
+        <Input label="CNPJ do Escritório" placeholder="00.000.000/0001-00" maxLength={18}
+          {...r("cnpj_contador")} onChange={(e) => { e.target.value = maskCnpj(e.target.value); r("cnpj_contador").onChange(e); }} />
         <Input label="E-mail" type="email" {...r("email_contador")} />
-        <Input label="Telefone Fixo" {...r("tel_fixo_contador")} />
-        <Input label="Celular" {...r("tel_cel_contador")} />
+        <Input label="Telefone Fixo" placeholder="(00) 0000-0000" maxLength={15}
+          {...r("tel_fixo_contador")} onChange={(e) => { e.target.value = maskPhone(e.target.value); r("tel_fixo_contador").onChange(e); }} />
+        <Input label="Celular" placeholder="(00) 00000-0000" maxLength={15}
+          {...r("tel_cel_contador")} onChange={(e) => { e.target.value = maskPhone(e.target.value); r("tel_cel_contador").onChange(e); }} />
       </EditGrid>
       <Divider title="Endereço do Contador" />
       <EditGrid>
