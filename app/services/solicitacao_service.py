@@ -1,5 +1,5 @@
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from sqlalchemy.orm import Session
 from sqlalchemy import select
@@ -230,7 +230,10 @@ def get_by_token(db: Session, token: str) -> Solicitacao:
 
     if not sol:
         raise HTTPException(404, "Link inválido ou expirado.")
-    if sol.review_token_expires_at and sol.review_token_expires_at < datetime.now():
+    expires = sol.review_token_expires_at
+    if expires and expires.tzinfo is None:
+        expires = expires.replace(tzinfo=timezone.utc)
+    if expires and expires < datetime.now(timezone.utc):
         raise HTTPException(410, "Este link expirou. Entre em contato com nossa equipe.")
     return sol
 

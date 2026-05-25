@@ -106,7 +106,11 @@ def definir_senha(token: str, data: DefinirSenhaRequest, db: Session = Depends(g
 
     if not user:
         raise HTTPException(404, "Link de acesso inválido.")
-    if user.access_token_expires_at and datetime.now(timezone.utc) > user.access_token_expires_at:
+    expires = user.access_token_expires_at
+    if expires:
+        if expires.tzinfo is None:
+            expires = expires.replace(tzinfo=timezone.utc)
+    if expires and datetime.now(timezone.utc) > expires:
         raise HTTPException(410, "Este link expirou. Solicite um novo ao administrador.")
     if len(data.senha) < 6:
         raise HTTPException(400, "A senha deve ter pelo menos 6 caracteres.")
