@@ -3,13 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import { Badge } from "../components/ui/Badge";
 import { implantacoesApi } from "../services/api";
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function fmtDate(d) {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString("pt-BR");
-}
+import { fmtDate } from "../utils/dateUtils";
 
 function slaRelativo(impl) {
   if (impl.status === "concluida" || impl.status === "cancelada") {

@@ -1,5 +1,5 @@
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -88,8 +88,8 @@ def aprovar(
     u.grupo_id = data.grupo_id
     u.pendente = False
     u.access_token = token
-    u.access_token_expires_at = datetime.now() + timedelta(hours=24)
-    u.updated_at = datetime.now()
+    u.access_token_expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
+    u.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(u)
 
@@ -126,8 +126,8 @@ def reenviar_senha(
 
     token = secrets.token_urlsafe(40)
     u.access_token = token
-    u.access_token_expires_at = datetime.now() + timedelta(hours=24)
-    u.updated_at = datetime.now()
+    u.access_token_expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
+    u.updated_at = datetime.now(timezone.utc)
     db.commit()
 
     frontend_url = (cfg.get("frontend_url") or "").rstrip("/")
@@ -164,7 +164,7 @@ def atualizar(
     if data.ativo is not None:
         u.ativo = data.ativo
 
-    u.updated_at = datetime.now()
+    u.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(u)
     return u

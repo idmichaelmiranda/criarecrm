@@ -3,17 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import { Badge, PrioridadeBadge } from "../components/ui/Badge";
 import { implantacoesApi, clientesApi, usuariosApi, templatesApi } from "../services/api";
-
-// ── Formatters ────────────────────────────────────────────────────────────────
-
-function fmtDate(d) {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString("pt-BR");
-}
-function fmtDateTime(d) {
-  if (!d) return "—";
-  return new Date(d).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
-}
+import { fmtDate, fmtDateTime } from "../utils/dateUtils";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

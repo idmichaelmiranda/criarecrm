@@ -5,18 +5,7 @@ import { Badge, PrioridadeBadge } from "../components/ui/Badge";
 import { solicitacoesApi, templatesApi, clientesApi } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { BANCOS_BR } from "../data/bancos";
-
-// ── helpers ───────────────────────────────────────────────────────────────────
-
-function fmtDate(d) {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString("pt-BR");
-}
-
-function fmtDateTime(d) {
-  if (!d) return "—";
-  return new Date(d).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
-}
+import { fmtDate, fmtDateTime } from "../utils/dateUtils";
 
 const TERMINAL_STATUSES = ["aprovada", "recusada", "cancelada"];
 

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import String, Integer, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database.connection import Base
@@ -20,7 +20,7 @@ class ImplantacaoEtapa(Base):
 
     data_inicio: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     data_conclusao: Mapped[datetime] = mapped_column(DateTime, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     implantacao: Mapped["Implantacao"] = relationship("Implantacao", back_populates="etapas")
     itens: Mapped[list["ChecklistItem"]] = relationship(

@@ -7,6 +7,7 @@ import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
 import { Checkbox } from "../components/ui/Checkbox";
 import { clientesApi, implantacoesApi } from "../services/api";
+import { fmtDate } from "../utils/dateUtils";
 import { useCep } from "../hooks/useCep";
 import { BANCOS_BR } from "../data/bancos";
 
@@ -649,7 +650,7 @@ function TabImplantacoes({ implantacoes, loading }) {
           <div className="text-right shrink-0">
             <div className="text-lg font-bold text-gray-800">{impl.progresso}%</div>
             <div className="text-xs text-gray-400 mt-0.5">
-              SLA: {impl.sla_limite ? new Date(impl.sla_limite).toLocaleDateString("pt-BR") : "—"}
+              SLA: {impl.sla_limite ? fmtDate(impl.sla_limite) : "—"}
             </div>
           </div>
           <span className="text-xs text-gray-300 group-hover:text-orange-400 transition-colors font-medium shrink-0">Abrir →</span>
@@ -970,7 +971,7 @@ export default function ClienteDetalhe() {
           {/* Actions */}
           <div className="flex flex-col items-start sm:items-end gap-2 shrink-0">
             <p className="text-xs text-gray-400">
-              Cadastro: {new Date(cliente.created_at).toLocaleDateString("pt-BR")}
+              Cadastro: {fmtDate(cliente.created_at)}
             </p>
 
             {isEditing ? (

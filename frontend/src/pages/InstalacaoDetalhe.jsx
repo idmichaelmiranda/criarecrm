@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import { instalacaosApi, clientesApi, usuariosApi, templatesApi } from "../services/api";
+import { fmtDate, fmtDateTime } from "../utils/dateUtils";
 
 function normalizeTipo(t) {
   return t?.startsWith("instalacao_") ? t : `instalacao_${t}`;
@@ -62,7 +63,7 @@ function useElapsed(iniciadoEm, finalizadoEm) {
   const [elapsed, setElapsed] = useState(0);
   useEffect(() => {
     if (!iniciadoEm || finalizadoEm) return;
-    const start = new Date(iniciadoEm).getTime();
+    const start = new Date(iniciadoEm.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(iniciadoEm) ? iniciadoEm : iniciadoEm + "Z").getTime();
     const tick = () => setElapsed(Math.floor((Date.now() - start) / 1000));
     tick();
     const id = setInterval(tick, 1000);
@@ -214,7 +215,7 @@ function ChecklistItem({ item, instId, onUpdated, onDeleted, locked }) {
         </span>
         {item.data_conclusao && isConcluido && (
           <span className="text-[10px] text-gray-300 shrink-0">
-            {new Date(item.data_conclusao).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+            {fmtDateTime(item.data_conclusao)}
           </span>
         )}
         {/* Botão de nota */}
@@ -653,12 +654,12 @@ export default function InstalacaoDetalhe() {
             {/* Datas */}
             <div className="space-y-2 pt-3 border-t border-gray-100">
               {[
-                { label: "Criado em",     value: new Date(inst.created_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }) },
-                { label: "Agendado para", value: inst.data_agendada ? new Date(inst.data_agendada + "T00:00:00").toLocaleDateString("pt-BR") : null },
+                { label: "Criado em",     value: fmtDateTime(inst.created_at) },
+                { label: "Agendado para", value: inst.data_agendada ? fmtDate(inst.data_agendada + "T00:00:00") : null },
                 { label: "Concluído em",  value: inst.finalizado_em
-                    ? new Date(inst.finalizado_em).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })
+                    ? fmtDateTime(inst.finalizado_em)
                     : inst.data_conclusao
-                      ? new Date(inst.data_conclusao + "T00:00:00").toLocaleDateString("pt-BR")
+                      ? fmtDate(inst.data_conclusao + "T00:00:00")
                       : null },
               ].map(({ label, value }) => value ? (
                 <div key={label} className="flex justify-between items-baseline">
@@ -851,7 +852,7 @@ export default function InstalacaoDetalhe() {
                       <div className="flex items-baseline gap-2 mb-0.5">
                         <span className="text-xs font-semibold text-gray-700">{c.usuario}</span>
                         <span className="text-[10px] text-gray-400">
-                          {new Date(c.created_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+                          {fmtDateTime(c.created_at)}
                         </span>
                       </div>
                       <p className="text-sm text-gray-600">{c.conteudo}</p>

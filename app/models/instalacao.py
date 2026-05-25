@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from sqlalchemy import String, Text, Integer, Boolean, Date, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database.connection import Base
@@ -41,8 +41,8 @@ class Instalacao(Base):
 
     progresso: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     cliente: Mapped["Cliente"] = relationship("Cliente", back_populates="instalacoes")
     responsavel: Mapped["Usuario"] = relationship("Usuario", foreign_keys=[responsavel_id])
@@ -72,7 +72,7 @@ class InstalacaoChecklist(Base):
     # which product this checklist item belongs to (null = legacy single-type)
 
     data_conclusao: Mapped[datetime] = mapped_column(DateTime, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     instalacao: Mapped["Instalacao"] = relationship("Instalacao", back_populates="checklist")
 
@@ -86,7 +86,7 @@ class InstalacaoComentario(Base):
     usuario: Mapped[str] = mapped_column(String(150), nullable=False)
     conteudo: Mapped[str] = mapped_column(Text, nullable=False)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     instalacao: Mapped["Instalacao"] = relationship("Instalacao", back_populates="comentarios")

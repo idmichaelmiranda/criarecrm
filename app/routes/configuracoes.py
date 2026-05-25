@@ -2,7 +2,7 @@ import json
 import re
 import shutil
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 import httpx
@@ -82,7 +82,7 @@ async def upload_base(
     with open(BASE_SQL_PATH, "wb") as f:
         f.write(content)
 
-    now = datetime.now().isoformat()
+    now = datetime.now(timezone.utc).isoformat()
     _write_meta({"versao": versao.strip() or None, "updated_at": now})
 
     return {

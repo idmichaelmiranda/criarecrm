@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import String, Boolean, DateTime, JSON, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database.connection import Base
@@ -37,5 +37,5 @@ class Cliente(Base):
         "Instalacao", back_populates="cliente"
     )
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)

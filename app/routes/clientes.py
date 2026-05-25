@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -71,7 +71,7 @@ def atualizar(cliente_id: int, data: ClienteUpdate, db: Session = Depends(get_db
         setattr(c, field, value)
         if isinstance(value, (dict, list)):
             flag_modified(c, field)
-    c.updated_at = datetime.now()
+    c.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(c)
     return c

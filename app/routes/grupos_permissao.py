@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func
@@ -79,7 +79,7 @@ def atualizar(
 
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(g, field, value)
-    g.updated_at = datetime.now()
+    g.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(g)
     return _enrich(g, db)

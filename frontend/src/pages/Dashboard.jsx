@@ -6,8 +6,14 @@ import { useAuth } from "../contexts/AuthContext";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
+function parseUTC(s) {
+  if (!s) return new Date(NaN);
+  if (s.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(s)) return new Date(s);
+  return new Date(s + "Z");
+}
+
 function timeAgo(iso, now = new Date()) {
-  const diff = (now - new Date(iso)) / 1000;
+  const diff = (now - parseUTC(iso)) / 1000;
   if (diff < 60) return "agora";
   if (diff < 3600) return `${Math.floor(diff / 60)}min`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h`;

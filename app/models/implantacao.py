@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from sqlalchemy import String, Text, Integer, Boolean, Date, DateTime, JSON, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database.connection import Base
@@ -39,8 +39,8 @@ class Implantacao(Base):
 
     certificado_path: Mapped[str] = mapped_column(String(500), nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     cliente: Mapped["Cliente"] = relationship("Cliente", back_populates="implantacoes")
     etapas: Mapped[list["ImplantacaoEtapa"]] = relationship(

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import { LoadingSpinner, EmptyState } from "../components/ui/LoadingSpinner";
 import { useClientes } from "../hooks/useClientes";
+import { fmtDate } from "../utils/dateUtils";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -272,7 +273,7 @@ export default function Clientes() {
 
                       {/* Atualizado */}
                       <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-400">
-                        {new Date(c.updated_at).toLocaleDateString("pt-BR")}
+                        {fmtDate(c.updated_at)}
                       </td>
 
                       {/* Chevron */}

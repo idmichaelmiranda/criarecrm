@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import select, func
@@ -217,7 +217,7 @@ def atualizar(instalacao_id: int, data: InstalacaoUpdate, db: Session = Depends(
     if inst.status == "concluida" and not inst.data_conclusao:
         inst.data_conclusao = date.today()
 
-    inst.updated_at = datetime.now()
+    inst.updated_at = datetime.now(timezone.utc)
     db.commit()
     return _to_full_response(_load(instalacao_id, db), db)
 
@@ -243,7 +243,7 @@ def atualizar_item(instalacao_id: int, item_id: int, data: ChecklistItemUpdate, 
         setattr(item, field, value)
 
     if data.status == "concluido" and not item.data_conclusao:
-        item.data_conclusao = datetime.now()
+        item.data_conclusao = datetime.now(timezone.utc)
     elif data.status in ("pendente", "nao_aplicavel"):
         item.data_conclusao = None
 
@@ -257,7 +257,7 @@ def atualizar_item(instalacao_id: int, item_id: int, data: ChecklistItemUpdate, 
     if inst.status == "agendada" and alguma_concluida:
         inst.status = "em_execucao"
 
-    inst.updated_at = datetime.now()
+    inst.updated_at = datetime.now(timezone.utc)
     db.commit()
     return _to_full_response(_load(instalacao_id, db), db)
 
@@ -292,7 +292,7 @@ def deletar_item(instalacao_id: int, item_id: int, db: Session = Depends(get_db)
 
     inst = _load(instalacao_id, db)
     _recalcular_progresso(inst)
-    inst.updated_at = datetime.now()
+    inst.updated_at = datetime.now(timezone.utc)
     db.commit()
     return _to_full_response(_load(instalacao_id, db), db)
 
@@ -310,9 +310,9 @@ def iniciar(instalacao_id: int, db: Session = Depends(get_db)):
         raise HTTPException(404, "Instalação não encontrada")
     if inst.iniciado_em:
         raise HTTPException(400, "Instalação já foi iniciada")
-    inst.iniciado_em = datetime.now()
+    inst.iniciado_em = datetime.now(timezone.utc)
     inst.status = "em_execucao"
-    inst.updated_at = datetime.now()
+    inst.updated_at = datetime.now(timezone.utc)
     db.commit()
     return _to_full_response(_load(instalacao_id, db), db)
 
@@ -327,7 +327,7 @@ def finalizar(instalacao_id: int, data: FinalizarPayload, db: Session = Depends(
     if inst.finalizado_em:
         raise HTTPException(400, "Instalação já foi finalizada")
 
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
     inst.finalizado_em = now
     inst.duracao_minutos = max(1, round((now - inst.iniciado_em).total_seconds() / 60))
     inst.status = "concluida"

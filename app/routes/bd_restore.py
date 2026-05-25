@@ -1,7 +1,7 @@
 import os
 import tempfile
 import uuid
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from pathlib import Path
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
@@ -666,7 +666,7 @@ async def gerar(req: GerarRequest):
     produto_rows: list     = session.get("produto_rows", [])
     filename: str    = session["filename"]
     ambiente         = req.ambiente
-    now              = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    now              = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     amb_label        = "PRODUCAO" if ambiente == 1 else "HOMOLOGACAO"
 
     with open(BASE_SQL_PATH, "rb") as f:

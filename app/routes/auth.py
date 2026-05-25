@@ -1,5 +1,5 @@
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
@@ -74,7 +74,7 @@ async def upload_avatar(
         raise HTTPException(400, "Imagem deve ter no máximo 5 MB.")
     dest.write_bytes(content)
     current_user.avatar_path = filename
-    current_user.updated_at = datetime.now()
+    current_user.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(current_user)
     return _usuario_data(current_user)
@@ -111,7 +111,7 @@ def definir_senha(token: str, data: DefinirSenhaRequest, db: Session = Depends(g
 
     if not user:
         raise HTTPException(404, "Link de acesso inválido.")
-    if user.access_token_expires_at and datetime.now() > user.access_token_expires_at:
+    if user.access_token_expires_at and datetime.now(timezone.utc) > user.access_token_expires_at:
         raise HTTPException(410, "Este link expirou. Solicite um novo ao administrador.")
     if len(data.senha) < 6:
         raise HTTPException(400, "A senha deve ter pelo menos 6 caracteres.")
@@ -121,7 +121,7 @@ def definir_senha(token: str, data: DefinirSenhaRequest, db: Session = Depends(g
     user.pendente = False
     user.access_token = None
     user.access_token_expires_at = None
-    user.updated_at = datetime.now()
+    user.updated_at = datetime.now(timezone.utc)
     db.commit()
 
     return {"message": "Senha definida com sucesso! Você já pode fazer login."}

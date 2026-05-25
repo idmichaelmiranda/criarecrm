@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import String, Text, Integer, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database.connection import Base
@@ -14,7 +14,7 @@ class Template(Base):
     sla_total_dias: Mapped[int] = mapped_column(Integer, nullable=False, default=30)
     ativo: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     pop_pdf_path: Mapped[str] = mapped_column(String(500), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     etapas: Mapped[list["TemplateEtapa"]] = relationship(
         "TemplateEtapa", back_populates="template",

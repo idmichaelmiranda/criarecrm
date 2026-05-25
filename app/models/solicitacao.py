@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import String, Text, Integer, DateTime, JSON
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database.connection import Base
@@ -53,5 +53,5 @@ class Solicitacao(Base):
     review_token: Mapped[str] = mapped_column(String(64), nullable=True, index=True)
     review_token_expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Layout } from "../components/layout/Layout";
 import { configuracoesApi, instalacaosApi, templatesApi } from "../services/api";
+import { fmtDateTime } from "../utils/dateUtils";
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
@@ -48,13 +49,7 @@ function formatBytes(bytes) {
   return `${bytes} B`;
 }
 
-function formatDate(iso) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleString("pt-BR", {
-    day: "2-digit", month: "2-digit", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
-  });
-}
+const formatDate = fmtDateTime;
 
 // ── Layout primitives ─────────────────────────────────────────────────────────
 

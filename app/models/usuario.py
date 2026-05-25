@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database.connection import Base
@@ -17,7 +17,7 @@ class Usuario(Base):
     access_token: Mapped[str | None] = mapped_column(String(80), nullable=True, index=True)
     access_token_expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     avatar_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     grupo: Mapped["GrupoPermissao | None"] = relationship("GrupoPermissao", back_populates="usuarios")
