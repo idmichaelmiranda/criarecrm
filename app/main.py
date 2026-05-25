@@ -161,7 +161,7 @@ app.include_router(bd_restore_router,    prefix="/api/v1", dependencies=_auth_de
 app.include_router(instalacoes_router,   prefix="/api/v1", dependencies=_auth_dep)
 
 
-@app.get("/api/v1/health")
+@app.api_route("/api/v1/health", methods=["GET", "HEAD"])
 def health():
     return {"status": "ok", "version": "2.0.0"}
 
