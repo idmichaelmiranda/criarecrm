@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+.venv/
+env/
+*.egg-info/
+
+# Banco local (nunca subir o .db)
+*.db
+*.db-shm
+*.db-wal
+
+# Variáveis de ambiente (nunca subir valores reais)
+.env
+.env.local
+.env.*.local
+
+# Uploads locais (arquivos de usuário)
+uploads/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+
+# IDEs
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# OS
+.DS_Store
+Thumbs.db

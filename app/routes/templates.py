@@ -1,0 +1,262 @@
+from pathlib import Path
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi.responses import Response
+from sqlalchemy.orm import Session, selectinload
+from sqlalchemy import select
+from datetime import datetime
+
+POP_DIR = Path("uploads/pops")
+POP_DIR.mkdir(parents=True, exist_ok=True)
+POP_TEMPLATE_DIR = Path("uploads/pops/templates")
+POP_TEMPLATE_DIR.mkdir(parents=True, exist_ok=True)
+
+from app.database.connection import get_db
+from app.models.template import Template, TemplateEtapa, TemplateTarefa
+from app.schemas.template import (
+    TemplateListResponse, TemplateResponse,
+    TemplateCreate, TemplateUpdate,
+    EtapaCreate, EtapaUpdate,
+    TarefaCreate, TarefaUpdate,
+    TemplateEtapaResponse, TemplateTarefaResponse,
+)
+
+router = APIRouter(prefix="/templates", tags=["templates"])
+
+
+def _load(template_id: int, db: Session) -> Template:
+    t = db.execute(
+        select(Template)
+        .options(selectinload(Template.etapas).selectinload(TemplateEtapa.tarefas))
+        .where(Template.id == template_id)
+    ).scalar_one_or_none()
+    if not t:
+        raise HTTPException(404, "Template não encontrado")
+    return t
+
+
+# ── Templates ─────────────────────────────────────────────────────────────────
+
+@router.get("/", response_model=list[TemplateListResponse])
+def listar(
+    categoria: str | None = None,
+    db: Session = Depends(get_db),
+):
+    q = select(Template)
+    if categoria == "implantacao":
+        q = q.where(~Template.tipo.like("instalacao_%"))
+    elif categoria == "instalacao":
+        q = q.where(Template.tipo.like("instalacao_%"))
+    return db.execute(q.order_by(Template.nome)).scalars().all()
+
+
+@router.post("/", response_model=TemplateResponse, status_code=201)
+def criar(data: TemplateCreate, db: Session = Depends(get_db)):
+    t = Template(**data.model_dump())
+    db.add(t)
+    db.commit()
+    db.refresh(t)
+    return _load(t.id, db)
+
+
+@router.get("/{template_id}", response_model=TemplateResponse)
+def obter(template_id: int, db: Session = Depends(get_db)):
+    return _load(template_id, db)
+
+
+@router.patch("/{template_id}", response_model=TemplateResponse)
+def atualizar(template_id: int, data: TemplateUpdate, db: Session = Depends(get_db)):
+    t = db.get(Template, template_id)
+    if not t:
+        raise HTTPException(404, "Template não encontrado")
+    for field, value in data.model_dump(exclude_none=True).items():
+        setattr(t, field, value)
+    db.commit()
+    return _load(template_id, db)
+
+
+@router.delete("/{template_id}", status_code=204)
+def deletar(template_id: int, db: Session = Depends(get_db)):
+    t = db.get(Template, template_id)
+    if not t:
+        raise HTTPException(404, "Template não encontrado")
+    if t.pop_pdf_path:
+        p = Path(t.pop_pdf_path)
+        if p.exists():
+            p.unlink()
+    db.delete(t)
+    db.commit()
+
+
+# ── POP geral do template ─────────────────────────────────────────────────────
+
+@router.post("/{template_id}/pop", response_model=TemplateResponse)
+def upload_pop_template(template_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
+    t = _load(template_id, db)
+    if not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(400, "Apenas arquivos PDF são aceitos")
+    if t.pop_pdf_path:
+        old = Path(t.pop_pdf_path)
+        if old.exists():
+            old.unlink()
+    dest = POP_TEMPLATE_DIR / f"template_{template_id}.pdf"
+    dest.write_bytes(file.file.read())
+    t.pop_pdf_path = str(dest)
+    db.commit()
+    return _load(template_id, db)
+
+
+@router.delete("/{template_id}/pop", status_code=204)
+def deletar_pop_template(template_id: int, db: Session = Depends(get_db)):
+    t = db.get(Template, template_id)
+    if not t:
+        raise HTTPException(404, "Template não encontrado")
+    if t.pop_pdf_path:
+        p = Path(t.pop_pdf_path)
+        if p.exists():
+            p.unlink()
+        t.pop_pdf_path = None
+        db.commit()
+
+
+@router.get("/{template_id}/pop")
+def visualizar_pop_template(template_id: int, db: Session = Depends(get_db)):
+    t = db.get(Template, template_id)
+    if not t or not t.pop_pdf_path:
+        raise HTTPException(404, "POP não encontrado")
+    p = Path(t.pop_pdf_path)
+    if not p.exists():
+        raise HTTPException(404, "Arquivo não encontrado")
+    return Response(
+        content=p.read_bytes(),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="POP_template_{template_id}.pdf"'},
+    )
+
+
+# ── Etapas ────────────────────────────────────────────────────────────────────
+
+@router.post("/{template_id}/etapas", response_model=TemplateEtapaResponse, status_code=201)
+def adicionar_etapa(template_id: int, data: EtapaCreate, db: Session = Depends(get_db)):
+    if not db.get(Template, template_id):
+        raise HTTPException(404, "Template não encontrado")
+    etapa = TemplateEtapa(template_id=template_id, **data.model_dump())
+    db.add(etapa)
+    db.commit()
+    db.refresh(etapa)
+    return etapa
+
+
+@router.patch("/etapas/{etapa_id}", response_model=TemplateEtapaResponse)
+def atualizar_etapa(etapa_id: int, data: EtapaUpdate, db: Session = Depends(get_db)):
+    etapa = db.execute(
+        select(TemplateEtapa)
+        .options(selectinload(TemplateEtapa.tarefas))
+        .where(TemplateEtapa.id == etapa_id)
+    ).scalar_one_or_none()
+    if not etapa:
+        raise HTTPException(404, "Etapa não encontrada")
+    for field, value in data.model_dump(exclude_none=True).items():
+        setattr(etapa, field, value)
+    db.commit()
+    db.refresh(etapa)
+    return etapa
+
+
+@router.delete("/etapas/{etapa_id}", status_code=204)
+def deletar_etapa(etapa_id: int, db: Session = Depends(get_db)):
+    etapa = db.get(TemplateEtapa, etapa_id)
+    if not etapa:
+        raise HTTPException(404, "Etapa não encontrada")
+    db.delete(etapa)
+    db.commit()
+
+
+# ── Tarefas ───────────────────────────────────────────────────────────────────
+
+@router.post("/etapas/{etapa_id}/tarefas", response_model=TemplateTarefaResponse, status_code=201)
+def adicionar_tarefa(etapa_id: int, data: TarefaCreate, db: Session = Depends(get_db)):
+    if not db.get(TemplateEtapa, etapa_id):
+        raise HTTPException(404, "Etapa não encontrada")
+    tarefa = TemplateTarefa(etapa_id=etapa_id, **data.model_dump())
+    db.add(tarefa)
+    db.commit()
+    db.refresh(tarefa)
+    return tarefa
+
+
+@router.patch("/tarefas/{tarefa_id}", response_model=TemplateTarefaResponse)
+def atualizar_tarefa(tarefa_id: int, data: TarefaUpdate, db: Session = Depends(get_db)):
+    tarefa = db.get(TemplateTarefa, tarefa_id)
+    if not tarefa:
+        raise HTTPException(404, "Tarefa não encontrada")
+    for field, value in data.model_dump(exclude_none=True).items():
+        setattr(tarefa, field, value)
+    db.commit()
+    db.refresh(tarefa)
+    return tarefa
+
+
+@router.delete("/tarefas/{tarefa_id}", status_code=204)
+def deletar_tarefa(tarefa_id: int, db: Session = Depends(get_db)):
+    tarefa = db.get(TemplateTarefa, tarefa_id)
+    if not tarefa:
+        raise HTTPException(404, "Tarefa não encontrada")
+    # Remove POP file if exists
+    if tarefa.pop_pdf_path:
+        p = Path(tarefa.pop_pdf_path)
+        if p.exists():
+            p.unlink()
+    db.delete(tarefa)
+    db.commit()
+
+
+# ── POP (PDF de referência por tarefa) ───────────────────────────────────────
+
+@router.post("/tarefas/{tarefa_id}/pop", response_model=TemplateTarefaResponse)
+def upload_pop(tarefa_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
+    tarefa = db.get(TemplateTarefa, tarefa_id)
+    if not tarefa:
+        raise HTTPException(404, "Tarefa não encontrada")
+    if not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(400, "Apenas arquivos PDF são aceitos")
+
+    # Remove old file if exists
+    if tarefa.pop_pdf_path:
+        old = Path(tarefa.pop_pdf_path)
+        if old.exists():
+            old.unlink()
+
+    dest = POP_DIR / f"tarefa_{tarefa_id}.pdf"
+    dest.write_bytes(file.file.read())
+    tarefa.pop_pdf_path = str(dest)
+    db.commit()
+    db.refresh(tarefa)
+    return tarefa
+
+
+@router.delete("/tarefas/{tarefa_id}/pop", status_code=204)
+def deletar_pop(tarefa_id: int, db: Session = Depends(get_db)):
+    tarefa = db.get(TemplateTarefa, tarefa_id)
+    if not tarefa:
+        raise HTTPException(404, "Tarefa não encontrada")
+    if tarefa.pop_pdf_path:
+        p = Path(tarefa.pop_pdf_path)
+        if p.exists():
+            p.unlink()
+        tarefa.pop_pdf_path = None
+        db.commit()
+
+
+@router.get("/tarefas/{tarefa_id}/pop")
+def visualizar_pop(tarefa_id: int, db: Session = Depends(get_db)):
+    tarefa = db.get(TemplateTarefa, tarefa_id)
+    if not tarefa or not tarefa.pop_pdf_path:
+        raise HTTPException(404, "POP não encontrado")
+    p = Path(tarefa.pop_pdf_path)
+    if not p.exists():
+        raise HTTPException(404, "Arquivo não encontrado")
+    return Response(
+        content=p.read_bytes(),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="POP_tarefa_{tarefa_id}.pdf"'},
+    )

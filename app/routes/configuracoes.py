@@ -1,0 +1,342 @@
+import json
+import re
+import shutil
+from pathlib import Path
+from datetime import datetime
+from typing import Any
+
+import httpx
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
+from app.database.connection import get_db
+from app.dependencies.auth import get_current_user
+from app.models.usuario import Usuario
+
+router = APIRouter(prefix="/configuracoes", tags=["configuracoes"])
+
+_auth = Depends(get_current_user)
+
+
+# ── Schemas de email ──────────────────────────────────────────────────────────
+
+class EmailConfig(BaseModel):
+    host: str
+    port: int = 587
+    user: str
+    password: str = ""
+    from_email: str = ""
+    from_name: str = "CriareCRM"
+    use_tls: bool = True
+    frontend_url: str = ""
+
+BASE_SQL_PATH    = Path("uploads/base_zerada.sql")
+BACKUP_SQL_PATH  = Path("uploads/base_zerada_anterior.sql")
+META_PATH        = Path("uploads/base_zerada_meta.json")
+
+
+def _read_meta() -> dict:
+    if META_PATH.exists():
+        try:
+            return json.loads(META_PATH.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return {}
+
+
+def _write_meta(data: dict) -> None:
+    META_PATH.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+@router.get("/base-zerada/info")
+def info_base():
+    if not BASE_SQL_PATH.exists():
+        return {"exists": False}
+    stat = BASE_SQL_PATH.stat()
+    meta = _read_meta()
+    return {
+        "exists": True,
+        "size": stat.st_size,
+        "updated_at": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+        "versao": meta.get("versao") or None,
+    }
+
+
+@router.post("/base-zerada")
+async def upload_base(
+    file: UploadFile = File(...),
+    versao: str = Form(""),
+):
+    if not file.filename.lower().endswith(".sql"):
+        raise HTTPException(400, "O arquivo deve ter extensão .sql")
+
+    content = await file.read()
+    if len(content) < 1024:
+        raise HTTPException(400, "Arquivo muito pequeno — verifique se é uma base válida")
+
+    if BASE_SQL_PATH.exists():
+        shutil.copy(BASE_SQL_PATH, BACKUP_SQL_PATH)
+
+    BASE_SQL_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with open(BASE_SQL_PATH, "wb") as f:
+        f.write(content)
+
+    now = datetime.now().isoformat()
+    _write_meta({"versao": versao.strip() or None, "updated_at": now})
+
+    return {
+        "message": "base_zerada.sql atualizado com sucesso",
+        "size": len(content),
+        "updated_at": now,
+        "versao": versao.strip() or None,
+    }
+
+
+# ── Config de email ───────────────────────────────────────────────────────────
+
+@router.get("/email", dependencies=[_auth])
+def get_email_config():
+    from app.services.email_service import get_config
+    cfg = get_config() or {}
+    # Retorna com senha mascarada para exibição
+    safe = dict(cfg)
+    if safe.get("password"):
+        safe["password"] = "••••••••"
+    return safe
+
+
+@router.put("/email", dependencies=[_auth])
+def save_email_config(data: EmailConfig):
+    from app.services.email_service import get_config, save_config
+    existing = get_config() or {}
+    payload = data.model_dump()
+    # Preserva a senha existente se o frontend enviar o placeholder mascarado
+    if payload.get("password") == "••••••••":
+        payload["password"] = existing.get("password", "")
+    save_config(payload)
+    return {"message": "Configuração de email salva com sucesso."}
+
+
+@router.post("/email/testar", dependencies=[_auth])
+def testar_email(data: dict):
+    from app.services.email_service import get_config, save_config, send_revisao_email
+    # Salva primeiro se vieram dados novos no body
+    if data.get("host"):
+        cfg_update = {**data}
+        existing = get_config() or {}
+        if cfg_update.get("password") == "••••••••":
+            cfg_update["password"] = existing.get("password", "")
+        save_config(cfg_update)
+
+    cfg = get_config()
+    if not cfg or not cfg.get("host"):
+        raise HTTPException(400, "Configuração de email não encontrada.")
+
+    dest = data.get("test_email") or cfg.get("user")
+    if not dest:
+        raise HTTPException(400, "Informe um email de destino para o teste.")
+
+    try:
+        send_revisao_email(
+            to_email=dest,
+            razao_social="Empresa Teste LTDA",
+            motivo="Este é um email de teste para validar as configurações SMTP do CriareCRM.",
+            link=(cfg.get("frontend_url") or "http://localhost:5173") + "/revisao/TOKEN_EXEMPLO",
+        )
+        return {"message": f"Email de teste enviado para {dest}."}
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+
+
+# ── Integração ERP ────────────────────────────────────────────────────────────
+
+ERP_CONFIG_PATH = Path("uploads/erp_config.json")
+ERP_CLIENT_ENDPOINT = "/api/gerente/v2/CheckClient"
+
+
+def _read_erp_config() -> dict:
+    if ERP_CONFIG_PATH.exists():
+        try:
+            return json.loads(ERP_CONFIG_PATH.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return {}
+
+
+def _write_erp_config(data: dict) -> None:
+    ERP_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    ERP_CONFIG_PATH.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+class ErpConfig(BaseModel):
+    base_url: str = ""
+    api_token: str = ""
+    timeout: int = 10
+
+
+def _normalize_clients(raw) -> list[dict]:
+    """Normaliza a resposta da API externa para [{id, nome, cnpj}]."""
+    if isinstance(raw, list):
+        items = raw
+    elif isinstance(raw, dict):
+        if any(k in raw for k in ("RazaoSocial", "razao_social", "NomeCliente", "razao", "nome", "Name")):
+            items = [raw]
+        else:
+            items = raw.get("clientes") or raw.get("data") or raw.get("result") or []
+    else:
+        items = []
+    result = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        nome = (
+            item.get("RazaoSocial") or item.get("razao_social") or
+            item.get("NomeCliente") or item.get("razao") or
+            item.get("nome") or item.get("Name") or ""
+        )
+        cnpj = item.get("CNPJ") or item.get("cnpj") or item.get("Cnpj") or ""
+        cod  = (
+            item.get("CodCliente") or item.get("codigo") or
+            item.get("id") or item.get("Id") or item.get("ID") or ""
+        )
+        if nome:
+            result.append({"id": str(cod), "nome": nome, "cnpj": cnpj})
+    return result
+
+
+@router.get("/erp", dependencies=[_auth])
+def get_erp_config():
+    cfg = _read_erp_config()
+    safe = dict(cfg)
+    if safe.get("api_token"):
+        safe["api_token"] = "••••••••"
+    return safe
+
+
+@router.put("/erp", dependencies=[_auth])
+def save_erp_config(data: ErpConfig):
+    existing = _read_erp_config()
+    payload = data.model_dump()
+    if payload.get("api_token") == "••••••••":
+        payload["api_token"] = existing.get("api_token", "")
+    _write_erp_config(payload)
+    return {"message": "Configuração ERP salva com sucesso."}
+
+
+@router.get("/erp/clientes", dependencies=[_auth])
+def erp_clientes(cnpj: str = ""):
+    cfg = _read_erp_config()
+    base_url = (cfg.get("base_url") or "").rstrip("/")
+    if not base_url:
+        raise HTTPException(400, "Integração ERP não configurada. Acesse Configurações > Integração ERP.")
+
+    if not cnpj:
+        return []
+
+    # Strip formatting — ERP expects raw digits to avoid URL-encoding issues with slashes
+    cnpj_digits = re.sub(r"\D", "", cnpj)
+    if not cnpj_digits:
+        return []
+
+    url = f"{base_url}{ERP_CLIENT_ENDPOINT}"
+    headers = {"Accept": "application/json"}
+    if cfg.get("api_token"):
+        headers["Authorization"] = f"Bearer {cfg['api_token']}"
+
+    # Use a longer timeout for real lookups (DB query); fallback to config value if set higher
+    lookup_timeout = max(int(cfg.get("timeout") or 10), 30)
+
+    try:
+        with httpx.Client(timeout=lookup_timeout) as client:
+            resp = client.get(url, headers=headers, params={"CNPJ": cnpj_digits})
+            if resp.status_code >= 400:
+                # ERP uses 4xx/5xx for "not found" — return empty rather than propagating
+                return []
+            raw = resp.json()
+    except httpx.TimeoutException:
+        raise HTTPException(504, f"Timeout ({lookup_timeout}s) ao consultar o ERP. Verifique se o servidor está acessível.")
+    except Exception as e:
+        raise HTTPException(502, f"Falha ao conectar ao ERP: {str(e)}")
+
+    return _normalize_clients(raw)
+
+
+@router.post("/erp/clientes/resolve", dependencies=[_auth])
+def erp_resolve_cliente(data: dict, db: Session = Depends(get_db)):
+    """
+    Recebe {nome, cnpj, id} do ERP e retorna o cliente_id do CRM.
+    Busca por CNPJ; se não encontrar, cria um stub para manter o FK íntegro.
+    """
+    from sqlalchemy import select
+    from app.models.cliente import Cliente
+
+    cnpj_raw = (data.get("cnpj") or "").strip()
+    nome     = (data.get("nome") or "").strip()
+    if not nome:
+        raise HTTPException(400, "Nome do cliente é obrigatório.")
+
+    cnpj_digits = re.sub(r"\D", "", cnpj_raw) if cnpj_raw else ""
+
+    existing = None
+    if cnpj_raw:
+        existing = db.execute(select(Cliente).where(Cliente.cnpj == cnpj_raw)).scalar_one_or_none()
+    if not existing and len(cnpj_digits) == 14:
+        fmt = f"{cnpj_digits[:2]}.{cnpj_digits[2:5]}.{cnpj_digits[5:8]}/{cnpj_digits[8:12]}-{cnpj_digits[12:14]}"
+        existing = db.execute(select(Cliente).where(Cliente.cnpj == fmt)).scalar_one_or_none()
+
+    if not existing:
+        cnpj_store = cnpj_raw or cnpj_digits or f"erp_{nome[:10]}"
+        email_stub = f"erp_{cnpj_digits or re.sub(chr(32), '_', nome[:20])}@erp.local"
+        stub = Cliente(
+            razao_social=nome,
+            cnpj=cnpj_store,
+            email=email_stub,
+            telefone_celular="",
+            ativo=True,
+            origem="erp",
+        )
+        db.add(stub)
+        db.commit()
+        db.refresh(stub)
+        existing = stub
+
+    return {"cliente_id": existing.id, "nome": existing.razao_social, "cnpj": existing.cnpj}
+
+
+@router.post("/erp/testar", dependencies=[_auth])
+def testar_erp(data: ErpConfig):
+    existing = _read_erp_config()
+    base_url = (data.base_url or existing.get("base_url") or "").rstrip("/")
+    if not base_url:
+        raise HTTPException(400, "Informe a URL base do ERP.")
+
+    token = data.api_token if data.api_token != "••••••••" else existing.get("api_token", "")
+    url = f"{base_url}{ERP_CLIENT_ENDPOINT}"
+    headers = {"Accept": "application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+
+    timeout = int(data.timeout or existing.get("timeout") or 10)
+
+    try:
+        with httpx.Client(timeout=timeout) as client:
+            resp = client.get(url, headers=headers)
+            # ERP returns 500 when CNPJ param is missing — that still means the server is reachable
+            if resp.status_code >= 400:
+                body = resp.text or ""
+                if "CNPJ" in body or "obrigatório" in body or "cadastrado" in body:
+                    return {"message": "Conexão estabelecida — servidor ERP acessível.", "total": 0}
+                raise httpx.HTTPStatusError(
+                    f"HTTP {resp.status_code}", request=resp.request, response=resp
+                )
+            raw = resp.json()
+    except httpx.TimeoutException:
+        raise HTTPException(504, f"Timeout ({timeout}s). Verifique se o servidor está acessível.")
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(502, f"ERP retornou HTTP {e.response.status_code}.")
+    except Exception as e:
+        raise HTTPException(502, f"Falha ao conectar: {str(e)}")
+
+    clientes = _normalize_clients(raw)
+    return {"message": f"Conexão OK — {len(clientes)} cliente(s) encontrado(s).", "total": len(clientes)}
