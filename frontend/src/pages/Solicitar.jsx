@@ -119,6 +119,32 @@ function CnpjInput({ register, errors, setValue }) {
   );
 }
 
+// ─── Phone field ─────────────────────────────────────────────────────────────
+
+function maskPhone(raw) {
+  const d = (raw || "").replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 2)  return d.length ? `(${d}` : "";
+  if (d.length <= 6)  return `(${d.slice(0,2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+  return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+}
+
+function PhoneInput({ name, label, required, register, errors }) {
+  const rules = required ? { required: `${label.replace(" *","")} obrigatório` } : {};
+  const { ref, onChange: regOnChange, ...rest } = register(name, rules);
+  return (
+    <Input
+      ref={ref}
+      label={label}
+      placeholder="(11) 99999-9999"
+      maxLength={15}
+      error={errors[name]?.message}
+      onChange={(e) => { e.target.value = maskPhone(e.target.value); regOnChange(e); }}
+      {...rest}
+    />
+  );
+}
+
 // ─── CEP field ────────────────────────────────────────────────────────────────
 
 function CepInput({ name, label, register, errors, setValue, fieldMap, required }) {
@@ -297,10 +323,8 @@ function Step1({ r, e }) {
             pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/, message: "Informe um e-mail válido" },
           })} />
       </div>
-      <Input label="Celular *" placeholder="(11) 99999-9999"
-        error={e.telefone_celular?.message}
-        {...r("telefone_celular", { required: "Celular obrigatório" })} />
-      <Input label="Telefone Fixo" placeholder="(11) 3333-3333" {...r("telefone_fixo")} />
+      <PhoneInput name="telefone_celular" label="Celular *" required register={r} errors={e} />
+      <PhoneInput name="telefone_fixo"   label="Telefone Fixo"   register={r} errors={e} />
     </div>
   );
 }
@@ -593,9 +617,11 @@ function Confirmation({ getValues, certFile }) {
 
 // ─── Build payload ────────────────────────────────────────────────────────────
 
+const digits = (v) => (v || "").replace(/\D/g, "") || null;
+
 function buildPayload(d) {
   return {
-    cliente: { razao_social: d.razao_social, nome_fantasia: d.nome_fantasia || null, cnpj: d.cnpj, ie: d.ie || null, email: d.email, telefone_fixo: d.telefone_fixo || null, telefone_celular: d.telefone_celular, responsavel: d.responsavel || null },
+    cliente: { razao_social: d.razao_social, nome_fantasia: d.nome_fantasia || null, cnpj: d.cnpj.replace(/\D/g,""), ie: d.ie || null, email: d.email, telefone_fixo: digits(d.telefone_fixo), telefone_celular: digits(d.telefone_celular), responsavel: d.responsavel || null },
     endereco: { cep: d.cep, endereco: d.endereco, numero: d.numero, bairro: d.bairro, cidade: d.cidade, estado: (d.estado || "").toUpperCase() },
     contabilidade: { nome_contador: d.nome_contador, cpf: d.cpf_contador, crc: d.crc || null, cnpj: d.cnpj_contador || null, cep: d.cep_contador || null, endereco: d.end_contador || null, numero: d.num_contador || null, bairro: d.bairro_contador || null, cidade: d.cidade_contador || null, estado: d.estado_contador ? d.estado_contador.toUpperCase() : null, telefone_fixo: d.tel_fixo_contador || null, telefone_celular: d.tel_cel_contador || null, email: d.email_contador || null },
     dados_bancarios: { nome_banco: d.nome_banco || null, cnpj_banco: d.cnpj_banco || null, codigo_banco: d.codigo_banco || null, inscricao_estadual: d.ie_banco || null, agencia: d.agencia || null, dv_agencia: d.dv_agencia || null, conta: d.conta || null, dv_conta: d.dv_conta || null, tipo_conta: d.tipo_conta || null },
