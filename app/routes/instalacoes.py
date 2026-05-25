@@ -6,7 +6,7 @@ from sqlalchemy import select, func
 import json
 
 from app.database.connection import get_db
-from app.config import BACKEND_URL
+import app.services.storage_service as storage
 from app.models.instalacao import Instalacao, InstalacaoChecklist, InstalacaoComentario
 from app.models.cliente import Cliente
 from app.models.usuario import Usuario
@@ -53,7 +53,7 @@ def _to_list_response(inst: Instalacao, cliente: Cliente | None) -> InstalacaoLi
     item.cliente_cnpj = cliente.cnpj if cliente else None
     item.responsavel_nome = inst.responsavel.nome if inst.responsavel else None
     if inst.responsavel and inst.responsavel.avatar_path:
-        item.responsavel_avatar_url = f"{BACKEND_URL}/uploads/avatars/{inst.responsavel.avatar_path}"
+        item.responsavel_avatar_url = storage.avatar_url(inst.responsavel.avatar_path)
     return item
 
 
@@ -61,7 +61,7 @@ def _to_full_response(inst: Instalacao, db: Session | None = None) -> Instalacao
     resp = InstalacaoFullResponse.model_validate(inst)
     resp.responsavel_nome = inst.responsavel.nome if inst.responsavel else None
     if inst.responsavel and inst.responsavel.avatar_path:
-        resp.responsavel_avatar_url = f"{BACKEND_URL}/uploads/avatars/{inst.responsavel.avatar_path}"
+        resp.responsavel_avatar_url = storage.avatar_url(inst.responsavel.avatar_path)
     if db:
         # For single-type installs use tipo; for multi-type use first tipo
         from app.schemas.instalacao import _parse_tipos

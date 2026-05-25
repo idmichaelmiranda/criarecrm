@@ -1,4 +1,3 @@
-from pathlib import Path
 from datetime import datetime
 from typing import Optional
 
@@ -6,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.models.cliente import Cliente
 
-BASE_SQL_PATH = Path("uploads/base_zerada.sql")
+_BASE_SQL_STORAGE = "configs/base_zerada.sql"
 
 
 def _esc(val, max_len: int | None = None) -> str:
@@ -122,11 +121,10 @@ def gerar_sql(cliente: Cliente, db: Optional[Session] = None, ambiente: int = 1)
     """
     ambiente: 1 = Produção, 2 = Homologação
     """
-    if not BASE_SQL_PATH.exists():
-        raise FileNotFoundError("base_zerada.sql não encontrado em uploads/")
-
-    with open(BASE_SQL_PATH, "rb") as f:
-        base_bytes = f.read()
+    from app.services import storage_service as storage
+    base_bytes = storage.download_sync(_BASE_SQL_STORAGE)
+    if base_bytes is None:
+        raise FileNotFoundError("base_zerada.sql não encontrado — faça upload em Configurações")
 
     addr = cliente.endereco or {}
     ct = cliente.contabilidade or {}

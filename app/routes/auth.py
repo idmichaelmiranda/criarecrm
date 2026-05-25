@@ -1,23 +1,19 @@
 import secrets
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 
 from app.database.connection import get_db
-from app.config import BACKEND_URL
 from app.models.usuario import Usuario
 from app.schemas.auth import LoginRequest, TokenResponse, UsuarioTokenData
 from app.schemas.usuario import RegistroRequest, DefinirSenhaRequest
 from app.services.auth_service import verify_password, hash_password, create_access_token
 from app.dependencies.auth import get_current_user
+import app.services.storage_service as storage
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-
-AVATAR_DIR = Path("uploads/avatars")
-AVATAR_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def _usuario_data(user: Usuario) -> UsuarioTokenData:
@@ -29,7 +25,7 @@ def _usuario_data(user: Usuario) -> UsuarioTokenData:
         grupo_nome=user.grupo.nome if user.grupo else None,
         permissoes=user.grupo.permissoes if user.grupo else [],
         ativo=user.ativo,
-        avatar_url=f"{BACKEND_URL}/uploads/avatars/{user.avatar_path}" if user.avatar_path else None,
+        avatar_url=storage.avatar_url(user.avatar_path),
     )
 
 
@@ -67,13 +63,12 @@ async def upload_avatar(
     if not file.content_type.startswith("image/"):
         raise HTTPException(400, "Arquivo deve ser uma imagem.")
     ext = Path(file.filename).suffix.lower() or ".jpg"
-    filename = f"{current_user.id}{ext}"
-    dest = AVATAR_DIR / filename
+    storage_path = f"avatars/{current_user.id}{ext}"
     content = await file.read()
     if len(content) > 5 * 1024 * 1024:
         raise HTTPException(400, "Imagem deve ter no máximo 5 MB.")
-    dest.write_bytes(content)
-    current_user.avatar_path = filename
+    await storage.upload_async(storage_path, content, file.content_type or "image/jpeg")
+    current_user.avatar_path = storage_path
     current_user.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(current_user)

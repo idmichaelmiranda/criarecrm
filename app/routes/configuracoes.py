@@ -1,7 +1,5 @@
 import json
 import re
-import shutil
-from pathlib import Path
 from datetime import datetime, timezone
 from typing import Any
 
@@ -13,10 +11,13 @@ from sqlalchemy.orm import Session
 from app.database.connection import get_db
 from app.dependencies.auth import get_current_user
 from app.models.usuario import Usuario
+import app.services.storage_service as storage
 
 router = APIRouter(prefix="/configuracoes", tags=["configuracoes"])
 
 _auth = Depends(get_current_user)
+
+_META_PATH = "configs/base_zerada_meta.json"
 
 
 # ── Schemas de email ──────────────────────────────────────────────────────────
@@ -31,34 +32,24 @@ class EmailConfig(BaseModel):
     use_tls: bool = True
     frontend_url: str = ""
 
-BASE_SQL_PATH    = Path("uploads/base_zerada.sql")
-BACKUP_SQL_PATH  = Path("uploads/base_zerada_anterior.sql")
-META_PATH        = Path("uploads/base_zerada_meta.json")
-
 
 def _read_meta() -> dict:
-    if META_PATH.exists():
-        try:
-            return json.loads(META_PATH.read_text(encoding="utf-8"))
-        except Exception:
-            pass
-    return {}
+    return storage.get_json_sync(_META_PATH) or {}
 
 
 def _write_meta(data: dict) -> None:
-    META_PATH.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    storage.put_json_sync(_META_PATH, data)
 
 
 @router.get("/base-zerada/info")
 def info_base():
-    if not BASE_SQL_PATH.exists():
-        return {"exists": False}
-    stat = BASE_SQL_PATH.stat()
     meta = _read_meta()
+    if not meta:
+        return {"exists": False}
     return {
         "exists": True,
-        "size": stat.st_size,
-        "updated_at": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+        "size": meta.get("size"),
+        "updated_at": meta.get("updated_at"),
         "versao": meta.get("versao") or None,
     }
 
@@ -75,15 +66,10 @@ async def upload_base(
     if len(content) < 1024:
         raise HTTPException(400, "Arquivo muito pequeno — verifique se é uma base válida")
 
-    if BASE_SQL_PATH.exists():
-        shutil.copy(BASE_SQL_PATH, BACKUP_SQL_PATH)
-
-    BASE_SQL_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with open(BASE_SQL_PATH, "wb") as f:
-        f.write(content)
+    await storage.upload_async("configs/base_zerada.sql", content, "application/sql")
 
     now = datetime.now(timezone.utc).isoformat()
-    _write_meta({"versao": versao.strip() or None, "updated_at": now})
+    _write_meta({"versao": versao.strip() or None, "updated_at": now, "size": len(content)})
 
     return {
         "message": "base_zerada.sql atualizado com sucesso",
@@ -151,22 +137,16 @@ def testar_email(data: dict):
 
 # ── Integração ERP ────────────────────────────────────────────────────────────
 
-ERP_CONFIG_PATH = Path("uploads/erp_config.json")
 ERP_CLIENT_ENDPOINT = "/api/gerente/v2/CheckClient"
+_ERP_CONFIG_PATH = "configs/erp_config.json"
 
 
 def _read_erp_config() -> dict:
-    if ERP_CONFIG_PATH.exists():
-        try:
-            return json.loads(ERP_CONFIG_PATH.read_text(encoding="utf-8"))
-        except Exception:
-            pass
-    return {}
+    return storage.get_json_sync(_ERP_CONFIG_PATH) or {}
 
 
 def _write_erp_config(data: dict) -> None:
-    ERP_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    ERP_CONFIG_PATH.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    storage.put_json_sync(_ERP_CONFIG_PATH, data)
 
 
 class ErpConfig(BaseModel):

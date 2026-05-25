@@ -273,16 +273,14 @@ def submit_revisao(db: Session, token: str, data: SolicitacaoCreate) -> Solicita
 
 
 async def upload_certificado(db: Session, solicitacao_id: int, file: UploadFile) -> str:
+    from app.services import storage_service as storage
     sol = get_by_id(db, solicitacao_id)
-    upload_dir = Path("uploads/certificados")
-    upload_dir.mkdir(parents=True, exist_ok=True)
-    safe_name = f"sol_{solicitacao_id}_{file.filename}"
-    file_path = upload_dir / safe_name
+    sp = f"certs/sol_{solicitacao_id}_{file.filename}"
     content = await file.read()
-    file_path.write_bytes(content)
-    sol.certificado_path = str(file_path)
+    await storage.upload_async(sp, content, file.content_type or "application/octet-stream")
+    sol.certificado_path = sp
     db.commit()
-    return str(file_path)
+    return sp
 
 
 async def upload_certificado_by_token(db: Session, token: str, file: UploadFile) -> str:

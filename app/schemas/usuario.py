@@ -1,7 +1,7 @@
 from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel, EmailStr, model_validator
-from app.config import BACKEND_URL
+import app.services.storage_service as storage
 
 
 class GrupoMinimo(BaseModel):
@@ -45,7 +45,7 @@ class UsuarioResponse(BaseModel):
     def _derive_fields(cls, data):
         if hasattr(data, "__dict__"):
             avatar_path = getattr(data, "avatar_path", None)
-            data.__dict__.setdefault("avatar_url", f"{BACKEND_URL}/uploads/avatars/{avatar_path}" if avatar_path else None)
+            data.__dict__.setdefault("avatar_url", storage.avatar_url(avatar_path))
             grupo = getattr(data, "grupo", None)
             data.__dict__.setdefault("grupo_nome", grupo.nome if grupo else None)
         return data

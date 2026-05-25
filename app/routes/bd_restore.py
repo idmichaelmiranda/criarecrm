@@ -10,7 +10,7 @@ from pydantic import BaseModel
 
 router = APIRouter(prefix="/bd-restore", tags=["BD Restore"])
 
-BASE_SQL_PATH = Path("uploads/base_zerada.sql")
+_BASE_SQL_STORAGE = "configs/base_zerada.sql"
 
 # Tabelas Firebird → chave de resposta (Passo 2)
 TABELAS = {
@@ -669,8 +669,10 @@ async def gerar(req: GerarRequest):
     now              = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     amb_label        = "PRODUCAO" if ambiente == 1 else "HOMOLOGACAO"
 
-    with open(BASE_SQL_PATH, "rb") as f:
-        base_bytes = f.read()
+    from app.services import storage_service as storage
+    base_bytes = storage.download_sync(_BASE_SQL_STORAGE)
+    if base_bytes is None:
+        raise HTTPException(400, "base_zerada.sql não encontrado — faça upload em Configurações")
 
     # CODIGO_N fixo em 1 — base_zerada sempre inicia com 1, não altera a PK
     codigo_n = 1

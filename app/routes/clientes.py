@@ -103,15 +103,16 @@ def gerar_base(
     )
 
 
-def _get_cert_path(cliente: Cliente, db: Session) -> Path | None:
+def _get_cert_storage_path(cliente: Cliente, db: Session):
     if not cliente.solicitacao_id:
-        return None
+        return None, None
     from app.models.solicitacao import Solicitacao
+    import app.services.storage_service as storage
     sol = db.get(Solicitacao, cliente.solicitacao_id)
     if not sol or not sol.certificado_path:
-        return None
-    p = Path(sol.certificado_path)
-    return p if p.exists() else None
+        return None, None
+    sp = storage._to_storage_path(sol.certificado_path)
+    return sp, sp.split("/")[-1]
 
 
 @router.get("/{cliente_id}/certificado/info")
@@ -119,22 +120,26 @@ def info_certificado(cliente_id: int, db: Session = Depends(get_db)):
     c = db.get(Cliente, cliente_id)
     if not c:
         raise HTTPException(404, "Cliente não encontrado")
-    p = _get_cert_path(c, db)
-    if not p:
+    sp, filename = _get_cert_storage_path(c, db)
+    if not sp:
         return {"exists": False, "filename": None}
-    return {"exists": True, "filename": p.name}
+    return {"exists": True, "filename": filename}
 
 
 @router.get("/{cliente_id}/certificado")
 def baixar_certificado(cliente_id: int, db: Session = Depends(get_db)):
+    import app.services.storage_service as storage
     c = db.get(Cliente, cliente_id)
     if not c:
         raise HTTPException(404, "Cliente não encontrado")
-    p = _get_cert_path(c, db)
-    if not p:
+    sp, filename = _get_cert_storage_path(c, db)
+    if not sp:
         raise HTTPException(404, "Certificado não encontrado")
+    data = storage.download_sync(sp)
+    if data is None:
+        raise HTTPException(404, "Arquivo não encontrado no storage")
     return Response(
-        content=p.read_bytes(),
+        content=data,
         media_type="application/octet-stream",
-        headers={"Content-Disposition": f'attachment; filename="{p.name}"'},
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )

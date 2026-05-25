@@ -1,15 +1,10 @@
-from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import Response
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import select
 from datetime import datetime
 
-POP_DIR = Path("uploads/pops")
-POP_DIR.mkdir(parents=True, exist_ok=True)
-POP_TEMPLATE_DIR = Path("uploads/pops/templates")
-POP_TEMPLATE_DIR.mkdir(parents=True, exist_ok=True)
-
+import app.services.storage_service as storage
 from app.database.connection import get_db
 from app.models.template import Template, TemplateEtapa, TemplateTarefa
 from app.schemas.template import (
@@ -80,9 +75,7 @@ def deletar(template_id: int, db: Session = Depends(get_db)):
     if not t:
         raise HTTPException(404, "Template não encontrado")
     if t.pop_pdf_path:
-        p = Path(t.pop_pdf_path)
-        if p.exists():
-            p.unlink()
+        storage.delete_sync(storage._to_storage_path(t.pop_pdf_path))
     db.delete(t)
     db.commit()
 
@@ -95,12 +88,10 @@ def upload_pop_template(template_id: int, file: UploadFile = File(...), db: Sess
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(400, "Apenas arquivos PDF são aceitos")
     if t.pop_pdf_path:
-        old = Path(t.pop_pdf_path)
-        if old.exists():
-            old.unlink()
-    dest = POP_TEMPLATE_DIR / f"template_{template_id}.pdf"
-    dest.write_bytes(file.file.read())
-    t.pop_pdf_path = str(dest)
+        storage.delete_sync(storage._to_storage_path(t.pop_pdf_path))
+    sp = f"pops/templates/template_{template_id}.pdf"
+    storage.upload_sync(sp, file.file.read(), "application/pdf")
+    t.pop_pdf_path = sp
     db.commit()
     return _load(template_id, db)
 
@@ -111,9 +102,7 @@ def deletar_pop_template(template_id: int, db: Session = Depends(get_db)):
     if not t:
         raise HTTPException(404, "Template não encontrado")
     if t.pop_pdf_path:
-        p = Path(t.pop_pdf_path)
-        if p.exists():
-            p.unlink()
+        storage.delete_sync(storage._to_storage_path(t.pop_pdf_path))
         t.pop_pdf_path = None
         db.commit()
 
@@ -123,11 +112,11 @@ def visualizar_pop_template(template_id: int, db: Session = Depends(get_db)):
     t = db.get(Template, template_id)
     if not t or not t.pop_pdf_path:
         raise HTTPException(404, "POP não encontrado")
-    p = Path(t.pop_pdf_path)
-    if not p.exists():
+    data = storage.download_sync(storage._to_storage_path(t.pop_pdf_path))
+    if data is None:
         raise HTTPException(404, "Arquivo não encontrado")
     return Response(
-        content=p.read_bytes(),
+        content=data,
         media_type="application/pdf",
         headers={"Content-Disposition": f'inline; filename="POP_template_{template_id}.pdf"'},
     )
@@ -201,11 +190,8 @@ def deletar_tarefa(tarefa_id: int, db: Session = Depends(get_db)):
     tarefa = db.get(TemplateTarefa, tarefa_id)
     if not tarefa:
         raise HTTPException(404, "Tarefa não encontrada")
-    # Remove POP file if exists
     if tarefa.pop_pdf_path:
-        p = Path(tarefa.pop_pdf_path)
-        if p.exists():
-            p.unlink()
+        storage.delete_sync(storage._to_storage_path(tarefa.pop_pdf_path))
     db.delete(tarefa)
     db.commit()
 
@@ -219,16 +205,11 @@ def upload_pop(tarefa_id: int, file: UploadFile = File(...), db: Session = Depen
         raise HTTPException(404, "Tarefa não encontrada")
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(400, "Apenas arquivos PDF são aceitos")
-
-    # Remove old file if exists
     if tarefa.pop_pdf_path:
-        old = Path(tarefa.pop_pdf_path)
-        if old.exists():
-            old.unlink()
-
-    dest = POP_DIR / f"tarefa_{tarefa_id}.pdf"
-    dest.write_bytes(file.file.read())
-    tarefa.pop_pdf_path = str(dest)
+        storage.delete_sync(storage._to_storage_path(tarefa.pop_pdf_path))
+    sp = f"pops/tarefa_{tarefa_id}.pdf"
+    storage.upload_sync(sp, file.file.read(), "application/pdf")
+    tarefa.pop_pdf_path = sp
     db.commit()
     db.refresh(tarefa)
     return tarefa
@@ -240,9 +221,7 @@ def deletar_pop(tarefa_id: int, db: Session = Depends(get_db)):
     if not tarefa:
         raise HTTPException(404, "Tarefa não encontrada")
     if tarefa.pop_pdf_path:
-        p = Path(tarefa.pop_pdf_path)
-        if p.exists():
-            p.unlink()
+        storage.delete_sync(storage._to_storage_path(tarefa.pop_pdf_path))
         tarefa.pop_pdf_path = None
         db.commit()
 
@@ -252,11 +231,11 @@ def visualizar_pop(tarefa_id: int, db: Session = Depends(get_db)):
     tarefa = db.get(TemplateTarefa, tarefa_id)
     if not tarefa or not tarefa.pop_pdf_path:
         raise HTTPException(404, "POP não encontrado")
-    p = Path(tarefa.pop_pdf_path)
-    if not p.exists():
+    data = storage.download_sync(storage._to_storage_path(tarefa.pop_pdf_path))
+    if data is None:
         raise HTTPException(404, "Arquivo não encontrado")
     return Response(
-        content=p.read_bytes(),
+        content=data,
         media_type="application/pdf",
         headers={"Content-Disposition": f'inline; filename="POP_tarefa_{tarefa_id}.pdf"'},
     )

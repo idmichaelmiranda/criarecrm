@@ -1,28 +1,20 @@
-import json
 import smtplib
 import ssl
 import threading
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from pathlib import Path
 
-EMAIL_CONFIG_PATH = Path("uploads/email_config.json")
+_EMAIL_CONFIG_PATH = "configs/email_config.json"
 
 
 def get_config() -> dict | None:
-    if not EMAIL_CONFIG_PATH.exists():
-        return None
-    try:
-        return json.loads(EMAIL_CONFIG_PATH.read_text(encoding="utf-8"))
-    except Exception:
-        return None
+    from app.services import storage_service as storage
+    return storage.get_json_sync(_EMAIL_CONFIG_PATH)
 
 
 def save_config(data: dict) -> None:
-    EMAIL_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    EMAIL_CONFIG_PATH.write_text(
-        json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
+    from app.services import storage_service as storage
+    storage.put_json_sync(_EMAIL_CONFIG_PATH, data)
 
 
 def _smtp_send(cfg: dict, to_email: str, msg: MIMEMultipart) -> None:

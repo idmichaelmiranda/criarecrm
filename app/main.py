@@ -118,7 +118,9 @@ def _migrate_permissions(db: Session) -> None:
 
 import os
 os.makedirs("uploads/avatars", exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+from app.config import SUPABASE_URL as _SUPABASE_URL
+if not _SUPABASE_URL:
+    app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 
 @app.on_event("startup")
