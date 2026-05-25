@@ -574,6 +574,9 @@ async def analisar(arquivo: UploadFile = File(...)):
                 charset="UTF8",
             )
         except Exception as e:
+            import traceback
+            print(f"[BD-RESTORE] Erro ao conectar Firebird: {e}")
+            print(traceback.format_exc())
             raise HTTPException(
                 status_code=422,
                 detail=f"Não foi possível abrir o banco Firebird. Detalhe: {e}",
