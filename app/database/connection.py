@@ -8,8 +8,7 @@ IS_SQLITE = DATABASE_URL.startswith("sqlite")
 if IS_SQLITE:
     engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 else:
-    _url = make_url(DATABASE_URL)
-    engine = create_engine(_url, connect_args={"sslmode": "require"})
+    engine = create_engine(make_url(DATABASE_URL))
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
