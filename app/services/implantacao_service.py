@@ -96,6 +96,14 @@ def atualizar(db: Session, impl_id: int, data: ImplantacaoUpdate, usuario: str =
         setattr(impl, field, value)
     impl.updated_at = datetime.now()
 
+    if data.data_prevista is not None:
+        impl.sla_limite = data.data_prevista
+        if impl.data_conclusao:
+            impl.sla_status = "ok" if impl.data_conclusao <= data.data_prevista else "atrasada"
+        else:
+            dias = (data.data_prevista - date.today()).days
+            impl.sla_status = "atrasada" if dias < 0 else "critico" if dias <= 3 else "em_risco" if dias <= 7 else "ok"
+
     if data.status and data.status != old_status:
         if data.status == "concluida":
             impl.data_conclusao = date.today()
