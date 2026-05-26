@@ -435,20 +435,24 @@ def _sincronizar_etapas(db: Session, implantacao_id: int, usuario: str = "Sistem
     ).scalars().all()
 
     # Cache item counts per etapa to avoid redundant queries
+    # Considera TODOS os itens raiz não-arquivados (não só obrigatórios) para
+    # que a etapa conclua quando o usuário marca todos os cards, independente
+    # de como foram criados (template ou manual).
     etapa_stats: dict[int, tuple[int, int]] = {}  # etapa_id → (total, concluidos)
     for etapa in etapas:
         if etapa.status in ("pulada", "bloqueada"):
             etapa_stats[etapa.id] = (0, 0)
             continue
-        obrigatorios = db.execute(
+        ativos = db.execute(
             select(ChecklistItem).where(
                 ChecklistItem.etapa_id == etapa.id,
-                ChecklistItem.obrigatoria == True,
                 ChecklistItem.parent_id == None,  # noqa: E711
+                ChecklistItem.arquivado == False,  # noqa: E712
+                ChecklistItem.status != "nao_aplicavel",
             )
         ).scalars().all()
-        total = len(obrigatorios)
-        done = sum(1 for i in obrigatorios if i.status in ("concluido", "nao_aplicavel"))
+        total = len(ativos)
+        done = sum(1 for i in ativos if i.status == "concluido")
         etapa_stats[etapa.id] = (total, done)
 
     # Pass 1: advance/regress each etapa based on item state
@@ -471,7 +475,7 @@ def _sincronizar_etapas(db: Session, implantacao_id: int, usuario: str = "Sistem
             etapa.data_conclusao = None
             timeline_service.log(db, tipo="etapa_revertida",
                 titulo=f'Etapa "{etapa.nome}" reaberta', usuario=usuario,
-                descricao="Item obrigatório desmarcado.", icone="refresh",
+                descricao="Item desmarcado.", icone="refresh",
                 cor="#f59e0b", implantacao_id=implantacao_id)
 
         elif algum_feito and etapa.status == "pendente":
