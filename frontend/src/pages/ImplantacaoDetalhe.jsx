@@ -116,36 +116,90 @@ function PipelineRing({ etapa }) {
 
 // ── Pipeline ──────────────────────────────────────────────────────────────────
 
-function Pipeline({ etapas, onEtapaClick }) {
+function Pipeline({ etapas, onEtapaClick, onAddEtapa, onRenameEtapa }) {
+  const sorted = [...etapas].sort((a, b) => a.ordem - b.ordem);
+  const [editingId, setEditingId] = useState(null);
+  const [editNome, setEditNome]   = useState("");
+  const [saving, setSaving]       = useState(false);
+
+  function startEdit(etapa, e) {
+    e.stopPropagation();
+    setEditingId(etapa.id);
+    setEditNome(etapa.nome);
+  }
+
+  async function commitEdit() {
+    if (!editNome.trim() || saving) { setEditingId(null); return; }
+    setSaving(true);
+    try { await onRenameEtapa(editingId, editNome.trim()); }
+    catch { } finally { setSaving(false); setEditingId(null); }
+  }
+
   return (
     <div className="overflow-x-auto overflow-y-visible -mx-2 px-2">
       <div className="flex items-start gap-0 pt-2 pb-3">
-        {etapas.map((etapa, idx) => {
-          const active  = etapa.itens.filter((i) => i.status !== "nao_aplicavel");
-          const done    = active.filter((i) => i.status === "concluido").length;
-          const total   = active.length;
-          const allDone = total > 0 && done === total;
-          const isLast  = idx === etapas.length - 1;
+        {sorted.map((etapa, idx) => {
+          const active    = etapa.itens.filter((i) => i.status !== "nao_aplicavel");
+          const done      = active.filter((i) => i.status === "concluido").length;
+          const total     = active.length;
+          const allDone   = total > 0 && done === total;
+          const isLast    = idx === sorted.length - 1;
+          const isEditing = editingId === etapa.id;
+
           return (
             <div key={etapa.id} className="flex items-center">
-              <button
-                onClick={() => onEtapaClick(etapa.id)}
-                title={`${etapa.nome} — ${done}/${total} tarefas`}
-                className="flex flex-col items-center gap-2 min-w-[84px] group focus:outline-none"
-              >
-                <div className="transition-transform duration-150 group-hover:scale-110 group-hover:drop-shadow-md">
+              <div className="flex flex-col items-center gap-2 min-w-[84px] group">
+                <button
+                  onClick={() => !isEditing && onEtapaClick(etapa.id)}
+                  title={`${etapa.nome} — ${done}/${total} tarefas`}
+                  className="transition-transform duration-150 group-hover:scale-110 group-hover:drop-shadow-md focus:outline-none"
+                >
                   <PipelineRing etapa={etapa} />
-                </div>
-                <p className="text-[10px] font-medium text-gray-500 text-center leading-tight max-w-[76px] group-hover:text-orange-500 transition-colors">
-                  {etapa.nome}
-                </p>
-              </button>
+                </button>
+                {isEditing ? (
+                  <input
+                    autoFocus
+                    value={editNome}
+                    onChange={(e) => setEditNome(e.target.value)}
+                    onBlur={commitEdit}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") commitEdit();
+                      if (e.key === "Escape") setEditingId(null);
+                    }}
+                    className="text-[10px] w-[76px] text-center border border-orange-300 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-orange-400 bg-white"
+                  />
+                ) : (
+                  <button
+                    onClick={() => onEtapaClick(etapa.id)}
+                    onDoubleClick={(e) => startEdit(etapa, e)}
+                    title={`${etapa.nome} · Duplo clique para renomear`}
+                    className="text-[10px] font-medium text-gray-500 text-center leading-tight max-w-[76px] hover:text-orange-500 transition-colors"
+                  >
+                    {etapa.nome}
+                  </button>
+                )}
+              </div>
               {!isLast && (
                 <div className={`w-8 h-0.5 mb-6 shrink-0 ${allDone ? "bg-green-400" : "bg-gray-200"}`} />
               )}
             </div>
           );
         })}
+
+        {/* "+" ring ao final da pipeline */}
+        <div className="flex items-center">
+          <div className="w-6 h-0.5 mb-6 shrink-0 bg-gray-100" />
+          <button
+            onClick={onAddEtapa}
+            title="Adicionar nova etapa"
+            className="flex flex-col items-center gap-2 min-w-[60px] focus:outline-none group/add mb-4"
+          >
+            <div className="w-9 h-9 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 group-hover/add:border-orange-400 group-hover/add:text-orange-500 group-hover/add:bg-orange-50 transition-all">
+              <span className="text-lg leading-none font-light">+</span>
+            </div>
+            <p className="text-[10px] text-gray-400 group-hover/add:text-orange-500 transition-colors">Nova</p>
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -830,6 +884,7 @@ function KanbanColumn({ etapa, implId, somentePendentes, filterText, filterResp,
       {/* Column header */}
       <div className="px-3 pt-3 pb-2 shrink-0">
         <div className="flex items-center gap-1.5 mb-1.5">
+          <span className="text-gray-300 text-sm leading-none cursor-grab select-none shrink-0" title="Reordenar via menu ⋮">⠿</span>
           <span className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: etapa.cor || "#6366f1" }} />
           <p className="text-sm font-semibold text-gray-800 flex-1 min-w-0 truncate">{etapa.nome}</p>
 
@@ -981,15 +1036,18 @@ function IconCompress() {
 
 // ── Kanban Tab ────────────────────────────────────────────────────────────────
 
-function KanbanTab({ etapas, implId, somentePendentes, columnRefs, onRefresh, isExpanded }) {
+function KanbanTab({ etapas, implId, somentePendentes, columnRefs, onRefresh, isExpanded, showAddEtapa: propShowAdd, onSetShowAddEtapa }) {
   const [filterText, setFilterText]     = useState("");
   const [filterResp, setFilterResp]     = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [dragItem, setDragItem]         = useState(null);
   const [usuarios, setUsuarios]         = useState([]);
-  const [showAddEtapa, setShowAddEtapa] = useState(false);
+  const [localShowAdd, setLocalShowAdd] = useState(false);
   const [novaEtapa, setNovaEtapa]       = useState({ nome: "", cor: "#6366f1", sla_dias: 3 });
   const [savingEtapa, setSavingEtapa]   = useState(false);
+
+  const showAddEtapa = propShowAdd !== undefined ? propShowAdd : localShowAdd;
+  function setShowAddEtapa(v) { setLocalShowAdd(v); if (onSetShowAddEtapa) onSetShowAddEtapa(v); }
 
   useEffect(() => {
     usuariosApi.listar()
@@ -1418,6 +1476,7 @@ export default function ImplantacaoDetalhe() {
   const [showEdit, setShowEdit] = useState(false);
   const [somentePendentes, setSomentePendentes] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showAddEtapa, setShowAddEtapa] = useState(false);
   const columnRefs = useRef({});
 
   useEffect(() => {
@@ -1467,6 +1526,10 @@ export default function ImplantacaoDetalhe() {
   }
 
   if (!impl) return null;
+
+  async function handleRenameEtapa(etapaId, nome) {
+    try { await implantacoesApi.atualizarEtapa(impl.id, etapaId, { nome }); load(); } catch { }
+  }
 
   const slaColor =
     impl.status === "concluida" || impl.status === "cancelada" ? "text-gray-500" :
@@ -1554,7 +1617,12 @@ export default function ImplantacaoDetalhe() {
 
         {/* Pipeline */}
         {impl.etapas.length > 0 && (
-          <Pipeline etapas={impl.etapas} onEtapaClick={handlePipelineClick} />
+          <Pipeline
+            etapas={impl.etapas}
+            onEtapaClick={handlePipelineClick}
+            onAddEtapa={() => { setActiveTab("checklist"); setShowAddEtapa(true); }}
+            onRenameEtapa={handleRenameEtapa}
+          />
         )}
       </div>
 
@@ -1588,6 +1656,13 @@ export default function ImplantacaoDetalhe() {
             {activeTab === "checklist" && (
               <div className="pr-2 flex items-center gap-2">
                 <button
+                  onClick={() => setShowAddEtapa(true)}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-orange-500 hover:bg-orange-600 transition-colors"
+                >
+                  <span className="text-base leading-none font-light">+</span>
+                  Nova Etapa
+                </button>
+                <button
                   onClick={() => setSomentePendentes((v) => !v)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                     somentePendentes
@@ -1619,6 +1694,8 @@ export default function ImplantacaoDetalhe() {
               somentePendentes={somentePendentes}
               columnRefs={columnRefs}
               onRefresh={load}
+              showAddEtapa={showAddEtapa}
+              onSetShowAddEtapa={setShowAddEtapa}
             />
           )}
           {activeTab === "timeline"    && <TimelineTab timeline={impl.timeline} />}
@@ -1697,6 +1774,8 @@ export default function ImplantacaoDetalhe() {
               columnRefs={columnRefs}
               onRefresh={load}
               isExpanded={true}
+              showAddEtapa={showAddEtapa}
+              onSetShowAddEtapa={setShowAddEtapa}
             />
           </div>
         </div>
