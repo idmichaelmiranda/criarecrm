@@ -189,7 +189,7 @@ function TarefaRow({ tarefa, index, total, onUpdate, onDelete, onMoveUp, onMoveD
 
   return (
     <div className="group flex flex-col">
-      <div className="flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-gray-50 transition-colors">
+      <div className="flex items-start gap-2 py-1.5 px-2 rounded-lg hover:bg-gray-50 transition-colors">
 
         {/* Drag grip */}
         <span className="text-gray-300 group-hover:text-gray-400 transition-colors cursor-grab active:cursor-grabbing shrink-0">
@@ -206,12 +206,13 @@ function TarefaRow({ tarefa, index, total, onUpdate, onDelete, onMoveUp, onMoveD
         />
 
         {/* Título */}
-        <input
-          type="text"
+        <textarea
           value={tarefa.titulo}
           onChange={(e) => onUpdate({ ...tarefa, titulo: e.target.value })}
+          onInput={(e) => { e.target.style.height = "auto"; e.target.style.height = e.target.scrollHeight + "px"; }}
           placeholder="Descreva a tarefa..."
-          className="flex-1 text-sm bg-transparent border-b border-transparent hover:border-gray-200 focus:border-orange-400 focus:outline-none py-0.5 text-gray-800 placeholder-gray-300 transition-colors"
+          rows={1}
+          className="flex-1 text-sm bg-transparent border-b border-transparent hover:border-gray-200 focus:border-orange-400 focus:outline-none py-0.5 text-gray-800 placeholder-gray-300 transition-colors resize-none overflow-hidden leading-snug"
         />
 
         {/* Reorder buttons — aparecem no hover */}

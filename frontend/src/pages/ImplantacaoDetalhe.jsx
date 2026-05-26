@@ -336,15 +336,22 @@ function SubItemRow({ sub, implId, onRefresh }) {
   const [toggling, setToggling]         = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [editValue, setEditValue]       = useState(sub.titulo);
-  const isDone = sub.status === "concluido";
+  const [localDone, setLocalDone]       = useState(sub.status === "concluido");
+
+  useEffect(() => { setLocalDone(sub.status === "concluido"); }, [sub.status]);
+
+  const isDone = localDone;
 
   async function handleToggle() {
     if (toggling) return;
+    const newDone = !isDone;
+    setLocalDone(newDone); // optimistic
     setToggling(true);
     try {
-      await implantacoesApi.atualizarChecklist(sub.id, { status: isDone ? "pendente" : "concluido" });
+      await implantacoesApi.atualizarChecklist(sub.id, { status: newDone ? "concluido" : "pendente" });
       onRefresh();
-    } catch { } finally { setToggling(false); }
+    } catch { setLocalDone(isDone); } // revert on error
+    finally { setToggling(false); }
   }
 
   async function handleDelete() {
@@ -423,10 +430,14 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, isDragged, onD
   const [showAddSub, setShowAddSub]         = useState(false);
   const [editingTitle, setEditingTitle]     = useState(false);
   const [editTitleValue, setEditTitleValue] = useState(item.titulo);
+  const [localStatus, setLocalStatus]       = useState(item.status);
+
+  // Sync local status when parent data refreshes
+  useEffect(() => { setLocalStatus(item.status); }, [item.status]);
 
   const isCustom  = item.template_tarefa_id == null;
-  const isNA      = item.status === "nao_aplicavel";
-  const isDone    = item.status === "concluido";
+  const isNA      = localStatus === "nao_aplicavel";
+  const isDone    = localStatus === "concluido";
   const initials  = getInitials(item.responsavel);
   const days      = item.data_prazo ? daysDiff(item.data_prazo) : null;
   const subitens  = item.subitens || [];
@@ -456,18 +467,23 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, isDragged, onD
 
   async function handleToggle() {
     if (isNA || toggling) return;
+    const newStatus = isDone ? "pendente" : "concluido";
+    setLocalStatus(newStatus); // optimistic
     setToggling(true);
     try {
-      await implantacoesApi.atualizarChecklist(item.id, { status: isDone ? "pendente" : "concluido" });
-      onRefresh();
-    } catch { } finally { setToggling(false); }
+      await implantacoesApi.atualizarChecklist(item.id, { status: newStatus });
+      onRefresh(); // sync progress/stage in background
+    } catch { setLocalStatus(item.status); } // revert on error
+    finally { setToggling(false); }
   }
 
   async function handleToggleNA() {
+    const newStatus = isNA ? "pendente" : "nao_aplicavel";
+    setLocalStatus(newStatus); // optimistic
     try {
-      await implantacoesApi.atualizarChecklist(item.id, { status: isNA ? "pendente" : "nao_aplicavel" });
+      await implantacoesApi.atualizarChecklist(item.id, { status: newStatus });
       onRefresh();
-    } catch { }
+    } catch { setLocalStatus(item.status); }
   }
 
   async function handleDelete() {
@@ -724,39 +740,41 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, isDragged, onD
               <p className="text-[10px] text-green-600 mt-0.5">✅ {fmtDateTime(item.data_conclusao)}</p>
             )}
             {isNA && <p className="text-[10px] text-gray-400 mt-0.5">⊘ Não aplicável</p>}
-          </div>
 
-          {/* Hover actions */}
-          <div className={`flex items-center gap-1 shrink-0 transition-opacity mt-0.5 ${hovered ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
-            <button
-              onClick={() => { setShowNote((v) => !v); setNoteText(item.descricao || ""); }}
-              title={item.descricao ? "Editar nota" : "Adicionar nota"}
-              className={`w-6 h-6 rounded-md flex items-center justify-center text-[11px] transition-colors
-                ${item.descricao ? "text-blue-500 bg-blue-50 hover:bg-blue-100" : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"}`}
-            >
-              📝
-            </button>
-            <button
-              onClick={() => { setShowSubitens((v) => !v); if (!showSubitens) setShowAddSub(false); }}
-              title="Sub-itens"
-              className={`w-6 h-6 rounded-md flex items-center justify-center text-[11px] transition-colors
-                ${subitens.length > 0 ? "text-indigo-500 bg-indigo-50 hover:bg-indigo-100" : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"}`}
-            >
-              ☰
-            </button>
-            <button
-              onClick={handleToggleNA}
-              title={isNA ? "Reativar tarefa" : "Marcar como Não Aplicável"}
-              className={`w-6 h-6 rounded-md flex items-center justify-center text-[11px] transition-colors
-                ${isNA ? "text-indigo-500 bg-indigo-50 hover:bg-indigo-100" : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"}`}
-            >
-              ⊘
-            </button>
-            {isCustom && (
-              <button onClick={handleDelete} title="Remover tarefa"
-                className="w-6 h-6 rounded-md flex items-center justify-center text-[11px] text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors">
-                🗑
-              </button>
+            {/* Action bar — inside content, no longer competes with title width */}
+            {hovered && (
+              <div className="flex items-center gap-0.5 mt-2 pt-1.5 border-t border-gray-100">
+                <button
+                  onClick={() => { setShowNote((v) => !v); setNoteText(item.descricao || ""); }}
+                  title={item.descricao ? "Editar nota" : "Adicionar nota"}
+                  className={`w-6 h-6 rounded-md flex items-center justify-center text-[11px] transition-colors
+                    ${item.descricao ? "text-blue-500 bg-blue-50 hover:bg-blue-100" : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"}`}
+                >
+                  📝
+                </button>
+                <button
+                  onClick={() => { setShowSubitens((v) => !v); if (!showSubitens) setShowAddSub(false); }}
+                  title="Sub-itens"
+                  className={`w-6 h-6 rounded-md flex items-center justify-center text-[11px] transition-colors
+                    ${subitens.length > 0 ? "text-indigo-500 bg-indigo-50 hover:bg-indigo-100" : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"}`}
+                >
+                  ☰
+                </button>
+                <button
+                  onClick={handleToggleNA}
+                  title={isNA ? "Reativar tarefa" : "Marcar como Não Aplicável"}
+                  className={`w-6 h-6 rounded-md flex items-center justify-center text-[11px] transition-colors
+                    ${isNA ? "text-indigo-500 bg-indigo-50 hover:bg-indigo-100" : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"}`}
+                >
+                  ⊘
+                </button>
+                {isCustom && (
+                  <button onClick={handleDelete} title="Remover tarefa"
+                    className="w-6 h-6 rounded-md flex items-center justify-center text-[11px] text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors">
+                    🗑
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -1802,6 +1820,13 @@ export default function ImplantacaoDetalhe() {
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setShowAddEtapa(true)}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-orange-500 hover:bg-orange-600 transition-colors"
+              >
+                <span className="text-base leading-none font-light">+</span>
+                Nova Etapa
+              </button>
               <button
                 onClick={() => setSomentePendentes((v) => !v)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
