@@ -333,7 +333,9 @@ function EditEtapaModal({ etapa, implId, onClose, onSaved }) {
 // ── Sub-item Row ──────────────────────────────────────────────────────────────
 
 function SubItemRow({ sub, implId, onRefresh }) {
-  const [toggling, setToggling] = useState(false);
+  const [toggling, setToggling]         = useState(false);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [editValue, setEditValue]       = useState(sub.titulo);
   const isDone = sub.status === "concluido";
 
   async function handleToggle() {
@@ -353,6 +355,16 @@ function SubItemRow({ sub, implId, onRefresh }) {
     } catch { }
   }
 
+  async function handleSaveTitle() {
+    const trimmed = editValue.trim();
+    setEditingTitle(false);
+    if (!trimmed || trimmed === sub.titulo) return;
+    try {
+      await implantacoesApi.atualizarChecklist(sub.id, { titulo: trimmed });
+      onRefresh();
+    } catch { setEditValue(sub.titulo); }
+  }
+
   return (
     <div className="flex items-center gap-2 py-1 group/sub">
       <button
@@ -363,9 +375,27 @@ function SubItemRow({ sub, implId, onRefresh }) {
       >
         {isDone && <span className="text-white text-[7px] font-bold leading-none">✓</span>}
       </button>
-      <span className={`flex-1 text-xs leading-snug ${isDone ? "line-through text-gray-400" : "text-gray-600"}`}>
-        {sub.titulo}
-      </span>
+      {editingTitle ? (
+        <input
+          autoFocus
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onBlur={handleSaveTitle}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleSaveTitle();
+            if (e.key === "Escape") { setEditingTitle(false); setEditValue(sub.titulo); }
+          }}
+          className="flex-1 text-xs border border-orange-300 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-orange-400 bg-white text-gray-700"
+        />
+      ) : (
+        <span
+          onDoubleClick={() => { if (!isDone) { setEditingTitle(true); setEditValue(sub.titulo); } }}
+          title={!isDone ? "Duplo clique para renomear" : undefined}
+          className={`flex-1 text-xs leading-snug ${isDone ? "line-through text-gray-400" : "text-gray-600 cursor-text"}`}
+        >
+          {sub.titulo}
+        </span>
+      )}
       <button
         onClick={handleDelete}
         className="opacity-0 group-hover/sub:opacity-100 w-4 h-4 rounded flex items-center justify-center text-gray-400 hover:text-red-400 hover:bg-red-50 transition-all text-[10px]"
