@@ -206,7 +206,8 @@ def kpis(db: Session = Depends(get_db)):
         if impl.sla_status == "ok" and dias_restantes is not None:
             sla_dias_list.append(dias_restantes)
 
-        active_items = [i for i in impl.checklist if i.status != "nao_aplicavel"]
+        root_items   = [i for i in impl.checklist if not i.parent_id and i.etapa_id is not None]
+        active_items = [i for i in root_items if i.status != "nao_aplicavel"]
         done_items   = [i for i in active_items if i.status == "concluido"]
         live_progresso = round((len(done_items) / len(active_items)) * 100) if active_items else 0
 
