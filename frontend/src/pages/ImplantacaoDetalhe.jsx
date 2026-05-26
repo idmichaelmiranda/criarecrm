@@ -68,7 +68,7 @@ function Spinner() {
 // ── Pipeline Ring ─────────────────────────────────────────────────────────────
 
 function PipelineRing({ etapa }) {
-  const active = etapa.itens.filter((i) => i.status !== "nao_aplicavel");
+  const active = etapa.itens.filter((i) => !i.parent_id && i.status !== "nao_aplicavel");
   const done   = active.filter((i) => i.status === "concluido").length;
   const total  = active.length;
   const pct    = total > 0 ? done / total : 0;
@@ -139,7 +139,7 @@ function Pipeline({ etapas, onEtapaClick, onAddEtapa, onRenameEtapa }) {
     <div className="overflow-x-auto overflow-y-visible -mx-2 px-2">
       <div className="flex items-start gap-0 pt-2 pb-3">
         {sorted.map((etapa, idx) => {
-          const active    = etapa.itens.filter((i) => i.status !== "nao_aplicavel");
+          const active    = etapa.itens.filter((i) => !i.parent_id && i.status !== "nao_aplicavel");
           const done      = active.filter((i) => i.status === "concluido").length;
           const total     = active.length;
           const allDone   = total > 0 && done === total;
@@ -890,7 +890,7 @@ function KanbanColumn({ etapa, implId, somentePendentes, filterText, filterResp,
     );
   }
 
-  const activeItens = etapa.itens.filter((i) => i.status !== "nao_aplicavel");
+  const activeItens = etapa.itens.filter((i) => !i.parent_id && i.status !== "nao_aplicavel");
   const done  = activeItens.filter((i) => i.status === "concluido").length;
   const total = activeItens.length;
   const pct   = total > 0 ? Math.round((done / total) * 100) : 0;
@@ -1654,7 +1654,7 @@ export default function ImplantacaoDetalhe() {
     impl.sla_status === "critico"  ? "text-amber-600 font-semibold" :
     "text-gray-600";
 
-  const allItems     = impl.etapas.flatMap((e) => e.itens);
+  const allItems     = impl.etapas.flatMap((e) => e.itens.filter((i) => !i.parent_id));
   const activeItems  = allItems.filter((i) => i.status !== "nao_aplicavel");
   const doneItems    = activeItems.filter((i) => i.status === "concluido");
   const liveProgress = activeItems.length > 0 ? Math.round((doneItems.length / activeItems.length) * 100) : 0;

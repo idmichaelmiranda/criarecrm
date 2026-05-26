@@ -188,7 +188,7 @@ def _gerar_pipeline(db: Session, implantacao: Implantacao, template: Template) -
             for subtarefa in sorted(tarefa.subitens, key=lambda x: x.ordem):
                 db.add(ChecklistItem(
                     implantacao_id=implantacao.id,
-                    etapa_id=etapa.id,
+                    etapa_id=None,
                     template_tarefa_id=subtarefa.id,
                     titulo=subtarefa.titulo,
                     descricao=subtarefa.descricao,

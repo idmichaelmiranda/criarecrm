@@ -209,7 +209,7 @@ def kpis(db: Session = Depends(get_db)):
         root_items   = [i for i in impl.checklist if not i.parent_id and i.etapa_id is not None]
         active_items = [i for i in root_items if i.status != "nao_aplicavel"]
         done_items   = [i for i in active_items if i.status == "concluido"]
-        live_progresso = round((len(done_items) / len(active_items)) * 100) if active_items else 0
+        live_progresso = int((len(done_items) / len(active_items)) * 100 + 0.5) if active_items else 0
 
         # Dias na etapa atual (gargalo)
         etapa_ativa = next((e for e in impl.etapas if e.status == "em_andamento"), None)

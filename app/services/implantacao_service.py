@@ -396,7 +396,7 @@ def _recalcular_progresso(db: Session, implantacao_id: int) -> None:
     ).scalar_one()
     impl = db.get(Implantacao, implantacao_id)
     if impl:
-        impl.progresso = round((concluidos / total) * 100) if total > 0 else 0
+        impl.progresso = int((concluidos / total) * 100 + 0.5) if total > 0 else 0
         impl.updated_at = datetime.now()
 
 

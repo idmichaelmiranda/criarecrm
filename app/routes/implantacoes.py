@@ -36,7 +36,7 @@ def listar(
         root = [i for i in impl.checklist if not i.parent_id and i.etapa_id is not None]
         active = [i for i in root if i.status != "nao_aplicavel"]
         done   = [i for i in active if i.status == "concluido"]
-        live_progresso = round((len(done) / len(active)) * 100) if active else 0
+        live_progresso = int((len(done) / len(active)) * 100 + 0.5) if active else 0
 
         hoje = date.today()
         vencidas = sum(

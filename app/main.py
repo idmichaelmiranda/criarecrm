@@ -87,6 +87,12 @@ def _migrate_sqlite():
                 conn.commit()
             except Exception:
                 pass  # coluna já existe
+        # Corrige sub-itens criados com etapa_id incorreto (devem ter etapa_id=NULL)
+        try:
+            conn.execute(text("UPDATE checklist_itens SET etapa_id = NULL WHERE parent_id IS NOT NULL"))
+            conn.commit()
+        except Exception:
+            pass
         # Marca stubs gerados pelo ERP como origem='erp'
         try:
             conn.execute(text("UPDATE clientes SET origem='erp' WHERE (email LIKE 'erp_%@erp.local') AND origem='triagem'"))
@@ -126,6 +132,12 @@ def _migrate_postgres() -> None:
                 conn.commit()
             except Exception:
                 pass
+        # Corrige sub-itens criados com etapa_id incorreto (devem ter etapa_id=NULL)
+        try:
+            conn.execute(text("UPDATE checklist_itens SET etapa_id = NULL WHERE parent_id IS NOT NULL"))
+            conn.commit()
+        except Exception:
+            pass
 
 
 def _migrate_permissions(db: Session) -> None:
