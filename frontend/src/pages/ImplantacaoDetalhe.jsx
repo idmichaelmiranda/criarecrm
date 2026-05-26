@@ -435,7 +435,7 @@ function SubItemRow({ sub, implId, onRefresh, onOptimisticToggle }) {
 
 // ── Kanban Card ───────────────────────────────────────────────────────────────
 
-function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticToggle, isDragged, onDragStart, onDragEnd }) {
+function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticToggle, isDragged, onDragStart, onDragEnd, onMoveUp, onMoveDown }) {
   const [hovered, setHovered]         = useState(false);
   const [showNote, setShowNote]       = useState(false);
   const [noteText, setNoteText]       = useState(item.descricao || "");
@@ -809,6 +809,18 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
                 >
                   ⊘
                 </button>
+                {onMoveUp && (
+                  <button onClick={onMoveUp} title="Mover para cima"
+                    className="w-6 h-6 rounded-md flex items-center justify-center text-[11px] text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
+                    ▲
+                  </button>
+                )}
+                {onMoveDown && (
+                  <button onClick={onMoveDown} title="Mover para baixo"
+                    className="w-6 h-6 rounded-md flex items-center justify-center text-[11px] text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
+                    ▼
+                  </button>
+                )}
                 <button
                   onClick={handleArchive}
                   title={item.arquivado ? "Desarquivar tarefa" : "Arquivar tarefa"}
@@ -1012,6 +1024,22 @@ function KanbanColumn({ etapa, implId, somentePendentes, filterText, filterResp,
     await onMoveItem(dragItem.id, etapa.id);
   }
 
+  async function handleReorderItem(itemId, direction) {
+    const sorted = [...items].sort((a, b) => a.ordem - b.ordem);
+    const idx = sorted.findIndex((i) => i.id === itemId);
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= sorted.length) return;
+    const swap = sorted[swapIdx];
+    const cur  = sorted[idx];
+    try {
+      await implantacoesApi.reordenarChecklist(implId, [
+        { id: cur.id,  ordem: swap.ordem },
+        { id: swap.id, ordem: cur.ordem },
+      ]);
+      onRefresh();
+    } catch { }
+  }
+
   return (
     <div
       ref={columnRef}
@@ -1081,7 +1109,7 @@ function KanbanColumn({ etapa, implId, somentePendentes, filterText, filterResp,
 
       {/* Cards */}
       <div className="flex-1 overflow-y-auto px-2 py-1 space-y-2 min-h-0">
-        {items.map((item) => (
+        {items.map((item, idx) => (
           <KanbanCard
             key={item.id}
             item={item}
@@ -1093,6 +1121,8 @@ function KanbanColumn({ etapa, implId, somentePendentes, filterText, filterResp,
             isDragged={dragItem?.id === item.id}
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
+            onMoveUp={idx > 0 ? () => handleReorderItem(item.id, "up") : null}
+            onMoveDown={idx < items.length - 1 ? () => handleReorderItem(item.id, "down") : null}
           />
         ))}
         {items.length === 0 && !isDropTarget && (

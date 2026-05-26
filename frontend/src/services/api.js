@@ -88,6 +88,7 @@ export const implantacoesApi = {
   criarEtapa: (implId, data) => api.post(`/implantacoes/${implId}/etapas`, data),
   deletarEtapa: (implId, etapaId) => api.delete(`/implantacoes/${implId}/etapas/${etapaId}`),
   reordenarEtapas: (implId, ordens) => api.post(`/implantacoes/${implId}/etapas/reordenar`, { ordens }),
+  reordenarChecklist: (implId, ordens) => api.post(`/implantacoes/${implId}/checklist/reordenar`, { ordens }),
 };
 
 // ── Clientes ─────────────────────────────────────────────────────────────────

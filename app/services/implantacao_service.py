@@ -184,6 +184,14 @@ def deletar_checklist_item(db: Session, item_id: int) -> None:
     db.commit()
 
 
+def reordenar_checklist_itens(db: Session, ordens: list[dict]) -> None:
+    for entry in ordens:
+        item = db.get(ChecklistItem, entry["id"])
+        if item:
+            item.ordem = entry["ordem"]
+    db.commit()
+
+
 def atualizar_etapa(db: Session, implantacao_id: int, etapa_id: int, data: EtapaPropsUpdate, usuario: str = "Sistema") -> ImplantacaoEtapa:
     etapa = db.get(ImplantacaoEtapa, etapa_id)
     if not etapa or etapa.implantacao_id != implantacao_id:

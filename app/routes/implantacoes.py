@@ -7,7 +7,7 @@ from app.dependencies.auth import get_current_user
 from app.models.usuario import Usuario
 from app.schemas.implantacao import (
     ImplantacaoListResponse, ImplantacaoFullResponse, ImplantacaoUpdate,
-    ChecklistItemResponse, ChecklistItemUpdate, ChecklistItemCreate,
+    ChecklistItemResponse, ChecklistItemUpdate, ChecklistItemCreate, ChecklistReorder,
     EtapaResponse, EtapaManualUpdate, EtapaCreate, EtapaPropsUpdate, EtapaReorder,
     ComentarioCreate, ComentarioResponse,
 )
@@ -87,6 +87,12 @@ def atualizar_item(item_id: int, data: ChecklistItemUpdate, db: Session = Depend
 @router.delete("/checklist/{item_id}", status_code=204)
 def deletar_item(item_id: int, db: Session = Depends(get_db)):
     implantacao_service.deletar_checklist_item(db, item_id)
+
+
+@router.post("/{impl_id}/checklist/reordenar", status_code=200)
+def reordenar_checklist(impl_id: int, data: ChecklistReorder, db: Session = Depends(get_db)):
+    implantacao_service.reordenar_checklist_itens(db, data.ordens)
+    return {"ok": True}
 
 
 @router.patch("/{impl_id}/etapas/{etapa_id}", response_model=EtapaResponse)

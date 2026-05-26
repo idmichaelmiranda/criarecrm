@@ -71,6 +71,10 @@ class EtapaReorder(BaseModel):
     ordens: list[dict]  # [{id: int, ordem: int}]
 
 
+class ChecklistReorder(BaseModel):
+    ordens: list[dict]  # [{id: int, ordem: int}]
+
+
 class EtapaResponse(BaseModel):
     id: int
     nome: str
