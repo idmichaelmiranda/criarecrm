@@ -120,6 +120,9 @@ def atualizar_checklist_item(db: Session, item_id: int, data: ChecklistItemUpdat
         if item.parent_id:
             _sincronizar_pai(db, item.parent_id, data.status)
 
+    if data.titulo is not None:
+        item.titulo = data.titulo.strip() or item.titulo
+
     if data.descricao is not None:
         item.descricao = data.descricao.strip() or None
 
