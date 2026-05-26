@@ -21,11 +21,21 @@ router = APIRouter(prefix="/templates", tags=["templates"])
 def _load(template_id: int, db: Session) -> Template:
     t = db.execute(
         select(Template)
-        .options(selectinload(Template.etapas).selectinload(TemplateEtapa.tarefas))
+        .options(
+            selectinload(Template.etapas)
+            .selectinload(TemplateEtapa.tarefas)
+            .selectinload(TemplateTarefa.subitens)
+        )
         .where(Template.id == template_id)
     ).scalar_one_or_none()
     if not t:
         raise HTTPException(404, "Template não encontrado")
+    # Expõe apenas tarefas raiz na etapa; subitens acessíveis via tarefa.subitens
+    for etapa in t.etapas:
+        etapa.tarefas = sorted(
+            [tarefa for tarefa in etapa.tarefas if tarefa.parent_id is None],
+            key=lambda x: x.ordem,
+        )
     return t
 
 
@@ -171,6 +181,18 @@ def adicionar_tarefa(etapa_id: int, data: TarefaCreate, db: Session = Depends(ge
     db.commit()
     db.refresh(tarefa)
     return tarefa
+
+
+@router.post("/tarefas/{tarefa_id}/subitens", response_model=TemplateTarefaResponse, status_code=201)
+def adicionar_subtarefa(tarefa_id: int, data: TarefaCreate, db: Session = Depends(get_db)):
+    parent = db.get(TemplateTarefa, tarefa_id)
+    if not parent:
+        raise HTTPException(404, "Tarefa não encontrada")
+    sub = TemplateTarefa(etapa_id=parent.etapa_id, parent_id=tarefa_id, **data.model_dump())
+    db.add(sub)
+    db.commit()
+    db.refresh(sub)
+    return sub
 
 
 @router.patch("/tarefas/{tarefa_id}", response_model=TemplateTarefaResponse)

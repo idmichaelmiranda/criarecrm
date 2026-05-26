@@ -99,7 +99,7 @@ def _checklist_from_template(tipo: str, db: Session) -> list[tuple[str, bool]]:
         tarefas = db.execute(
             select(TemplateTarefa)
             .join(TemplateEtapa)
-            .where(TemplateEtapa.template_id == t.id)
+            .where(TemplateEtapa.template_id == t.id, TemplateTarefa.parent_id == None)  # noqa: E711
             .order_by(TemplateEtapa.ordem, TemplateTarefa.ordem)
         ).scalars().all()
         if tarefas:

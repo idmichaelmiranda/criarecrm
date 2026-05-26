@@ -113,6 +113,7 @@ export const templatesApi = {
   atualizarEtapa: (etapaId, data) => api.patch(`/templates/etapas/${etapaId}`, data),
   deletarEtapa: (etapaId) => api.delete(`/templates/etapas/${etapaId}`),
   adicionarTarefa: (etapaId, data) => api.post(`/templates/etapas/${etapaId}/tarefas`, data),
+  adicionarSubTarefa: (tarefaId, data) => api.post(`/templates/tarefas/${tarefaId}/subitens`, data),
   atualizarTarefa: (tarefaId, data) => api.patch(`/templates/tarefas/${tarefaId}`, data),
   deletarTarefa: (tarefaId) => api.delete(`/templates/tarefas/${tarefaId}`),
   // POP geral do template

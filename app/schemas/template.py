@@ -4,13 +4,18 @@ from pydantic import BaseModel
 
 class TemplateTarefaResponse(BaseModel):
     id: int
+    parent_id: int | None = None
     titulo: str
     descricao: str | None
     obrigatoria: bool
     ordem: int
     pop_pdf_path: str | None = None
+    subitens: list["TemplateTarefaResponse"] = []
 
     model_config = {"from_attributes": True}
+
+
+TemplateTarefaResponse.model_rebuild()
 
 
 class TemplateEtapaResponse(BaseModel):

@@ -345,13 +345,15 @@ def adicionar_comentario(db: Session, impl_id: int, usuario: str, conteudo: str)
 # ── Helpers internos ──────────────────────────────────────────────────────────
 
 def _recalcular_progresso(db: Session, implantacao_id: int) -> None:
-    # Exclude N/A items and sub-items (parent_id IS NOT NULL)
+    # Apenas itens raiz em etapas (etapa_id IS NOT NULL) — mesma base do frontend.
+    # Itens órfãos (etapa_id NULL) são ignorados para não distorcer o progresso.
     total = db.execute(
         select(func.count()).select_from(ChecklistItem)
         .where(
             ChecklistItem.implantacao_id == implantacao_id,
             ChecklistItem.status != "nao_aplicavel",
             ChecklistItem.parent_id == None,  # noqa: E711
+            ChecklistItem.etapa_id != None,  # noqa: E711
         )
     ).scalar_one()
     concluidos = db.execute(
@@ -360,6 +362,7 @@ def _recalcular_progresso(db: Session, implantacao_id: int) -> None:
             ChecklistItem.implantacao_id == implantacao_id,
             ChecklistItem.status == "concluido",
             ChecklistItem.parent_id == None,  # noqa: E711
+            ChecklistItem.etapa_id != None,  # noqa: E711
         )
     ).scalar_one()
     impl = db.get(Implantacao, implantacao_id)

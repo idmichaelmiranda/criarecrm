@@ -143,9 +143,38 @@ function PopGeral({ templateId, popPath, onUpdated }) {
 
 function TarefaRow({ tarefa, index, total, onUpdate, onDelete, onMoveUp, onMoveDown }) {
   const fileRef                   = useRef(null);
+  const textareaRef               = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [removing,  setRemoving]  = useState(false);
   const [popError,  setPopError]  = useState("");
+  const [showSubs,  setShowSubs]  = useState((tarefa.subitens || []).length > 0);
+
+  // Auto-resize textarea on mount so existing long text wraps correctly
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+  }, []);
+
+  function addSubitem() {
+    const subitens = [...(tarefa.subitens || []), { _key: Date.now(), id: null, titulo: "", obrigatoria: false, ordem: (tarefa.subitens?.length || 0) + 1 }];
+    onUpdate({ ...tarefa, subitens });
+    setShowSubs(true);
+  }
+
+  function updateSubitem(idx, titulo) {
+    const subitens = [...(tarefa.subitens || [])];
+    subitens[idx] = { ...subitens[idx], titulo };
+    onUpdate({ ...tarefa, subitens });
+  }
+
+  function deleteSubitem(idx) {
+    const sub = tarefa.subitens[idx];
+    const subitens = tarefa.subitens.filter((_, i) => i !== idx);
+    const _deletedSubitemIds = [...(tarefa._deletedSubitemIds || []), ...(sub.id ? [sub.id] : [])];
+    onUpdate({ ...tarefa, subitens, _deletedSubitemIds });
+  }
 
   const hasPop   = Boolean(tarefa.pop_pdf_path);
   const isSaved  = Boolean(tarefa.id);
@@ -207,6 +236,7 @@ function TarefaRow({ tarefa, index, total, onUpdate, onDelete, onMoveUp, onMoveD
 
         {/* Título */}
         <textarea
+          ref={textareaRef}
           value={tarefa.titulo}
           onChange={(e) => onUpdate({ ...tarefa, titulo: e.target.value })}
           onInput={(e) => { e.target.style.height = "auto"; e.target.style.height = e.target.scrollHeight + "px"; }}
@@ -214,6 +244,20 @@ function TarefaRow({ tarefa, index, total, onUpdate, onDelete, onMoveUp, onMoveD
           rows={1}
           className="flex-1 text-sm bg-transparent border-b border-transparent hover:border-gray-200 focus:border-orange-400 focus:outline-none py-0.5 text-gray-800 placeholder-gray-300 transition-colors resize-none overflow-hidden leading-snug"
         />
+
+        {/* Sub-items badge / toggle */}
+        <button
+          type="button"
+          onClick={() => setShowSubs((v) => !v)}
+          title="Sub-itens"
+          className={`shrink-0 flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded transition-colors
+            ${(tarefa.subitens || []).length > 0
+              ? "bg-indigo-50 text-indigo-500 hover:bg-indigo-100"
+              : "opacity-0 group-hover:opacity-100 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+            }`}
+        >
+          ☰ {(tarefa.subitens || []).length > 0 && <span>{tarefa.subitens.length}</span>}
+        </button>
 
         {/* Reorder buttons — aparecem no hover */}
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
@@ -277,6 +321,43 @@ function TarefaRow({ tarefa, index, total, onUpdate, onDelete, onMoveUp, onMoveD
 
       {popError && <p className="text-[10px] text-red-500 ml-10 -mt-0.5">{popError}</p>}
       <input ref={fileRef} type="file" accept=".pdf" className="hidden" onChange={handleFileChange} />
+
+      {/* Sub-items panel */}
+      {showSubs && (
+        <div className="ml-10 pl-3 border-l-2 border-gray-100 mt-0.5 pb-1 space-y-0.5">
+          {(tarefa.subitens || []).map((sub, si) => (
+            <div key={sub._key ?? sub.id} className="flex items-center gap-1.5 group/sub py-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+              <input
+                type="text"
+                value={sub.titulo}
+                onChange={(e) => updateSubitem(si, e.target.value)}
+                placeholder="Descrição do sub-item..."
+                className="flex-1 text-xs bg-transparent border-b border-transparent hover:border-gray-200 focus:border-orange-400 focus:outline-none py-0.5 text-gray-700 placeholder-gray-300 transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => deleteSubitem(si)}
+                className="opacity-0 group-hover/sub:opacity-100 w-4 h-4 flex items-center justify-center rounded text-gray-300 hover:text-red-400 hover:bg-red-50 transition-all shrink-0"
+              >
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={addSubitem}
+            className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-orange-500 transition-colors pt-0.5"
+          >
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            sub-item
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -291,7 +372,7 @@ function EtapaCard({ etapa, index, total, onUpdate, onDelete, onMoveUp, onMoveDo
       ...etapa,
       tarefas: [
         ...etapa.tarefas,
-        { _key: Date.now(), id: null, titulo: "", obrigatoria: true, ordem: etapa.tarefas.length + 1 },
+        { _key: Date.now(), id: null, titulo: "", obrigatoria: true, ordem: etapa.tarefas.length + 1, subitens: [], _deletedSubitemIds: [] },
       ],
     });
   }
@@ -471,7 +552,12 @@ export default function TemplateEditor() {
         setEtapas(data.etapas.map((e) => ({
           ...e,
           _deletedTarefaIds: [],
-          tarefas: e.tarefas.map((t) => ({ ...t, _key: t.id })),
+          tarefas: e.tarefas.map((t) => ({
+            ...t,
+            _key: t.id,
+            subitens: (t.subitens || []).map((s) => ({ ...s, _key: s.id })),
+            _deletedSubitemIds: [],
+          })),
         })));
       })
       .catch(() => setError("Erro ao carregar template."))
@@ -551,14 +637,32 @@ export default function TemplateEditor() {
         for (let j = 0; j < etapa.tarefas.length; j++) {
           const tarefa = { ...etapa.tarefas[j], ordem: j + 1 };
           if (!tarefa.titulo.trim()) continue;
+          let tarefaFinalId = tarefa.id;
           if (!tarefa.id) {
-            await templatesApi.adicionarTarefa(etapaId, {
+            const { data: t } = await templatesApi.adicionarTarefa(etapaId, {
               titulo: tarefa.titulo, obrigatoria: tarefa.obrigatoria, ordem: tarefa.ordem,
             });
+            tarefaFinalId = t.id;
           } else {
             await templatesApi.atualizarTarefa(tarefa.id, {
               titulo: tarefa.titulo, obrigatoria: tarefa.obrigatoria, ordem: tarefa.ordem,
             });
+          }
+
+          for (const sid of tarefa._deletedSubitemIds || []) await templatesApi.deletarTarefa(sid);
+
+          for (let k = 0; k < (tarefa.subitens || []).length; k++) {
+            const sub = { ...tarefa.subitens[k], ordem: k + 1 };
+            if (!sub.titulo.trim()) continue;
+            if (!sub.id) {
+              await templatesApi.adicionarSubTarefa(tarefaFinalId, {
+                titulo: sub.titulo, obrigatoria: false, ordem: sub.ordem,
+              });
+            } else {
+              await templatesApi.atualizarTarefa(sub.id, {
+                titulo: sub.titulo, obrigatoria: false, ordem: sub.ordem,
+              });
+            }
           }
         }
       }

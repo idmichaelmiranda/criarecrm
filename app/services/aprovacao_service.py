@@ -146,9 +146,13 @@ def _dispatch_aprovacao_email(email: str, razao_social: str, codigo: str) -> Non
 def _gerar_pipeline(db: Session, implantacao: Implantacao, template: Template) -> None:
     from app.models.template import TemplateEtapa
 
+    from app.models.template import TemplateTarefa
     etapas_template = db.execute(
         select(TemplateEtapa)
-        .options(selectinload(TemplateEtapa.tarefas))
+        .options(
+            selectinload(TemplateEtapa.tarefas)
+            .selectinload(TemplateTarefa.subitens)
+        )
         .where(TemplateEtapa.template_id == template.id)
         .order_by(TemplateEtapa.ordem)
     ).scalars().all()
@@ -167,7 +171,8 @@ def _gerar_pipeline(db: Session, implantacao: Implantacao, template: Template) -
         db.add(etapa)
         db.flush()
 
-        for tarefa in sorted(t_etapa.tarefas, key=lambda x: x.ordem):
+        root_tarefas = sorted([t for t in t_etapa.tarefas if t.parent_id is None], key=lambda x: x.ordem)
+        for tarefa in root_tarefas:
             item = ChecklistItem(
                 implantacao_id=implantacao.id,
                 etapa_id=etapa.id,
@@ -178,3 +183,16 @@ def _gerar_pipeline(db: Session, implantacao: Implantacao, template: Template) -
                 ordem=tarefa.ordem,
             )
             db.add(item)
+            db.flush()
+
+            for subtarefa in sorted(tarefa.subitens, key=lambda x: x.ordem):
+                db.add(ChecklistItem(
+                    implantacao_id=implantacao.id,
+                    etapa_id=etapa.id,
+                    template_tarefa_id=subtarefa.id,
+                    titulo=subtarefa.titulo,
+                    descricao=subtarefa.descricao,
+                    obrigatoria=subtarefa.obrigatoria,
+                    ordem=subtarefa.ordem,
+                    parent_id=item.id,
+                ))

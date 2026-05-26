@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from typing import Optional
 from sqlalchemy import String, Text, Integer, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database.connection import Base
@@ -45,6 +46,7 @@ class TemplateTarefa(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     etapa_id: Mapped[int] = mapped_column(ForeignKey("template_etapas.id"), nullable=False)
+    parent_id: Mapped[Optional[int]] = mapped_column(ForeignKey("template_tarefas.id"), nullable=True)
     titulo: Mapped[str] = mapped_column(String(200), nullable=False)
     descricao: Mapped[str] = mapped_column(Text, nullable=True)
     obrigatoria: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
@@ -52,3 +54,10 @@ class TemplateTarefa(Base):
     pop_pdf_path: Mapped[str] = mapped_column(String(500), nullable=True)
 
     etapa: Mapped["TemplateEtapa"] = relationship("TemplateEtapa", back_populates="tarefas")
+    subitens: Mapped[list["TemplateTarefa"]] = relationship(
+        "TemplateTarefa",
+        primaryjoin="TemplateTarefa.parent_id == TemplateTarefa.id",
+        foreign_keys="[TemplateTarefa.parent_id]",
+        cascade="all, delete-orphan",
+        order_by="TemplateTarefa.ordem",
+    )
