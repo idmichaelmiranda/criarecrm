@@ -40,7 +40,7 @@ def listar(
 
         hoje = date.today()
         vencidas = sum(
-            1 for i in root
+            1 for i in _roots
             if i.data_prazo and i.data_prazo < hoje and i.status not in ("concluido", "nao_aplicavel")
         )
 
