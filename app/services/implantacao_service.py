@@ -11,6 +11,40 @@ from app.schemas.implantacao import ImplantacaoUpdate, ChecklistItemUpdate, Chec
 from app.services import timeline_service
 
 
+# ── Leaf-item progress helpers ────────────────────────────────────────────────
+
+def _build_subs_index(all_items: list) -> dict:
+    """Builds parent_id → [sub_items] index from a flat item list."""
+    idx: dict = {}
+    for item in all_items:
+        if item.parent_id:
+            idx.setdefault(item.parent_id, []).append(item)
+    return idx
+
+
+def _leaf_counts(roots: list, subs_by_parent: dict) -> tuple[int, int]:
+    """Counts (total_active, done) using leaf-item logic:
+    - If a root item has non-archived sub-items → count the sub-items.
+    - Otherwise → count the root item itself.
+    nao_aplicavel and arquivado items are excluded from both numerator and denominator."""
+    total = done = 0
+    for item in roots:
+        if item.arquivado:
+            continue
+        active_subs = [
+            s for s in subs_by_parent.get(item.id, [])
+            if not s.arquivado and s.status != "nao_aplicavel"
+        ]
+        if active_subs:
+            total += len(active_subs)
+            done += sum(1 for s in active_subs if s.status == "concluido")
+        elif item.status != "nao_aplicavel":
+            total += 1
+            if item.status == "concluido":
+                done += 1
+    return total, done
+
+
 def get_all(
     db: Session,
     status: str | None = None,
@@ -388,31 +422,20 @@ def _sincronizar_pai(db: Session, parent_id: int, sub_novo_status: str) -> None:
 
 
 def _recalcular_progresso(db: Session, implantacao_id: int) -> None:
-    # Apenas itens raiz em etapas (etapa_id IS NOT NULL) — mesma base do frontend.
-    # Itens órfãos (etapa_id NULL) são ignorados para não distorcer o progresso.
-    total = db.execute(
-        select(func.count()).select_from(ChecklistItem)
-        .where(
+    all_items = db.execute(
+        select(ChecklistItem).where(
             ChecklistItem.implantacao_id == implantacao_id,
-            ChecklistItem.status != "nao_aplicavel",
-            ChecklistItem.parent_id == None,  # noqa: E711
-            ChecklistItem.etapa_id != None,  # noqa: E711
             ChecklistItem.arquivado == False,  # noqa: E712
         )
-    ).scalar_one()
-    concluidos = db.execute(
-        select(func.count()).select_from(ChecklistItem)
-        .where(
-            ChecklistItem.implantacao_id == implantacao_id,
-            ChecklistItem.status == "concluido",
-            ChecklistItem.parent_id == None,  # noqa: E711
-            ChecklistItem.etapa_id != None,  # noqa: E711
-            ChecklistItem.arquivado == False,  # noqa: E712
-        )
-    ).scalar_one()
+    ).scalars().all()
+
+    subs_index = _build_subs_index(all_items)
+    roots = [i for i in all_items if not i.parent_id and i.etapa_id is not None]
+    total, done = _leaf_counts(roots, subs_index)
+
     impl = db.get(Implantacao, implantacao_id)
     if impl:
-        impl.progresso = int((concluidos / total) * 100 + 0.5) if total > 0 else 0
+        impl.progresso = int((done / total) * 100 + 0.5) if total > 0 else 0
         impl.updated_at = datetime.now()
 
 
@@ -434,25 +457,27 @@ def _sincronizar_etapas(db: Session, implantacao_id: int, usuario: str = "Sistem
         .order_by(ImplantacaoEtapa.ordem)
     ).scalars().all()
 
-    # Cache item counts per etapa to avoid redundant queries
-    # Considera TODOS os itens raiz não-arquivados (não só obrigatórios) para
-    # que a etapa conclua quando o usuário marca todos os cards, independente
-    # de como foram criados (template ou manual).
-    etapa_stats: dict[int, tuple[int, int]] = {}  # etapa_id → (total, concluidos)
+    # Load ALL items once and build per-etapa leaf counts (avoids N+1 queries)
+    all_items = db.execute(
+        select(ChecklistItem).where(
+            ChecklistItem.implantacao_id == implantacao_id,
+            ChecklistItem.arquivado == False,  # noqa: E712
+        )
+    ).scalars().all()
+
+    subs_index = _build_subs_index(all_items)
+    roots_by_etapa: dict[int, list] = {}
+    for item in all_items:
+        if not item.parent_id and item.etapa_id:
+            roots_by_etapa.setdefault(item.etapa_id, []).append(item)
+
+    etapa_stats: dict[int, tuple[int, int]] = {}  # etapa_id → (total, done)
     for etapa in etapas:
         if etapa.status in ("pulada", "bloqueada"):
             etapa_stats[etapa.id] = (0, 0)
             continue
-        ativos = db.execute(
-            select(ChecklistItem).where(
-                ChecklistItem.etapa_id == etapa.id,
-                ChecklistItem.parent_id == None,  # noqa: E711
-                ChecklistItem.arquivado == False,  # noqa: E712
-                ChecklistItem.status != "nao_aplicavel",
-            )
-        ).scalars().all()
-        total = len(ativos)
-        done = sum(1 for i in ativos if i.status == "concluido")
+        roots = roots_by_etapa.get(etapa.id, [])
+        total, done = _leaf_counts(roots, subs_index)
         etapa_stats[etapa.id] = (total, done)
 
     # Pass 1: advance/regress each etapa based on item state

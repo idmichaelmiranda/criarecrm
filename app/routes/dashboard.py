@@ -9,6 +9,7 @@ from app.models.implantacao import Implantacao
 from app.models.checklist import ChecklistItem
 from app.models.cliente import Cliente
 from app.models.timeline import TimelineEvento
+from app.services import implantacao_service
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -206,10 +207,10 @@ def kpis(db: Session = Depends(get_db)):
         if impl.sla_status == "ok" and dias_restantes is not None:
             sla_dias_list.append(dias_restantes)
 
-        root_items   = [i for i in impl.checklist if not i.parent_id and i.etapa_id is not None and not i.arquivado]
-        active_items = [i for i in root_items if i.status != "nao_aplicavel"]
-        done_items   = [i for i in active_items if i.status == "concluido"]
-        live_progresso = int((len(done_items) / len(active_items)) * 100 + 0.5) if active_items else 0
+        _subs   = implantacao_service._build_subs_index(impl.checklist)
+        _roots  = [i for i in impl.checklist if not i.parent_id and i.etapa_id is not None and not i.arquivado]
+        _total, _done = implantacao_service._leaf_counts(_roots, _subs)
+        live_progresso = int((_done / _total) * 100 + 0.5) if _total else 0
 
         # Dias na etapa atual (gargalo)
         etapa_ativa = next((e for e in impl.etapas if e.status == "em_andamento"), None)

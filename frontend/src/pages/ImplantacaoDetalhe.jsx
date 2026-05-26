@@ -7,6 +7,30 @@ import { fmtDate, fmtDateTime } from "../utils/dateUtils";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+/**
+ * Leaf-item progress: if a root item has non-archived sub-items, count those;
+ * otherwise count the root item. Matches backend _leaf_counts logic exactly.
+ * @param {Array} rootItems - root-level items of an etapa (item.subitens populated)
+ * @returns {{ total: number, done: number }}
+ */
+function leafProgress(rootItems) {
+  let total = 0, done = 0;
+  for (const item of rootItems) {
+    if (item.arquivado) continue;
+    const activeSubs = (item.subitens || []).filter(
+      (s) => !s.arquivado && s.status !== "nao_aplicavel"
+    );
+    if (activeSubs.length > 0) {
+      total += activeSubs.length;
+      done  += activeSubs.filter((s) => s.status === "concluido").length;
+    } else if (item.status !== "nao_aplicavel") {
+      total += 1;
+      if (item.status === "concluido") done += 1;
+    }
+  }
+  return { total, done };
+}
+
 function getInitials(name) {
   if (!name) return null;
   return name.trim().split(/\s+/).slice(0, 2).map((n) => n[0].toUpperCase()).join("");
@@ -68,9 +92,7 @@ function Spinner() {
 // ── Pipeline Ring ─────────────────────────────────────────────────────────────
 
 function PipelineRing({ etapa }) {
-  const active = etapa.itens.filter((i) => !i.parent_id && !i.arquivado && i.status !== "nao_aplicavel");
-  const done   = active.filter((i) => i.status === "concluido").length;
-  const total  = active.length;
+  const { total, done } = leafProgress(etapa.itens);
   const pct    = total > 0 ? done / total : 0;
   const allDone = total > 0 && done === total;
 
@@ -139,9 +161,7 @@ function Pipeline({ etapas, onEtapaClick, onAddEtapa, onRenameEtapa }) {
     <div className="overflow-x-auto overflow-y-visible -mx-2 px-2">
       <div className="flex items-start gap-0 pt-2 pb-3">
         {sorted.map((etapa, idx) => {
-          const active    = etapa.itens.filter((i) => !i.parent_id && !i.arquivado && i.status !== "nao_aplicavel");
-          const done      = active.filter((i) => i.status === "concluido").length;
-          const total     = active.length;
+          const { total, done } = leafProgress(etapa.itens);
           const allDone   = total > 0 && done === total;
           const isLast    = idx === sorted.length - 1;
           const isEditing = editingId === etapa.id;
@@ -956,10 +976,8 @@ function KanbanColumn({ etapa, implId, somentePendentes, filterText, filterResp,
     );
   }
 
-  const activeItens = etapa.itens.filter((i) => !i.parent_id && !i.arquivado && i.status !== "nao_aplicavel");
-  const done  = activeItens.filter((i) => i.status === "concluido").length;
-  const total = activeItens.length;
-  const pct   = total > 0 ? Math.round((done / total) * 100) : 0;
+  const { total, done } = leafProgress(etapa.itens);
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
   const isDropTarget = isDragOver && dragItem && dragItem.sourceEtapaId !== etapa.id;
 
@@ -1769,11 +1787,12 @@ export default function ImplantacaoDetalhe() {
     impl.sla_status === "critico"  ? "text-amber-600 font-semibold" :
     "text-gray-600";
 
-  const allItems     = impl.etapas.flatMap((e) => e.itens.filter((i) => !i.parent_id && !i.arquivado));
-  const activeItems  = allItems.filter((i) => i.status !== "nao_aplicavel");
-  const doneItems    = activeItems.filter((i) => i.status === "concluido");
-  const liveProgress = activeItems.length > 0 ? Math.round((doneItems.length / activeItems.length) * 100) : 0;
-  const pendingItems = activeItems.length - doneItems.length;
+  const { total: lpTotal, done: lpDone } = impl.etapas.reduce(
+    (acc, e) => { const r = leafProgress(e.itens); return { total: acc.total + r.total, done: acc.done + r.done }; },
+    { total: 0, done: 0 }
+  );
+  const liveProgress = lpTotal > 0 ? Math.round((lpDone / lpTotal) * 100) : 0;
+  const pendingItems = lpTotal - lpDone;
 
   return (
     <Layout>

@@ -33,10 +33,10 @@ def listar(
         # Conta apenas itens em etapas (etapa_id não nulo) para ser consistente
         # com o cálculo da página de detalhe, que itera impl.etapas[].itens.
         # Itens órfãos (etapa_id=None) são excluídos para evitar distorção.
-        root = [i for i in impl.checklist if not i.parent_id and i.etapa_id is not None and not i.arquivado]
-        active = [i for i in root if i.status != "nao_aplicavel"]
-        done   = [i for i in active if i.status == "concluido"]
-        live_progresso = int((len(done) / len(active)) * 100 + 0.5) if active else 0
+        _subs = implantacao_service._build_subs_index(impl.checklist)
+        _roots = [i for i in impl.checklist if not i.parent_id and i.etapa_id is not None and not i.arquivado]
+        _total, _done = implantacao_service._leaf_counts(_roots, _subs)
+        live_progresso = int((_done / _total) * 100 + 0.5) if _total else 0
 
         hoje = date.today()
         vencidas = sum(
