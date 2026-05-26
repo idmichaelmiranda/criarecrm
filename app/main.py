@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,10 +25,32 @@ from app.routes.bd_restore import router as bd_restore_router
 from app.routes.instalacoes import router as instalacoes_router
 from app.dependencies.auth import get_current_user
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    Base.metadata.create_all(bind=engine)
+    _migrate_sqlite()
+    _migrate_postgres()
+    db = SessionLocal()
+    try:
+        _seed_templates(db)
+        _seed_auth(db)
+        _migrate_permissions(db)
+        from app.services import sla_service
+        n = sla_service.recalculate(db)
+        if n:
+            print(f"[SLA] Startup: {n} implantacao(es) recalculadas")
+    finally:
+        db.close()
+    from app.services import sla_service
+    sla_service.start_worker()
+    yield
+
+
 app = FastAPI(
     title="CriareCRM",
     description="Plataforma Operacional de Implantações",
     version="2.0.0",
+    lifespan=lifespan,
 )
 
 from app.config import FRONTEND_URL
@@ -159,25 +182,6 @@ from app.config import SUPABASE_URL as _SUPABASE_URL
 if not _SUPABASE_URL:
     app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
-
-@app.on_event("startup")
-def startup():
-    Base.metadata.create_all(bind=engine)
-    _migrate_sqlite()
-    _migrate_postgres()
-    db = SessionLocal()
-    try:
-        _seed_templates(db)
-        _seed_auth(db)
-        _migrate_permissions(db)
-        from app.services import sla_service
-        n = sla_service.recalculate(db)
-        if n:
-            print(f"[SLA] Startup: {n} implantacao(es) recalculadas")
-    finally:
-        db.close()
-    from app.services import sla_service
-    sla_service.start_worker()
 
 
 # ── Rotas públicas (sem auth) ─────────────────────────────────────────────────
