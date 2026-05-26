@@ -5,7 +5,7 @@ import { Badge, PrioridadeBadge } from "../components/ui/Badge";
 import { solicitacoesApi, templatesApi, clientesApi } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { BANCOS_BR } from "../data/bancos";
-import { fmtDate, fmtDateTime } from "../utils/dateUtils";
+import { fmtDate, fmtDateTime, parseUTC } from "../utils/dateUtils";
 import { maskPhone, maskCnpj, maskCpf } from "../hooks/useCnpj";
 
 const TERMINAL_STATUSES = ["aprovada", "recusada", "cancelada"];
@@ -15,7 +15,7 @@ function slaRelativo(sol) {
   if (!sol.sla_limite) return null;
 
   const isCliente = sol.status === "aguardando_correcao";
-  const diff = new Date(sol.sla_limite) - Date.now();
+  const diff = parseUTC(sol.sla_limite) - Date.now();
 
   if (diff < 0) {
     if (isCliente) return { label: "Link expirado", level: "expired", isCliente: true };

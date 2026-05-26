@@ -332,7 +332,7 @@ function EditEtapaModal({ etapa, implId, onClose, onSaved }) {
 
 // ── Sub-item Row ──────────────────────────────────────────────────────────────
 
-function SubItemRow({ sub, implId, onRefresh }) {
+function SubItemRow({ sub, implId, onRefresh, onOptimisticToggle }) {
   const [toggling, setToggling]         = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [editValue, setEditValue]       = useState(sub.titulo);
@@ -345,12 +345,17 @@ function SubItemRow({ sub, implId, onRefresh }) {
   async function handleToggle() {
     if (toggling) return;
     const newDone = !isDone;
-    setLocalDone(newDone); // optimistic
+    const newStatus = newDone ? "concluido" : "pendente";
+    setLocalDone(newDone);
+    onOptimisticToggle?.(sub.id, newStatus);
     setToggling(true);
     try {
-      await implantacoesApi.atualizarChecklist(sub.id, { status: newDone ? "concluido" : "pendente" });
+      await implantacoesApi.atualizarChecklist(sub.id, { status: newStatus });
       onRefresh();
-    } catch { setLocalDone(isDone); } // revert on error
+    } catch {
+      setLocalDone(isDone);
+      onOptimisticToggle?.(sub.id, sub.status);
+    }
     finally { setToggling(false); }
   }
 
@@ -415,7 +420,7 @@ function SubItemRow({ sub, implId, onRefresh }) {
 
 // ── Kanban Card ───────────────────────────────────────────────────────────────
 
-function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, isDragged, onDragStart, onDragEnd }) {
+function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticToggle, isDragged, onDragStart, onDragEnd }) {
   const [hovered, setHovered]         = useState(false);
   const [showNote, setShowNote]       = useState(false);
   const [noteText, setNoteText]       = useState(item.descricao || "");
@@ -468,22 +473,30 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, isDragged, onD
   async function handleToggle() {
     if (isNA || toggling) return;
     const newStatus = isDone ? "pendente" : "concluido";
-    setLocalStatus(newStatus); // optimistic
+    setLocalStatus(newStatus);
+    onOptimisticToggle?.(item.id, newStatus);
     setToggling(true);
     try {
       await implantacoesApi.atualizarChecklist(item.id, { status: newStatus });
-      onRefresh(); // sync progress/stage in background
-    } catch { setLocalStatus(item.status); } // revert on error
+      onRefresh();
+    } catch {
+      setLocalStatus(item.status);
+      onOptimisticToggle?.(item.id, item.status);
+    }
     finally { setToggling(false); }
   }
 
   async function handleToggleNA() {
     const newStatus = isNA ? "pendente" : "nao_aplicavel";
-    setLocalStatus(newStatus); // optimistic
+    setLocalStatus(newStatus);
+    onOptimisticToggle?.(item.id, newStatus);
     try {
       await implantacoesApi.atualizarChecklist(item.id, { status: newStatus });
       onRefresh();
-    } catch { setLocalStatus(item.status); }
+    } catch {
+      setLocalStatus(item.status);
+      onOptimisticToggle?.(item.id, item.status);
+    }
   }
 
   async function handleDelete() {
@@ -785,7 +798,7 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, isDragged, onD
         <div className="px-3 pb-3 pt-0 border-t border-gray-100">
           <div className="pt-2 space-y-0.5">
             {subitens.map((sub) => (
-              <SubItemRow key={sub.id} sub={sub} implId={implId} onRefresh={onRefresh} />
+              <SubItemRow key={sub.id} sub={sub} implId={implId} onRefresh={onRefresh} onOptimisticToggle={onOptimisticToggle} />
             ))}
             {showAddSub ? (
               <div className="flex items-center gap-1.5 pt-1">
@@ -851,7 +864,7 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, isDragged, onD
 
 // ── Kanban Column ─────────────────────────────────────────────────────────────
 
-function KanbanColumn({ etapa, implId, somentePendentes, filterText, filterResp, filterStatus, columnRef, onRefresh, isExpanded, dragItem, onDragStart, onDragEnd, onMoveItem, usuarios, isFirst, isLast, onMoveLeft, onMoveRight, onDelete }) {
+function KanbanColumn({ etapa, implId, somentePendentes, filterText, filterResp, filterStatus, columnRef, onRefresh, onOptimisticToggle, isExpanded, dragItem, onDragStart, onDragEnd, onMoveItem, usuarios, isFirst, isLast, onMoveLeft, onMoveRight, onDelete }) {
   const [showAdd, setShowAdd]       = useState(false);
   const [newTitle, setNewTitle]     = useState("");
   const [showMenu, setShowMenu]     = useState(false);
@@ -1022,6 +1035,7 @@ function KanbanColumn({ etapa, implId, somentePendentes, filterText, filterResp,
             etapaId={etapa.id}
             usuarios={usuarios}
             onRefresh={onRefresh}
+            onOptimisticToggle={onOptimisticToggle}
             isDragged={dragItem?.id === item.id}
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
@@ -1114,7 +1128,7 @@ function IconCompress() {
 
 // ── Kanban Tab ────────────────────────────────────────────────────────────────
 
-function KanbanTab({ etapas, implId, somentePendentes, columnRefs, onRefresh, isExpanded, showAddEtapa: propShowAdd, onSetShowAddEtapa }) {
+function KanbanTab({ etapas, implId, somentePendentes, columnRefs, onRefresh, onOptimisticToggle, isExpanded, showAddEtapa: propShowAdd, onSetShowAddEtapa }) {
   const [filterText, setFilterText]     = useState("");
   const [filterResp, setFilterResp]     = useState("");
   const [filterStatus, setFilterStatus] = useState("");
@@ -1233,6 +1247,7 @@ function KanbanTab({ etapas, implId, somentePendentes, columnRefs, onRefresh, is
             filterStatus={filterStatus}
             columnRef={(el) => { if (el) columnRefs.current[etapa.id] = el; }}
             onRefresh={onRefresh}
+            onOptimisticToggle={onOptimisticToggle}
             isExpanded={isExpanded}
             dragItem={dragItem}
             onDragStart={setDragItem}
@@ -1609,6 +1624,20 @@ export default function ImplantacaoDetalhe() {
     try { await implantacoesApi.atualizarEtapa(impl.id, etapaId, { nome }); load(); } catch { }
   }
 
+  function handleOptimisticToggle(itemId, newStatus) {
+    setImpl(prev => ({
+      ...prev,
+      etapas: prev.etapas.map(etapa => ({
+        ...etapa,
+        itens: etapa.itens.map(item => {
+          if (item.id === itemId) return { ...item, status: newStatus };
+          if (!item.subitens?.length) return item;
+          return { ...item, subitens: item.subitens.map(sub => sub.id === itemId ? { ...sub, status: newStatus } : sub) };
+        }),
+      })),
+    }));
+  }
+
   const slaColor =
     impl.status === "concluida" || impl.status === "cancelada" ? "text-gray-500" :
     impl.sla_status === "atrasada" ? "text-red-600 font-semibold" :
@@ -1772,6 +1801,7 @@ export default function ImplantacaoDetalhe() {
               somentePendentes={somentePendentes}
               columnRefs={columnRefs}
               onRefresh={load}
+              onOptimisticToggle={handleOptimisticToggle}
               showAddEtapa={showAddEtapa}
               onSetShowAddEtapa={setShowAddEtapa}
             />
@@ -1858,6 +1888,7 @@ export default function ImplantacaoDetalhe() {
               somentePendentes={somentePendentes}
               columnRefs={columnRefs}
               onRefresh={load}
+              onOptimisticToggle={handleOptimisticToggle}
               isExpanded={true}
               showAddEtapa={showAddEtapa}
               onSetShowAddEtapa={setShowAddEtapa}
