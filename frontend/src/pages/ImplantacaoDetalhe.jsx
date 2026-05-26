@@ -1632,7 +1632,15 @@ export default function ImplantacaoDetalhe() {
         itens: etapa.itens.map(item => {
           if (item.id === itemId) return { ...item, status: newStatus };
           if (!item.subitens?.length) return item;
-          return { ...item, subitens: item.subitens.map(sub => sub.id === itemId ? { ...sub, status: newStatus } : sub) };
+          const isSub = item.subitens.some(s => s.id === itemId);
+          if (!isSub) return item;
+          const updatedSubs = item.subitens.map(s => s.id === itemId ? { ...s, status: newStatus } : s);
+          const allDone = updatedSubs.every(s => s.status === "concluido" || s.status === "nao_aplicavel");
+          const anyPending = updatedSubs.some(s => s.status === "pendente");
+          let parentStatus = item.status;
+          if (allDone) parentStatus = "concluido";
+          else if (anyPending && item.status === "concluido") parentStatus = "pendente";
+          return { ...item, status: parentStatus, subitens: updatedSubs };
         }),
       })),
     }));

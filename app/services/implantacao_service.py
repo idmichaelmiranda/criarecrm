@@ -116,6 +116,10 @@ def atualizar_checklist_item(db: Session, item_id: int, data: ChecklistItemUpdat
         elif data.status in ("pendente", "nao_aplicavel", "bloqueado"):
             item.data_conclusao = None
 
+        # Se é um sub-item, sincroniza o pai automaticamente
+        if item.parent_id:
+            _sincronizar_pai(db, item.parent_id)
+
     if data.descricao is not None:
         item.descricao = data.descricao.strip() or None
 
@@ -343,6 +347,26 @@ def adicionar_comentario(db: Session, impl_id: int, usuario: str, conteudo: str)
 
 
 # ── Helpers internos ──────────────────────────────────────────────────────────
+
+def _sincronizar_pai(db: Session, parent_id: int) -> None:
+    """Auto-completa ou reabre o pai com base no estado de todos os sub-itens."""
+    parent = db.get(ChecklistItem, parent_id)
+    if not parent:
+        return
+    subitens = db.execute(
+        select(ChecklistItem).where(ChecklistItem.parent_id == parent_id)
+    ).scalars().all()
+    if not subitens:
+        return
+    todos_feitos = all(s.status in ("concluido", "nao_aplicavel") for s in subitens)
+    algum_pendente = any(s.status == "pendente" for s in subitens)
+    if todos_feitos and parent.status != "concluido":
+        parent.status = "concluido"
+        parent.data_conclusao = datetime.now()
+    elif algum_pendente and parent.status == "concluido":
+        parent.status = "pendente"
+        parent.data_conclusao = None
+
 
 def _recalcular_progresso(db: Session, implantacao_id: int) -> None:
     # Apenas itens raiz em etapas (etapa_id IS NOT NULL) — mesma base do frontend.
