@@ -75,6 +75,7 @@ def _migrate_sqlite():
         "ALTER TABLE clientes ADD COLUMN origem VARCHAR(20) NOT NULL DEFAULT 'triagem'",
         "ALTER TABLE solicitacoes ADD COLUMN campos_correcao JSON",
         "ALTER TABLE solicitacoes ADD COLUMN historico_recusas JSON",
+        "ALTER TABLE checklist_itens ADD COLUMN parent_id INTEGER REFERENCES checklist_itens(id)",
     ]
     with engine.connect() as conn:
         for ddl in new_cols:
@@ -103,6 +104,24 @@ def _migrate_sqlite():
             pass
 
 
+def _migrate_postgres() -> None:
+    """Adiciona colunas novas em tabelas PostgreSQL existentes. No-op em SQLite."""
+    from app.database.connection import IS_SQLITE
+    if IS_SQLITE:
+        return
+    from sqlalchemy import text
+    new_cols = [
+        "ALTER TABLE checklist_itens ADD COLUMN IF NOT EXISTS parent_id INTEGER REFERENCES checklist_itens(id)",
+    ]
+    with engine.connect() as conn:
+        for ddl in new_cols:
+            try:
+                conn.execute(text(ddl))
+                conn.commit()
+            except Exception:
+                pass
+
+
 def _migrate_permissions(db: Session) -> None:
     """Garante que o grupo Administrador sempre tenha todas as permissões definidas em ALL_PERMISSIONS."""
     admin = db.execute(select(GrupoPermissao).where(GrupoPermissao.nome == "Administrador")).scalar_one_or_none()
@@ -127,6 +146,7 @@ if not _SUPABASE_URL:
 def startup():
     Base.metadata.create_all(bind=engine)
     _migrate_sqlite()
+    _migrate_postgres()
     db = SessionLocal()
     try:
         _seed_templates(db)

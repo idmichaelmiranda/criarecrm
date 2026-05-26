@@ -7,7 +7,7 @@ from app.models.implantacao import Implantacao
 from app.models.etapa import ImplantacaoEtapa
 from app.models.checklist import ChecklistItem
 from app.models.cliente import Cliente
-from app.schemas.implantacao import ImplantacaoUpdate, ChecklistItemUpdate, ChecklistItemCreate, EtapaManualUpdate
+from app.schemas.implantacao import ImplantacaoUpdate, ChecklistItemUpdate, ChecklistItemCreate, EtapaManualUpdate, EtapaCreate, EtapaPropsUpdate
 from app.services import timeline_service
 
 
@@ -41,6 +41,7 @@ def get_by_id(db: Session, impl_id: int) -> Implantacao:
         .options(
             selectinload(Implantacao.cliente),
             selectinload(Implantacao.etapas).selectinload(ImplantacaoEtapa.itens).selectinload(ChecklistItem.template_tarefa),
+            selectinload(Implantacao.etapas).selectinload(ImplantacaoEtapa.itens).selectinload(ChecklistItem.subitens),
             selectinload(Implantacao.timeline),
             selectinload(Implantacao.comentarios),
         )
@@ -173,47 +174,150 @@ def deletar_checklist_item(db: Session, item_id: int) -> None:
     db.commit()
 
 
-def atualizar_etapa(db: Session, implantacao_id: int, etapa_id: int, data: EtapaManualUpdate, usuario: str = "Sistema") -> ImplantacaoEtapa:
+def atualizar_etapa(db: Session, implantacao_id: int, etapa_id: int, data: EtapaPropsUpdate, usuario: str = "Sistema") -> ImplantacaoEtapa:
     etapa = db.get(ImplantacaoEtapa, etapa_id)
     if not etapa or etapa.implantacao_id != implantacao_id:
         raise HTTPException(404, "Etapa não encontrada")
 
-    old_status = etapa.status
-    etapa.status = data.status
+    if data.nome is not None:
+        etapa.nome = data.nome.strip()
+    if data.cor is not None:
+        etapa.cor = data.cor
+    if data.sla_dias is not None:
+        etapa.sla_dias = data.sla_dias
 
-    if data.status == "em_andamento" and old_status != "em_andamento":
-        etapa.data_inicio = etapa.data_inicio or datetime.now()
-    elif data.status == "concluida":
-        etapa.data_conclusao = datetime.now()
-        proxima = db.execute(
-            select(ImplantacaoEtapa).where(
-                ImplantacaoEtapa.implantacao_id == implantacao_id,
-                ImplantacaoEtapa.ordem == etapa.ordem + 1,
-            )
-        ).scalar_one_or_none()
-        if proxima and proxima.status == "pendente":
-            proxima.status = "em_andamento"
-            proxima.data_inicio = proxima.data_inicio or datetime.now()
-    elif data.status in ("pendente", "pulada"):
-        etapa.data_conclusao = None
+    if data.status is not None:
+        old_status = etapa.status
+        etapa.status = data.status
 
-    _labels = {
-        "em_andamento": "Em Andamento", "concluida": "Concluída",
-        "pulada": "Pulada", "pendente": "Pendente", "bloqueada": "Bloqueada",
-    }
+        if data.status == "em_andamento" and old_status != "em_andamento":
+            etapa.data_inicio = etapa.data_inicio or datetime.now()
+        elif data.status == "concluida":
+            etapa.data_conclusao = datetime.now()
+            proxima = db.execute(
+                select(ImplantacaoEtapa).where(
+                    ImplantacaoEtapa.implantacao_id == implantacao_id,
+                    ImplantacaoEtapa.ordem == etapa.ordem + 1,
+                )
+            ).scalar_one_or_none()
+            if proxima and proxima.status == "pendente":
+                proxima.status = "em_andamento"
+                proxima.data_inicio = proxima.data_inicio or datetime.now()
+        elif data.status in ("pendente", "pulada"):
+            etapa.data_conclusao = None
+
+        _labels = {
+            "em_andamento": "Em Andamento", "concluida": "Concluída",
+            "pulada": "Pulada", "pendente": "Pendente", "bloqueada": "Bloqueada",
+        }
+        timeline_service.log(
+            db,
+            tipo="etapa_status_alterado",
+            titulo=f'Etapa "{etapa.nome}" → {_labels.get(data.status, data.status)}',
+            usuario=usuario,
+            icone="flag",
+            cor="#6366f1",
+            implantacao_id=implantacao_id,
+        )
+
+    db.commit()
+    db.refresh(etapa)
+    return etapa
+
+
+def criar_etapa(db: Session, implantacao_id: int, data: EtapaCreate, usuario: str = "Sistema") -> ImplantacaoEtapa:
+    impl = db.get(Implantacao, implantacao_id)
+    if not impl:
+        raise HTTPException(404, "Implantação não encontrada")
+
+    max_ordem = db.execute(
+        select(func.coalesce(func.max(ImplantacaoEtapa.ordem), 0))
+        .where(ImplantacaoEtapa.implantacao_id == implantacao_id)
+    ).scalar_one()
+
+    etapa = ImplantacaoEtapa(
+        implantacao_id=implantacao_id,
+        nome=data.nome.strip(),
+        cor=data.cor,
+        sla_dias=data.sla_dias,
+        ordem=max_ordem + 1,
+        status="pendente",
+    )
+    db.add(etapa)
     timeline_service.log(
         db,
-        tipo="etapa_status_alterado",
-        titulo=f'Etapa "{etapa.nome}" → {_labels.get(data.status, data.status)}',
+        tipo="etapa_criada",
+        titulo=f'Etapa "{data.nome}" adicionada',
         usuario=usuario,
         icone="flag",
         cor="#6366f1",
         implantacao_id=implantacao_id,
     )
-
     db.commit()
     db.refresh(etapa)
     return etapa
+
+
+def deletar_etapa(db: Session, implantacao_id: int, etapa_id: int, usuario: str = "Sistema") -> None:
+    etapa = db.get(ImplantacaoEtapa, etapa_id)
+    if not etapa or etapa.implantacao_id != implantacao_id:
+        raise HTTPException(404, "Etapa não encontrada")
+
+    nome = etapa.nome
+    # Move orphan items to no-stage (etapa_id = None) so they are not lost
+    itens = db.execute(
+        select(ChecklistItem).where(ChecklistItem.etapa_id == etapa_id)
+    ).scalars().all()
+    for item in itens:
+        item.etapa_id = None
+
+    db.delete(etapa)
+    timeline_service.log(
+        db,
+        tipo="etapa_removida",
+        titulo=f'Etapa "{nome}" removida',
+        usuario=usuario,
+        icone="flag",
+        cor="#ef4444",
+        implantacao_id=implantacao_id,
+    )
+    db.commit()
+
+
+def reordenar_etapas(db: Session, implantacao_id: int, ordens: list[dict]) -> None:
+    for entry in ordens:
+        etapa = db.get(ImplantacaoEtapa, entry["id"])
+        if etapa and etapa.implantacao_id == implantacao_id:
+            etapa.ordem = entry["ordem"]
+    db.commit()
+
+
+def criar_subitem(db: Session, implantacao_id: int, parent_id: int, data: ChecklistItemCreate) -> ChecklistItem:
+    parent = db.get(ChecklistItem, parent_id)
+    if not parent or parent.implantacao_id != implantacao_id:
+        raise HTTPException(404, "Item pai não encontrado")
+
+    max_ordem = db.execute(
+        select(func.coalesce(func.max(ChecklistItem.ordem), 0))
+        .where(ChecklistItem.parent_id == parent_id)
+    ).scalar_one()
+
+    subitem = ChecklistItem(
+        implantacao_id=implantacao_id,
+        parent_id=parent_id,
+        etapa_id=None,
+        titulo=data.titulo.strip(),
+        descricao=data.descricao,
+        obrigatoria=False,
+        ordem=max_ordem + 1,
+        status="pendente",
+        responsavel=data.responsavel,
+        data_prazo=data.data_prazo,
+    )
+    db.add(subitem)
+    db.commit()
+    db.refresh(subitem)
+    return subitem
 
 
 def adicionar_comentario(db: Session, impl_id: int, usuario: str, conteudo: str):
@@ -241,12 +345,13 @@ def adicionar_comentario(db: Session, impl_id: int, usuario: str, conteudo: str)
 # ── Helpers internos ──────────────────────────────────────────────────────────
 
 def _recalcular_progresso(db: Session, implantacao_id: int) -> None:
-    # Exclude N/A items — they are neither done nor pending
+    # Exclude N/A items and sub-items (parent_id IS NOT NULL)
     total = db.execute(
         select(func.count()).select_from(ChecklistItem)
         .where(
             ChecklistItem.implantacao_id == implantacao_id,
             ChecklistItem.status != "nao_aplicavel",
+            ChecklistItem.parent_id == None,  # noqa: E711
         )
     ).scalar_one()
     concluidos = db.execute(
@@ -254,6 +359,7 @@ def _recalcular_progresso(db: Session, implantacao_id: int) -> None:
         .where(
             ChecklistItem.implantacao_id == implantacao_id,
             ChecklistItem.status == "concluido",
+            ChecklistItem.parent_id == None,  # noqa: E711
         )
     ).scalar_one()
     impl = db.get(Implantacao, implantacao_id)
@@ -290,6 +396,7 @@ def _sincronizar_etapas(db: Session, implantacao_id: int, usuario: str = "Sistem
             select(ChecklistItem).where(
                 ChecklistItem.etapa_id == etapa.id,
                 ChecklistItem.obrigatoria == True,
+                ChecklistItem.parent_id == None,  # noqa: E711
             )
         ).scalars().all()
         total = len(obrigatorios)
@@ -378,6 +485,7 @@ def _verificar_conclusao_etapa(db: Session, etapa_id: int) -> None:
         select(ChecklistItem).where(
             ChecklistItem.etapa_id == etapa_id,
             ChecklistItem.obrigatoria == True,
+            ChecklistItem.parent_id == None,  # noqa: E711
         )
     ).scalars().all()
 

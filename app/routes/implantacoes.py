@@ -8,7 +8,7 @@ from app.models.usuario import Usuario
 from app.schemas.implantacao import (
     ImplantacaoListResponse, ImplantacaoFullResponse, ImplantacaoUpdate,
     ChecklistItemResponse, ChecklistItemUpdate, ChecklistItemCreate,
-    EtapaResponse, EtapaManualUpdate,
+    EtapaResponse, EtapaManualUpdate, EtapaCreate, EtapaPropsUpdate, EtapaReorder,
     ComentarioCreate, ComentarioResponse,
 )
 from app.services import implantacao_service
@@ -30,13 +30,14 @@ def listar(
     )
     result = []
     for impl in implantacoes:
-        active = [i for i in impl.checklist if i.status != "nao_aplicavel"]
+        root = [i for i in impl.checklist if not i.parent_id]
+        active = [i for i in root if i.status != "nao_aplicavel"]
         done   = [i for i in active if i.status == "concluido"]
         live_progresso = round((len(done) / len(active)) * 100) if active else 0
 
         hoje = date.today()
         vencidas = sum(
-            1 for i in impl.checklist
+            1 for i in root
             if i.data_prazo and i.data_prazo < hoje and i.status not in ("concluido", "nao_aplicavel")
         )
 
@@ -86,5 +87,26 @@ def deletar_item(item_id: int, db: Session = Depends(get_db)):
 
 
 @router.patch("/{impl_id}/etapas/{etapa_id}", response_model=EtapaResponse)
-def atualizar_etapa(impl_id: int, etapa_id: int, data: EtapaManualUpdate, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+def atualizar_etapa(impl_id: int, etapa_id: int, data: EtapaPropsUpdate, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
     return implantacao_service.atualizar_etapa(db, impl_id, etapa_id, data, usuario=current_user.nome)
+
+
+@router.post("/{impl_id}/etapas", response_model=EtapaResponse, status_code=201)
+def criar_etapa(impl_id: int, data: EtapaCreate, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    return implantacao_service.criar_etapa(db, impl_id, data, usuario=current_user.nome)
+
+
+@router.delete("/{impl_id}/etapas/{etapa_id}", status_code=204)
+def deletar_etapa(impl_id: int, etapa_id: int, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    implantacao_service.deletar_etapa(db, impl_id, etapa_id, usuario=current_user.nome)
+
+
+@router.post("/{impl_id}/etapas/reordenar", status_code=200)
+def reordenar_etapas(impl_id: int, data: EtapaReorder, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    implantacao_service.reordenar_etapas(db, impl_id, data.ordens)
+    return {"ok": True}
+
+
+@router.post("/{impl_id}/checklist/{item_id}/subitens", response_model=ChecklistItemResponse, status_code=201)
+def criar_subitem(impl_id: int, item_id: int, data: ChecklistItemCreate, db: Session = Depends(get_db)):
+    return implantacao_service.criar_subitem(db, impl_id, item_id, data)

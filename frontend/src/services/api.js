@@ -83,7 +83,11 @@ export const implantacoesApi = {
   atualizarChecklist: (itemId, data) => api.patch(`/implantacoes/checklist/${itemId}`, data),
   criarChecklist: (implId, data) => api.post(`/implantacoes/${implId}/checklist`, data),
   deletarChecklist: (itemId) => api.delete(`/implantacoes/checklist/${itemId}`),
+  criarSubitem: (implId, itemId, data) => api.post(`/implantacoes/${implId}/checklist/${itemId}/subitens`, data),
   atualizarEtapa: (implId, etapaId, data) => api.patch(`/implantacoes/${implId}/etapas/${etapaId}`, data),
+  criarEtapa: (implId, data) => api.post(`/implantacoes/${implId}/etapas`, data),
+  deletarEtapa: (implId, etapaId) => api.delete(`/implantacoes/${implId}/etapas/${etapaId}`),
+  reordenarEtapas: (implId, ordens) => api.post(`/implantacoes/${implId}/etapas/reordenar`, { ordens }),
 };
 
 // ── Clientes ─────────────────────────────────────────────────────────────────

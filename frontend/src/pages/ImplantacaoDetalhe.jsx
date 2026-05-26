@@ -153,8 +153,8 @@ function Pipeline({ etapas, onEtapaClick }) {
 
 // ── Etapa Dropdown ────────────────────────────────────────────────────────────
 
-function EtapaDropdown({ status, onAction, onClose }) {
-  const opts = [
+function EtapaDropdown({ status, onAction, onClose, onEdit, onMoveLeft, onMoveRight, onDelete, isFirst, isLast }) {
+  const statusOpts = [
     { v: "em_andamento", label: "▶  Iniciar",               show: status !== "em_andamento" },
     { v: "concluida",    label: "✓  Marcar como Concluída",  show: status !== "concluida"    },
     { v: "pulada",       label: "→  Pular Etapa",            show: status !== "pulada"       },
@@ -165,35 +165,198 @@ function EtapaDropdown({ status, onAction, onClose }) {
     <>
       <div className="fixed inset-0 z-30" onClick={onClose} />
       <div className="absolute right-0 top-8 z-40 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 min-w-[210px]">
-        {opts.map((o) => (
+        {statusOpts.map((o) => (
           <button key={o.v} onClick={() => { onAction(o.v); onClose(); }}
             className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors">
             {o.label}
           </button>
         ))}
-        {opts.length === 0 && <p className="px-4 py-2 text-xs text-gray-400">Nenhuma ação disponível</p>}
+        {statusOpts.length > 0 && <div className="my-1 border-t border-gray-100" />}
+        <button onClick={() => { onEdit(); onClose(); }}
+          className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
+          ✏️  Editar etapa
+        </button>
+        {!isFirst && (
+          <button onClick={() => { onMoveLeft(); onClose(); }}
+            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+            ← Mover para esquerda
+          </button>
+        )}
+        {!isLast && (
+          <button onClick={() => { onMoveRight(); onClose(); }}
+            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+            → Mover para direita
+          </button>
+        )}
+        <div className="my-1 border-t border-gray-100" />
+        <button onClick={() => { onDelete(); onClose(); }}
+          className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors">
+          🗑  Remover etapa
+        </button>
       </div>
     </>
+  );
+}
+
+// ── Edit Etapa Modal ──────────────────────────────────────────────────────────
+
+const ETAPA_CORES = [
+  "#6366f1", "#f59e0b", "#10b981", "#ef4444",
+  "#3b82f6", "#8b5cf6", "#ec4899", "#14b8a6",
+  "#f97316", "#64748b",
+];
+
+function EditEtapaModal({ etapa, implId, onClose, onSaved }) {
+  const [nome, setNome]       = useState(etapa.nome);
+  const [cor, setCor]         = useState(etapa.cor || "#6366f1");
+  const [slaDias, setSlaDias] = useState(etapa.sla_dias || 3);
+  const [saving, setSaving]   = useState(false);
+
+  async function handleSave() {
+    if (!nome.trim()) return;
+    setSaving(true);
+    try {
+      await implantacoesApi.atualizarEtapa(implId, etapa.id, { nome: nome.trim(), cor, sla_dias: slaDias });
+      onSaved();
+    } catch { } finally { setSaving(false); }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h3 className="font-semibold text-gray-900">Editar Etapa</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-lg">✕</button>
+        </div>
+        <div className="px-6 py-5 space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Nome da etapa</label>
+            <input
+              autoFocus
+              type="text"
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSave()}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 transition"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-2">Cor</label>
+            <div className="flex gap-2 flex-wrap">
+              {ETAPA_CORES.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setCor(c)}
+                  className={`w-7 h-7 rounded-full transition-all ${cor === c ? "ring-2 ring-offset-2 ring-gray-400 scale-110" : "hover:scale-105"}`}
+                  style={{ backgroundColor: c }}
+                />
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">SLA da etapa (dias)</label>
+            <input
+              type="number"
+              min={1}
+              max={999}
+              value={slaDias}
+              onChange={(e) => setSlaDias(Number(e.target.value))}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 transition"
+            />
+          </div>
+          <div className="flex gap-3 pt-1">
+            <button onClick={onClose} className="flex-1 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors">Cancelar</button>
+            <button onClick={handleSave} disabled={saving || !nome.trim()} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50 transition-colors">
+              {saving ? "Salvando..." : "Salvar"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Sub-item Row ──────────────────────────────────────────────────────────────
+
+function SubItemRow({ sub, implId, onRefresh }) {
+  const [toggling, setToggling] = useState(false);
+  const isDone = sub.status === "concluido";
+
+  async function handleToggle() {
+    if (toggling) return;
+    setToggling(true);
+    try {
+      await implantacoesApi.atualizarChecklist(sub.id, { status: isDone ? "pendente" : "concluido" });
+      onRefresh();
+    } catch { } finally { setToggling(false); }
+  }
+
+  async function handleDelete() {
+    if (!window.confirm(`Remover "${sub.titulo}"?`)) return;
+    try {
+      await implantacoesApi.deletarChecklist(sub.id);
+      onRefresh();
+    } catch { }
+  }
+
+  return (
+    <div className="flex items-center gap-2 py-1 group/sub">
+      <button
+        onClick={handleToggle}
+        disabled={toggling}
+        className={`w-3.5 h-3.5 rounded border-2 shrink-0 flex items-center justify-center transition-all
+          ${isDone ? "bg-orange-500 border-orange-500" : "border-gray-300 hover:border-orange-400"}`}
+      >
+        {isDone && <span className="text-white text-[7px] font-bold leading-none">✓</span>}
+      </button>
+      <span className={`flex-1 text-xs leading-snug ${isDone ? "line-through text-gray-400" : "text-gray-600"}`}>
+        {sub.titulo}
+      </span>
+      <button
+        onClick={handleDelete}
+        className="opacity-0 group-hover/sub:opacity-100 w-4 h-4 rounded flex items-center justify-center text-gray-400 hover:text-red-400 hover:bg-red-50 transition-all text-[10px]"
+      >
+        ✕
+      </button>
+    </div>
   );
 }
 
 // ── Kanban Card ───────────────────────────────────────────────────────────────
 
 function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, isDragged, onDragStart, onDragEnd }) {
-  const [hovered, setHovered]       = useState(false);
-  const [showNote, setShowNote]     = useState(false);
-  const [noteText, setNoteText]     = useState(item.descricao || "");
-  const [savingNote, setSavingNote] = useState(false);
-  const [toggling, setToggling]     = useState(false);
+  const [hovered, setHovered]         = useState(false);
+  const [showNote, setShowNote]       = useState(false);
+  const [noteText, setNoteText]       = useState(item.descricao || "");
+  const [savingNote, setSavingNote]   = useState(false);
+  const [toggling, setToggling]       = useState(false);
   const [showRespPicker, setShowRespPicker] = useState(false);
   const [editingPrazo, setEditingPrazo]     = useState(false);
   const [prazoInput, setPrazoInput]         = useState((item.data_prazo || "").split("T")[0]);
+  const [showSubitens, setShowSubitens]     = useState(false);
+  const [newSubTitle, setNewSubTitle]       = useState("");
+  const [addingSub, setAddingSub]           = useState(false);
+  const [showAddSub, setShowAddSub]         = useState(false);
 
-  const isCustom = item.template_tarefa_id == null;
-  const isNA     = item.status === "nao_aplicavel";
-  const isDone   = item.status === "concluido";
-  const initials = getInitials(item.responsavel);
-  const days     = item.data_prazo ? daysDiff(item.data_prazo) : null;
+  const isCustom  = item.template_tarefa_id == null;
+  const isNA      = item.status === "nao_aplicavel";
+  const isDone    = item.status === "concluido";
+  const initials  = getInitials(item.responsavel);
+  const days      = item.data_prazo ? daysDiff(item.data_prazo) : null;
+  const subitens  = item.subitens || [];
+  const subDone   = subitens.filter((s) => s.status === "concluido").length;
+
+  async function handleAddSub() {
+    if (!newSubTitle.trim() || addingSub) return;
+    setAddingSub(true);
+    try {
+      await implantacoesApi.criarSubitem(implId, item.id, { titulo: newSubTitle.trim() });
+      setNewSubTitle("");
+      setShowAddSub(false);
+      setShowSubitens(true);
+      onRefresh();
+    } catch { } finally { setAddingSub(false); }
+  }
 
   async function handleToggle() {
     if (isNA || toggling) return;
@@ -431,6 +594,17 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, isDragged, onD
               </p>
             )}
 
+            {/* Sub-items indicator */}
+            {subitens.length > 0 && !showSubitens && (
+              <button
+                onClick={() => setShowSubitens(true)}
+                className="flex items-center gap-1 mt-1.5 text-[10px] text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <span className="w-3 h-3 rounded border border-gray-300 flex items-center justify-center text-[7px] leading-none">✓</span>
+                {subDone}/{subitens.length} sub-itens
+              </button>
+            )}
+
             {/* Status info */}
             {isDone && item.data_conclusao && (
               <p className="text-[10px] text-green-600 mt-0.5">✅ {fmtDateTime(item.data_conclusao)}</p>
@@ -449,6 +623,14 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, isDragged, onD
               📝
             </button>
             <button
+              onClick={() => { setShowSubitens((v) => !v); if (!showSubitens) setShowAddSub(false); }}
+              title="Sub-itens"
+              className={`w-6 h-6 rounded-md flex items-center justify-center text-[11px] transition-colors
+                ${subitens.length > 0 ? "text-indigo-500 bg-indigo-50 hover:bg-indigo-100" : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"}`}
+            >
+              ☰
+            </button>
+            <button
               onClick={handleToggleNA}
               title={isNA ? "Reativar tarefa" : "Marcar como Não Aplicável"}
               className={`w-6 h-6 rounded-md flex items-center justify-center text-[11px] transition-colors
@@ -465,6 +647,46 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, isDragged, onD
           </div>
         </div>
       </div>
+
+      {/* Sub-items panel */}
+      {showSubitens && (
+        <div className="px-3 pb-3 pt-0 border-t border-gray-100">
+          <div className="pt-2 space-y-0.5">
+            {subitens.map((sub) => (
+              <SubItemRow key={sub.id} sub={sub} implId={implId} onRefresh={onRefresh} />
+            ))}
+            {showAddSub ? (
+              <div className="flex items-center gap-1.5 pt-1">
+                <input
+                  autoFocus
+                  type="text"
+                  value={newSubTitle}
+                  onChange={(e) => setNewSubTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleAddSub();
+                    if (e.key === "Escape") { setShowAddSub(false); setNewSubTitle(""); }
+                  }}
+                  placeholder="Nome do sub-item..."
+                  className="flex-1 border border-gray-200 rounded px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-orange-400 transition"
+                />
+                <button onClick={handleAddSub} disabled={addingSub || !newSubTitle.trim()}
+                  className="px-2 py-1 rounded text-xs font-semibold text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50 transition-colors">
+                  {addingSub ? "..." : "OK"}
+                </button>
+                <button onClick={() => { setShowAddSub(false); setNewSubTitle(""); }}
+                  className="px-1 py-1 text-xs text-gray-400 hover:text-gray-600">✕</button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAddSub(true)}
+                className="flex items-center gap-1 mt-1 text-[10px] text-gray-400 hover:text-orange-500 transition-colors"
+              >
+                <span className="text-sm leading-none font-light">+</span> sub-item
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Inline note editor */}
       {showNote && (
@@ -497,12 +719,13 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, isDragged, onD
 
 // ── Kanban Column ─────────────────────────────────────────────────────────────
 
-function KanbanColumn({ etapa, implId, somentePendentes, filterText, filterResp, filterStatus, columnRef, onRefresh, isExpanded, dragItem, onDragStart, onDragEnd, onMoveItem, usuarios }) {
-  const [showAdd, setShowAdd]   = useState(false);
-  const [newTitle, setNewTitle] = useState("");
-  const [showMenu, setShowMenu] = useState(false);
-  const [saving, setSaving]     = useState(false);
+function KanbanColumn({ etapa, implId, somentePendentes, filterText, filterResp, filterStatus, columnRef, onRefresh, isExpanded, dragItem, onDragStart, onDragEnd, onMoveItem, usuarios, isFirst, isLast, onMoveLeft, onMoveRight, onDelete }) {
+  const [showAdd, setShowAdd]       = useState(false);
+  const [newTitle, setNewTitle]     = useState("");
+  const [showMenu, setShowMenu]     = useState(false);
+  const [saving, setSaving]         = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [showEditEtapa, setShowEditEtapa] = useState(false);
 
   // SLA per-etapa: only show when in progress and has a start date
   const slaDaysLeft = (etapa.status === "em_andamento" && etapa.data_inicio)
@@ -558,6 +781,14 @@ function KanbanColumn({ etapa, implId, somentePendentes, filterText, filterResp,
   async function handleEtapaAction(status) {
     try {
       await implantacoesApi.atualizarEtapa(implId, etapa.id, { status });
+      onRefresh();
+    } catch { }
+  }
+
+  async function handleDeleteEtapa() {
+    if (!window.confirm(`Remover a etapa "${etapa.nome}"? As tarefas desta etapa serão mantidas sem etapa.`)) return;
+    try {
+      await implantacoesApi.deletarEtapa(implId, etapa.id);
       onRefresh();
     } catch { }
   }
@@ -622,7 +853,17 @@ function KanbanColumn({ etapa, implId, somentePendentes, filterText, filterResp,
               ⋮
             </button>
             {showMenu && (
-              <EtapaDropdown status={etapa.status} onAction={handleEtapaAction} onClose={() => setShowMenu(false)} />
+              <EtapaDropdown
+                status={etapa.status}
+                onAction={handleEtapaAction}
+                onClose={() => setShowMenu(false)}
+                onEdit={() => setShowEditEtapa(true)}
+                onMoveLeft={onMoveLeft}
+                onMoveRight={onMoveRight}
+                onDelete={handleDeleteEtapa}
+                isFirst={isFirst}
+                isLast={isLast}
+              />
             )}
           </div>
         </div>
@@ -705,6 +946,15 @@ function KanbanColumn({ etapa, implId, somentePendentes, filterText, filterResp,
           </button>
         )}
       </div>
+
+      {showEditEtapa && (
+        <EditEtapaModal
+          etapa={etapa}
+          implId={implId}
+          onClose={() => setShowEditEtapa(false)}
+          onSaved={() => { setShowEditEtapa(false); onRefresh(); }}
+        />
+      )}
     </div>
   );
 }
@@ -737,6 +987,9 @@ function KanbanTab({ etapas, implId, somentePendentes, columnRefs, onRefresh, is
   const [filterStatus, setFilterStatus] = useState("");
   const [dragItem, setDragItem]         = useState(null);
   const [usuarios, setUsuarios]         = useState([]);
+  const [showAddEtapa, setShowAddEtapa] = useState(false);
+  const [novaEtapa, setNovaEtapa]       = useState({ nome: "", cor: "#6366f1", sla_dias: 3 });
+  const [savingEtapa, setSavingEtapa]   = useState(false);
 
   useEffect(() => {
     usuariosApi.listar()
@@ -746,7 +999,6 @@ function KanbanTab({ etapas, implId, somentePendentes, columnRefs, onRefresh, is
 
   const hasFilters = filterText || filterResp || filterStatus;
 
-  // Collect unique responsaveis across all items (for filter dropdown)
   const responsaveis = [...new Set(
     etapas.flatMap((e) => e.itens.map((i) => i.responsavel).filter(Boolean))
   )].sort();
@@ -758,21 +1010,40 @@ function KanbanTab({ etapas, implId, somentePendentes, columnRefs, onRefresh, is
     } catch { }
   }
 
-  if (etapas.length === 0) {
-    return (
-      <div className="py-16 text-center text-sm text-gray-400">
-        Nenhuma etapa configurada para esta implantação.
-      </div>
-    );
+  async function handleMoveEtapa(etapa, direction) {
+    const sorted = [...etapas].sort((a, b) => a.ordem - b.ordem);
+    const idx    = sorted.findIndex((e) => e.id === etapa.id);
+    const swapIdx = direction === "left" ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= sorted.length) return;
+    const swap = sorted[swapIdx];
+    const ordens = [
+      { id: etapa.id, ordem: swap.ordem },
+      { id: swap.id,  ordem: etapa.ordem },
+    ];
+    try {
+      await implantacoesApi.reordenarEtapas(implId, ordens);
+      onRefresh();
+    } catch { }
+  }
+
+  async function handleAddEtapa() {
+    if (!novaEtapa.nome.trim() || savingEtapa) return;
+    setSavingEtapa(true);
+    try {
+      await implantacoesApi.criarEtapa(implId, novaEtapa);
+      setNovaEtapa({ nome: "", cor: "#6366f1", sla_dias: 3 });
+      setShowAddEtapa(false);
+      onRefresh();
+    } catch { } finally { setSavingEtapa(false); }
   }
 
   const inputCls = "border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 transition bg-white";
+  const sorted   = [...etapas].sort((a, b) => a.ordem - b.ordem);
 
   return (
     <div className={isExpanded ? "flex flex-col h-full" : "flex flex-col"}>
       {/* ── Filter bar ──────────────────────────────────────── */}
       <div className="flex items-center gap-2 mb-3 flex-wrap shrink-0">
-        {/* Text search */}
         <div className="relative flex-1 min-w-[180px] max-w-xs">
           <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
@@ -786,7 +1057,6 @@ function KanbanTab({ etapas, implId, somentePendentes, columnRefs, onRefresh, is
           />
         </div>
 
-        {/* Responsavel filter */}
         {responsaveis.length > 0 && (
           <select value={filterResp} onChange={(e) => setFilterResp(e.target.value)} className={inputCls}>
             <option value="">Todos responsáveis</option>
@@ -794,7 +1064,6 @@ function KanbanTab({ etapas, implId, somentePendentes, columnRefs, onRefresh, is
           </select>
         )}
 
-        {/* Status filter */}
         <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className={inputCls}>
           <option value="">Todos status</option>
           <option value="pendente">Pendentes</option>
@@ -802,7 +1071,6 @@ function KanbanTab({ etapas, implId, somentePendentes, columnRefs, onRefresh, is
           <option value="nao_aplicavel">Não aplicáveis</option>
         </select>
 
-        {/* Clear filters */}
         {hasFilters && (
           <button
             onClick={() => { setFilterText(""); setFilterResp(""); setFilterStatus(""); }}
@@ -818,7 +1086,7 @@ function KanbanTab({ etapas, implId, somentePendentes, columnRefs, onRefresh, is
         className={isExpanded ? "flex gap-3 overflow-x-auto flex-1 pb-2" : "flex gap-3 overflow-x-auto pb-4 -mx-6 px-6"}
         style={{ scrollbarWidth: "thin" }}
       >
-        {etapas.map((etapa) => (
+        {sorted.map((etapa, idx) => (
           <KanbanColumn
             key={etapa.id}
             etapa={etapa}
@@ -835,8 +1103,72 @@ function KanbanTab({ etapas, implId, somentePendentes, columnRefs, onRefresh, is
             onDragEnd={() => setDragItem(null)}
             onMoveItem={handleMoveItem}
             usuarios={usuarios}
+            isFirst={idx === 0}
+            isLast={idx === sorted.length - 1}
+            onMoveLeft={() => handleMoveEtapa(etapa, "left")}
+            onMoveRight={() => handleMoveEtapa(etapa, "right")}
           />
         ))}
+
+        {/* ── Add Etapa card ── */}
+        <div className="min-w-[220px] max-w-[220px] shrink-0">
+          {showAddEtapa ? (
+            <div className="rounded-xl border border-dashed border-orange-300 bg-orange-50/50 p-3 space-y-2.5">
+              <input
+                autoFocus
+                type="text"
+                value={novaEtapa.nome}
+                onChange={(e) => setNovaEtapa((v) => ({ ...v, nome: e.target.value }))}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleAddEtapa();
+                  if (e.key === "Escape") { setShowAddEtapa(false); }
+                }}
+                placeholder="Nome da nova etapa..."
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 transition bg-white"
+              />
+              <div>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">Cor</p>
+                <div className="flex gap-1.5 flex-wrap">
+                  {ETAPA_CORES.map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setNovaEtapa((v) => ({ ...v, cor: c }))}
+                      className={`w-5 h-5 rounded-full transition-all ${novaEtapa.cor === c ? "ring-2 ring-offset-1 ring-gray-400 scale-110" : "hover:scale-105"}`}
+                      style={{ backgroundColor: c }}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1">SLA (dias)</p>
+                <input
+                  type="number" min={1} max={999}
+                  value={novaEtapa.sla_dias}
+                  onChange={(e) => setNovaEtapa((v) => ({ ...v, sla_dias: Number(e.target.value) }))}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:border-orange-400 transition bg-white"
+                />
+              </div>
+              <div className="flex gap-1.5">
+                <button onClick={handleAddEtapa} disabled={savingEtapa || !novaEtapa.nome.trim()}
+                  className="flex-1 py-1.5 rounded-lg text-xs font-semibold text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50 transition-colors">
+                  {savingEtapa ? "..." : "Criar"}
+                </button>
+                <button onClick={() => setShowAddEtapa(false)}
+                  className="px-3 py-1.5 rounded-lg text-xs text-gray-500 hover:bg-white/80 transition-colors">
+                  ✕
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowAddEtapa(true)}
+              className="w-full h-16 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center gap-2 text-sm text-gray-400 hover:border-orange-300 hover:text-orange-500 hover:bg-orange-50/30 transition-all group"
+            >
+              <span className="text-xl leading-none font-light group-hover:text-orange-500">+</span>
+              Nova etapa
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

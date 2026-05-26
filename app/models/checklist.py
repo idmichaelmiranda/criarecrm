@@ -12,6 +12,7 @@ class ChecklistItem(Base):
     implantacao_id: Mapped[int] = mapped_column(ForeignKey("implantacoes.id"), nullable=False)
     etapa_id: Mapped[int] = mapped_column(ForeignKey("implantacao_etapas.id"), nullable=True)
     template_tarefa_id: Mapped[int] = mapped_column(ForeignKey("template_tarefas.id"), nullable=True)
+    parent_id: Mapped[Optional[int]] = mapped_column(ForeignKey("checklist_itens.id"), nullable=True)
 
     titulo: Mapped[str] = mapped_column(String(200), nullable=False)
     descricao: Mapped[str] = mapped_column(Text, nullable=True)
@@ -29,6 +30,12 @@ class ChecklistItem(Base):
     implantacao: Mapped["Implantacao"] = relationship("Implantacao", back_populates="checklist")
     etapa: Mapped["ImplantacaoEtapa"] = relationship("ImplantacaoEtapa", back_populates="itens")
     template_tarefa: Mapped[Optional["TemplateTarefa"]] = relationship("TemplateTarefa", foreign_keys=[template_tarefa_id])
+    subitens: Mapped[list["ChecklistItem"]] = relationship(
+        "ChecklistItem",
+        primaryjoin="ChecklistItem.parent_id == ChecklistItem.id",
+        foreign_keys="[ChecklistItem.parent_id]",
+        order_by="ChecklistItem.ordem",
+    )
 
     @property
     def pop_pdf_path(self) -> Optional[str]:

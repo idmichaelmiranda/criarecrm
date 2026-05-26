@@ -20,13 +20,19 @@ class ChecklistItemResponse(BaseModel):
     responsavel: str | None
     data_prazo: date | None
     pop_pdf_path: str | None = None
+    parent_id: int | None = None
+    subitens: list["ChecklistItemResponse"] = []
 
     model_config = {"from_attributes": True}
+
+
+ChecklistItemResponse.model_rebuild()
 
 
 class ChecklistItemCreate(BaseModel):
     titulo: str
     etapa_id: int | None = None
+    parent_id: int | None = None
     obrigatoria: bool = False
     descricao: str | None = None
     responsavel: str | None = None
@@ -39,10 +45,28 @@ class ChecklistItemUpdate(BaseModel):
     responsavel: str | None = None
     data_prazo: date | None = None
     etapa_id: int | None = None
+    titulo: str | None = None
 
 
 class EtapaManualUpdate(BaseModel):
     status: StatusEtapaType
+
+
+class EtapaCreate(BaseModel):
+    nome: str
+    cor: str = "#6366f1"
+    sla_dias: int = 3
+
+
+class EtapaPropsUpdate(BaseModel):
+    nome: str | None = None
+    cor: str | None = None
+    sla_dias: int | None = None
+    status: StatusEtapaType | None = None
+
+
+class EtapaReorder(BaseModel):
+    ordens: list[dict]  # [{id: int, ordem: int}]
 
 
 class EtapaResponse(BaseModel):
