@@ -71,6 +71,7 @@ def _migrate_sqlite():
         "ALTER TABLE instalacoes ADD COLUMN tipos_json TEXT",
         "ALTER TABLE instalacoes ADD COLUMN contato_nome VARCHAR(150)",
         "ALTER TABLE instalacoes ADD COLUMN contato_telefone VARCHAR(30)",
+        "ALTER TABLE instalacoes ADD COLUMN tipos_nomes_json TEXT",
         "ALTER TABLE instalacao_checklist ADD COLUMN tipo VARCHAR(50)",
         "ALTER TABLE clientes ADD COLUMN origem VARCHAR(20) NOT NULL DEFAULT 'triagem'",
         "ALTER TABLE solicitacoes ADD COLUMN campos_correcao JSON",
@@ -112,6 +113,7 @@ def _migrate_postgres() -> None:
     from sqlalchemy import text
     new_cols = [
         "ALTER TABLE checklist_itens ADD COLUMN IF NOT EXISTS parent_id INTEGER REFERENCES checklist_itens(id)",
+        "ALTER TABLE instalacoes ADD COLUMN IF NOT EXISTS tipos_nomes_json TEXT",
     ]
     with engine.connect() as conn:
         for ddl in new_cols:

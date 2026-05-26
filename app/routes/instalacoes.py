@@ -167,11 +167,22 @@ def criar(data: InstalacaoCreate, db: Session = Depends(get_db)):
         raise HTTPException(404, "Usuário responsável não encontrado")
 
     tipo_primario = data.tipos[0]
+
+    # Snapshot dos nomes de produto — independe de renomear o template depois
+    tipo_nomes_map: dict[str, str] = {}
+    for tipo in data.tipos:
+        template_tipo = tipo if tipo.startswith("instalacao_") else f"instalacao_{tipo}"
+        t_nome = db.execute(
+            select(Template).where(Template.tipo == template_tipo, Template.ativo == True)
+        ).scalar_one_or_none()
+        tipo_nomes_map[tipo] = t_nome.nome if t_nome else tipo
+
     inst = Instalacao(
         codigo=_gerar_codigo(db),
         cliente_id=data.cliente_id,
         tipo=tipo_primario,
         tipos_json=json.dumps(data.tipos),
+        tipos_nomes_json=json.dumps(tipo_nomes_map),
         quantidade=data.quantidade,
         prioridade=data.prioridade,
         responsavel_id=data.responsavel_id,

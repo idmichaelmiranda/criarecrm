@@ -113,11 +113,25 @@ def _parse_tipos(inst) -> list[str]:
     return [fallback] if fallback else []
 
 
+def _parse_tipos_nomes(inst) -> dict[str, str]:
+    """Derive tipos_nomes dict from tipos_nomes_json (snapshot gravado na criação)."""
+    raw = getattr(inst, "tipos_nomes_json", None)
+    if raw:
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, dict):
+                return parsed
+        except Exception:
+            pass
+    return {}
+
+
 class InstalacaoListResponse(BaseModel):
     id: int
     codigo: str
     tipo: str
     tipos: list[str] = []
+    tipos_nomes: dict[str, str] = {}
     quantidade: int
     status: str
     prioridade: str
@@ -142,6 +156,7 @@ class InstalacaoListResponse(BaseModel):
     def _derive_tipos(cls, data):
         if hasattr(data, "__dict__"):
             data.__dict__.setdefault("tipos", _parse_tipos(data))
+            data.__dict__.setdefault("tipos_nomes", _parse_tipos_nomes(data))
         return data
 
 
@@ -150,6 +165,7 @@ class InstalacaoFullResponse(BaseModel):
     codigo: str
     tipo: str
     tipos: list[str] = []
+    tipos_nomes: dict[str, str] = {}
     quantidade: int
     status: str
     prioridade: str
@@ -181,4 +197,5 @@ class InstalacaoFullResponse(BaseModel):
     def _derive_tipos(cls, data):
         if hasattr(data, "__dict__"):
             data.__dict__.setdefault("tipos", _parse_tipos(data))
+            data.__dict__.setdefault("tipos_nomes", _parse_tipos_nomes(data))
         return data

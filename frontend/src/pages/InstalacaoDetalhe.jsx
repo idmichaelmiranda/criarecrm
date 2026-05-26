@@ -496,7 +496,7 @@ export default function InstalacaoDetalhe() {
                   {(inst.tipos?.length > 0 ? inst.tipos : [inst.tipo]).map((t) => {
                     const td = tiposMap[normalizeTipo(t)];
                     const cor = td?.cor;
-                    const label = td?.nome || TIPO_LABEL[t] || t;
+                    const label = (inst.tipos_nomes || {})[t] || td?.nome || TIPO_LABEL[t] || t;
                     return (
                       <span key={t}
                         className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${cor ? "" : (TIPO_COLOR[t] || "bg-gray-100 text-gray-600 border-gray-200")}`}
@@ -780,10 +780,11 @@ export default function InstalacaoDetalhe() {
                           {(() => {
                             const td2 = tiposMap[normalizeTipo(t)];
                             const cor2 = td2?.cor;
+                            const label2 = (inst.tipos_nomes || {})[t] || td2?.nome || TIPO_LABEL[t] || t;
                             return (
                               <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${cor2 ? "" : (TIPO_COLOR[t] || "bg-gray-100 text-gray-600 border-gray-200")}`}
                                 style={cor2 ? { background: `${cor2}22`, color: cor2, borderColor: `${cor2}55` } : undefined}>
-                                {td2?.nome || TIPO_LABEL[t] || t}
+                                {label2}
                               </span>
                             );
                           })()}

@@ -41,6 +41,9 @@ class Instalacao(Base):
 
     progresso: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
+    # Snapshot dos nomes de produtos no momento da criação — independente do template
+    tipos_nomes_json: Mapped[str] = mapped_column(Text, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
