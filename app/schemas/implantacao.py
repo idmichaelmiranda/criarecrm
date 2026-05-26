@@ -21,6 +21,7 @@ class ChecklistItemResponse(BaseModel):
     data_prazo: date | None
     pop_pdf_path: str | None = None
     parent_id: int | None = None
+    arquivado: bool = False
     subitens: list["ChecklistItemResponse"] = []
 
     model_config = {"from_attributes": True}
@@ -46,6 +47,7 @@ class ChecklistItemUpdate(BaseModel):
     data_prazo: date | None = None
     etapa_id: int | None = None
     titulo: str | None = None
+    arquivado: bool | None = None
 
 
 class EtapaManualUpdate(BaseModel):

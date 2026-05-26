@@ -123,6 +123,9 @@ def atualizar_checklist_item(db: Session, item_id: int, data: ChecklistItemUpdat
     if data.titulo is not None:
         item.titulo = data.titulo.strip() or item.titulo
 
+    if data.arquivado is not None:
+        item.arquivado = data.arquivado
+
     if data.descricao is not None:
         item.descricao = data.descricao.strip() or None
 
@@ -386,6 +389,7 @@ def _recalcular_progresso(db: Session, implantacao_id: int) -> None:
             ChecklistItem.status != "nao_aplicavel",
             ChecklistItem.parent_id == None,  # noqa: E711
             ChecklistItem.etapa_id != None,  # noqa: E711
+            ChecklistItem.arquivado == False,  # noqa: E712
         )
     ).scalar_one()
     concluidos = db.execute(
@@ -395,6 +399,7 @@ def _recalcular_progresso(db: Session, implantacao_id: int) -> None:
             ChecklistItem.status == "concluido",
             ChecklistItem.parent_id == None,  # noqa: E711
             ChecklistItem.etapa_id != None,  # noqa: E711
+            ChecklistItem.arquivado == False,  # noqa: E712
         )
     ).scalar_one()
     impl = db.get(Implantacao, implantacao_id)

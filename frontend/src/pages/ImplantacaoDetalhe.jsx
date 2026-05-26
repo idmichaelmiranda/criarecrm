@@ -68,7 +68,7 @@ function Spinner() {
 // ── Pipeline Ring ─────────────────────────────────────────────────────────────
 
 function PipelineRing({ etapa }) {
-  const active = etapa.itens.filter((i) => !i.parent_id && i.status !== "nao_aplicavel");
+  const active = etapa.itens.filter((i) => !i.parent_id && !i.arquivado && i.status !== "nao_aplicavel");
   const done   = active.filter((i) => i.status === "concluido").length;
   const total  = active.length;
   const pct    = total > 0 ? done / total : 0;
@@ -139,7 +139,7 @@ function Pipeline({ etapas, onEtapaClick, onAddEtapa, onRenameEtapa }) {
     <div className="overflow-x-auto overflow-y-visible -mx-2 px-2">
       <div className="flex items-start gap-0 pt-2 pb-3">
         {sorted.map((etapa, idx) => {
-          const active    = etapa.itens.filter((i) => !i.parent_id && i.status !== "nao_aplicavel");
+          const active    = etapa.itens.filter((i) => !i.parent_id && !i.arquivado && i.status !== "nao_aplicavel");
           const done      = active.filter((i) => i.status === "concluido").length;
           const total     = active.length;
           const allDone   = total > 0 && done === total;
@@ -367,6 +367,13 @@ function SubItemRow({ sub, implId, onRefresh, onOptimisticToggle }) {
     } catch { }
   }
 
+  async function handleArchive() {
+    try {
+      await implantacoesApi.atualizarChecklist(sub.id, { arquivado: !sub.arquivado });
+      onRefresh();
+    } catch { }
+  }
+
   async function handleSaveTitle() {
     const trimmed = editValue.trim();
     setEditingTitle(false);
@@ -378,7 +385,7 @@ function SubItemRow({ sub, implId, onRefresh, onOptimisticToggle }) {
   }
 
   return (
-    <div className="flex items-center gap-2 py-1 group/sub">
+    <div className={`flex items-center gap-2 py-1 group/sub ${sub.arquivado ? "opacity-50" : ""}`}>
       <button
         onClick={handleToggle}
         disabled={toggling}
@@ -409,6 +416,14 @@ function SubItemRow({ sub, implId, onRefresh, onOptimisticToggle }) {
         </span>
       )}
       <button
+        onClick={handleArchive}
+        title={sub.arquivado ? "Desarquivar" : "Arquivar"}
+        className={`opacity-0 group-hover/sub:opacity-100 w-4 h-4 rounded flex items-center justify-center transition-all text-[10px]
+          ${sub.arquivado ? "opacity-100 text-amber-400 hover:bg-amber-50" : "text-gray-400 hover:text-amber-400 hover:bg-amber-50"}`}
+      >
+        📦
+      </button>
+      <button
         onClick={handleDelete}
         className="opacity-0 group-hover/sub:opacity-100 w-4 h-4 rounded flex items-center justify-center text-gray-400 hover:text-red-400 hover:bg-red-50 transition-all text-[10px]"
       >
@@ -436,6 +451,7 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
   const [editingTitle, setEditingTitle]     = useState(false);
   const [editTitleValue, setEditTitleValue] = useState(item.titulo);
   const [localStatus, setLocalStatus]       = useState(item.status);
+  const [showArchivedSubs, setShowArchivedSubs] = useState(false);
 
   // Sync local status when parent data refreshes
   useEffect(() => { setLocalStatus(item.status); }, [item.status]);
@@ -445,8 +461,10 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
   const isDone    = localStatus === "concluido";
   const initials  = getInitials(item.responsavel);
   const days      = item.data_prazo ? daysDiff(item.data_prazo) : null;
-  const subitens  = item.subitens || [];
-  const subDone   = subitens.filter((s) => s.status === "concluido").length;
+  const allSubitens    = item.subitens || [];
+  const subitens       = allSubitens.filter((s) => !s.arquivado);
+  const archivedSubs   = allSubitens.filter((s) => s.arquivado);
+  const subDone        = subitens.filter((s) => s.status === "concluido").length;
 
   async function handleSaveTitle() {
     const trimmed = editTitleValue.trim();
@@ -456,6 +474,14 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
       await implantacoesApi.atualizarChecklist(item.id, { titulo: trimmed });
       onRefresh();
     } catch { setEditTitleValue(item.titulo); }
+  }
+
+  async function handleArchive() {
+    const novo = !item.arquivado;
+    try {
+      await implantacoesApi.atualizarChecklist(item.id, { arquivado: novo });
+      onRefresh();
+    } catch { }
   }
 
   async function handleAddSub() {
@@ -553,9 +579,11 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
       }}
       onDragEnd={onDragEnd}
       className={`rounded-xl border shadow-sm transition-all select-none
-        ${!isNA ? "cursor-grab active:cursor-grabbing" : ""}
+        ${!isNA && !item.arquivado ? "cursor-grab active:cursor-grabbing" : ""}
         ${isDragged ? "opacity-40 scale-95" : ""}
-        ${isNA
+        ${item.arquivado
+          ? "bg-gray-50 border-gray-200 opacity-50"
+          : isNA
           ? "bg-gray-50 border-gray-100 opacity-60"
           : isDone
           ? "bg-white border-gray-100 opacity-60"
@@ -755,7 +783,7 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
             {isNA && <p className="text-[10px] text-gray-400 mt-0.5">⊘ Não aplicável</p>}
 
             {/* Action bar — inside content, no longer competes with title width */}
-            {hovered && (
+            {(hovered || item.arquivado) && (
               <div className="flex items-center gap-0.5 mt-2 pt-1.5 border-t border-gray-100">
                 <button
                   onClick={() => { setShowNote((v) => !v); setNoteText(item.descricao || ""); }}
@@ -781,6 +809,14 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
                 >
                   ⊘
                 </button>
+                <button
+                  onClick={handleArchive}
+                  title={item.arquivado ? "Desarquivar tarefa" : "Arquivar tarefa"}
+                  className={`w-6 h-6 rounded-md flex items-center justify-center text-[11px] transition-colors
+                    ${item.arquivado ? "text-amber-500 bg-amber-50 hover:bg-amber-100" : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"}`}
+                >
+                  📦
+                </button>
                 {isCustom && (
                   <button onClick={handleDelete} title="Remover tarefa"
                     className="w-6 h-6 rounded-md flex items-center justify-center text-[11px] text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors">
@@ -800,6 +836,20 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
             {subitens.map((sub) => (
               <SubItemRow key={sub.id} sub={sub} implId={implId} onRefresh={onRefresh} onOptimisticToggle={onOptimisticToggle} />
             ))}
+            {archivedSubs.length > 0 && (
+              <div className="pt-0.5">
+                <button
+                  onClick={() => setShowArchivedSubs((v) => !v)}
+                  className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-gray-600 transition-colors py-0.5"
+                >
+                  <span>{showArchivedSubs ? "▾" : "▸"}</span>
+                  {archivedSubs.length} sub-item{archivedSubs.length !== 1 ? "s" : ""} arquivado{archivedSubs.length !== 1 ? "s" : ""}
+                </button>
+                {showArchivedSubs && archivedSubs.map((sub) => (
+                  <SubItemRow key={sub.id} sub={sub} implId={implId} onRefresh={onRefresh} onOptimisticToggle={onOptimisticToggle} />
+                ))}
+              </div>
+            )}
             {showAddSub ? (
               <div className="flex items-center gap-1.5 pt-1">
                 <input
@@ -865,20 +915,24 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
 // ── Kanban Column ─────────────────────────────────────────────────────────────
 
 function KanbanColumn({ etapa, implId, somentePendentes, filterText, filterResp, filterStatus, columnRef, onRefresh, onOptimisticToggle, isExpanded, dragItem, onDragStart, onDragEnd, onMoveItem, usuarios, isFirst, isLast, onMoveLeft, onMoveRight, onDelete }) {
-  const [showAdd, setShowAdd]       = useState(false);
-  const [newTitle, setNewTitle]     = useState("");
-  const [showMenu, setShowMenu]     = useState(false);
-  const [saving, setSaving]         = useState(false);
-  const [isDragOver, setIsDragOver] = useState(false);
+  const [showAdd, setShowAdd]             = useState(false);
+  const [newTitle, setNewTitle]           = useState("");
+  const [showMenu, setShowMenu]           = useState(false);
+  const [saving, setSaving]               = useState(false);
+  const [isDragOver, setIsDragOver]       = useState(false);
   const [showEditEtapa, setShowEditEtapa] = useState(false);
+  const [showArchived, setShowArchived]   = useState(false);
 
   // SLA per-etapa: only show when in progress and has a start date
   const slaDaysLeft = (etapa.status === "em_andamento" && etapa.data_inicio)
     ? slaEtapaLabel(etapa.data_inicio, etapa.sla_dias)
     : null;
 
-  // Apply all filters
-  let items = etapa.itens;
+  // Archived items always separated
+  const archivedItems = etapa.itens.filter((i) => i.arquivado);
+
+  // Apply all filters (only non-archived items)
+  let items = etapa.itens.filter((i) => !i.arquivado);
   if (somentePendentes) items = items.filter((i) => i.status !== "concluido" && i.status !== "nao_aplicavel");
   if (filterStatus)     items = items.filter((i) => i.status === filterStatus);
   if (filterResp)       items = items.filter((i) => i.responsavel === filterResp);
@@ -890,7 +944,7 @@ function KanbanColumn({ etapa, implId, somentePendentes, filterText, filterResp,
     );
   }
 
-  const activeItens = etapa.itens.filter((i) => !i.parent_id && i.status !== "nao_aplicavel");
+  const activeItens = etapa.itens.filter((i) => !i.parent_id && !i.arquivado && i.status !== "nao_aplicavel");
   const done  = activeItens.filter((i) => i.status === "concluido").length;
   const total = activeItens.length;
   const pct   = total > 0 ? Math.round((done / total) * 100) : 0;
@@ -1054,6 +1108,37 @@ function KanbanColumn({ etapa, implId, somentePendentes, filterText, filterResp,
         {isDropTarget && (
           <div className="h-14 rounded-xl border-2 border-dashed border-blue-400 bg-blue-50/60 flex items-center justify-center text-xs text-blue-500 font-medium">
             Soltar aqui
+          </div>
+        )}
+
+        {/* Archived items section */}
+        {archivedItems.length > 0 && (
+          <div className="mt-1">
+            <button
+              onClick={() => setShowArchived((v) => !v)}
+              className="w-full flex items-center gap-1.5 px-1 py-1 text-[10px] text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <span className="text-[10px]">{showArchived ? "▾" : "▸"}</span>
+              {archivedItems.length} arquivado{archivedItems.length !== 1 ? "s" : ""}
+            </button>
+            {showArchived && (
+              <div className="space-y-1.5 mt-0.5">
+                {archivedItems.map((item) => (
+                  <KanbanCard
+                    key={item.id}
+                    item={item}
+                    implId={implId}
+                    etapaId={etapa.id}
+                    usuarios={usuarios}
+                    onRefresh={onRefresh}
+                    onOptimisticToggle={onOptimisticToggle}
+                    isDragged={false}
+                    onDragStart={onDragStart}
+                    onDragEnd={onDragEnd}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1654,7 +1739,7 @@ export default function ImplantacaoDetalhe() {
     impl.sla_status === "critico"  ? "text-amber-600 font-semibold" :
     "text-gray-600";
 
-  const allItems     = impl.etapas.flatMap((e) => e.itens.filter((i) => !i.parent_id));
+  const allItems     = impl.etapas.flatMap((e) => e.itens.filter((i) => !i.parent_id && !i.arquivado));
   const activeItems  = allItems.filter((i) => i.status !== "nao_aplicavel");
   const doneItems    = activeItems.filter((i) => i.status === "concluido");
   const liveProgress = activeItems.length > 0 ? Math.round((doneItems.length / activeItems.length) * 100) : 0;

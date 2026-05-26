@@ -23,6 +23,7 @@ class ChecklistItem(Base):
 
     responsavel: Mapped[str] = mapped_column(String(100), nullable=True)
     data_prazo: Mapped[date] = mapped_column(Date, nullable=True)
+    arquivado: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, server_default="0")
 
     data_conclusao: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
