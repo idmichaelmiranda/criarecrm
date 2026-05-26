@@ -391,6 +391,8 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, isDragged, onD
   const [newSubTitle, setNewSubTitle]       = useState("");
   const [addingSub, setAddingSub]           = useState(false);
   const [showAddSub, setShowAddSub]         = useState(false);
+  const [editingTitle, setEditingTitle]     = useState(false);
+  const [editTitleValue, setEditTitleValue] = useState(item.titulo);
 
   const isCustom  = item.template_tarefa_id == null;
   const isNA      = item.status === "nao_aplicavel";
@@ -399,6 +401,16 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, isDragged, onD
   const days      = item.data_prazo ? daysDiff(item.data_prazo) : null;
   const subitens  = item.subitens || [];
   const subDone   = subitens.filter((s) => s.status === "concluido").length;
+
+  async function handleSaveTitle() {
+    const trimmed = editTitleValue.trim();
+    setEditingTitle(false);
+    if (!trimmed || trimmed === item.titulo) return;
+    try {
+      await implantacoesApi.atualizarChecklist(item.id, { titulo: trimmed });
+      onRefresh();
+    } catch { setEditTitleValue(item.titulo); }
+  }
 
   async function handleAddSub() {
     if (!newSubTitle.trim() || addingSub) return;
@@ -515,9 +527,27 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, isDragged, onD
           {/* Content */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start gap-1">
-              <p className={`text-sm leading-snug flex-1 break-words ${(isDone || isNA) ? "line-through text-gray-400" : "text-gray-800"}`}>
-                {item.titulo}
-              </p>
+              {editingTitle ? (
+                <input
+                  autoFocus
+                  value={editTitleValue}
+                  onChange={(e) => setEditTitleValue(e.target.value)}
+                  onBlur={handleSaveTitle}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSaveTitle();
+                    if (e.key === "Escape") { setEditingTitle(false); setEditTitleValue(item.titulo); }
+                  }}
+                  className="flex-1 text-sm border border-orange-300 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-orange-400 bg-white text-gray-800 w-full"
+                />
+              ) : (
+                <p
+                  onDoubleClick={() => { if (!isDone && !isNA) { setEditingTitle(true); setEditTitleValue(item.titulo); } }}
+                  title={!isDone && !isNA ? "Duplo clique para renomear" : undefined}
+                  className={`text-sm leading-snug flex-1 break-words ${(isDone || isNA) ? "line-through text-gray-400" : "text-gray-800 cursor-text"}`}
+                >
+                  {item.titulo}
+                </p>
+              )}
               <div className="flex items-center gap-1 shrink-0 ml-1 mt-0.5">
                 {item.pop_pdf_path && (
                   <button
