@@ -10,17 +10,15 @@ function slaRelativo(impl) {
     return { label: fmtDate(impl.sla_limite), level: "done" };
   }
   if (!impl.sla_limite) return null;
-  const diff = new Date(impl.sla_limite) - Date.now();
-  if (diff < 0) {
-    const h = Math.ceil(Math.abs(diff) / 3600000);
-    const d = Math.floor(h / 24);
-    return { label: d >= 1 ? `Vencido ${d}d` : `Vencido ${h}h`, level: "expired" };
-  }
-  const totalH = Math.floor(diff / 3600000);
-  const d = Math.floor(totalH / 24);
-  if (totalH < 24) return { label: "Vence hoje", level: "urgent" };
-  if (d === 1)     return { label: "Amanhã",     level: "warning" };
-  return           { label: `${d} dias`,          level: "ok" };
+  // Parse as local date (YYYY-MM-DD) to avoid UTC-offset shifting the day count
+  const [y, mo, dy] = impl.sla_limite.split("-").map(Number);
+  const slaLocal = new Date(y, mo - 1, dy);
+  const todayLocal = new Date(); todayLocal.setHours(0, 0, 0, 0);
+  const d = Math.round((slaLocal - todayLocal) / 86400000);
+  if (d < 0)  return { label: `Vencido ${-d}d`, level: "expired" };
+  if (d === 0) return { label: "Vence hoje",    level: "urgent" };
+  if (d === 1) return { label: "Amanhã",        level: "warning" };
+  return             { label: `${d} dias`,       level: "ok" };
 }
 
 const SLA_PILL = {
