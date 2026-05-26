@@ -899,7 +899,7 @@ export default function ClienteDetalhe() {
         const url = URL.createObjectURL(new Blob([data], { type: "application/octet-stream" }));
         const a = document.createElement("a");
         a.href = url;
-        a.download = `base_${cnpjClean}_${sufixo}.sql`;
+        a.download = `bdsia_${cnpjClean}_${sufixo}.sql`;
         a.click();
         URL.revokeObjectURL(url);
       })
