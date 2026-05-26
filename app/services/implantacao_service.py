@@ -118,7 +118,7 @@ def atualizar_checklist_item(db: Session, item_id: int, data: ChecklistItemUpdat
 
         # Se é um sub-item, sincroniza o pai automaticamente
         if item.parent_id:
-            _sincronizar_pai(db, item.parent_id)
+            _sincronizar_pai(db, item.parent_id, data.status)
 
     if data.descricao is not None:
         item.descricao = data.descricao.strip() or None
@@ -348,8 +348,13 @@ def adicionar_comentario(db: Session, impl_id: int, usuario: str, conteudo: str)
 
 # ── Helpers internos ──────────────────────────────────────────────────────────
 
-def _sincronizar_pai(db: Session, parent_id: int) -> None:
-    """Auto-completa ou reabre o pai com base no estado de todos os sub-itens."""
+def _sincronizar_pai(db: Session, parent_id: int, sub_novo_status: str) -> None:
+    """Auto-completa ou reabre o pai com base na direção do toggle do sub-item.
+
+    - Sub marcado (concluido/nao_aplicavel): completa o pai só se TODOS os subs estiverem done.
+    - Sub desmarcado (pendente): reabre o pai se ele estava concluido.
+    Nunca desmarca o pai quando o sub está sendo marcado — só quando está sendo desmarcado.
+    """
     parent = db.get(ChecklistItem, parent_id)
     if not parent:
         return
@@ -358,12 +363,12 @@ def _sincronizar_pai(db: Session, parent_id: int) -> None:
     ).scalars().all()
     if not subitens:
         return
-    todos_feitos = all(s.status in ("concluido", "nao_aplicavel") for s in subitens)
-    algum_pendente = any(s.status == "pendente" for s in subitens)
-    if todos_feitos and parent.status != "concluido":
-        parent.status = "concluido"
-        parent.data_conclusao = datetime.now()
-    elif algum_pendente and parent.status == "concluido":
+    if sub_novo_status in ("concluido", "nao_aplicavel"):
+        todos_feitos = all(s.status in ("concluido", "nao_aplicavel") for s in subitens)
+        if todos_feitos and parent.status != "concluido":
+            parent.status = "concluido"
+            parent.data_conclusao = datetime.now()
+    elif sub_novo_status == "pendente" and parent.status == "concluido":
         parent.status = "pendente"
         parent.data_conclusao = None
 
