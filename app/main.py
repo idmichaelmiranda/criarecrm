@@ -78,6 +78,7 @@ def _migrate_sqlite():
         "ALTER TABLE solicitacoes ADD COLUMN historico_recusas JSON",
         "ALTER TABLE checklist_itens ADD COLUMN parent_id INTEGER REFERENCES checklist_itens(id)",
         "ALTER TABLE template_tarefas ADD COLUMN parent_id INTEGER REFERENCES template_tarefas(id)",
+        "ALTER TABLE templates ADD COLUMN nome_produto VARCHAR(150)",
     ]
     with engine.connect() as conn:
         for ddl in new_cols:
@@ -116,6 +117,7 @@ def _migrate_postgres() -> None:
         "ALTER TABLE checklist_itens ADD COLUMN IF NOT EXISTS parent_id INTEGER REFERENCES checklist_itens(id)",
         "ALTER TABLE instalacoes ADD COLUMN IF NOT EXISTS tipos_nomes_json TEXT",
         "ALTER TABLE template_tarefas ADD COLUMN IF NOT EXISTS parent_id INTEGER REFERENCES template_tarefas(id)",
+        "ALTER TABLE templates ADD COLUMN IF NOT EXISTS nome_produto VARCHAR(150)",
     ]
     with engine.connect() as conn:
         for ddl in new_cols:

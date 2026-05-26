@@ -499,7 +499,7 @@ function ProdutosInstalacaoSection() {
     setSavingId(p.id);
     setError("");
     try {
-      if (nome !== p.nome) await templatesApi.atualizar(p.id, { nome });
+      if (nome !== p.nome) await templatesApi.atualizar(p.id, { nome_produto: nome });
       if (cor !== p.cor) {
         const { data: full } = await templatesApi.obter(p.id);
         if (full.etapas.length > 0) {
@@ -545,7 +545,7 @@ function ProdutosInstalacaoSection() {
     setError("");
     try {
       const tipo = `instalacao_${toSlug(newNome.trim())}`;
-      const { data: created } = await templatesApi.criar({ nome: newNome.trim(), tipo, ativo: true });
+      const { data: created } = await templatesApi.criar({ nome: newNome.trim(), nome_produto: newNome.trim(), tipo, ativo: true });
       const { data: etapa } = await templatesApi.adicionarEtapa(created.id, {
         nome: "Checklist de Instalação", ordem: 1, sla_dias: 7, cor: newCor,
       });

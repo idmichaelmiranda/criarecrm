@@ -149,7 +149,7 @@ def listar_tipos(db: Session = Depends(get_db)):
     return [
         TipoInstalacaoInfo(
             id=t.id,
-            nome=t.nome,
+            nome=t.nome_produto or t.nome,
             tipo=t.tipo,
             cor=t.etapas[0].cor if t.etapas else "#6366f1",
             n_tarefas=sum(len(e.tarefas) for e in t.etapas),

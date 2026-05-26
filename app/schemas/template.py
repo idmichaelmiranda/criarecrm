@@ -32,6 +32,7 @@ class TemplateEtapaResponse(BaseModel):
 class TemplateResponse(BaseModel):
     id: int
     nome: str
+    nome_produto: str | None = None
     descricao: str | None
     tipo: str | None
     sla_total_dias: int
@@ -46,6 +47,7 @@ class TemplateResponse(BaseModel):
 class TemplateListResponse(BaseModel):
     id: int
     nome: str
+    nome_produto: str | None = None
     descricao: str | None
     tipo: str | None
     sla_total_dias: int
@@ -59,6 +61,7 @@ class TemplateListResponse(BaseModel):
 
 class TemplateCreate(BaseModel):
     nome: str
+    nome_produto: str | None = None
     descricao: str | None = None
     tipo: str | None = None
     sla_total_dias: int = 30
@@ -67,6 +70,7 @@ class TemplateCreate(BaseModel):
 
 class TemplateUpdate(BaseModel):
     nome: str | None = None
+    nome_produto: str | None = None
     descricao: str | None = None
     tipo: str | None = None
     sla_total_dias: int | None = None

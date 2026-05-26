@@ -10,6 +10,7 @@ class Template(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     nome: Mapped[str] = mapped_column(String(150), nullable=False)
+    nome_produto: Mapped[Optional[str]] = mapped_column(String(150), nullable=True)
     descricao: Mapped[str] = mapped_column(Text, nullable=True)
     tipo: Mapped[str] = mapped_column(String(50), nullable=True)
     sla_total_dias: Mapped[int] = mapped_column(Integer, nullable=False, default=30)
