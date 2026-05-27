@@ -337,6 +337,8 @@ export default function InstalacaoDetalhe() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const fileInputRef = useRef(null);
+  const [editandoResp, setEditandoResp] = useState(false);
+  const [savingResp, setSavingResp] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -426,6 +428,20 @@ export default function InstalacaoDetalhe() {
       setNovoComentario("");
     } catch {}
     finally { setSendingComentario(false); }
+  }
+
+  async function handleSaveResp(rawVal) {
+    const responsavel_id = rawVal ? parseInt(rawVal) : null;
+    setSavingResp(true);
+    try {
+      const { data } = await instalacaosApi.atualizar(id, { responsavel_id });
+      setInst(data);
+      setFormEdit((f) => ({ ...f, responsavel_id: data.responsavel_id ?? "" }));
+    } catch {}
+    finally {
+      setSavingResp(false);
+      setEditandoResp(false);
+    }
   }
 
   async function handleUploadAnexo(e) {
@@ -672,10 +688,44 @@ export default function InstalacaoDetalhe() {
               )}
             </div>
 
-            {/* Responsável — card de perfil */}
+            {/* Responsável — card de perfil com seletor inline */}
             <div className="pt-3 border-t border-gray-100">
-              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">Responsável</p>
-              {inst.responsavel_nome ? (
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Responsável</p>
+                {!editandoResp && !inst.finalizado_em && (
+                  <button
+                    type="button"
+                    onClick={() => setEditandoResp(true)}
+                    className="p-1 rounded text-gray-300 hover:text-orange-500 hover:bg-orange-50 transition-colors"
+                    title="Alterar responsável"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+
+              {editandoResp ? (
+                <div className="flex items-center gap-2">
+                  <select
+                    autoFocus
+                    defaultValue={inst.responsavel_id ?? ""}
+                    disabled={savingResp}
+                    onChange={(e) => handleSaveResp(e.target.value)}
+                    onBlur={() => !savingResp && setEditandoResp(false)}
+                    className="flex-1 text-sm border border-orange-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-400/20 bg-white"
+                  >
+                    <option value="">Sem responsável</option>
+                    {usuarios.map((u) => (
+                      <option key={u.id} value={u.id}>{u.nome}</option>
+                    ))}
+                  </select>
+                  {savingResp && (
+                    <div className="w-4 h-4 rounded-full border-2 border-orange-400 border-t-transparent animate-spin shrink-0" />
+                  )}
+                </div>
+              ) : inst.responsavel_nome ? (
                 <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100">
                   {responsavelUser?.avatar_url ? (
                     <img
@@ -697,14 +747,18 @@ export default function InstalacaoDetalhe() {
                   <div className="w-2 h-2 rounded-full bg-green-400 shrink-0" title="Ativo" />
                 </div>
               ) : (
-                <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-2.5 border border-dashed border-gray-200">
-                  <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                    <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <button
+                  type="button"
+                  onClick={() => setEditandoResp(true)}
+                  className="w-full flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-2.5 border border-dashed border-gray-200 hover:border-orange-300 hover:bg-orange-50 transition-colors group"
+                >
+                  <div className="w-9 h-9 rounded-full bg-gray-100 group-hover:bg-orange-100 flex items-center justify-center shrink-0 transition-colors">
+                    <svg className="w-4 h-4 text-gray-300 group-hover:text-orange-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
-                  <p className="text-sm text-gray-400 italic">Não atribuído</p>
-                </div>
+                  <p className="text-sm text-gray-400 group-hover:text-orange-500 italic transition-colors">Atribuir responsável…</p>
+                </button>
               )}
             </div>
 
