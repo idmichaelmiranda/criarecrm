@@ -242,6 +242,10 @@ def atualizar(instalacao_id: int, data: InstalacaoUpdate, db: Session = Depends(
     for field, value in data.model_dump(exclude_none=True).items():
         setattr(inst, field, value)
 
+    # responsavel_id=null deve ser honrado mesmo sendo None (exclude_none=True pularia)
+    if "responsavel_id" in data.model_fields_set and data.responsavel_id is None:
+        inst.responsavel_id = None
+
     if inst.status == "concluida" and not inst.data_conclusao:
         inst.data_conclusao = date.today()
 
