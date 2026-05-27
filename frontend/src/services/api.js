@@ -167,6 +167,14 @@ export const instalacaosApi = {
     api.get(`/instalacoes/${instId}/anexos/${anexoId}/download`, { responseType: "blob" }),
 };
 
+// ── Notificações ─────────────────────────────────────────────────────────────
+export const notificacoesApi = {
+  listar: () => api.get("/notificacoes/"),
+  naoLidasCount: () => api.get("/notificacoes/nao-lidas-count"),
+  marcarLida: (id) => api.patch(`/notificacoes/${id}/lida`),
+  marcarTodasLidas: () => api.patch("/notificacoes/lidas-todas"),
+};
+
 // ── Dashboard ────────────────────────────────────────────────────────────────
 export const dashboardApi = {
   kpis: () => api.get("/dashboard/kpis"),

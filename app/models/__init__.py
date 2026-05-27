@@ -9,6 +9,7 @@ from app.models.comentario import Comentario
 from app.models.grupo_permissao import GrupoPermissao
 from app.models.usuario import Usuario
 from app.models.instalacao import Instalacao, InstalacaoChecklist, InstalacaoComentario, InstalacaoAnexo
+from app.models.notificacao import Notificacao
 
 __all__ = [
     "Solicitacao",
@@ -22,4 +23,5 @@ __all__ = [
     "GrupoPermissao",
     "Usuario",
     "Instalacao", "InstalacaoChecklist", "InstalacaoComentario", "InstalacaoAnexo",
+    "Notificacao",
 ]

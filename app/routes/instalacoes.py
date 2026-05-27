@@ -26,6 +26,21 @@ from app.schemas.instalacao import (
 router = APIRouter(prefix="/instalacoes", tags=["instalacoes"])
 
 
+def _criar_notif_atribuicao(db: Session, inst: "Instalacao", usuario_id: int) -> None:
+    """Cria notificação para o usuário recém-atribuído como responsável da instalação."""
+    from app.models.notificacao import Notificacao
+    cliente = db.get(Cliente, inst.cliente_id)
+    cliente_nome = cliente.razao_social if cliente else f"Cliente #{inst.cliente_id}"
+    db.add(Notificacao(
+        usuario_id=usuario_id,
+        tipo="instalacao_atribuida",
+        titulo="Nova instalação atribuída a você",
+        mensagem=f"{inst.codigo} — {cliente_nome}",
+        dados={"instalacao_id": inst.id, "codigo": inst.codigo},
+        lida=False,
+    ))
+
+
 def _safe_storage_name(original: str) -> str:
     """Converte nome de arquivo para path seguro no Supabase Storage.
     Remove acentos, substitui espaços/especiais por underscore, preserva extensão."""
@@ -151,6 +166,10 @@ def stats(db: Session = Depends(get_db)):
         "em_execucao": sum(1 for r in rows if r.status == "em_execucao"),
         "concluidas": sum(1 for r in rows if r.status == "concluida"),
         "canceladas": sum(1 for r in rows if r.status == "cancelada"),
+        "sem_responsavel": sum(
+            1 for r in rows
+            if not r.responsavel_id and r.status not in ("concluida", "cancelada")
+        ),
     }
 
 
@@ -211,6 +230,9 @@ def criar(data: InstalacaoCreate, db: Session = Depends(get_db)):
     db.add(inst)
     db.flush()
 
+    if data.responsavel_id:
+        _criar_notif_atribuicao(db, inst, data.responsavel_id)
+
     # Merge checklists from all selected types
     ordem = 1
     for tipo in data.tipos:
@@ -239,12 +261,19 @@ def atualizar(instalacao_id: int, data: InstalacaoUpdate, db: Session = Depends(
     if not inst:
         raise HTTPException(404, "Instalação não encontrada")
 
+    old_responsavel_id = inst.responsavel_id
+
     for field, value in data.model_dump(exclude_none=True).items():
         setattr(inst, field, value)
 
     # responsavel_id=null deve ser honrado mesmo sendo None (exclude_none=True pularia)
     if "responsavel_id" in data.model_fields_set and data.responsavel_id is None:
         inst.responsavel_id = None
+
+    # Notifica o novo responsável quando a atribuição muda
+    new_responsavel_id = inst.responsavel_id
+    if new_responsavel_id and new_responsavel_id != old_responsavel_id:
+        _criar_notif_atribuicao(db, inst, new_responsavel_id)
 
     if inst.status == "concluida" and not inst.data_conclusao:
         inst.data_conclusao = date.today()

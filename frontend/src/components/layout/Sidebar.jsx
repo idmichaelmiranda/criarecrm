@@ -1,7 +1,8 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { solicitacoesApi, usuariosApi, authApi } from "../../services/api";
+import { solicitacoesApi, usuariosApi, authApi, instalacaosApi, notificacoesApi } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
+import { timeAgoFromUTC } from "../../utils/dateUtils";
 
 function Icon({ d }) {
   return (
@@ -27,7 +28,7 @@ const MENU = {
       d: "M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2",
     },
     {
-      to: "/instalacoes", label: "Instalações", permission: "instalacoes.view",
+      to: "/instalacoes", label: "Instalações", permission: "instalacoes.view", installsBadge: true,
       d: "M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18",
     },
     {
@@ -57,7 +58,7 @@ const MENU = {
   ],
 };
 
-function NavItem({ item, badge = 0, pendenteBadge = 0 }) {
+function NavItem({ item, badge = 0, pendenteBadge = 0, installsBadge = 0 }) {
   return (
     <NavLink
       to={item.to}
@@ -77,6 +78,11 @@ function NavItem({ item, badge = 0, pendenteBadge = 0 }) {
           {badge > 99 ? "99+" : badge}
         </span>
       )}
+      {item.installsBadge && installsBadge > 0 && (
+        <span className="min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-orange-500 text-white text-[11px] font-bold leading-none">
+          {installsBadge > 99 ? "99+" : installsBadge}
+        </span>
+      )}
       {item.pendenteBadge && pendenteBadge > 0 && (
         <span className="min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-amber-500 text-white text-[11px] font-bold leading-none">
           {pendenteBadge > 99 ? "99+" : pendenteBadge}
@@ -91,7 +97,7 @@ function NavItem({ item, badge = 0, pendenteBadge = 0 }) {
   );
 }
 
-function NavGroup({ title, items, badge, pendenteBadge, hasPermission }) {
+function NavGroup({ title, items, badge, pendenteBadge, installsBadge, hasPermission }) {
   const visible = items.filter((i) => hasPermission(i.permission));
   if (visible.length === 0) return null;
   return (
@@ -100,20 +106,110 @@ function NavGroup({ title, items, badge, pendenteBadge, hasPermission }) {
         {title}
       </p>
       {visible.map((item) => (
-        <NavItem key={item.to} item={item} badge={badge} pendenteBadge={pendenteBadge} />
+        <NavItem key={item.to} item={item} badge={badge} pendenteBadge={pendenteBadge} installsBadge={installsBadge} />
       ))}
     </div>
   );
 }
 
+// ── Dropdown de notificações ──────────────────────────────────────────────────
+
+function NotifDropdown({ notifs, onMarcarLida, onMarcarTodas, onClose, navigate }) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) onClose();
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [onClose]);
+
+  const naoLidas = notifs.filter((n) => !n.lida);
+
+  return (
+    <div
+      ref={ref}
+      className="fixed z-50 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden"
+      style={{ left: "252px", bottom: "16px" }}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+        <span className="text-sm font-bold text-gray-800">Notificações</span>
+        {naoLidas.length > 0 && (
+          <button
+            onClick={onMarcarTodas}
+            className="text-[11px] text-orange-500 hover:text-orange-600 font-medium transition-colors"
+          >
+            Marcar todas como lidas
+          </button>
+        )}
+      </div>
+
+      {/* Lista */}
+      <div className="overflow-y-auto max-h-80">
+        {notifs.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-8">Nenhuma notificação.</p>
+        ) : (
+          notifs.map((n) => (
+            <button
+              key={n.id}
+              onClick={() => {
+                onMarcarLida(n.id);
+                if (n.dados?.instalacao_id) {
+                  navigate(`/instalacoes/${n.dados.instalacao_id}`);
+                }
+                onClose();
+              }}
+              className={`w-full text-left px-4 py-3 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors flex items-start gap-3 ${
+                !n.lida ? "bg-orange-50/50" : ""
+              }`}
+            >
+              {/* Ícone */}
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                !n.lida ? "bg-orange-100" : "bg-gray-100"
+              }`}>
+                <svg className={`w-4 h-4 ${!n.lida ? "text-orange-500" : "text-gray-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18" />
+                </svg>
+              </div>
+              {/* Texto */}
+              <div className="flex-1 min-w-0">
+                <p className={`text-xs font-semibold leading-snug truncate ${!n.lida ? "text-gray-800" : "text-gray-600"}`}>
+                  {n.titulo}
+                </p>
+                {n.mensagem && (
+                  <p className="text-[11px] text-gray-500 truncate mt-0.5">{n.mensagem}</p>
+                )}
+                <p className="text-[10px] text-gray-400 mt-1">{timeAgoFromUTC(n.created_at)}</p>
+              </div>
+              {/* Bolinha não lida */}
+              {!n.lida && (
+                <div className="w-2 h-2 rounded-full bg-orange-500 shrink-0 mt-1.5" />
+              )}
+            </button>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Sidebar principal ─────────────────────────────────────────────────────────
+
 export function Sidebar() {
-  const [triageCount, setTriageCount]     = useState(0);
-  const [pendentesCount, setPendentesCount] = useState(0);
-  const [uploading, setUploading] = useState(false);
+  const [triageCount, setTriageCount]         = useState(0);
+  const [pendentesCount, setPendentesCount]   = useState(0);
+  const [semRespCount, setSemRespCount]       = useState(0);
+  const [notifCount, setNotifCount]           = useState(0);
+  const [notifs, setNotifs]                   = useState([]);
+  const [showNotifs, setShowNotifs]           = useState(false);
+  const [uploading, setUploading]             = useState(false);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
   const { user, logout, hasPermission, updateUser } = useAuth();
 
+  // ── Triagem badge ──────────────────────────────────────────────────────────
   useEffect(() => {
     if (!hasPermission("triagem.view")) return;
     const fetch = () =>
@@ -127,6 +223,7 @@ export function Sidebar() {
     return () => { clearInterval(interval); document.removeEventListener("visibilitychange", onVisible); };
   }, [hasPermission]);
 
+  // ── Usuários pendentes badge ───────────────────────────────────────────────
   useEffect(() => {
     if (!hasPermission("usuarios.view")) return;
     const fetch = () =>
@@ -140,9 +237,56 @@ export function Sidebar() {
     return () => { clearInterval(interval); document.removeEventListener("visibilitychange", onVisible); };
   }, [hasPermission]);
 
-  const handleAvatarClick = () => {
-    if (!uploading) fileInputRef.current?.click();
-  };
+  // ── Instalações sem responsável badge ─────────────────────────────────────
+  useEffect(() => {
+    if (!hasPermission("instalacoes.view")) return;
+    const fetch = () =>
+      instalacaosApi.stats()
+        .then(({ data }) => setSemRespCount(data.sem_responsavel || 0))
+        .catch(() => {});
+    fetch();
+    const interval = setInterval(fetch, 20_000);
+    const onVisible = () => { if (document.visibilityState === "visible") fetch(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { clearInterval(interval); document.removeEventListener("visibilitychange", onVisible); };
+  }, [hasPermission]);
+
+  // ── Notificações do usuário ────────────────────────────────────────────────
+  useEffect(() => {
+    const fetchCount = () =>
+      notificacoesApi.naoLidasCount()
+        .then(({ data }) => setNotifCount(data.count || 0))
+        .catch(() => {});
+    fetchCount();
+    const interval = setInterval(fetchCount, 20_000);
+    const onVisible = () => { if (document.visibilityState === "visible") fetchCount(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { clearInterval(interval); document.removeEventListener("visibilitychange", onVisible); };
+  }, []);
+
+  async function handleOpenNotifs() {
+    if (showNotifs) { setShowNotifs(false); return; }
+    try {
+      const { data } = await notificacoesApi.listar();
+      setNotifs(data);
+    } catch {}
+    setShowNotifs(true);
+  }
+
+  async function handleMarcarLida(id) {
+    try { await notificacoesApi.marcarLida(id); } catch {}
+    setNotifs((prev) => prev.map((n) => n.id === id ? { ...n, lida: true } : n));
+    setNotifCount((c) => Math.max(0, c - 1));
+  }
+
+  async function handleMarcarTodas() {
+    try { await notificacoesApi.marcarTodasLidas(); } catch {}
+    setNotifs((prev) => prev.map((n) => ({ ...n, lida: true })));
+    setNotifCount(0);
+  }
+
+  // ── Avatar upload ──────────────────────────────────────────────────────────
+  const handleAvatarClick = () => { if (!uploading) fileInputRef.current?.click(); };
 
   const handleAvatarChange = useCallback(async (e) => {
     const file = e.target.files?.[0];
@@ -152,11 +296,8 @@ export function Sidebar() {
     try {
       const { data } = await authApi.uploadAvatar(file);
       updateUser(data);
-    } catch {
-      // silently ignore — user can retry
-    } finally {
-      setUploading(false);
-    }
+    } catch {}
+    finally { setUploading(false); }
   }, [updateUser]);
 
   function handleLogout() {
@@ -197,16 +338,16 @@ export function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-0.5">
-        <NavGroup title="Operacional"   items={MENU.OPERACIONAL}   badge={triageCount}   pendenteBadge={0}             hasPermission={hasPermission} />
-        <NavGroup title="Configuração"  items={MENU.CONFIGURACAO}  badge={0}             pendenteBadge={0}             hasPermission={hasPermission} />
-        <NavGroup title="Administração" items={MENU.ADMINISTRACAO} badge={0}             pendenteBadge={pendentesCount} hasPermission={hasPermission} />
+        <NavGroup title="Operacional"   items={MENU.OPERACIONAL}   badge={triageCount}   pendenteBadge={0}             installsBadge={semRespCount} hasPermission={hasPermission} />
+        <NavGroup title="Configuração"  items={MENU.CONFIGURACAO}  badge={0}             pendenteBadge={0}             installsBadge={0}            hasPermission={hasPermission} />
+        <NavGroup title="Administração" items={MENU.ADMINISTRACAO} badge={0}             pendenteBadge={pendentesCount} installsBadge={0}            hasPermission={hasPermission} />
       </nav>
 
       {/* User footer */}
       <div className="px-4 py-4 border-t border-white/5 shrink-0">
         {user && (
-          <div className="flex items-center gap-3 mb-3">
-            {/* Clickable avatar */}
+          <div className="flex items-center gap-2 mb-3">
+            {/* Avatar clicável */}
             <button
               onClick={handleAvatarClick}
               title="Alterar foto"
@@ -214,19 +355,12 @@ export function Sidebar() {
               className="relative w-10 h-10 rounded-full shrink-0 group focus:outline-none"
             >
               {user.avatar_url ? (
-                <img
-                  src={user.avatar_url}
-                  alt={user.nome}
-                  className="w-10 h-10 rounded-full object-cover"
-                />
+                <img src={user.avatar_url} alt={user.nome} className="w-10 h-10 rounded-full object-cover" />
               ) : (
                 <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
-                  <span className="text-orange-400 text-sm font-bold">
-                    {user.nome.charAt(0).toUpperCase()}
-                  </span>
+                  <span className="text-orange-400 text-sm font-bold">{user.nome.charAt(0).toUpperCase()}</span>
                 </div>
               )}
-              {/* Hover overlay */}
               <span className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 {uploading ? (
                   <svg className="w-4 h-4 text-white animate-spin" fill="none" viewBox="0 0 24 24">
@@ -242,20 +376,31 @@ export function Sidebar() {
               </span>
             </button>
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleAvatarChange}
-            />
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
 
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold text-slate-300 truncate">{user.nome}</p>
               <p className="text-[10px] text-slate-600 truncate">{user.grupo_nome || "Sem grupo"}</p>
             </div>
+
+            {/* Sino de notificações */}
+            <button
+              onClick={handleOpenNotifs}
+              title="Notificações"
+              className="relative w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/8 transition-all shrink-0"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              {notifCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold leading-none">
+                  {notifCount > 9 ? "9+" : notifCount}
+                </span>
+              )}
+            </button>
           </div>
         )}
+
         <button
           onClick={handleLogout}
           className="flex items-center gap-2 text-xs text-slate-600 hover:text-slate-400 transition-colors py-1"
@@ -266,6 +411,17 @@ export function Sidebar() {
           Sair
         </button>
       </div>
+
+      {/* Dropdown de notificações — posicionado à direita do sidebar */}
+      {showNotifs && (
+        <NotifDropdown
+          notifs={notifs}
+          onMarcarLida={handleMarcarLida}
+          onMarcarTodas={handleMarcarTodas}
+          onClose={() => setShowNotifs(false)}
+          navigate={navigate}
+        />
+      )}
     </aside>
   );
 }

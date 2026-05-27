@@ -11,6 +11,7 @@ from app.models import (  # noqa: F401 — registra todos os modelos no metadata
     Implantacao, ImplantacaoEtapa, ChecklistItem, TimelineEvento, Comentario,
     GrupoPermissao, Usuario,
     Instalacao, InstalacaoChecklist, InstalacaoComentario, InstalacaoAnexo,
+    Notificacao,
 )
 from app.routes.solicitacoes import router as solicitacoes_router
 from app.routes.implantacoes import router as implantacoes_router
@@ -23,6 +24,7 @@ from app.routes.usuarios import router as usuarios_router
 from app.routes.grupos_permissao import router as grupos_router
 from app.routes.bd_restore import router as bd_restore_router
 from app.routes.instalacoes import router as instalacoes_router
+from app.routes.notificacoes import router as notificacoes_router
 from app.dependencies.auth import get_current_user
 
 @asynccontextmanager
@@ -159,6 +161,17 @@ def _migrate_postgres() -> None:
             uploaded_by VARCHAR(150),
             created_at TIMESTAMP NOT NULL DEFAULT NOW()
         )""",
+        """CREATE TABLE IF NOT EXISTS notificacoes (
+            id SERIAL PRIMARY KEY,
+            usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+            tipo VARCHAR(50) NOT NULL,
+            titulo VARCHAR(200) NOT NULL,
+            mensagem TEXT,
+            dados JSON,
+            lida BOOLEAN NOT NULL DEFAULT FALSE,
+            created_at TIMESTAMP NOT NULL DEFAULT NOW()
+        )""",
+        "CREATE INDEX IF NOT EXISTS ix_notificacoes_usuario_id ON notificacoes (usuario_id)",
     ]
     with engine.connect() as conn:
         for ddl in new_cols:
@@ -213,6 +226,7 @@ app.include_router(usuarios_router,      prefix="/api/v1", dependencies=_auth_de
 app.include_router(grupos_router,        prefix="/api/v1", dependencies=_auth_dep)
 app.include_router(bd_restore_router,    prefix="/api/v1", dependencies=_auth_dep)
 app.include_router(instalacoes_router,   prefix="/api/v1", dependencies=_auth_dep)
+app.include_router(notificacoes_router,  prefix="/api/v1", dependencies=_auth_dep)
 
 
 @app.api_route("/api/v1/health", methods=["GET", "HEAD"])
