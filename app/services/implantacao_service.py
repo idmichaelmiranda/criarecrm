@@ -76,6 +76,7 @@ def get_by_id(db: Session, impl_id: int) -> Implantacao:
             selectinload(Implantacao.cliente),
             selectinload(Implantacao.etapas).selectinload(ImplantacaoEtapa.itens).selectinload(ChecklistItem.template_tarefa),
             selectinload(Implantacao.etapas).selectinload(ImplantacaoEtapa.itens).selectinload(ChecklistItem.subitens),
+            selectinload(Implantacao.checklist),
             selectinload(Implantacao.timeline),
             selectinload(Implantacao.comentarios),
         )

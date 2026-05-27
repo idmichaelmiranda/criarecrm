@@ -118,6 +118,17 @@ class ComentarioCreate(BaseModel):
     usuario: str = "Admin"
 
 
+class ChecklistItemFlatResponse(BaseModel):
+    """Flat (non-nested) checklist item — used to build subitems index on the frontend."""
+    id: int
+    parent_id: int | None = None
+    etapa_id: int | None = None
+    status: str
+    arquivado: bool = False
+
+    model_config = {"from_attributes": True}
+
+
 class ImplantacaoListResponse(BaseModel):
     id: int
     codigo: str
@@ -175,6 +186,7 @@ class ImplantacaoFullResponse(BaseModel):
     cliente_id: int
     solicitacao_id: int | None
     etapas: list[EtapaResponse] = []
+    checklist: list[ChecklistItemFlatResponse] = []
     timeline: list[TimelineResponse] = []
     comentarios: list[ComentarioResponse] = []
 

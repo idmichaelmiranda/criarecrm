@@ -8,16 +8,31 @@ import { fmtDate, fmtDateTime } from "../utils/dateUtils";
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 /**
+ * Builds parent_id → [sub_items] index from the flat checklist.
+ * Mirrors backend _build_subs_index exactly.
+ */
+function buildSubsIndex(checklist) {
+  const idx = {};
+  for (const item of checklist || []) {
+    if (item.parent_id) {
+      (idx[item.parent_id] = idx[item.parent_id] || []).push(item);
+    }
+  }
+  return idx;
+}
+
+/**
  * Leaf-item progress: if a root item has non-archived sub-items, count those;
  * otherwise count the root item. Matches backend _leaf_counts logic exactly.
- * @param {Array} rootItems - root-level items of an etapa (item.subitens populated)
- * @returns {{ total: number, done: number }}
+ * subsIndex: result of buildSubsIndex(impl.checklist) — preferred over item.subitens
+ * because self-referential selectinload may not always populate subitens in the ORM chain.
  */
-function leafProgress(rootItems) {
+function leafProgress(rootItems, subsIndex) {
   let total = 0, done = 0;
   for (const item of rootItems) {
     if (item.arquivado) continue;
-    const activeSubs = (item.subitens || []).filter(
+    const subs = (subsIndex && subsIndex[item.id]) || item.subitens || [];
+    const activeSubs = subs.filter(
       (s) => !s.arquivado && s.status !== "nao_aplicavel"
     );
     if (activeSubs.length > 0) {
@@ -91,8 +106,8 @@ function Spinner() {
 
 // ── Pipeline Ring ─────────────────────────────────────────────────────────────
 
-function PipelineRing({ etapa }) {
-  const { total, done } = leafProgress(etapa.itens);
+function PipelineRing({ etapa, subsIndex }) {
+  const { total, done } = leafProgress(etapa.itens, subsIndex);
   const pct    = total > 0 ? done / total : 0;
   const allDone = total > 0 && done === total;
 
@@ -138,7 +153,7 @@ function PipelineRing({ etapa }) {
 
 // ── Pipeline ──────────────────────────────────────────────────────────────────
 
-function Pipeline({ etapas, onEtapaClick, onAddEtapa, onRenameEtapa }) {
+function Pipeline({ etapas, subsIndex, onEtapaClick, onAddEtapa, onRenameEtapa }) {
   const sorted = [...etapas].sort((a, b) => a.ordem - b.ordem);
   const [editingId, setEditingId] = useState(null);
   const [editNome, setEditNome]   = useState("");
@@ -161,7 +176,7 @@ function Pipeline({ etapas, onEtapaClick, onAddEtapa, onRenameEtapa }) {
     <div className="overflow-x-auto overflow-y-visible -mx-2 px-2">
       <div className="flex items-start gap-0 pt-2 pb-3">
         {sorted.map((etapa, idx) => {
-          const { total, done } = leafProgress(etapa.itens);
+          const { total, done } = leafProgress(etapa.itens, subsIndex);
           const allDone   = total > 0 && done === total;
           const isLast    = idx === sorted.length - 1;
           const isEditing = editingId === etapa.id;
@@ -174,7 +189,7 @@ function Pipeline({ etapas, onEtapaClick, onAddEtapa, onRenameEtapa }) {
                   title={`${etapa.nome} — ${done}/${total} tarefas`}
                   className="transition-transform duration-150 group-hover:scale-110 group-hover:drop-shadow-md focus:outline-none"
                 >
-                  <PipelineRing etapa={etapa} />
+                  <PipelineRing etapa={etapa} subsIndex={subsIndex} />
                 </button>
                 {isEditing ? (
                   <input
@@ -946,7 +961,7 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
 
 // ── Kanban Column ─────────────────────────────────────────────────────────────
 
-function KanbanColumn({ etapa, implId, somentePendentes, filterText, filterResp, filterStatus, columnRef, onRefresh, onOptimisticToggle, isExpanded, dragItem, onDragStart, onDragEnd, onMoveItem, usuarios, isFirst, isLast, onMoveLeft, onMoveRight, onDelete }) {
+function KanbanColumn({ etapa, subsIndex, implId, somentePendentes, filterText, filterResp, filterStatus, columnRef, onRefresh, onOptimisticToggle, isExpanded, dragItem, onDragStart, onDragEnd, onMoveItem, usuarios, isFirst, isLast, onMoveLeft, onMoveRight, onDelete }) {
   const [showAdd, setShowAdd]             = useState(false);
   const [newTitle, setNewTitle]           = useState("");
   const [showMenu, setShowMenu]           = useState(false);
@@ -976,7 +991,7 @@ function KanbanColumn({ etapa, implId, somentePendentes, filterText, filterResp,
     );
   }
 
-  const { total, done } = leafProgress(etapa.itens);
+  const { total, done } = leafProgress(etapa.itens, subsIndex);
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
   const isDropTarget = isDragOver && dragItem && dragItem.sourceEtapaId !== etapa.id;
@@ -1261,7 +1276,7 @@ function IconCompress() {
 
 // ── Kanban Tab ────────────────────────────────────────────────────────────────
 
-function KanbanTab({ etapas, implId, somentePendentes, columnRefs, onRefresh, onOptimisticToggle, isExpanded, showAddEtapa: propShowAdd, onSetShowAddEtapa }) {
+function KanbanTab({ etapas, subsIndex, implId, somentePendentes, columnRefs, onRefresh, onOptimisticToggle, isExpanded, showAddEtapa: propShowAdd, onSetShowAddEtapa }) {
   const [filterText, setFilterText]     = useState("");
   const [filterResp, setFilterResp]     = useState("");
   const [filterStatus, setFilterStatus] = useState("");
@@ -1373,6 +1388,7 @@ function KanbanTab({ etapas, implId, somentePendentes, columnRefs, onRefresh, on
           <KanbanColumn
             key={etapa.id}
             etapa={etapa}
+            subsIndex={subsIndex}
             implId={implId}
             somentePendentes={somentePendentes}
             filterText={filterText}
@@ -1760,6 +1776,11 @@ export default function ImplantacaoDetalhe() {
   function handleOptimisticToggle(itemId, newStatus) {
     setImpl(prev => ({
       ...prev,
+      // Update flat checklist (drives leafProgress via subsIndex)
+      checklist: (prev.checklist || []).map(item =>
+        item.id === itemId ? { ...item, status: newStatus } : item
+      ),
+      // Update nested etapas (drives card display)
       etapas: prev.etapas.map(etapa => ({
         ...etapa,
         itens: etapa.itens.map(item => {
@@ -1787,8 +1808,10 @@ export default function ImplantacaoDetalhe() {
     impl.sla_status === "critico"  ? "text-amber-600 font-semibold" :
     "text-gray-600";
 
+  const subsIndex = buildSubsIndex(impl.checklist);
+
   const { total: lpTotal, done: lpDone } = impl.etapas.reduce(
-    (acc, e) => { const r = leafProgress(e.itens); return { total: acc.total + r.total, done: acc.done + r.done }; },
+    (acc, e) => { const r = leafProgress(e.itens, subsIndex); return { total: acc.total + r.total, done: acc.done + r.done }; },
     { total: 0, done: 0 }
   );
   const liveProgress = lpTotal > 0 ? Math.round((lpDone / lpTotal) * 100) : 0;
@@ -1870,6 +1893,7 @@ export default function ImplantacaoDetalhe() {
         {impl.etapas.length > 0 && (
           <Pipeline
             etapas={impl.etapas}
+            subsIndex={subsIndex}
             onEtapaClick={handlePipelineClick}
             onAddEtapa={() => { setActiveTab("checklist"); setShowAddEtapa(true); }}
             onRenameEtapa={handleRenameEtapa}
@@ -1941,6 +1965,7 @@ export default function ImplantacaoDetalhe() {
           {activeTab === "checklist" && (
             <KanbanTab
               etapas={impl.etapas}
+              subsIndex={subsIndex}
               implId={impl.id}
               somentePendentes={somentePendentes}
               columnRefs={columnRefs}
@@ -2028,6 +2053,7 @@ export default function ImplantacaoDetalhe() {
           <div className="flex-1 overflow-hidden px-5 py-4">
             <KanbanTab
               etapas={impl.etapas}
+              subsIndex={subsIndex}
               implId={impl.id}
               somentePendentes={somentePendentes}
               columnRefs={columnRefs}
