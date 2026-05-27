@@ -2,7 +2,9 @@ from datetime import datetime, date, timezone
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Response
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import select, func
-
+from pathlib import Path
+import re
+import unicodedata
 import json
 
 from app.database.connection import get_db
@@ -22,6 +24,20 @@ from app.schemas.instalacao import (
 )
 
 router = APIRouter(prefix="/instalacoes", tags=["instalacoes"])
+
+
+def _safe_storage_name(original: str) -> str:
+    """Converte nome de arquivo para path seguro no Supabase Storage.
+    Remove acentos, substitui espaços/especiais por underscore, preserva extensão."""
+    stem = Path(original).stem
+    ext = Path(original).suffix  # inclui o ponto, ex.: ".pdf"
+    # Remove acentos (NFD + encode ascii)
+    stem = unicodedata.normalize("NFKD", stem).encode("ascii", "ignore").decode("ascii")
+    # Substitui qualquer char que não seja alfanum, hífen ou ponto por underscore
+    stem = re.sub(r"[^\w\-]", "_", stem)
+    # Colapsa underscores múltiplos e remove das bordas
+    stem = re.sub(r"_+", "_", stem).strip("_") or "arquivo"
+    return f"{stem}{ext}"
 
 # Prefixo do código: IN-YYYYMMDD-XXXX
 def _gerar_codigo(db: Session) -> str:
@@ -386,8 +402,9 @@ async def upload_anexo(
         raise HTTPException(404, "Instalação não encontrada")
 
     data = await file.read()
-    storage_path = f"instalacoes/{inst_check.codigo}/{file.filename}"
-    storage.upload_sync(storage_path, data, file.content_type or "application/octet-stream")
+    safe_name = _safe_storage_name(file.filename or "arquivo")
+    storage_path = f"instalacoes/{inst_check.codigo}/{safe_name}"
+    await storage.upload_async(storage_path, data, file.content_type or "application/octet-stream")
 
     anexo = InstalacaoAnexo(
         instalacao_id=instalacao_id,

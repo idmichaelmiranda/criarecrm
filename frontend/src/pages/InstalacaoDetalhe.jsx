@@ -335,6 +335,7 @@ export default function InstalacaoDetalhe() {
   const [iniciando, setIniciando] = useState(false);
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const fileInputRef = useRef(null);
 
   async function load() {
@@ -432,11 +433,16 @@ export default function InstalacaoDetalhe() {
     if (!file) return;
     e.target.value = "";
     setUploading(true);
+    setUploadError("");
     try {
       const { data } = await instalacaosApi.uploadAnexo(id, file);
       setInst(data);
-    } catch {}
-    finally { setUploading(false); }
+    } catch (err) {
+      const msg = err?.response?.data?.detail || err?.message || "Erro ao enviar arquivo.";
+      setUploadError(typeof msg === "string" ? msg : JSON.stringify(msg));
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function handleDeleteAnexo(anexo) {
@@ -989,6 +995,10 @@ export default function InstalacaoDetalhe() {
                 onChange={handleUploadAnexo}
               />
             </div>
+
+            {uploadError && (
+              <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-3">{uploadError}</p>
+            )}
 
             {(inst.anexos || []).length === 0 ? (
               <p className="text-sm text-gray-400 py-2 text-center">Nenhum arquivo anexado.</p>

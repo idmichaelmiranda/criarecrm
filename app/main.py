@@ -149,6 +149,16 @@ def _migrate_postgres() -> None:
         "ALTER TABLE template_tarefas ADD COLUMN IF NOT EXISTS parent_id INTEGER REFERENCES template_tarefas(id)",
         "ALTER TABLE templates ADD COLUMN IF NOT EXISTS nome_produto VARCHAR(150)",
         "ALTER TABLE checklist_itens ADD COLUMN IF NOT EXISTS arquivado BOOLEAN NOT NULL DEFAULT FALSE",
+        """CREATE TABLE IF NOT EXISTS instalacao_anexos (
+            id SERIAL PRIMARY KEY,
+            instalacao_id INTEGER NOT NULL REFERENCES instalacoes(id) ON DELETE CASCADE,
+            filename VARCHAR(500) NOT NULL,
+            storage_path VARCHAR(1000) NOT NULL,
+            content_type VARCHAR(100),
+            tamanho_bytes INTEGER,
+            uploaded_by VARCHAR(150),
+            created_at TIMESTAMP NOT NULL DEFAULT NOW()
+        )""",
     ]
     with engine.connect() as conn:
         for ddl in new_cols:
