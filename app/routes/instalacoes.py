@@ -1,5 +1,5 @@
 from datetime import datetime, date, timezone
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Response
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import select, func
 
@@ -7,7 +7,7 @@ import json
 
 from app.database.connection import get_db
 import app.services.storage_service as storage
-from app.models.instalacao import Instalacao, InstalacaoChecklist, InstalacaoComentario
+from app.models.instalacao import Instalacao, InstalacaoChecklist, InstalacaoComentario, InstalacaoAnexo
 from app.models.cliente import Cliente
 from app.models.usuario import Usuario
 from app.models.template import Template, TemplateEtapa, TemplateTarefa
@@ -18,7 +18,7 @@ from app.schemas.instalacao import (
     InstalacaoListResponse, InstalacaoFullResponse,
     ChecklistItemCreate, ChecklistItemUpdate,
     ComentarioCreate, ComentarioResponse,
-    TipoInstalacaoInfo,
+    TipoInstalacaoInfo, AnexoResponse,
 )
 
 router = APIRouter(prefix="/instalacoes", tags=["instalacoes"])
@@ -39,6 +39,7 @@ def _load(instalacao_id: int, db: Session) -> Instalacao:
             selectinload(Instalacao.checklist),
             selectinload(Instalacao.comentarios),
             selectinload(Instalacao.responsavel),
+            selectinload(Instalacao.anexos),
         )
         .where(Instalacao.id == instalacao_id)
     ).scalar_one_or_none()
@@ -369,3 +370,59 @@ def adicionar_comentario(instalacao_id: int, data: ComentarioCreate, db: Session
     db.commit()
     db.refresh(c)
     return c
+
+
+# ── Anexos ────────────────────────────────────────────────────────────────────
+
+@router.post("/{instalacao_id}/anexos", response_model=InstalacaoFullResponse, status_code=201)
+async def upload_anexo(
+    instalacao_id: int,
+    file: UploadFile = File(...),
+    uploaded_by: str = Form("Admin"),
+    db: Session = Depends(get_db),
+):
+    inst_check = db.get(Instalacao, instalacao_id)
+    if not inst_check:
+        raise HTTPException(404, "Instalação não encontrada")
+
+    data = await file.read()
+    storage_path = f"instalacoes/{inst_check.codigo}/{file.filename}"
+    storage.upload_sync(storage_path, data, file.content_type or "application/octet-stream")
+
+    anexo = InstalacaoAnexo(
+        instalacao_id=instalacao_id,
+        filename=file.filename,
+        storage_path=storage_path,
+        content_type=file.content_type,
+        tamanho_bytes=len(data),
+        uploaded_by=uploaded_by,
+    )
+    db.add(anexo)
+    db.commit()
+    return _to_full_response(_load(instalacao_id, db), db)
+
+
+@router.delete("/{instalacao_id}/anexos/{anexo_id}", response_model=InstalacaoFullResponse)
+def deletar_anexo(instalacao_id: int, anexo_id: int, db: Session = Depends(get_db)):
+    anexo = db.get(InstalacaoAnexo, anexo_id)
+    if not anexo or anexo.instalacao_id != instalacao_id:
+        raise HTTPException(404, "Anexo não encontrado")
+    storage.delete_sync(anexo.storage_path)
+    db.delete(anexo)
+    db.commit()
+    return _to_full_response(_load(instalacao_id, db), db)
+
+
+@router.get("/{instalacao_id}/anexos/{anexo_id}/download")
+def download_anexo(instalacao_id: int, anexo_id: int, db: Session = Depends(get_db)):
+    anexo = db.get(InstalacaoAnexo, anexo_id)
+    if not anexo or anexo.instalacao_id != instalacao_id:
+        raise HTTPException(404, "Anexo não encontrado")
+    data = storage.download_sync(anexo.storage_path)
+    if data is None:
+        raise HTTPException(404, "Arquivo não encontrado no storage")
+    return Response(
+        content=data,
+        media_type=anexo.content_type or "application/octet-stream",
+        headers={"Content-Disposition": f'attachment; filename="{anexo.filename}"'},
+    )

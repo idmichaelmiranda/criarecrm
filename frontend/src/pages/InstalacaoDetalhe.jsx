@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import { instalacaosApi, clientesApi, usuariosApi, templatesApi } from "../services/api";
-import { fmtDate, fmtDateTime } from "../utils/dateUtils";
+import { fmtDate, fmtDateTime, fmtDateOnly } from "../utils/dateUtils";
 
 function normalizeTipo(t) {
   return t?.startsWith("instalacao_") ? t : `instalacao_${t}`;
@@ -87,6 +87,23 @@ function formatMinutes(min) {
   const m = min % 60;
   if (h > 0) return `${h}h ${m > 0 ? `${m}min` : ""}`.trim();
   return `${m}min`;
+}
+
+function fmtBytes(bytes) {
+  if (!bytes) return "";
+  if (bytes < 1024) return `${bytes}B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)}KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+}
+
+function fileIcon(contentType) {
+  if (!contentType) return "📄";
+  if (contentType.startsWith("image/")) return "🖼️";
+  if (contentType === "application/pdf") return "📑";
+  if (contentType.includes("spreadsheet") || contentType.includes("excel") || contentType.includes("csv")) return "📊";
+  if (contentType.includes("word") || contentType.includes("document")) return "📝";
+  if (contentType.includes("zip") || contentType.includes("rar") || contentType.includes("tar")) return "🗜️";
+  return "📄";
 }
 
 // ── Modal de Finalização ──────────────────────────────────────────────────────
@@ -317,6 +334,8 @@ export default function InstalacaoDetalhe() {
   const [finalizando, setFinalizando] = useState(false);
   const [iniciando, setIniciando] = useState(false);
   const [error, setError] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   async function load() {
     setLoading(true);
@@ -406,6 +425,38 @@ export default function InstalacaoDetalhe() {
       setNovoComentario("");
     } catch {}
     finally { setSendingComentario(false); }
+  }
+
+  async function handleUploadAnexo(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    setUploading(true);
+    try {
+      const { data } = await instalacaosApi.uploadAnexo(id, file);
+      setInst(data);
+    } catch {}
+    finally { setUploading(false); }
+  }
+
+  async function handleDeleteAnexo(anexo) {
+    if (!window.confirm(`Remover "${anexo.filename}"?`)) return;
+    try {
+      const { data } = await instalacaosApi.deletarAnexo(id, anexo.id);
+      setInst(data);
+    } catch {}
+  }
+
+  async function handleDownloadAnexo(anexo) {
+    try {
+      const { data } = await instalacaosApi.downloadAnexo(id, anexo.id);
+      const url = URL.createObjectURL(new Blob([data], { type: anexo.content_type || "application/octet-stream" }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = anexo.filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {}
   }
 
   if (loading) {
@@ -651,15 +702,42 @@ export default function InstalacaoDetalhe() {
               )}
             </div>
 
+            {/* Contato no local */}
+            {(inst.contato_nome || inst.contato_telefone) && (
+              <div className="pt-3 border-t border-gray-100">
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">Contato no local</p>
+                <div className="flex items-start gap-2.5 bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100">
+                  <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center shrink-0 mt-0.5">
+                    <svg className="w-4 h-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <div className="min-w-0">
+                    {inst.contato_nome && (
+                      <p className="text-sm font-semibold text-gray-800 leading-tight">{inst.contato_nome}</p>
+                    )}
+                    {inst.contato_telefone && (
+                      <a
+                        href={`tel:${inst.contato_telefone.replace(/\D/g, "")}`}
+                        className="text-xs text-orange-600 hover:underline mt-0.5 block"
+                      >
+                        {inst.contato_telefone}
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Datas */}
             <div className="space-y-2 pt-3 border-t border-gray-100">
               {[
                 { label: "Criado em",     value: fmtDateTime(inst.created_at) },
-                { label: "Agendado para", value: inst.data_agendada ? fmtDate(inst.data_agendada + "T00:00:00") : null },
+                { label: "Agendado para", value: inst.data_agendada ? fmtDateOnly(inst.data_agendada) : null },
                 { label: "Concluído em",  value: inst.finalizado_em
                     ? fmtDateTime(inst.finalizado_em)
                     : inst.data_conclusao
-                      ? fmtDate(inst.data_conclusao + "T00:00:00")
+                      ? fmtDateOnly(inst.data_conclusao)
                       : null },
               ].map(({ label, value }) => value ? (
                 <div key={label} className="flex justify-between items-baseline">
@@ -876,6 +954,84 @@ export default function InstalacaoDetalhe() {
                 {sendingComentario ? "…" : "Enviar"}
               </button>
             </form>
+          </div>
+
+          {/* Anexos */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-bold text-gray-800">Anexos</h2>
+                {(inst.anexos || []).length > 0 && (
+                  <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">
+                    {inst.anexos.length}
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-orange-600 bg-orange-50 hover:bg-orange-100 disabled:opacity-50 transition-colors"
+              >
+                {uploading ? (
+                  <div className="w-3.5 h-3.5 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" />
+                ) : (
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                )}
+                {uploading ? "Enviando…" : "Anexar arquivo"}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                onChange={handleUploadAnexo}
+              />
+            </div>
+
+            {(inst.anexos || []).length === 0 ? (
+              <p className="text-sm text-gray-400 py-2 text-center">Nenhum arquivo anexado.</p>
+            ) : (
+              <div className="space-y-2">
+                {inst.anexos.map((anexo) => (
+                  <div key={anexo.id} className="flex items-center gap-3 p-2.5 rounded-lg border border-gray-100 hover:border-gray-200 hover:bg-gray-50 transition-colors group">
+                    <span className="text-lg shrink-0">{fileIcon(anexo.content_type)}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-700 truncate">{anexo.filename}</p>
+                      <p className="text-[10px] text-gray-400">
+                        {fmtBytes(anexo.tamanho_bytes)}
+                        {anexo.tamanho_bytes ? " · " : ""}
+                        {fmtDateTime(anexo.created_at)}
+                        {anexo.uploaded_by ? ` · ${anexo.uploaded_by}` : ""}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadAnexo(anexo)}
+                        title="Baixar"
+                        className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteAnexo(anexo)}
+                        title="Remover"
+                        className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

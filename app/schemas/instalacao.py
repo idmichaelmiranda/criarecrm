@@ -52,6 +52,20 @@ class ChecklistItemUpdate(BaseModel):
     nota: str | None = None
 
 
+# ── Anexos ────────────────────────────────────────────────────────────────────
+
+class AnexoResponse(BaseModel):
+    id: int
+    filename: str
+    storage_path: str
+    content_type: str | None = None
+    tamanho_bytes: int | None = None
+    uploaded_by: str | None = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
 # ── Comentários ───────────────────────────────────────────────────────────────
 
 class ComentarioResponse(BaseModel):
@@ -189,6 +203,7 @@ class InstalacaoFullResponse(BaseModel):
     template_pop_pdf_path: str | None = None
     checklist: list[ChecklistItemResponse] = []
     comentarios: list[ComentarioResponse] = []
+    anexos: list[AnexoResponse] = []
 
     model_config = {"from_attributes": True}
 

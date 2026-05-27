@@ -8,7 +8,7 @@ from app.models.timeline import TimelineEvento
 from app.models.comentario import Comentario
 from app.models.grupo_permissao import GrupoPermissao
 from app.models.usuario import Usuario
-from app.models.instalacao import Instalacao, InstalacaoChecklist, InstalacaoComentario
+from app.models.instalacao import Instalacao, InstalacaoChecklist, InstalacaoComentario, InstalacaoAnexo
 
 __all__ = [
     "Solicitacao",
@@ -21,5 +21,5 @@ __all__ = [
     "Comentario",
     "GrupoPermissao",
     "Usuario",
-    "Instalacao", "InstalacaoChecklist", "InstalacaoComentario",
+    "Instalacao", "InstalacaoChecklist", "InstalacaoComentario", "InstalacaoAnexo",
 ]

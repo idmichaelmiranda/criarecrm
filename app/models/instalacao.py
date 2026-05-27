@@ -57,6 +57,10 @@ class Instalacao(Base):
         "InstalacaoComentario", back_populates="instalacao",
         order_by="InstalacaoComentario.created_at", cascade="all, delete-orphan"
     )
+    anexos: Mapped[list["InstalacaoAnexo"]] = relationship(
+        "InstalacaoAnexo", back_populates="instalacao",
+        order_by="InstalacaoAnexo.created_at", cascade="all, delete-orphan"
+    )
 
 
 class InstalacaoChecklist(Base):
@@ -93,3 +97,18 @@ class InstalacaoComentario(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     instalacao: Mapped["Instalacao"] = relationship("Instalacao", back_populates="comentarios")
+
+
+class InstalacaoAnexo(Base):
+    __tablename__ = "instalacao_anexos"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    instalacao_id: Mapped[int] = mapped_column(ForeignKey("instalacoes.id"), nullable=False)
+    filename: Mapped[str] = mapped_column(String(500), nullable=False)
+    storage_path: Mapped[str] = mapped_column(String(1000), nullable=False)
+    content_type: Mapped[str] = mapped_column(String(100), nullable=True)
+    tamanho_bytes: Mapped[int] = mapped_column(Integer, nullable=True)
+    uploaded_by: Mapped[str] = mapped_column(String(150), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    instalacao: Mapped["Instalacao"] = relationship("Instalacao", back_populates="anexos")

@@ -10,7 +10,7 @@ from app.models import (  # noqa: F401 — registra todos os modelos no metadata
     Solicitacao, Cliente, Template, TemplateEtapa, TemplateTarefa,
     Implantacao, ImplantacaoEtapa, ChecklistItem, TimelineEvento, Comentario,
     GrupoPermissao, Usuario,
-    Instalacao, InstalacaoChecklist, InstalacaoComentario,
+    Instalacao, InstalacaoChecklist, InstalacaoComentario, InstalacaoAnexo,
 )
 from app.routes.solicitacoes import router as solicitacoes_router
 from app.routes.implantacoes import router as implantacoes_router

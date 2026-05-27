@@ -154,6 +154,17 @@ export const instalacaosApi = {
   adicionarComentario: (instId, data) => api.post(`/instalacoes/${instId}/comentarios`, data),
   iniciar: (instId) => api.post(`/instalacoes/${instId}/iniciar`),
   finalizar: (instId, data) => api.post(`/instalacoes/${instId}/finalizar`, data),
+  uploadAnexo: (instId, file, uploadedBy = "Admin") => {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("uploaded_by", uploadedBy);
+    return api.post(`/instalacoes/${instId}/anexos`, form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+  deletarAnexo: (instId, anexoId) => api.delete(`/instalacoes/${instId}/anexos/${anexoId}`),
+  downloadAnexo: (instId, anexoId) =>
+    api.get(`/instalacoes/${instId}/anexos/${anexoId}/download`, { responseType: "blob" }),
 };
 
 // ── Dashboard ────────────────────────────────────────────────────────────────

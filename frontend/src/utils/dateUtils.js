@@ -16,6 +16,13 @@ export function fmtDateTime(d) {
   return parseUTC(d).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
 }
 
+// Para campos date-only (YYYY-MM-DD): parse como data local para evitar off-by-one em UTC-3
+export function fmtDateOnly(dateStr) {
+  if (!dateStr) return "—";
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("pt-BR");
+}
+
 export function timeAgoFromUTC(isoStr) {
   if (!isoStr) return "";
   const diff = (Date.now() - parseUTC(isoStr)) / 1000;
