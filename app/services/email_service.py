@@ -39,23 +39,41 @@ def _smtp_send(cfg: dict, to_email: str, msg: MIMEMultipart) -> None:
             server.sendmail(msg["From"], [to_email], msg.as_string())
 
 
-def send_revisao_email(
-    to_email: str, razao_social: str, motivo: str, link: str
-) -> None:
-    cfg = get_config()
-    if not cfg or not cfg.get("host") or not cfg.get("user"):
-        raise ValueError(
-            "Configuração de email incompleta. Acesse Configurações > Email."
-        )
+def _send_email(to_email: str, subject: str, html: str) -> None:
+    """Route to Resend (when RESEND_API_KEY is set) or SMTP."""
+    from app.config import RESEND_API_KEY
 
-    from_name = cfg.get("from_name") or "CriareCRM"
-    from_email = cfg.get("from_email") or cfg["user"]
+    cfg = get_config()
+    _cfg = cfg or {}
+    from_name = _cfg.get("from_name") or "CriareCRM"
+    from_email = _cfg.get("from_email") or _cfg.get("user") or "noreply@criare.com.br"
+    from_addr = f"{from_name} <{from_email}>"
+
+    if RESEND_API_KEY:
+        import httpx
+        try:
+            resp = httpx.post(
+                "https://api.resend.com/emails",
+                headers={"Authorization": f"Bearer {RESEND_API_KEY}"},
+                json={"from": from_addr, "to": [to_email], "subject": subject, "html": html},
+                timeout=20,
+            )
+            resp.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            raise ValueError(f"Resend recusou o email ({exc.response.status_code}): {exc.response.text}")
+        except Exception as exc:
+            raise ValueError(f"Erro ao enviar email via Resend: {exc}")
+        return
+
+    # SMTP fallback
+    if not cfg or not cfg.get("host") or not cfg.get("user"):
+        raise ValueError("Configuração de email incompleta. Acesse Configurações > Email.")
 
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = "Sua solicitação precisa de ajustes — CriareCRM"
-    msg["From"] = f"{from_name} <{from_email}>"
+    msg["Subject"] = subject
+    msg["From"] = from_addr
     msg["To"] = to_email
-    msg.attach(MIMEText(_build_html(razao_social, motivo, link), "html", "utf-8"))
+    msg.attach(MIMEText(html, "html", "utf-8"))
 
     try:
         _smtp_send(cfg, to_email, msg)
@@ -69,41 +87,34 @@ def send_revisao_email(
         raise ValueError(f"Erro ao enviar email: {exc}")
 
 
-def send_revisao_email_async(
-    to_email: str, razao_social: str, motivo: str, link: str
-) -> None:
+# ── Revisão ───────────────────────────────────────────────────────────────────
+
+def send_revisao_email(to_email: str, razao_social: str, motivo: str, link: str) -> None:
+    _send_email(
+        to_email,
+        "Sua solicitação precisa de ajustes — CriareCRM",
+        _build_html(razao_social, motivo, link),
+    )
+
+
+def send_revisao_email_async(to_email: str, razao_social: str, motivo: str, link: str) -> None:
     def _run():
         try:
             send_revisao_email(to_email, razao_social, motivo, link)
             print(f"[EMAIL] Revisão enviada para {to_email}")
         except Exception as exc:
             print(f"[EMAIL] Falha ao enviar revisão para {to_email}: {exc}")
-
     threading.Thread(target=_run, daemon=True).start()
 
 
+# ── Boas-vindas ───────────────────────────────────────────────────────────────
+
 def send_boas_vindas_email(to_email: str, nome: str, link: str) -> None:
-    cfg = get_config()
-    if not cfg or not cfg.get("host") or not cfg.get("user"):
-        raise ValueError("Configuração de email incompleta. Acesse Configurações > Email.")
-
-    from_name = cfg.get("from_name") or "CriareCRM"
-    from_email = cfg.get("from_email") or cfg["user"]
-
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = "Seu acesso foi aprovado — CriareCRM"
-    msg["From"] = f"{from_name} <{from_email}>"
-    msg["To"] = to_email
-    msg.attach(MIMEText(_build_boas_vindas_html(nome, link), "html", "utf-8"))
-
-    try:
-        _smtp_send(cfg, to_email, msg)
-    except smtplib.SMTPAuthenticationError:
-        raise ValueError("Falha na autenticação SMTP. Verifique usuário e senha.")
-    except (smtplib.SMTPConnectError, OSError) as exc:
-        raise ValueError(f"Não foi possível conectar ao servidor {cfg['host']}:{cfg.get('port', 587)}. {exc}")
-    except Exception as exc:
-        raise ValueError(f"Erro ao enviar email: {exc}")
+    _send_email(
+        to_email,
+        "Seu acesso foi aprovado — CriareCRM",
+        _build_boas_vindas_html(nome, link),
+    )
 
 
 def send_boas_vindas_email_async(to_email: str, nome: str, link: str) -> None:
@@ -113,9 +124,50 @@ def send_boas_vindas_email_async(to_email: str, nome: str, link: str) -> None:
             print(f"[EMAIL] Boas-vindas enviado para {to_email}")
         except Exception as exc:
             print(f"[EMAIL] Falha ao enviar boas-vindas para {to_email}: {exc}")
-
     threading.Thread(target=_run, daemon=True).start()
 
+
+# ── Triagem ───────────────────────────────────────────────────────────────────
+
+def send_triagem_email(to_email: str, razao_social: str) -> None:
+    _send_email(
+        to_email,
+        "Sua solicitação está em análise — CriareCRM",
+        _build_triagem_html(razao_social),
+    )
+
+
+def send_triagem_email_async(to_email: str, razao_social: str) -> None:
+    def _run():
+        try:
+            send_triagem_email(to_email, razao_social)
+            print(f"[EMAIL] Triagem enviada para {to_email}")
+        except Exception as exc:
+            print(f"[EMAIL] Falha ao enviar triagem para {to_email}: {exc}")
+    threading.Thread(target=_run, daemon=True).start()
+
+
+# ── Aprovação ─────────────────────────────────────────────────────────────────
+
+def send_aprovacao_email(to_email: str, razao_social: str, codigo: str) -> None:
+    _send_email(
+        to_email,
+        "Sua solicitação foi aprovada! — CriareCRM",
+        _build_aprovacao_html(razao_social, codigo),
+    )
+
+
+def send_aprovacao_email_async(to_email: str, razao_social: str, codigo: str) -> None:
+    def _run():
+        try:
+            send_aprovacao_email(to_email, razao_social, codigo)
+            print(f"[EMAIL] Aprovação enviada para {to_email}")
+        except Exception as exc:
+            print(f"[EMAIL] Falha ao enviar aprovação para {to_email}: {exc}")
+    threading.Thread(target=_run, daemon=True).start()
+
+
+# ── HTML builders ─────────────────────────────────────────────────────────────
 
 def _build_html(razao_social: str, motivo: str, link: str) -> str:
     return f"""<!DOCTYPE html>
@@ -175,74 +227,6 @@ def _build_html(razao_social: str, motivo: str, link: str) -> str:
 </table>
 </td></tr></table>
 </body></html>"""
-
-
-def send_triagem_email(to_email: str, razao_social: str) -> None:
-    cfg = get_config()
-    if not cfg or not cfg.get("host") or not cfg.get("user"):
-        raise ValueError("Configuração de email incompleta. Acesse Configurações > Email.")
-
-    from_name = cfg.get("from_name") or "CriareCRM"
-    from_email = cfg.get("from_email") or cfg["user"]
-
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = "Sua solicitação está em análise — CriareCRM"
-    msg["From"] = f"{from_name} <{from_email}>"
-    msg["To"] = to_email
-    msg.attach(MIMEText(_build_triagem_html(razao_social), "html", "utf-8"))
-
-    try:
-        _smtp_send(cfg, to_email, msg)
-    except smtplib.SMTPAuthenticationError:
-        raise ValueError("Falha na autenticação SMTP. Verifique usuário e senha.")
-    except (smtplib.SMTPConnectError, OSError) as exc:
-        raise ValueError(f"Não foi possível conectar ao servidor {cfg['host']}:{cfg.get('port', 587)}. {exc}")
-    except Exception as exc:
-        raise ValueError(f"Erro ao enviar email: {exc}")
-
-
-def send_triagem_email_async(to_email: str, razao_social: str) -> None:
-    def _run():
-        try:
-            send_triagem_email(to_email, razao_social)
-            print(f"[EMAIL] Triagem enviada para {to_email}")
-        except Exception as exc:
-            print(f"[EMAIL] Falha ao enviar triagem para {to_email}: {exc}")
-    threading.Thread(target=_run, daemon=True).start()
-
-
-def send_aprovacao_email(to_email: str, razao_social: str, codigo: str) -> None:
-    cfg = get_config()
-    if not cfg or not cfg.get("host") or not cfg.get("user"):
-        raise ValueError("Configuração de email incompleta. Acesse Configurações > Email.")
-
-    from_name = cfg.get("from_name") or "CriareCRM"
-    from_email = cfg.get("from_email") or cfg["user"]
-
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = "Sua solicitação foi aprovada! — CriareCRM"
-    msg["From"] = f"{from_name} <{from_email}>"
-    msg["To"] = to_email
-    msg.attach(MIMEText(_build_aprovacao_html(razao_social, codigo), "html", "utf-8"))
-
-    try:
-        _smtp_send(cfg, to_email, msg)
-    except smtplib.SMTPAuthenticationError:
-        raise ValueError("Falha na autenticação SMTP. Verifique usuário e senha.")
-    except (smtplib.SMTPConnectError, OSError) as exc:
-        raise ValueError(f"Não foi possível conectar ao servidor {cfg['host']}:{cfg.get('port', 587)}. {exc}")
-    except Exception as exc:
-        raise ValueError(f"Erro ao enviar email: {exc}")
-
-
-def send_aprovacao_email_async(to_email: str, razao_social: str, codigo: str) -> None:
-    def _run():
-        try:
-            send_aprovacao_email(to_email, razao_social, codigo)
-            print(f"[EMAIL] Aprovação enviada para {to_email}")
-        except Exception as exc:
-            print(f"[EMAIL] Falha ao enviar aprovação para {to_email}: {exc}")
-    threading.Thread(target=_run, daemon=True).start()
 
 
 def _build_triagem_html(razao_social: str) -> str:

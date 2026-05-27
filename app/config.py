@@ -15,3 +15,6 @@ SECRET_KEY: str = os.environ.get("SECRET_KEY", "dev-secret-mude-em-producao")
 # Supabase Storage — quando configurado, todos os uploads vão para o bucket "uploads"
 SUPABASE_URL: str = os.environ.get("SUPABASE_URL", "").rstrip("/")
 SUPABASE_SERVICE_KEY: str = os.environ.get("SUPABASE_SERVICE_KEY", "")
+
+# Resend — serviço de email via HTTP (preferido sobre SMTP em cloud hosting)
+RESEND_API_KEY: str = os.environ.get("RESEND_API_KEY", "")
