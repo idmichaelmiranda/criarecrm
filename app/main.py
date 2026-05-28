@@ -106,6 +106,7 @@ def _migrate_sqlite():
         "ALTER TABLE templates ADD COLUMN nome_produto VARCHAR(150)",
         "ALTER TABLE checklist_itens ADD COLUMN arquivado BOOLEAN NOT NULL DEFAULT 0",
         "ALTER TABLE templates ADD COLUMN checklist_template_id INTEGER REFERENCES templates(id)",
+        "ALTER TABLE instalacoes ADD COLUMN criado_por_id INTEGER REFERENCES usuarios(id)",
     ]
     with engine.connect() as conn:
         for ddl in new_cols:
@@ -153,6 +154,7 @@ def _migrate_postgres() -> None:
         "ALTER TABLE templates ADD COLUMN IF NOT EXISTS nome_produto VARCHAR(150)",
         "ALTER TABLE checklist_itens ADD COLUMN IF NOT EXISTS arquivado BOOLEAN NOT NULL DEFAULT FALSE",
         "ALTER TABLE templates ADD COLUMN IF NOT EXISTS checklist_template_id INTEGER REFERENCES templates(id)",
+        "ALTER TABLE instalacoes ADD COLUMN IF NOT EXISTS criado_por_id INTEGER REFERENCES usuarios(id)",
         """CREATE TABLE IF NOT EXISTS instalacao_anexos (
             id SERIAL PRIMARY KEY,
             instalacao_id INTEGER NOT NULL REFERENCES instalacoes(id) ON DELETE CASCADE,

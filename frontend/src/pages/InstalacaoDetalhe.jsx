@@ -1027,6 +1027,19 @@ export default function InstalacaoDetalhe() {
               )}
             </div>
 
+            {/* Criado por */}
+            {inst.criado_por_nome && (
+              <div className="pt-3 border-t border-gray-100">
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">Criado por</p>
+                <div className="flex items-center gap-2.5 bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 ${avatarColor(inst.criado_por_nome)}`}>
+                    {initials(inst.criado_por_nome)}
+                  </div>
+                  <p className="text-sm font-medium text-gray-700 truncate">{inst.criado_por_nome}</p>
+                </div>
+              </div>
+            )}
+
             {/* Contato no local */}
             {(inst.contato_nome || inst.contato_telefone) && (
               <div className="pt-3 border-t border-gray-100">

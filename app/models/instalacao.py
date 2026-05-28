@@ -26,6 +26,7 @@ class Instalacao(Base):
     # normal | alta | urgente
 
     responsavel_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"), nullable=True)
+    criado_por_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"), nullable=True)
     consultor: Mapped[str] = mapped_column(String(150), nullable=True)
     observacoes: Mapped[str] = mapped_column(Text, nullable=True)
 
@@ -49,6 +50,7 @@ class Instalacao(Base):
 
     cliente: Mapped["Cliente"] = relationship("Cliente", back_populates="instalacoes")
     responsavel: Mapped["Usuario"] = relationship("Usuario", foreign_keys=[responsavel_id])
+    criado_por: Mapped["Usuario"] = relationship("Usuario", foreign_keys=[criado_por_id])
     checklist: Mapped[list["InstalacaoChecklist"]] = relationship(
         "InstalacaoChecklist", back_populates="instalacao",
         order_by="InstalacaoChecklist.ordem", cascade="all, delete-orphan"

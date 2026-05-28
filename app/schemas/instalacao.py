@@ -199,6 +199,8 @@ class InstalacaoFullResponse(BaseModel):
     responsavel_id: int | None = None
     responsavel_nome: str | None = None
     responsavel_avatar_url: str | None = None
+    criado_por_id: int | None = None
+    criado_por_nome: str | None = None
     observacoes: str | None = None
     contato_nome: str | None = None
     contato_telefone: str | None = None

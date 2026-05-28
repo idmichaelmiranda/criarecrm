@@ -8,6 +8,7 @@ import unicodedata
 import json
 
 from app.database.connection import get_db
+from app.dependencies.auth import get_current_user
 import app.services.storage_service as storage
 from app.models.instalacao import Instalacao, InstalacaoChecklist, InstalacaoComentario, InstalacaoAnexo
 from app.models.cliente import Cliente
@@ -70,6 +71,7 @@ def _load(instalacao_id: int, db: Session) -> Instalacao:
             selectinload(Instalacao.checklist),
             selectinload(Instalacao.comentarios),
             selectinload(Instalacao.responsavel),
+            selectinload(Instalacao.criado_por),
             selectinload(Instalacao.anexos),
         )
         .where(Instalacao.id == instalacao_id)
@@ -94,6 +96,7 @@ def _to_full_response(inst: Instalacao, db: Session | None = None) -> Instalacao
     resp.responsavel_nome = inst.responsavel.nome if inst.responsavel else None
     if inst.responsavel and inst.responsavel.avatar_path:
         resp.responsavel_avatar_url = storage.avatar_url(inst.responsavel.avatar_path)
+    resp.criado_por_nome = inst.criado_por.nome if inst.criado_por else None
     if db:
         # For single-type installs use tipo; for multi-type use first tipo
         from app.schemas.instalacao import _parse_tipos
@@ -198,7 +201,7 @@ def listar_tipos(db: Session = Depends(get_db)):
 
 
 @router.post("/", response_model=InstalacaoFullResponse, status_code=201)
-def criar(data: InstalacaoCreate, db: Session = Depends(get_db)):
+def criar(data: InstalacaoCreate, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
     if not db.get(Cliente, data.cliente_id):
         raise HTTPException(404, "Cliente não encontrado")
     if data.responsavel_id and not db.get(Usuario, data.responsavel_id):
@@ -224,6 +227,7 @@ def criar(data: InstalacaoCreate, db: Session = Depends(get_db)):
         quantidade=data.quantidade,
         prioridade=data.prioridade,
         responsavel_id=data.responsavel_id,
+        criado_por_id=current_user.id,
         observacoes=data.observacoes,
         data_agendada=data.data_agendada,
         contato_nome=data.contato_nome,
