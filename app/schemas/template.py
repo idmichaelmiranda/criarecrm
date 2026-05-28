@@ -75,6 +75,7 @@ class TemplateUpdate(BaseModel):
     tipo: str | None = None
     sla_total_dias: int | None = None
     ativo: bool | None = None
+    checklist_template_id: int | None = None
 
 
 class EtapaCreate(BaseModel):

@@ -312,6 +312,174 @@ function ChecklistItem({ item, instId, onUpdated, onDeleted, locked }) {
   );
 }
 
+// ── Modal Editar (antes de iniciar) ──────────────────────────────────────────
+
+function EditarInstalacaoModal({ inst, tiposConfig, usuarios, onSave, onClose, saving, error }) {
+  const tiposAtuais = (inst.tipos?.length > 0 ? inst.tipos : [inst.tipo].filter(Boolean))
+    .map((t) => t.replace(/^instalacao_/, ""));
+
+  const [tiposSel, setTiposSel] = useState([...tiposAtuais]);
+  const [form, setForm] = useState({
+    quantidade: inst.quantidade || 1,
+    prioridade: inst.prioridade || "normal",
+    responsavel_id: inst.responsavel_id ?? "",
+    data_agendada: inst.data_agendada || "",
+    contato_nome: inst.contato_nome || "",
+    contato_telefone: inst.contato_telefone || "",
+    observacoes: inst.observacoes || "",
+  });
+
+  const oriSet = new Set(tiposAtuais);
+  const tiposChanged = tiposSel.length !== oriSet.size || tiposSel.some((t) => !oriSet.has(t));
+
+  function toggleTipo(slug) {
+    setTiposSel((prev) => prev.includes(slug) ? prev.filter((t) => t !== slug) : [...prev, slug]);
+  }
+
+  function handleSubmit() {
+    const tipos = tiposSel.map((t) => (t.startsWith("instalacao_") ? t : `instalacao_${t}`));
+    onSave({
+      tipos,
+      quantidade: Number(form.quantidade),
+      prioridade: form.prioridade,
+      responsavel_id: form.responsavel_id ? parseInt(form.responsavel_id) : null,
+      data_agendada: form.data_agendada || null,
+      contato_nome: form.contato_nome || null,
+      contato_telefone: form.contato_telefone || null,
+      observacoes: form.observacoes || null,
+    });
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+          <h2 className="text-base font-bold text-gray-900">Editar Instalação</h2>
+          <button onClick={onClose} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="overflow-y-auto px-6 py-5 space-y-5 flex-1">
+          {/* Produtos */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Produtos</label>
+            <div className="flex flex-wrap gap-2">
+              {tiposConfig.filter((t) => t.ativo).map((t) => {
+                const slug = t.tipo.replace(/^instalacao_/, "");
+                const sel = tiposSel.includes(slug);
+                return (
+                  <button key={t.id} type="button" onClick={() => toggleTipo(slug)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all ${
+                      sel ? "border-transparent text-white shadow-sm" : "border-gray-200 text-gray-500 hover:border-gray-300 bg-white"
+                    }`}
+                    style={sel ? { background: t.cor || "#6366f1" } : undefined}>
+                    {sel && (
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                    {t.nome}
+                  </button>
+                );
+              })}
+            </div>
+            {tiposChanged && (
+              <div className="mt-2.5 flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                <svg className="w-3.5 h-3.5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>Alterar os produtos irá regenerar o checklist. Itens já marcados serão perdidos.</span>
+              </div>
+            )}
+          </div>
+
+          {/* Quantidade + Prioridade */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5">Quantidade</label>
+              <input type="number" min={1} value={form.quantidade}
+                onChange={(e) => setForm((f) => ({ ...f, quantidade: e.target.value }))}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 transition" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5">Prioridade</label>
+              <select value={form.prioridade}
+                onChange={(e) => setForm((f) => ({ ...f, prioridade: e.target.value }))}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 transition bg-white">
+                <option value="normal">Normal</option>
+                <option value="alta">Alta</option>
+                <option value="urgente">Urgente</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Responsável + Data */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5">Responsável</label>
+              <select value={form.responsavel_id}
+                onChange={(e) => setForm((f) => ({ ...f, responsavel_id: e.target.value }))}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 transition bg-white">
+                <option value="">Sem responsável</option>
+                {usuarios.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5">Data Agendada</label>
+              <input type="date" value={form.data_agendada}
+                onChange={(e) => setForm((f) => ({ ...f, data_agendada: e.target.value }))}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 transition" />
+            </div>
+          </div>
+
+          {/* Contato */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5">Contato no local</label>
+              <input type="text" value={form.contato_nome} placeholder="Nome do contato"
+                onChange={(e) => setForm((f) => ({ ...f, contato_nome: e.target.value }))}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 transition" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5">Telefone</label>
+              <input type="text" value={form.contato_telefone} placeholder="(00) 00000-0000"
+                onChange={(e) => setForm((f) => ({ ...f, contato_telefone: e.target.value }))}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 transition" />
+            </div>
+          </div>
+
+          {/* Observações */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Observações</label>
+            <textarea value={form.observacoes} rows={3}
+              onChange={(e) => setForm((f) => ({ ...f, observacoes: e.target.value }))}
+              placeholder="Observações adicionais…"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 transition resize-none" />
+          </div>
+
+          {error && (
+            <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
+          )}
+        </div>
+
+        <div className="flex gap-3 px-6 py-4 border-t border-gray-100 shrink-0">
+          <button type="button" onClick={onClose}
+            className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+            Cancelar
+          </button>
+          <button type="button" onClick={handleSubmit} disabled={saving || tiposSel.length === 0}
+            className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50 transition-colors">
+            {saving ? "Salvando…" : "Salvar alterações"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function InstalacaoDetalhe() {
@@ -339,6 +507,9 @@ export default function InstalacaoDetalhe() {
   const fileInputRef = useRef(null);
   const [editandoResp, setEditandoResp] = useState(false);
   const [savingResp, setSavingResp] = useState(false);
+  const [showEditarModal, setShowEditarModal] = useState(false);
+  const [editarError, setEditarError] = useState("");
+  const [editarSaving, setEditarSaving] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -444,6 +615,20 @@ export default function InstalacaoDetalhe() {
     }
   }
 
+  async function handleEditarAntes(payload) {
+    setEditarSaving(true);
+    setEditarError("");
+    try {
+      const { data } = await instalacaosApi.editarAntes(id, payload);
+      setInst(data);
+      setShowEditarModal(false);
+    } catch (err) {
+      setEditarError(err.message || "Erro ao salvar alterações.");
+    } finally {
+      setEditarSaving(false);
+    }
+  }
+
   async function handleUploadAnexo(e) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -518,6 +703,17 @@ export default function InstalacaoDetalhe() {
           onClose={() => setShowModalFinalizar(false)}
         />
       )}
+      {showEditarModal && (
+        <EditarInstalacaoModal
+          inst={inst}
+          tiposConfig={tiposConfig}
+          usuarios={usuarios}
+          saving={editarSaving}
+          error={editarError}
+          onSave={handleEditarAntes}
+          onClose={() => { setShowEditarModal(false); setEditarError(""); }}
+        />
+      )}
       {/* Breadcrumb */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2 text-sm">
@@ -533,21 +729,34 @@ export default function InstalacaoDetalhe() {
           <span className="text-gray-300">/</span>
           <span className="text-gray-700 font-medium">{inst.codigo}</span>
         </div>
-        <button
-          onClick={() => setEditando((v) => !v)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-            editando ? "bg-gray-100 text-gray-600" : "bg-orange-50 text-orange-600 hover:bg-orange-100"
-          }`}
-        >
-          {editando ? "Cancelar edição" : (
-            <>
+        <div className="flex items-center gap-2">
+          {inst.status === "agendada" && (
+            <button
+              onClick={() => { setEditarError(""); setShowEditarModal(true); }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-all"
+            >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
-              Editar
-            </>
+              Editar Instalação
+            </button>
           )}
-        </button>
+          <button
+            onClick={() => setEditando((v) => !v)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+              editando ? "bg-gray-100 text-gray-600" : "bg-orange-50 text-orange-600 hover:bg-orange-100"
+            }`}
+          >
+            {editando ? "Cancelar edição" : (
+              <>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Editar
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

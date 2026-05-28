@@ -75,6 +75,9 @@ def atualizar(template_id: int, data: TemplateUpdate, db: Session = Depends(get_
         raise HTTPException(404, "Template não encontrado")
     for field, value in data.model_dump(exclude_none=True).items():
         setattr(t, field, value)
+    # permite limpar checklist_template_id (null explícito)
+    if "checklist_template_id" in data.model_fields_set and data.checklist_template_id is None:
+        t.checklist_template_id = None
     db.commit()
     return _load(template_id, db)
 

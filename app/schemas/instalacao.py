@@ -15,6 +15,7 @@ class TipoInstalacaoInfo(BaseModel):
     cor: str
     n_tarefas: int
     ativo: bool
+    checklist_template_id: int | None = None
 
 
 TIPO_LABELS = {
@@ -109,6 +110,18 @@ class InstalacaoUpdate(BaseModel):
     observacoes: str | None = None
     data_agendada: date | None = None
     data_conclusao: date | None = None
+    contato_nome: str | None = None
+    contato_telefone: str | None = None
+
+
+class InstalacaoEditar(BaseModel):
+    """Edição completa de instalação com status 'agendada' (antes de iniciar)."""
+    tipos: list[TipoInstalacaoType] | None = None
+    quantidade: int | None = None
+    prioridade: PrioridadeType | None = None
+    responsavel_id: int | None = None
+    observacoes: str | None = None
+    data_agendada: date | None = None
     contato_nome: str | None = None
     contato_telefone: str | None = None
 

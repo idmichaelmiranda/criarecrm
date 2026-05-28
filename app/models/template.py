@@ -16,6 +16,7 @@ class Template(Base):
     sla_total_dias: Mapped[int] = mapped_column(Integer, nullable=False, default=30)
     ativo: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     pop_pdf_path: Mapped[str] = mapped_column(String(500), nullable=True)
+    checklist_template_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("templates.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     etapas: Mapped[list["TemplateEtapa"]] = relationship(

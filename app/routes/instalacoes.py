@@ -16,7 +16,7 @@ from app.models.template import Template, TemplateEtapa, TemplateTarefa
 from pydantic import BaseModel as PydanticBase
 
 from app.schemas.instalacao import (
-    InstalacaoCreate, InstalacaoUpdate,
+    InstalacaoCreate, InstalacaoUpdate, InstalacaoEditar,
     InstalacaoListResponse, InstalacaoFullResponse,
     ChecklistItemCreate, ChecklistItemUpdate,
     ComentarioCreate, ComentarioResponse,
@@ -121,22 +121,23 @@ def _recalcular_progresso(inst: Instalacao) -> None:
 
 
 def _checklist_from_template(tipo: str, db: Session) -> list[tuple[str, bool]]:
-    """Busca tarefas do template de instalação. Retorna lista de (titulo, obrigatoria)."""
-    # aceita tanto "pdv" (legado) quanto "instalacao_pdv" (novo padrão)
+    """Busca tarefas do template de instalação. Retorna lista de (titulo, obrigatoria).
+    Se o produto tiver checklist_template_id configurado, usa esse template;
+    caso contrário usa as tarefas do próprio template do produto."""
     template_tipo = tipo if tipo.startswith("instalacao_") else f"instalacao_{tipo}"
     t = db.execute(
         select(Template).where(Template.tipo == template_tipo, Template.ativo == True)
     ).scalar_one_or_none()
     if t:
+        source_id = t.checklist_template_id if t.checklist_template_id else t.id
         tarefas = db.execute(
             select(TemplateTarefa)
             .join(TemplateEtapa)
-            .where(TemplateEtapa.template_id == t.id, TemplateTarefa.parent_id == None)  # noqa: E711
+            .where(TemplateEtapa.template_id == source_id, TemplateTarefa.parent_id == None)  # noqa: E711
             .order_by(TemplateEtapa.ordem, TemplateTarefa.ordem)
         ).scalars().all()
         if tarefas:
             return [(ta.titulo, ta.obrigatoria) for ta in tarefas]
-    # fallback
     return [
         ("Levantamento de requisitos", True),
         ("Instalação / configuração",  True),
@@ -190,6 +191,7 @@ def listar_tipos(db: Session = Depends(get_db)):
             cor=t.etapas[0].cor if t.etapas else "#6366f1",
             n_tarefas=sum(len(e.tarefas) for e in t.etapas),
             ativo=t.ativo,
+            checklist_template_id=t.checklist_template_id,
         )
         for t in templates
     ]
@@ -277,6 +279,74 @@ def atualizar(instalacao_id: int, data: InstalacaoUpdate, db: Session = Depends(
 
     if inst.status == "concluida" and not inst.data_conclusao:
         inst.data_conclusao = date.today()
+
+    inst.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    return _to_full_response(_load(instalacao_id, db), db)
+
+
+@router.put("/{instalacao_id}/editar", response_model=InstalacaoFullResponse)
+def editar(instalacao_id: int, data: InstalacaoEditar, db: Session = Depends(get_db)):
+    """Edição completa antes de iniciar — disponível apenas quando status='agendada'."""
+    inst = db.get(Instalacao, instalacao_id)
+    if not inst:
+        raise HTTPException(404, "Instalação não encontrada")
+    if inst.status != "agendada":
+        raise HTTPException(400, "Edição completa disponível apenas para instalações com status 'agendada'.")
+
+    tipos_atuais = json.loads(inst.tipos_json or "[]") or ([inst.tipo] if inst.tipo else [])
+    tipos_novos = data.tipos
+
+    if tipos_novos is not None and set(tipos_novos) != set(tipos_atuais):
+        # Bloqueia se algum item já foi marcado
+        marcados = [i for i in inst.checklist if i.status != "pendente"]
+        if marcados:
+            raise HTTPException(
+                400,
+                f"Não é possível alterar produtos: {len(marcados)} item(ns) do checklist já foram marcados."
+            )
+        # Apaga checklist atual e gera novo
+        for item in list(inst.checklist):
+            db.delete(item)
+        db.flush()
+
+        inst.tipo = tipos_novos[0]
+        inst.tipos_json = json.dumps(tipos_novos)
+
+        tipo_nomes_map: dict[str, str] = {}
+        for tipo in tipos_novos:
+            template_tipo = tipo if tipo.startswith("instalacao_") else f"instalacao_{tipo}"
+            t_nome = db.execute(
+                select(Template).where(Template.tipo == template_tipo, Template.ativo == True)
+            ).scalar_one_or_none()
+            tipo_nomes_map[tipo] = t_nome.nome if t_nome else tipo
+        inst.tipos_nomes_json = json.dumps(tipo_nomes_map)
+
+        ordem = 1
+        for tipo in tipos_novos:
+            for titulo, obrigatoria in _checklist_from_template(tipo, db):
+                db.add(InstalacaoChecklist(
+                    instalacao_id=inst.id,
+                    titulo=titulo,
+                    obrigatoria=obrigatoria,
+                    ordem=ordem,
+                    tipo=tipo,
+                ))
+                ordem += 1
+
+    # Campos simples
+    for field in ("prioridade", "quantidade", "observacoes", "data_agendada",
+                  "contato_nome", "contato_telefone"):
+        val = getattr(data, field)
+        if val is not None:
+            setattr(inst, field, val)
+
+    # responsavel_id pode ser null explícito
+    if "responsavel_id" in data.model_fields_set:
+        old_resp = inst.responsavel_id
+        inst.responsavel_id = data.responsavel_id
+        if data.responsavel_id and data.responsavel_id != old_resp:
+            _criar_notif_atribuicao(db, inst, data.responsavel_id)
 
     inst.updated_at = datetime.now(timezone.utc)
     db.commit()

@@ -154,6 +154,7 @@ export const instalacaosApi = {
   adicionarComentario: (instId, data) => api.post(`/instalacoes/${instId}/comentarios`, data),
   iniciar: (instId) => api.post(`/instalacoes/${instId}/iniciar`),
   finalizar: (instId, data) => api.post(`/instalacoes/${instId}/finalizar`, data),
+  editarAntes: (instId, data) => api.put(`/instalacoes/${instId}/editar`, data),
   uploadAnexo: (instId, file, uploadedBy = "Admin") => {
     const form = new FormData();
     form.append("file", file);

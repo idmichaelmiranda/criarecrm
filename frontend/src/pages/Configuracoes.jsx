@@ -454,6 +454,7 @@ function toSlug(nome) {
 
 function ProdutosInstalacaoSection() {
   const [produtos, setProdutos]   = useState([]);
+  const [todosTemplates, setTodosTemplates] = useState([]); // templates de instalação para o dropdown
   const [loading, setLoading]     = useState(true);
   const [savingId, setSavingId]   = useState(null);
   const [deletingId, setDeletingId] = useState(null);
@@ -468,8 +469,12 @@ function ProdutosInstalacaoSection() {
   async function load() {
     setLoading(true);
     try {
-      const { data } = await instalacaosApi.tipos();
-      setProdutos(data);
+      const [{ data: prods }, { data: tmpl }] = await Promise.all([
+        instalacaosApi.tipos(),
+        templatesApi.listar({ categoria: "instalacao" }),
+      ]);
+      setProdutos(prods);
+      setTodosTemplates(tmpl);
     } catch {
       setError("Não foi possível carregar os produtos.");
     } finally {
@@ -496,6 +501,9 @@ function ProdutosInstalacaoSection() {
     const edit = edits[p.id] || {};
     const nome = edit.nome !== undefined ? edit.nome : p.nome;
     const cor  = edit.cor  !== undefined ? edit.cor  : p.cor;
+    const templateId = edit.checklist_template_id !== undefined
+      ? edit.checklist_template_id
+      : p.checklist_template_id;
     setSavingId(p.id);
     setError("");
     try {
@@ -508,7 +516,12 @@ function ProdutosInstalacaoSection() {
           await templatesApi.adicionarEtapa(p.id, { nome: "Principal", ordem: 1, sla_dias: 7, cor });
         }
       }
-      setProdutos((prev) => prev.map((x) => x.id === p.id ? { ...x, nome, cor } : x));
+      if (templateId !== p.checklist_template_id) {
+        await templatesApi.atualizar(p.id, { checklist_template_id: templateId || null });
+      }
+      setProdutos((prev) => prev.map((x) =>
+        x.id === p.id ? { ...x, nome, cor, checklist_template_id: templateId || null } : x
+      ));
       setEdits((e) => { const c = { ...e }; delete c[p.id]; return c; });
     } catch (err) {
       setError(err.message || "Erro ao salvar.");
@@ -590,56 +603,83 @@ function ProdutosInstalacaoSection() {
             const edit = edits[p.id] || {};
             const nomeCur = edit.nome !== undefined ? edit.nome : p.nome;
             const corCur  = edit.cor  !== undefined ? edit.cor  : p.cor;
-            const dirty   = edit.nome !== undefined || edit.cor !== undefined;
+            const dirty   = edit.nome !== undefined || edit.cor !== undefined || edit.checklist_template_id !== undefined;
             const isSaving = savingId === p.id;
-            return (
-              <div key={p.id} className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all ${dirty ? "border-indigo-200 bg-indigo-50/30" : "border-gray-100 bg-white hover:border-gray-200"}`}>
+            const templateCur = edit.checklist_template_id !== undefined
+              ? edit.checklist_template_id
+              : (p.checklist_template_id ?? "");
+            const templateSelecionado = todosTemplates.find((t) => t.id === templateCur);
 
-                {/* Color picker */}
-                <div className="relative shrink-0 w-7 h-7">
-                  <div className="w-7 h-7 rounded-full border-2 border-white shadow-sm overflow-hidden" style={{ background: corCur }}>
-                    <input type="color" value={corCur} title="Alterar cor"
-                      onChange={(e) => setEdits((ed) => ({ ...ed, [p.id]: { ...(ed[p.id] || {}), cor: e.target.value } }))}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+            return (
+              <div key={p.id} className={`flex flex-col gap-2 px-4 py-3 rounded-xl border transition-all ${dirty ? "border-indigo-200 bg-indigo-50/30" : "border-gray-100 bg-white hover:border-gray-200"}`}>
+                {/* Main row */}
+                <div className="flex items-center gap-3">
+                  {/* Color picker */}
+                  <div className="relative shrink-0 w-7 h-7">
+                    <div className="w-7 h-7 rounded-full border-2 border-white shadow-sm overflow-hidden" style={{ background: corCur }}>
+                      <input type="color" value={corCur} title="Alterar cor"
+                        onChange={(e) => setEdits((ed) => ({ ...ed, [p.id]: { ...(ed[p.id] || {}), cor: e.target.value } }))}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                    </div>
                   </div>
+
+                  {/* Nome inline edit */}
+                  <input type="text" value={nomeCur}
+                    onChange={(e) => setEdits((ed) => ({ ...ed, [p.id]: { ...(ed[p.id] || {}), nome: e.target.value } }))}
+                    className="flex-1 text-sm font-medium text-gray-800 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-indigo-400 focus:outline-none px-1 py-0.5 transition-colors min-w-0" />
+
+                  {/* Task count */}
+                  <span className="text-[11px] text-gray-400 shrink-0 tabular-nums">{p.n_tarefas} tarefa{p.n_tarefas !== 1 ? "s" : ""}</span>
+
+                  {/* Ativo toggle */}
+                  <button type="button" onClick={() => toggleAtivo(p)} disabled={isSaving}
+                    title={p.ativo ? "Ativo — clique para desativar" : "Inativo — clique para ativar"}
+                    className={`relative w-9 h-5 rounded-full transition-all shrink-0 ${p.ativo ? "bg-green-400" : "bg-gray-200"} disabled:opacity-50`}>
+                    <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${p.ativo ? "left-[18px]" : "left-0.5"}`} />
+                  </button>
+
+                  {dirty ? (
+                    <>
+                      <button type="button" onClick={() => saveEdit(p)} disabled={isSaving}
+                        className="text-xs px-2.5 py-1 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white font-semibold transition-colors disabled:opacity-50 shrink-0">
+                        {isSaving ? "…" : "Salvar"}
+                      </button>
+                      <button type="button" onClick={() => setEdits((ed) => { const c = { ...ed }; delete c[p.id]; return c; })}
+                        className="text-xs px-2.5 py-1 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors shrink-0">
+                        Cancelar
+                      </button>
+                    </>
+                  ) : (
+                    <button type="button" onClick={() => deletar(p)} disabled={deletingId === p.id}
+                      title="Remover produto"
+                      className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:text-red-400 hover:bg-red-50 transition-colors shrink-0 disabled:opacity-50">
+                      {deletingId === p.id
+                        ? <span className="w-3.5 h-3.5 rounded-full border-2 border-gray-300 border-t-transparent animate-spin" />
+                        : <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      }
+                    </button>
+                  )}
                 </div>
 
-                {/* Nome inline edit */}
-                <input type="text" value={nomeCur}
-                  onChange={(e) => setEdits((ed) => ({ ...ed, [p.id]: { ...(ed[p.id] || {}), nome: e.target.value } }))}
-                  className="flex-1 text-sm font-medium text-gray-800 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-indigo-400 focus:outline-none px-1 py-0.5 transition-colors min-w-0" />
-
-                {/* Task count */}
-                <span className="text-[11px] text-gray-400 shrink-0 tabular-nums">{p.n_tarefas} tarefa{p.n_tarefas !== 1 ? "s" : ""}</span>
-
-                {/* Ativo toggle */}
-                <button type="button" onClick={() => toggleAtivo(p)} disabled={isSaving}
-                  title={p.ativo ? "Ativo — clique para desativar" : "Inativo — clique para ativar"}
-                  className={`relative w-9 h-5 rounded-full transition-all shrink-0 ${p.ativo ? "bg-green-400" : "bg-gray-200"} disabled:opacity-50`}>
-                  <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${p.ativo ? "left-[18px]" : "left-0.5"}`} />
-                </button>
-
-                {dirty ? (
-                  <>
-                    <button type="button" onClick={() => saveEdit(p)} disabled={isSaving}
-                      className="text-xs px-2.5 py-1 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white font-semibold transition-colors disabled:opacity-50 shrink-0">
-                      {isSaving ? "…" : "Salvar"}
-                    </button>
-                    <button type="button" onClick={() => setEdits((ed) => { const c = { ...ed }; delete c[p.id]; return c; })}
-                      className="text-xs px-2.5 py-1 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors shrink-0">
-                      Cancelar
-                    </button>
-                  </>
-                ) : (
-                  <button type="button" onClick={() => deletar(p)} disabled={deletingId === p.id}
-                    title="Remover produto"
-                    className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:text-red-400 hover:bg-red-50 transition-colors shrink-0 disabled:opacity-50">
-                    {deletingId === p.id
-                      ? <span className="w-3.5 h-3.5 rounded-full border-2 border-gray-300 border-t-transparent animate-spin" />
-                      : <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                    }
-                  </button>
-                )}
+                {/* Template selector row */}
+                <div className="flex items-center gap-2 pl-10">
+                  <span className="text-[11px] text-gray-400 shrink-0 whitespace-nowrap">Template checklist:</span>
+                  <select
+                    value={templateCur}
+                    onChange={(e) => {
+                      const val = e.target.value === "" ? "" : Number(e.target.value);
+                      setEdits((ed) => ({ ...ed, [p.id]: { ...(ed[p.id] || {}), checklist_template_id: val } }));
+                    }}
+                    className="text-xs text-gray-700 border border-gray-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:border-indigo-400 flex-1 max-w-xs">
+                    <option value="">Usar próprio template</option>
+                    {todosTemplates.filter((t) => t.id !== p.id).map((t) => (
+                      <option key={t.id} value={t.id}>{t.nome}</option>
+                    ))}
+                  </select>
+                  {templateSelecionado && (
+                    <span className="text-[11px] text-indigo-500 shrink-0">{templateSelecionado.n_tarefas} tarefas</span>
+                  )}
+                </div>
               </div>
             );
           })}
