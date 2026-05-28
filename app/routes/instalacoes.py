@@ -460,7 +460,8 @@ def finalizar(instalacao_id: int, data: FinalizarPayload, db: Session = Depends(
 
     now = datetime.now(timezone.utc)
     inst.finalizado_em = now
-    inst.duracao_minutos = max(1, round((now - inst.iniciado_em).total_seconds() / 60))
+    iniciado = inst.iniciado_em if inst.iniciado_em.tzinfo else inst.iniciado_em.replace(tzinfo=timezone.utc)
+    inst.duracao_minutos = max(1, round((now - iniciado).total_seconds() / 60))
     inst.status = "concluida"
     inst.data_conclusao = date.today()
     inst.updated_at = now
