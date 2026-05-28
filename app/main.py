@@ -41,6 +41,7 @@ async def lifespan(app: FastAPI):
         n = sla_service.recalculate(db)
         if n:
             print(f"[SLA] Startup: {n} implantacao(es) recalculadas")
+        _migrate_storage_to_private(db)
     finally:
         db.close()
     from app.services import sla_service
@@ -68,6 +69,49 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def _migrate_storage_to_private(db) -> None:
+    """Copia arquivos sensíveis do bucket público (uploads) para o bucket privado (private).
+    Idempotente — ignora arquivos que já existem no destino."""
+    from app.database.connection import IS_SQLITE
+    if IS_SQLITE:
+        return  # local dev não usa Supabase
+    from app.services import storage_service as storage
+    if not storage._USE_SUPABASE:
+        return
+
+    from sqlalchemy import select, text as _text
+    from app.models.solicitacao import Solicitacao
+    from app.models.implantacao import Implantacao
+    from app.models.template import Template, TemplateTarefa
+    from app.models.instalacao import InstalacaoAnexo
+
+    paths: set[str] = set()
+
+    for row in db.execute(select(Solicitacao.certificado_path).where(Solicitacao.certificado_path.isnot(None))).scalars():
+        paths.add(storage._to_storage_path(row))
+    for row in db.execute(select(Implantacao.certificado_path).where(Implantacao.certificado_path.isnot(None))).scalars():
+        paths.add(storage._to_storage_path(row))
+    for row in db.execute(select(Template.pop_pdf_path).where(Template.pop_pdf_path.isnot(None))).scalars():
+        paths.add(storage._to_storage_path(row))
+    for row in db.execute(select(TemplateTarefa.pop_pdf_path).where(TemplateTarefa.pop_pdf_path.isnot(None))).scalars():
+        paths.add(storage._to_storage_path(row))
+    for row in db.execute(select(InstalacaoAnexo.storage_path)).scalars():
+        paths.add(storage._to_storage_path(row))
+
+    migrated = 0
+    for path in paths:
+        if not path or path.startswith("avatars/"):
+            continue
+        try:
+            if storage.migrate_to_private(path):
+                migrated += 1
+        except Exception as exc:
+            print(f"[STORAGE MIGRATION] Erro em {path}: {exc}")
+
+    if migrated:
+        print(f"[STORAGE MIGRATION] {migrated} arquivo(s) migrado(s) para bucket privado.")
 
 
 def _migrate_sqlite():
