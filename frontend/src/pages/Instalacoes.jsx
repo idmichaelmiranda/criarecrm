@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import { instalacaosApi, usuariosApi, configuracoesApi } from "../services/api";
 
@@ -567,6 +567,7 @@ function NovaInstalacaoModal({ onClose, onCreated, tiposConfig = [] }) {
 
 export default function Instalacoes() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [all, setAll] = useState([]);
   const [tiposConfig, setTiposConfig] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -575,6 +576,16 @@ export default function Instalacoes() {
   const [tipoFiltro, setTipoFiltro] = useState("todos");
   const [showModal, setShowModal] = useState(false);
   const [filtroAtrasadas, setFiltroAtrasadas] = useState(false);
+  const [filtroSemResponsavel, setFiltroSemResponsavel] = useState(
+    () => searchParams.get("sem_responsavel") === "1"
+  );
+
+  // Quando vem do dashboard com sem_responsavel=1, força tab "ativas"
+  useEffect(() => {
+    if (searchParams.get("sem_responsavel") === "1") {
+      setTab("ativas");
+    }
+  }, []);
 
   const tiposMap = Object.fromEntries(tiposConfig.map((t) => [t.tipo, t]));
 
@@ -603,6 +614,7 @@ export default function Instalacoes() {
       if (tab === "historico" && !HISTORICO_STATUSES.includes(i.status)) return false;
       if (tipoFiltro !== "todos" && !getTipos(i).map(normalizeTipo).includes(tipoFiltro)) return false;
       if (filtroAtrasadas && !isAtrasada(i)) return false;
+      if (filtroSemResponsavel && i.responsavel_id) return false;
       if (search) {
         const q = search.toLowerCase();
         const nome = (i.cliente_nome || "").toLowerCase();
@@ -752,6 +764,21 @@ export default function Instalacoes() {
           </select>
         </div>
       </div>
+
+      {/* Chip: filtro sem responsável ativo */}
+      {filtroSemResponsavel && (
+        <div className="flex items-center gap-2 mb-3">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 border border-orange-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+            Sem responsável
+            <button
+              onClick={() => { setFiltroSemResponsavel(false); setSearchParams({}); }}
+              className="ml-1 hover:text-orange-900 transition-colors"
+            >✕</button>
+          </span>
+          <span className="text-xs text-gray-400">{filtered.length} instalaç{filtered.length !== 1 ? "ões" : "ão"} encontrada{filtered.length !== 1 ? "s" : ""}</span>
+        </div>
+      )}
 
       {/* Tabela */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">

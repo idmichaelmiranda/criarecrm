@@ -240,7 +240,7 @@ function AlertStrip({ data }) {
       desc: "Aguardando direcionamento",
       bg: "bg-orange-50 border-orange-200", titleColor: "text-orange-800", descColor: "text-orange-600",
       btnBg: "bg-orange-100 hover:bg-orange-200 text-orange-700",
-      to: "/admin/instalacoes",
+      to: "/instalacoes?sem_responsavel=1",
     });
   }
   if (alerts.length === 0) return null;
@@ -960,7 +960,7 @@ export default function Dashboard() {
               value={data.instalacoes_sem_responsavel ?? 0}
               sub="Aguardando direcionamento"
               icon="📦" color={data.instalacoes_sem_responsavel > 0 ? "text-orange-700" : "text-gray-400"}
-              to="/admin/instalacoes"
+              to="/instalacoes?sem_responsavel=1"
               urgent={data.instalacoes_sem_responsavel > 0}
               flashing={flashKeys.has("instalacoes_sem_responsavel")}
             />
