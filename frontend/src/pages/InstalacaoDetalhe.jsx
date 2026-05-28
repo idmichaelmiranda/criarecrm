@@ -827,6 +827,24 @@ export default function InstalacaoDetalhe() {
                   {cliente?.razao_social || `Cliente #${inst.cliente_id}`}
                 </h1>
                 {cliente?.cnpj && <p className="text-xs text-gray-400 mt-0.5">{cliente.cnpj}</p>}
+                {(inst.contato_nome || inst.contato_telefone) && (
+                  <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-gray-100">
+                    <svg className="w-3 h-3 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    {inst.contato_nome && (
+                      <span className="text-xs text-gray-600 font-medium">{inst.contato_nome}</span>
+                    )}
+                    {inst.contato_nome && inst.contato_telefone && (
+                      <span className="text-gray-300 text-xs">·</span>
+                    )}
+                    {inst.contato_telefone && (
+                      <a href={`tel:${inst.contato_telefone.replace(/\D/g, "")}`} className="text-xs text-orange-600 hover:underline">
+                        {inst.contato_telefone}
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="flex flex-col items-end gap-1.5 shrink-0">
                 {/* Multi-type badges */}
@@ -1036,33 +1054,6 @@ export default function InstalacaoDetalhe() {
                     {initials(inst.criado_por_nome)}
                   </div>
                   <p className="text-sm font-medium text-gray-700 truncate">{inst.criado_por_nome}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Contato no local */}
-            {(inst.contato_nome || inst.contato_telefone) && (
-              <div className="pt-3 border-t border-gray-100">
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">Contato no local</p>
-                <div className="flex items-start gap-2.5 bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100">
-                  <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center shrink-0 mt-0.5">
-                    <svg className="w-4 h-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </div>
-                  <div className="min-w-0">
-                    {inst.contato_nome && (
-                      <p className="text-sm font-semibold text-gray-800 leading-tight">{inst.contato_nome}</p>
-                    )}
-                    {inst.contato_telefone && (
-                      <a
-                        href={`tel:${inst.contato_telefone.replace(/\D/g, "")}`}
-                        className="text-xs text-orange-600 hover:underline mt-0.5 block"
-                      >
-                        {inst.contato_telefone}
-                      </a>
-                    )}
-                  </div>
                 </div>
               </div>
             )}
