@@ -368,27 +368,7 @@ export function Sidebar() {
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-1 shrink-0 mt-0.5">
-            {/* Sino de notificações */}
-            <button
-              onClick={handleOpenNotifs}
-              title="Notificações"
-              className={`relative w-7 h-7 flex items-center justify-center rounded-md transition-all ${
-                showNotifs
-                  ? "text-orange-400 bg-orange-500/15"
-                  : "text-slate-500 hover:text-slate-300 hover:bg-white/8"
-              }`}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-              {notifCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[15px] h-3.5 px-0.5 flex items-center justify-center rounded-full bg-red-500 text-white text-[8px] font-bold leading-none animate-pulse">
-                  {notifCount > 9 ? "9+" : notifCount}
-                </span>
-              )}
-            </button>
-
+          <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
             {hasPermission("configuracoes.view") && (
               <button
                 onClick={() => navigate("/admin/configuracoes")}
@@ -401,6 +381,28 @@ export function Sidebar() {
                 </svg>
               </button>
             )}
+
+            {/* Sino de notificações */}
+            <button
+              onClick={handleOpenNotifs}
+              title="Notificações"
+              className={`relative w-9 h-9 flex items-center justify-center rounded-lg transition-all ${
+                showNotifs
+                  ? "text-orange-400 bg-orange-500/20"
+                  : notifCount > 0
+                  ? "text-slate-300 bg-white/8 hover:bg-white/12"
+                  : "text-slate-500 hover:text-slate-300 hover:bg-white/8"
+              }`}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              {notifCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold leading-none animate-pulse shadow-sm">
+                  {notifCount > 9 ? "9+" : notifCount}
+                </span>
+              )}
+            </button>
           </div>
         </div>
       </div>
