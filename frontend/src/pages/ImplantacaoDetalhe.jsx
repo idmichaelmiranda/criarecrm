@@ -577,10 +577,10 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
     } catch { } finally { setSavingNote(false); }
   }
 
-  async function handleSelectResp(nome) {
+  async function handleSelectResp(nome, id = null) {
     setShowRespPicker(false);
     try {
-      await implantacoesApi.atualizarChecklist(item.id, { responsavel: nome });
+      await implantacoesApi.atualizarChecklist(item.id, { responsavel: nome, responsavel_id: id });
       onRefresh();
     } catch { }
   }
@@ -741,7 +741,7 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
                         {usuarios.map((u) => (
                           <button
                             key={u.id}
-                            onClick={() => handleSelectResp(u.nome)}
+                            onClick={() => handleSelectResp(u.nome, u.id)}
                             className={`w-full text-left px-3 py-2 text-xs flex items-center gap-2 transition-colors ${
                               item.responsavel === u.nome
                                 ? "bg-indigo-50 text-indigo-700 font-semibold"

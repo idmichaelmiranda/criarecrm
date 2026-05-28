@@ -11,6 +11,25 @@ from app.schemas.implantacao import ImplantacaoUpdate, ChecklistItemUpdate, Chec
 from app.services import timeline_service
 
 
+def _notificar_atribuicao_tarefa(db: Session, item: ChecklistItem, usuario_id: int) -> None:
+    from app.models.notificacao import Notificacao
+    from app.models.implantacao import Implantacao
+    from app.models.cliente import Cliente
+    impl = db.get(Implantacao, item.implantacao_id)
+    cliente_nome = ""
+    if impl:
+        c = db.get(Cliente, impl.cliente_id)
+        cliente_nome = f" — {c.razao_social}" if c else ""
+    db.add(Notificacao(
+        usuario_id=usuario_id,
+        tipo="implantacao",
+        titulo=f"Tarefa atribuída a você",
+        mensagem=f"{item.titulo}{cliente_nome}",
+        dados={"implantacao_id": item.implantacao_id, "checklist_item_id": item.id},
+        lida=False,
+    ))
+
+
 # ── Leaf-item progress helpers ────────────────────────────────────────────────
 
 def _build_subs_index(all_items: list) -> dict:
@@ -176,6 +195,12 @@ def atualizar_checklist_item(db: Session, item_id: int, data: ChecklistItemUpdat
     update_fields = data.model_dump(exclude_unset=True)
     if "responsavel" in update_fields:
         item.responsavel = (update_fields["responsavel"] or "").strip() or None
+    if "responsavel_id" in update_fields:
+        novo_resp_id = update_fields["responsavel_id"]
+        anterior_resp_id = item.responsavel_id
+        item.responsavel_id = novo_resp_id
+        if novo_resp_id and novo_resp_id != anterior_resp_id:
+            _notificar_atribuicao_tarefa(db, item, novo_resp_id)
     if "data_prazo" in update_fields:
         item.data_prazo = update_fields["data_prazo"]
     if "etapa_id" in update_fields and update_fields["etapa_id"] is not None:

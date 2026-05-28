@@ -22,6 +22,7 @@ class ChecklistItem(Base):
     ordem: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     responsavel: Mapped[str] = mapped_column(String(100), nullable=True)
+    responsavel_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"), nullable=True)
     data_prazo: Mapped[date] = mapped_column(Date, nullable=True)
     arquivado: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, server_default="0")
 

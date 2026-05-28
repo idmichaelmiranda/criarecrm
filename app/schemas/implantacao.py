@@ -44,6 +44,7 @@ class ChecklistItemUpdate(BaseModel):
     status: StatusItemType | None = None
     descricao: str | None = None
     responsavel: str | None = None
+    responsavel_id: int | None = None
     data_prazo: date | None = None
     etapa_id: int | None = None
     titulo: str | None = None
