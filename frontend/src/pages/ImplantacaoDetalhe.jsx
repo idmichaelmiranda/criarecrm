@@ -1742,6 +1742,8 @@ export default function ImplantacaoDetalhe() {
 
   useEffect(() => { load(); }, [load]);
 
+  const subsIndex = useMemo(() => buildSubsIndex(impl?.checklist), [impl?.checklist]);
+
   function handlePipelineClick(etapaId) {
     setActiveTab("checklist");
     requestAnimationFrame(() => {
@@ -1804,8 +1806,6 @@ export default function ImplantacaoDetalhe() {
     impl.sla_status === "atrasada" ? "text-red-600 font-semibold" :
     impl.sla_status === "critico"  ? "text-amber-600 font-semibold" :
     "text-gray-600";
-
-  const subsIndex = useMemo(() => buildSubsIndex(impl.checklist), [impl.checklist]);
 
   const { total: lpTotal, done: lpDone } = impl.etapas.reduce(
     (acc, e) => { const r = leafProgress(e.itens, subsIndex); return { total: acc.total + r.total, done: acc.done + r.done }; },
