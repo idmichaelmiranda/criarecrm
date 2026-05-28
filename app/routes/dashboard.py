@@ -9,6 +9,7 @@ from app.models.implantacao import Implantacao
 from app.models.checklist import ChecklistItem
 from app.models.cliente import Cliente
 from app.models.timeline import TimelineEvento
+from app.models.instalacao import Instalacao as InstalacaoModel
 from app.services import implantacao_service
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -143,6 +144,14 @@ def kpis(db: Session = Depends(get_db)):
             ChecklistItem.responsavel.is_(None),
             ChecklistItem.status.notin_(["concluido", "nao_aplicavel"]),
             Implantacao.status.in_(_ACTIVE),
+        )
+    ).scalar_one()
+
+    instalacoes_sem_responsavel = db.execute(
+        select(func.count()).select_from(InstalacaoModel)
+        .where(
+            InstalacaoModel.responsavel_id.is_(None),
+            InstalacaoModel.status.notin_(["concluida", "cancelada"]),
         )
     ).scalar_one()
 
@@ -332,6 +341,8 @@ def kpis(db: Session = Depends(get_db)):
         # Tarefas
         "tarefas_vencidas": tarefas_vencidas,
         "tarefas_sem_responsavel": tarefas_sem_responsavel,
+        # Instalações
+        "instalacoes_sem_responsavel": instalacoes_sem_responsavel,
         # SLA médio
         "sla_medio_dias": sla_medio,
         # Funil

@@ -91,7 +91,7 @@ const TIMELINE_FILTERS = [
 const FLASH_FIELDS = [
   "implantacoes_em_andamento", "implantacoes_atrasadas", "implantacoes_critico",
   "go_lives_semana", "taxa_conclusao", "tarefas_vencidas", "tarefas_sem_responsavel",
-  "solicitacoes_novas",
+  "solicitacoes_novas", "instalacoes_sem_responsavel",
 ];
 
 // ── Skeleton ───────────────────────────────────────────────────────────────────
@@ -231,6 +231,16 @@ function AlertStrip({ data }) {
       bg: "bg-indigo-50 border-indigo-200", titleColor: "text-indigo-800", descColor: "text-indigo-600",
       btnBg: "bg-indigo-100 hover:bg-indigo-200 text-indigo-700",
       to: "/admin/triagem",
+    });
+  }
+  if ((data.instalacoes_sem_responsavel ?? 0) > 0) {
+    alerts.push({
+      key: "instalacoes", icon: "📦",
+      title: `${data.instalacoes_sem_responsavel} instalaç${data.instalacoes_sem_responsavel > 1 ? "ões" : "ão"} sem responsável`,
+      desc: "Aguardando direcionamento",
+      bg: "bg-orange-50 border-orange-200", titleColor: "text-orange-800", descColor: "text-orange-600",
+      btnBg: "bg-orange-100 hover:bg-orange-200 text-orange-700",
+      to: "/admin/instalacoes",
     });
   }
   if (alerts.length === 0) return null;
@@ -946,12 +956,13 @@ export default function Dashboard() {
               flashing={flashKeys.has("tarefas_vencidas")}
             />
             <KpiCard
-              label="Sem Responsável"
-              value={data.tarefas_sem_responsavel ?? 0}
-              sub="Tarefas não atribuídas"
-              icon="👤" color={data.tarefas_sem_responsavel > 0 ? "text-amber-700" : "text-gray-400"}
-              to="/admin/implantacoes"
-              flashing={flashKeys.has("tarefas_sem_responsavel")}
+              label="Instalações S/ Resp."
+              value={data.instalacoes_sem_responsavel ?? 0}
+              sub="Aguardando direcionamento"
+              icon="📦" color={data.instalacoes_sem_responsavel > 0 ? "text-orange-700" : "text-gray-400"}
+              to="/admin/instalacoes"
+              urgent={data.instalacoes_sem_responsavel > 0}
+              flashing={flashKeys.has("instalacoes_sem_responsavel")}
             />
           </div>
 
