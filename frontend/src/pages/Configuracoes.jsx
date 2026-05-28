@@ -471,10 +471,10 @@ function ProdutosInstalacaoSection() {
     try {
       const [{ data: prods }, { data: tmpl }] = await Promise.all([
         instalacaosApi.tipos(),
-        templatesApi.listar({ categoria: "instalacao" }),
+        templatesApi.listar(),
       ]);
       setProdutos(prods);
-      setTodosTemplates(tmpl);
+      setTodosTemplates(tmpl.filter((t) => t.tipo?.startsWith("instalacao_")));
     } catch {
       setError("Não foi possível carregar os produtos.");
     } finally {
@@ -677,7 +677,7 @@ function ProdutosInstalacaoSection() {
                     ))}
                   </select>
                   {templateSelecionado && (
-                    <span className="text-[11px] text-indigo-500 shrink-0">{templateSelecionado.n_tarefas} tarefas</span>
+                    <span className="text-[11px] text-indigo-500 shrink-0">✓ vinculado</span>
                   )}
                 </div>
               </div>
