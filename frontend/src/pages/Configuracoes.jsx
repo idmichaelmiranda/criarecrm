@@ -672,7 +672,7 @@ function ProdutosInstalacaoSection() {
                     }}
                     className="text-xs text-gray-700 border border-gray-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:border-indigo-400 flex-1 max-w-xs">
                     <option value="">Usar próprio template</option>
-                    {todosTemplates.filter((t) => t.id !== p.id).map((t) => (
+                    {todosTemplates.map((t) => (
                       <option key={t.id} value={t.id}>{t.nome}</option>
                     ))}
                   </select>
