@@ -34,9 +34,28 @@ def _criar_notif_atribuicao(db: Session, inst: "Instalacao", usuario_id: int) ->
     cliente_nome = cliente.razao_social if cliente else f"Cliente #{inst.cliente_id}"
     db.add(Notificacao(
         usuario_id=usuario_id,
-        tipo="instalacao_atribuida",
+        tipo="instalacao",
         titulo="Nova instalação atribuída a você",
         mensagem=f"{inst.codigo} — {cliente_nome}",
+        dados={"instalacao_id": inst.id, "codigo": inst.codigo},
+        lida=False,
+    ))
+
+
+def _criar_notif_conclusao(db: Session, inst: "Instalacao", finalizado_por: "Usuario") -> None:
+    """Notifica o criador da instalação quando ela é finalizada por outro usuário."""
+    if not inst.criado_por_id or inst.criado_por_id == finalizado_por.id:
+        return
+    from app.models.notificacao import Notificacao
+    from datetime import timezone as _tz
+    cliente = db.get(Cliente, inst.cliente_id)
+    cliente_nome = cliente.razao_social if cliente else f"Cliente #{inst.cliente_id}"
+    data_str = datetime.now(_tz.utc).strftime("%d/%m/%Y %H:%M")
+    db.add(Notificacao(
+        usuario_id=inst.criado_por_id,
+        tipo="instalacao",
+        titulo=f"Instalação — {cliente_nome} finalizada",
+        mensagem=f"Finalizado por {finalizado_por.nome} em {data_str}",
         dados={"instalacao_id": inst.id, "codigo": inst.codigo},
         lida=False,
     ))
@@ -453,7 +472,7 @@ def iniciar(instalacao_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/{instalacao_id}/finalizar", response_model=InstalacaoFullResponse)
-def finalizar(instalacao_id: int, data: FinalizarPayload, db: Session = Depends(get_db)):
+def finalizar(instalacao_id: int, data: FinalizarPayload, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
     inst = db.get(Instalacao, instalacao_id)
     if not inst:
         raise HTTPException(404, "Instalação não encontrada")
@@ -475,6 +494,7 @@ def finalizar(instalacao_id: int, data: FinalizarPayload, db: Session = Depends(
         suffix = f"[Conclusão] {data.observacao_final}"
         inst.observacoes = f"{obs}\n{suffix}".strip() if obs else suffix
 
+    _criar_notif_conclusao(db, inst, current_user)
     db.commit()
     return _to_full_response(_load(instalacao_id, db), db)
 
