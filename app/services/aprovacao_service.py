@@ -76,7 +76,7 @@ def aprovar(db: Session, solicitacao_id: int, data: TriagemAprovar) -> Implantac
 
     implantacao = Implantacao(
         cliente_id=cliente.id,
-        template_id=data.template_id,
+        template_id=data.template_ids[0],
         solicitacao_id=sol.id,
         codigo=codigo,
         nome=f"Implantação — {sol.razao_social}",
@@ -94,27 +94,26 @@ def aprovar(db: Session, solicitacao_id: int, data: TriagemAprovar) -> Implantac
     db.add(implantacao)
     db.flush()
 
-    # 4. Gerar etapas + checklist a partir do template
-    template = db.execute(
+    # 4. Gerar etapas + checklist a partir dos templates selecionados
+    from app.models.template import TemplateEtapa as _TE
+    templates = db.execute(
         select(Template)
-        .options(selectinload(Template.etapas).selectinload(
-            __import__("app.models.template", fromlist=["TemplateEtapa"]).TemplateEtapa.tarefas
-        ))
-        .where(Template.id == data.template_id)
-    ).scalar_one_or_none()
+        .options(selectinload(Template.etapas).selectinload(_TE.tarefas))
+        .where(Template.id.in_(data.template_ids))
+    ).scalars().all()
 
-    if template:
-        _gerar_pipeline(db, implantacao, template)
+    if templates:
+        _gerar_pipeline_merged(db, implantacao, templates)
 
     # 5. Timeline
-    template_nome = template.nome if template else "Sem template"
+    modulos = ", ".join(t.nome for t in templates) if templates else "Sem template"
     timeline_service.log(
         db,
         tipo="implantacao_criada",
         titulo="Implantação iniciada",
         descricao=(
             f"Aprovado. Implantação {codigo} criada. "
-            f"Template: {template_nome}. "
+            f"Módulos: {modulos}. "
             f"Consultor: {data.consultor or 'Não atribuído'}. "
             f"SLA: {data.sla_dias} dias."
         ),
@@ -196,3 +195,65 @@ def _gerar_pipeline(db: Session, implantacao: Implantacao, template: Template) -
                     ordem=subtarefa.ordem,
                     parent_id=item.id,
                 ))
+
+
+def _gerar_pipeline_merged(db: Session, implantacao: Implantacao, templates: list) -> None:
+    """1 coluna por produto/template; cards = tarefas de todas as etapas internas achatadas."""
+    from app.models.template import TemplateEtapa, TemplateTarefa
+
+    for i, template in enumerate(templates):
+        etapas = db.execute(
+            select(TemplateEtapa)
+            .options(
+                selectinload(TemplateEtapa.tarefas)
+                .selectinload(TemplateTarefa.subitens)
+            )
+            .where(TemplateEtapa.template_id == template.id)
+            .order_by(TemplateEtapa.ordem)
+        ).scalars().all()
+
+        cor = etapas[0].cor if etapas and etapas[0].cor else "#6366f1"
+
+        etapa = ImplantacaoEtapa(
+            implantacao_id=implantacao.id,
+            template_etapa_id=None,
+            nome=template.nome,
+            ordem=i + 1,
+            cor=cor,
+            status="em_andamento" if i == 0 else "pendente",
+            data_inicio=datetime.now() if i == 0 else None,
+        )
+        db.add(etapa)
+        db.flush()
+
+        ordem_item = 1
+        for t_etapa in etapas:
+            root_tarefas = sorted(
+                [t for t in t_etapa.tarefas if t.parent_id is None],
+                key=lambda x: x.ordem,
+            )
+            for tarefa in root_tarefas:
+                item = ChecklistItem(
+                    implantacao_id=implantacao.id,
+                    etapa_id=etapa.id,
+                    template_tarefa_id=tarefa.id,
+                    titulo=tarefa.titulo,
+                    descricao=tarefa.descricao,
+                    obrigatoria=tarefa.obrigatoria,
+                    ordem=ordem_item,
+                )
+                db.add(item)
+                db.flush()
+                ordem_item += 1
+
+                for subtarefa in sorted(tarefa.subitens, key=lambda x: x.ordem):
+                    db.add(ChecklistItem(
+                        implantacao_id=implantacao.id,
+                        etapa_id=None,
+                        template_tarefa_id=subtarefa.id,
+                        titulo=subtarefa.titulo,
+                        descricao=subtarefa.descricao,
+                        obrigatoria=subtarefa.obrigatoria,
+                        ordem=subtarefa.ordem,
+                        parent_id=item.id,
+                    ))

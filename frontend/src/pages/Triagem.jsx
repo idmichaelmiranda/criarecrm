@@ -82,8 +82,9 @@ function Section({ title, children }) {
 
 function AprovarModal({ sol, onClose, onApproved }) {
   const [templates, setTemplates]               = useState([]);
+  const [templateDetails, setTemplateDetails]   = useState({}); // id → full template with etapas
   const [form, setForm]                         = useState({
-    template_id: "", consultor: "", prioridade: "normal", sla_dias: 30, observacoes: "", conversao_dados: false,
+    template_ids: [], consultor: "", prioridade: "normal", sla_dias: 30, observacoes: "", conversao_dados: false,
   });
   // step: "form" | "confirmar_cliente"
   const [step, setStep]                         = useState("form");
@@ -93,15 +94,41 @@ function AprovarModal({ sol, onClose, onApproved }) {
   const [error, setError]                       = useState("");
 
   useEffect(() => {
-    templatesApi.listar({ categoria: "implantacao" }).then(({ data }) => {
-      setTemplates(data);
-      if (data.length > 0) setForm((f) => ({ ...f, template_id: data[0].id }));
+    templatesApi.listar().then(async ({ data }) => {
+      // Exclui templates de produtos de instalação (tipo = "instalacao_*")
+      const implantacaoTemplates = data.filter((t) => !t.tipo?.startsWith("instalacao_"));
+      setTemplates(implantacaoTemplates);
+      // Pre-fetch full details for stage preview
+      const details = await Promise.all(
+        implantacaoTemplates.map((t) => templatesApi.obter(t.id).then((r) => r.data).catch(() => t))
+      );
+      const map = {};
+      details.forEach((t) => { map[t.id] = t; });
+      setTemplateDetails(map);
     });
   }, []);
 
+  function toggleTemplate(id) {
+    setForm((f) => ({
+      ...f,
+      template_ids: f.template_ids.includes(id)
+        ? f.template_ids.filter((x) => x !== id)
+        : [...f.template_ids, id],
+    }));
+  }
+
+  // 1 chip por módulo selecionado = 1 coluna por produto no Kanban
+  function getMergedStages() {
+    return form.template_ids.map((id) => {
+      const tpl = templateDetails[id];
+      const cor = tpl?.etapas?.[0]?.cor || "#6366f1";
+      return { nome: tpl?.nome || `Módulo ${id}`, cor };
+    });
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!form.template_id) { setError("Selecione um template."); return; }
+    if (form.template_ids.length === 0) { setError("Selecione ao menos um módulo."); return; }
 
     // Verifica se o CNPJ já está cadastrado na base de clientes
     setChecking(true);
@@ -124,9 +151,12 @@ function AprovarModal({ sol, onClose, onApproved }) {
     setError("");
     try {
       const { data: impl } = await solicitacoesApi.aprovar(sol.id, {
-        ...form,
-        template_id: parseInt(form.template_id),
+        template_ids: form.template_ids.map(Number),
+        consultor: form.consultor,
+        prioridade: form.prioridade,
         sla_dias: parseInt(form.sla_dias),
+        observacoes: form.observacoes,
+        conversao_dados: form.conversao_dados,
       });
       onApproved(impl);
     } catch (err) {
@@ -138,13 +168,14 @@ function AprovarModal({ sol, onClose, onApproved }) {
   }
 
   const inp = "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400";
+  const mergedStages = getMergedStages();
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col" style={{ maxHeight: "90vh" }}>
 
         {/* Cabeçalho */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
           <div>
             <h3 className="font-semibold text-gray-900">Aprovar Solicitação</h3>
             <p className="text-xs text-gray-500 mt-0.5">{sol.razao_social}</p>
@@ -154,76 +185,149 @@ function AprovarModal({ sol, onClose, onApproved }) {
           </button>
         </div>
 
-        {/* ── Passo 1: formulário ── */}
+        {/* ── Passo 1: layout dois painéis ── */}
         {step === "form" && (
-          <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1.5">Template de Implantação</label>
-              <select value={form.template_id} onChange={(e) => setForm((f) => ({ ...f, template_id: e.target.value }))} className={inp} required>
-                <option value="">Selecione...</option>
-                {templates.map((t) => <option key={t.id} value={t.id}>{t.nome}</option>)}
-              </select>
-            </div>
+          <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1.5">Consultor</label>
-                <input type="text" value={form.consultor} onChange={(e) => setForm((f) => ({ ...f, consultor: e.target.value }))} placeholder="Nome do consultor" className={inp} />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1.5">SLA (dias)</label>
-                <input type="number" min={1} max={365} value={form.sla_dias} onChange={(e) => setForm((f) => ({ ...f, sla_dias: e.target.value }))} className={inp} />
-              </div>
-            </div>
+            {/* Corpo: dois painéis lado a lado */}
+            <div className="flex flex-1 min-h-0 divide-x divide-gray-100">
 
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1.5">Prioridade</label>
-              <div className="flex gap-2">
-                {["baixa", "normal", "alta", "critica"].map((p) => (
-                  <button key={p} type="button" onClick={() => setForm((f) => ({ ...f, prioridade: p }))}
-                    className={`flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-all ${form.prioridade === p ? "bg-orange-500 text-white border-orange-500" : "border-gray-200 text-gray-600 hover:border-gray-300"}`}>
-                    {p === "critica" ? "Crítica" : p.charAt(0).toUpperCase() + p.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setForm((f) => ({ ...f, conversao_dados: !f.conversao_dados }))}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border-2 transition-all ${
-                form.conversao_dados
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-200 bg-gray-50 hover:border-gray-300"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors ${
-                  form.conversao_dados ? "bg-blue-500" : "bg-gray-300"
-                }`}>
-                  {form.conversao_dados && (
-                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </div>
-                <div className="text-left">
-                  <p className={`text-sm font-semibold ${form.conversao_dados ? "text-blue-700" : "text-gray-600"}`}>
-                    Conversão de dados
+              {/* Painel esquerdo: módulos */}
+              <div className="flex flex-col w-[42%] shrink-0">
+                <div className="px-5 pt-4 pb-2 shrink-0">
+                  <p className="text-xs font-semibold text-gray-500">
+                    Módulos de Implantação
+                    <span className="ml-1.5 font-normal text-gray-400">
+                      ({form.template_ids.length} selecionado{form.template_ids.length !== 1 ? "s" : ""})
+                    </span>
                   </p>
-                  <p className="text-xs text-gray-400">Este cliente terá migração de dados do sistema anterior</p>
+                </div>
+
+                {/* Lista de módulos com scroll */}
+                <div className="overflow-y-auto flex-1 px-5 pb-3 space-y-1.5">
+                  {templates.length === 0 && (
+                    <p className="text-xs text-gray-400 py-4 text-center">Carregando módulos...</p>
+                  )}
+                  {templates.map((t) => {
+                    const checked = form.template_ids.includes(t.id);
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => toggleTemplate(t.id)}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl border-2 text-left transition-all ${
+                          checked ? "border-indigo-500 bg-indigo-50" : "border-gray-200 bg-gray-50 hover:border-gray-300"
+                        }`}
+                      >
+                        <div className={`w-[16px] h-[16px] rounded-[4px] border-2 flex items-center justify-center shrink-0 transition-colors ${
+                          checked ? "bg-indigo-500 border-indigo-500" : "border-gray-300"
+                        }`}>
+                          {checked && (
+                            <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <span className={`text-xs font-semibold flex-1 truncate ${checked ? "text-indigo-700" : "text-gray-700"}`}>
+                          {t.nome}
+                        </span>
+                        {t.sla_total_dias > 0 && (
+                          <span className="text-[10px] text-gray-400 shrink-0">{t.sla_total_dias}d</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Preview das colunas do Kanban */}
+                <div className="px-5 pb-4 shrink-0">
+                  <div className="rounded-xl bg-gray-50 border border-gray-200 p-3">
+                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">
+                      Colunas do Kanban
+                    </p>
+                    {mergedStages.length === 0 ? (
+                      <p className="text-[11px] text-gray-400">Nenhum módulo selecionado</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-1.5">
+                        {mergedStages.map((s, i) => {
+                          const hex = s.cor && s.cor.startsWith("#") && s.cor.length >= 7 ? s.cor : "#6366f1";
+                          const r = parseInt(hex.slice(1, 3), 16);
+                          const g = parseInt(hex.slice(3, 5), 16);
+                          const b = parseInt(hex.slice(5, 7), 16);
+                          return (
+                            <span key={i} className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border"
+                              style={{ backgroundColor: `rgba(${r},${g},${b},0.10)`, color: hex, borderColor: `rgba(${r},${g},${b},0.30)` }}>
+                              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: hex }} />
+                              {s.nome}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </button>
 
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1.5">Observações internas</label>
-              <textarea value={form.observacoes} onChange={(e) => setForm((f) => ({ ...f, observacoes: e.target.value }))} rows={2} placeholder="Opcional..." className={`${inp} resize-none`} />
+              {/* Painel direito: configuração */}
+              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">Consultor</label>
+                    <input type="text" value={form.consultor} onChange={(e) => setForm((f) => ({ ...f, consultor: e.target.value }))} placeholder="Nome do consultor" className={inp} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">SLA (dias)</label>
+                    <input type="number" min={1} max={365} value={form.sla_dias} onChange={(e) => setForm((f) => ({ ...f, sla_dias: e.target.value }))} className={inp} />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">Prioridade</label>
+                  <div className="flex gap-2">
+                    {["baixa", "normal", "alta", "critica"].map((p) => (
+                      <button key={p} type="button" onClick={() => setForm((f) => ({ ...f, prioridade: p }))}
+                        className={`flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-all ${form.prioridade === p ? "bg-orange-500 text-white border-orange-500" : "border-gray-200 text-gray-600 hover:border-gray-300"}`}>
+                        {p === "critica" ? "Crítica" : p.charAt(0).toUpperCase() + p.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, conversao_dados: !f.conversao_dados }))}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left transition-all ${
+                    form.conversao_dados ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-gray-50 hover:border-gray-300"
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+                    form.conversao_dados ? "bg-blue-500" : "bg-gray-300"
+                  }`}>
+                    {form.conversao_dados && (
+                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  <div>
+                    <p className={`text-sm font-semibold ${form.conversao_dados ? "text-blue-700" : "text-gray-600"}`}>
+                      Conversão de dados
+                    </p>
+                    <p className="text-xs text-gray-400">Migração de dados do sistema anterior</p>
+                  </div>
+                </button>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">Observações internas</label>
+                  <textarea value={form.observacoes} onChange={(e) => setForm((f) => ({ ...f, observacoes: e.target.value }))} rows={3} placeholder="Opcional..." className={`${inp} resize-none`} />
+                </div>
+
+                {error && <p className="text-sm text-red-500">{error}</p>}
+              </div>
             </div>
 
-            {error && <p className="text-sm text-red-500">{error}</p>}
-
-            <div className="flex gap-3 pt-1">
+            {/* Rodapé fixo */}
+            <div className="flex gap-3 px-6 py-4 border-t border-gray-100 shrink-0">
               <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
                 Cancelar
               </button>
@@ -231,6 +335,8 @@ function AprovarModal({ sol, onClose, onApproved }) {
                 className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
                 {checking ? (
                   <><span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> Verificando...</>
+                ) : saving ? (
+                  <><span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> Aprovando...</>
                 ) : "Confirmar Aprovação"}
               </button>
             </div>
@@ -1189,71 +1295,90 @@ function Drawer({ sol, onClose, onTriar, onApproved, onRefused, onEdited }) {
     { id: "fiscal", label: "Fiscal" },
   ];
 
+  // Initials avatar
+  const initials = sol.razao_social.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+  const sla = slaRelativo(sol);
+  const hasHistory = (sol.historico_recusas?.length > 0 || sol.motivo_recusa) && sol.status !== "cancelada";
+  const [historyOpen, setHistoryOpen] = useState(true);
+
+  const AVATAR_BG = {
+    nova: "bg-blue-500", em_triagem: "bg-amber-500", aguardando_correcao: "bg-orange-500",
+    aprovada: "bg-green-500", recusada: "bg-red-500", cancelada: "bg-gray-400",
+  };
+
   return (
     <>
       {/* overlay */}
-      <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
       {/* panel */}
       <div className="fixed inset-y-0 right-0 z-50 w-full max-w-xl bg-white shadow-2xl flex flex-col">
-        {/* header */}
-        <div className="flex items-start justify-between px-6 py-5 border-b border-gray-100 shrink-0">
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-base font-bold text-gray-900">{sol.razao_social}</h2>
-              <Badge status={sol.status} />
-              <PrioridadeBadge prioridade={sol.prioridade} />
+
+        {/* ── Hero header ── */}
+        <div className="bg-gradient-to-br from-slate-800 to-slate-900 px-6 pt-5 pb-4 shrink-0">
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-lg ${AVATAR_BG[sol.status] || "bg-slate-600"}`}>
+                {initials || "?"}
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-white font-bold text-base leading-snug">{sol.razao_social}</h2>
+                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                  <span className="text-slate-400 text-[11px] font-mono">{sol.cnpj}</span>
+                  <span className="text-slate-600 text-[11px]">·</span>
+                  <span className="text-slate-400 text-[11px]">Recebida {fmtDateTime(sol.created_at)}</span>
+                </div>
+              </div>
             </div>
-            <p className="text-xs text-gray-500 mt-1 font-mono">{sol.cnpj}</p>
-            <p className="text-xs text-gray-400 mt-0.5">
-              Recebida em {fmtDateTime(sol.created_at)}
-            </p>
+            <button onClick={onClose} className="text-slate-400 hover:text-white w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-700 transition-colors shrink-0 text-lg">
+              ✕
+            </button>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-lg shrink-0 ml-4">
-            ✕
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge status={sol.status} />
+            <PrioridadeBadge prioridade={sol.prioridade} />
+            {sla && (
+              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${SLA_PILL[sla.level]}`}>
+                {sla.label}
+              </span>
+            )}
+          </div>
         </div>
 
-        {/* actions */}
-        <div className="flex gap-2 px-6 py-3 border-b border-gray-100 shrink-0 flex-wrap">
-          {!isTerminal && (
-            <>
-              {canTriar && (
-                <button
-                  onClick={handleTriar}
-                  disabled={triando}
-                  className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 disabled:opacity-50 transition-colors"
-                >
-                  {triando ? "Iniciando..." : "Iniciar Triagem"}
+        {/* ── Barra de ações ── */}
+        <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-100 shrink-0 bg-gray-50/80">
+          <div className="flex items-center gap-2 flex-1 flex-wrap">
+            {canTriar && (
+              <button onClick={handleTriar} disabled={triando}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-50 transition-colors shadow-sm">
+                {triando ? "Iniciando..." : "Iniciar Triagem"}
+              </button>
+            )}
+            {canAprovarRecusar && (
+              <>
+                <button onClick={() => setModal("aprovar")}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-green-600 text-white hover:bg-green-700 transition-colors shadow-sm">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  Aprovar
                 </button>
-              )}
-              <button
-                onClick={() => setModal("aprovar")}
-                className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-green-600 text-white hover:bg-green-700 transition-colors"
-              >
-                Aprovar
+                <button onClick={() => setModal("recusar")}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border border-red-200 text-red-600 bg-white hover:bg-red-50 transition-colors">
+                  Recusar
+                </button>
+              </>
+            )}
+            {canCancelar && (
+              <button onClick={() => setModal("cancelar")}
+                className="px-3.5 py-2 rounded-xl text-xs font-semibold border border-gray-200 text-gray-500 bg-white hover:bg-gray-50 transition-colors">
+                Cancelar
               </button>
-              <button
-                onClick={() => setModal("recusar")}
-                className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition-colors"
-              >
-                Recusar
-              </button>
-            </>
-          )}
-          {canCancelar && (
-            <button
-              onClick={() => setModal("cancelar")}
-              className="px-4 py-1.5 rounded-lg text-xs font-semibold text-gray-500 border border-gray-200 hover:bg-gray-100 transition-colors"
-            >
-              Cancelar
-            </button>
-          )}
+            )}
+          </div>
           {canEdit && sol.status !== "aprovada" && (
-            <button
-              onClick={() => setModal("editar")}
-              className="ml-auto px-4 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition-colors flex items-center gap-1.5"
-            >
+            <button onClick={() => setModal("editar")}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 transition-colors">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
@@ -1262,129 +1387,140 @@ function Drawer({ sol, onClose, onTriar, onApproved, onRefused, onEdited }) {
           )}
         </div>
 
+        {/* ── Banners de status ── */}
         {sol.status === "aprovada" && (
-          <div className="px-6 py-3 border-b border-green-100 bg-green-50 shrink-0">
-            <p className="text-xs text-green-700 font-medium">
-              Solicitação aprovada. A implantação foi criada automaticamente.
-            </p>
-            <button
-              onClick={() => navigate("/admin/implantacoes")}
-              className="text-xs text-green-800 font-semibold underline mt-0.5"
-            >
+          <div className="flex items-center gap-3 px-5 py-3 border-b border-green-100 bg-green-50 shrink-0">
+            <div className="w-7 h-7 rounded-lg bg-green-100 flex items-center justify-center shrink-0">
+              <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <p className="text-xs font-semibold text-green-800">Solicitação aprovada</p>
+              <p className="text-[11px] text-green-600">A implantação foi criada automaticamente.</p>
+            </div>
+            <button onClick={() => navigate("/admin/implantacoes")}
+              className="text-[11px] font-semibold text-green-700 bg-green-100 hover:bg-green-200 px-2.5 py-1.5 rounded-lg transition-colors shrink-0">
               Ver Implantações →
             </button>
           </div>
         )}
 
         {sol.status === "aguardando_correcao" && (
-          <div className="px-6 py-3 border-b border-amber-100 bg-amber-50 shrink-0">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-xs text-amber-700 font-medium">
-                  Email de correção enviado para o cliente.
-                </p>
-                <p className="text-xs text-amber-600 mt-0.5">
-                  Aguardando o cliente corrigir e reenviar os dados.
-                </p>
+          <div className="px-5 py-3 border-b border-amber-100 bg-amber-50 shrink-0">
+            <div className="flex items-start gap-3">
+              <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center shrink-0 mt-0.5">
+                <svg className="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
               </div>
-              <button
-                onClick={handleReenviarEmail}
-                disabled={reenviando}
-                className="shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-amber-300 bg-white text-amber-700 hover:bg-amber-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {reenviando ? (
-                  <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-                  </svg>
-                ) : (
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                  </svg>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-amber-800">Email de correção enviado</p>
+                <p className="text-[11px] text-amber-600 mt-0.5">Aguardando o cliente corrigir e reenviar os dados.</p>
+                {reenvioMsg && (
+                  <p className={`text-[11px] mt-1.5 font-medium ${reenvioMsg.ok ? "text-green-700" : "text-red-600"}`}>
+                    {reenvioMsg.text}
+                  </p>
                 )}
-                {reenviando ? "Enviando…" : "Reenviar email"}
+              </div>
+              <button onClick={handleReenviarEmail} disabled={reenviando}
+                className="shrink-0 flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border border-amber-300 bg-white text-amber-700 hover:bg-amber-100 transition-colors disabled:opacity-50">
+                {reenviando
+                  ? <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                  : <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                }
+                {reenviando ? "Enviando…" : "Reenviar"}
               </button>
             </div>
-            {reenvioMsg && (
-              <p className={`text-xs mt-2 font-medium ${reenvioMsg.ok ? "text-green-700" : "text-red-600"}`}>
-                {reenvioMsg.text}
-              </p>
-            )}
           </div>
         )}
 
         {sol.status === "cancelada" && (
-          <div className="px-6 py-3 border-b border-gray-200 bg-gray-100 shrink-0">
-            <p className="text-xs text-gray-600 font-medium">Solicitação cancelada.</p>
+          <div className="flex items-center gap-3 px-5 py-3 border-b border-gray-200 bg-gray-100 shrink-0">
+            <div className="w-7 h-7 rounded-lg bg-gray-200 flex items-center justify-center shrink-0">
+              <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <p className="text-xs font-semibold text-gray-600">Solicitação cancelada.</p>
           </div>
         )}
 
-        {(sol.historico_recusas?.length > 0 || sol.motivo_recusa) && sol.status !== "cancelada" && (
-          <div className="border-b border-red-100 bg-red-50 shrink-0">
-            <div className="px-6 pt-3 pb-2 flex items-center gap-2">
-              <svg className="w-3.5 h-3.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-              <p className="text-xs font-semibold text-red-700 uppercase tracking-widest">
-                Histórico de Recusas
-              </p>
+        {/* ── Histórico de recusas (timeline) ── */}
+        {hasHistory && (
+          <div className="border-b border-gray-100 shrink-0">
+            <button
+              onClick={() => setHistoryOpen((v) => !v)}
+              className="w-full flex items-center gap-2.5 px-5 py-2.5 hover:bg-gray-50 transition-colors"
+            >
+              <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                <svg className="w-3 h-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <span className="text-xs font-semibold text-gray-700 flex-1 text-left">Histórico de Recusas</span>
               {sol.historico_recusas?.length > 0 && (
-                <span className="bg-red-200 text-red-800 text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-600">
                   {sol.historico_recusas.length}
                 </span>
               )}
-            </div>
-            <div className="px-6 pb-3 space-y-2 max-h-52 overflow-y-auto">
-              {sol.historico_recusas?.length > 0
-                ? [...sol.historico_recusas].reverse().map((entry, idx) => {
-                    const num = sol.historico_recusas.length - idx;
-                    const secaoLabels = (entry.campos || []).map(
-                      (k) => SECOES_CORRECAO.find((s) => s.key === k)?.label || k
-                    );
-                    return (
-                      <div key={idx} className="bg-white rounded-lg border border-red-100 p-3">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-[10px] font-bold text-red-500 uppercase tracking-wide">
-                            Recusa #{num}
-                          </span>
-                          <span className="text-[10px] text-gray-400 tabular-nums">
-                            {new Date(entry.data).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
-                          </span>
-                        </div>
-                        {entry.usuario && (
-                          <div className="flex items-center gap-1 mb-1.5">
-                            <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                            </svg>
-                            <span className="text-[10px] text-gray-500 font-medium">{entry.usuario}</span>
+              <svg className={`w-3.5 h-3.5 text-gray-400 transition-transform ${historyOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {historyOpen && (
+              <div className="px-5 pb-4 max-h-56 overflow-y-auto">
+                {sol.historico_recusas?.length > 0 ? (
+                  <div className="relative">
+                    <div className="absolute left-[13px] top-2 bottom-2 w-0.5 bg-red-100" />
+                    {[...sol.historico_recusas].reverse().map((entry, idx) => {
+                      const num = sol.historico_recusas.length - idx;
+                      const secaoLabels = (entry.campos || []).map(
+                        (k) => SECOES_CORRECAO.find((s) => s.key === k)?.label || k
+                      );
+                      return (
+                        <div key={idx} className="relative flex gap-3 pb-3 last:pb-0">
+                          <div className="w-7 h-7 rounded-full bg-red-100 border-2 border-white flex items-center justify-center shrink-0 text-[10px] font-bold text-red-600 z-10 shadow-sm">
+                            {num}
                           </div>
-                        )}
-                        <p className="text-xs text-red-800 leading-relaxed mb-2">{entry.motivo}</p>
-                        {secaoLabels.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {secaoLabels.map((l) => (
-                              <span key={l} className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-medium">
-                                {l}
+                          <div className="flex-1 bg-white rounded-xl border border-gray-100 p-3 shadow-sm mt-0.5">
+                            <div className="flex items-center justify-between mb-1.5">
+                              {entry.usuario && (
+                                <span className="text-[11px] font-semibold text-gray-600">{entry.usuario}</span>
+                              )}
+                              <span className="text-[10px] text-gray-400 tabular-nums ml-auto">
+                                {new Date(entry.data).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
                               </span>
-                            ))}
+                            </div>
+                            <p className="text-xs text-gray-700 leading-relaxed mb-2">{entry.motivo}</p>
+                            {secaoLabels.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {secaoLabels.map((l) => (
+                                  <span key={l} className="text-[10px] bg-red-50 text-red-600 border border-red-100 px-1.5 py-0.5 rounded-full font-medium">
+                                    {l}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    );
-                  })
-                : (
-                  <div className="bg-white rounded-lg border border-red-100 p-3">
-                    <p className="text-xs text-red-800">{sol.motivo_recusa}</p>
+                        </div>
+                      );
+                    })}
                   </div>
-                )
-              }
-            </div>
+                ) : (
+                  <div className="bg-white rounded-xl border border-gray-100 p-3">
+                    <p className="text-xs text-gray-700">{sol.motivo_recusa}</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
-        {/* tabs */}
-        <div className="border-b border-gray-100 shrink-0 overflow-x-auto">
-          <div className="flex min-w-max px-6">
+        {/* ── Tabs ── */}
+        <div className="border-b border-gray-100 shrink-0 overflow-x-auto bg-white">
+          <div className="flex min-w-max px-5">
             {TABS.map((t) => (
               <button
                 key={t.id}
@@ -1392,7 +1528,7 @@ function Drawer({ sol, onClose, onTriar, onApproved, onRefused, onEdited }) {
                 className={`px-3 py-3 text-xs font-medium whitespace-nowrap border-b-2 transition-all ${
                   tab === t.id
                     ? "border-orange-500 text-orange-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
+                    : "border-transparent text-gray-400 hover:text-gray-600 hover:border-gray-200"
                 }`}
               >
                 {t.label}
@@ -1401,8 +1537,8 @@ function Drawer({ sol, onClose, onTriar, onApproved, onRefused, onEdited }) {
           </div>
         </div>
 
-        {/* content */}
-        <div className="flex-1 overflow-y-auto px-6 py-5">
+        {/* ── Conteúdo das tabs ── */}
+        <div className="flex-1 overflow-y-auto px-6 py-5 bg-gray-50/30">
           {tab === "dados" && (
             <>
               <Section title="Empresa">

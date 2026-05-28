@@ -44,12 +44,19 @@ class SolicitacaoCreate(BaseModel):
 # ── Ações de triagem ──────────────────────────────────────────────────────────
 
 class TriagemAprovar(BaseModel):
-    template_id: int
+    template_ids: list[int]
     consultor: str | None = None
     prioridade: PrioridadeType = "normal"
     sla_dias: int = 30
     observacoes: str | None = None
     conversao_dados: bool = False
+
+    @field_validator("template_ids")
+    @classmethod
+    def at_least_one(cls, v: list[int]) -> list[int]:
+        if not v:
+            raise ValueError("Selecione ao menos um módulo")
+        return v
 
 
 class TriagemRecusar(BaseModel):

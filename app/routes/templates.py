@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import Response
 from sqlalchemy.orm import Session, selectinload
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from datetime import datetime
 
 import app.services.storage_service as storage
@@ -48,7 +48,7 @@ def listar(
 ):
     q = select(Template)
     if categoria == "implantacao":
-        q = q.where(~Template.tipo.like("instalacao_%"))
+        q = q.where(or_(Template.tipo.is_(None), Template.tipo == "", ~Template.tipo.like("instalacao_%")))
     elif categoria == "instalacao":
         q = q.where(Template.tipo.like("instalacao_%"))
     return db.execute(q.order_by(Template.nome)).scalars().all()
