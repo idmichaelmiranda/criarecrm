@@ -1,5 +1,6 @@
 import smtplib
 import ssl
+import socket
 import threading
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -17,6 +18,9 @@ def save_config(data: dict) -> None:
     storage.put_json_sync(_EMAIL_CONFIG_PATH, data)
 
 
+_SMTP_TIMEOUT = 8  # segundos — deve ser menor que o timeout do frontend (15s)
+
+
 def _smtp_send(cfg: dict, to_email: str, msg: MIMEMultipart) -> None:
     port = int(cfg.get("port", 587))
     use_tls = cfg.get("use_tls", True)
@@ -24,19 +28,26 @@ def _smtp_send(cfg: dict, to_email: str, msg: MIMEMultipart) -> None:
     user = cfg["user"]
     password = cfg["password"]
 
-    if port == 465:
-        ctx = ssl.create_default_context()
-        with smtplib.SMTP_SSL(host, port, context=ctx, timeout=20) as server:
-            server.login(user, password)
-            server.sendmail(msg["From"], [to_email], msg.as_string())
-    else:
-        with smtplib.SMTP(host, port, timeout=20) as server:
-            server.ehlo()
-            if use_tls:
-                server.starttls(context=ssl.create_default_context())
+    try:
+        if port == 465:
+            ctx = ssl.create_default_context()
+            with smtplib.SMTP_SSL(host, port, context=ctx, timeout=_SMTP_TIMEOUT) as server:
+                server.login(user, password)
+                server.sendmail(msg["From"], [to_email], msg.as_string())
+        else:
+            with smtplib.SMTP(host, port, timeout=_SMTP_TIMEOUT) as server:
                 server.ehlo()
-            server.login(user, password)
-            server.sendmail(msg["From"], [to_email], msg.as_string())
+                if use_tls:
+                    server.starttls(context=ssl.create_default_context())
+                    server.ehlo()
+                server.login(user, password)
+                server.sendmail(msg["From"], [to_email], msg.as_string())
+    except (socket.timeout, TimeoutError):
+        raise smtplib.SMTPConnectError(
+            -1,
+            f"Timeout ({_SMTP_TIMEOUT}s) ao conectar em {host}:{port}. "
+            "Verifique se o servidor está acessível e se a porta está correta."
+        )
 
 
 def _send_email(to_email: str, subject: str, html: str) -> None:
@@ -78,13 +89,21 @@ def _send_email(to_email: str, subject: str, html: str) -> None:
     try:
         _smtp_send(cfg, to_email, msg)
     except smtplib.SMTPAuthenticationError:
-        raise ValueError("Falha na autenticação SMTP. Verifique usuário e senha.")
-    except (smtplib.SMTPConnectError, OSError) as exc:
         raise ValueError(
-            f"Não foi possível conectar ao servidor {cfg['host']}:{cfg.get('port', 587)}. {exc}"
+            "Falha na autenticação SMTP. Verifique usuário e senha. "
+            "Para Gmail, use uma App Password (não a senha normal da conta)."
         )
+    except smtplib.SMTPConnectError as exc:
+        raise ValueError(str(exc))
+    except (OSError, socket.timeout, TimeoutError) as exc:
+        raise ValueError(
+            f"Não foi possível conectar em {cfg['host']}:{cfg.get('port', 587)} "
+            f"dentro de {_SMTP_TIMEOUT}s. Verifique host, porta e se o servidor está acessível. ({exc})"
+        )
+    except smtplib.SMTPException as exc:
+        raise ValueError(f"Erro SMTP: {exc}")
     except Exception as exc:
-        raise ValueError(f"Erro ao enviar email: {exc}")
+        raise ValueError(f"Erro inesperado ao enviar email: {exc}")
 
 
 # ── Revisão ───────────────────────────────────────────────────────────────────

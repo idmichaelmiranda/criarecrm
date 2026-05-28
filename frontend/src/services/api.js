@@ -194,7 +194,7 @@ export const configuracoesApi = {
   },
   getEmail: () => api.get("/configuracoes/email"),
   saveEmail: (data) => api.put("/configuracoes/email", data),
-  testarEmail: (data) => api.post("/configuracoes/email/testar", data),
+  testarEmail: (data) => api.post("/configuracoes/email/testar", data, { timeout: 30000 }),
   // Integração ERP
   getErp: () => api.get("/configuracoes/erp"),
   saveErp: (data) => api.put("/configuracoes/erp", data),
