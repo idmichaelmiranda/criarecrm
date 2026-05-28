@@ -166,6 +166,16 @@ def kpis(db: Session = Depends(get_db)):
         )
     ).scalar_one()
 
+    # Instalações agendadas para hoje sem responsável (urgência máxima)
+    instalacoes_sem_responsavel_hoje = db.execute(
+        select(func.count()).select_from(InstalacaoModel)
+        .where(
+            InstalacaoModel.responsavel_id.is_(None),
+            InstalacaoModel.status.notin_(["concluida", "cancelada"]),
+            InstalacaoModel.data_agendada == today,
+        )
+    ).scalar_one()
+
     # ── Gráfico mensal (últimos 6 meses, concluídas) ──────────────────────────
     six_months_ago = today - timedelta(days=183)
     month_expr = (
@@ -357,6 +367,7 @@ def kpis(db: Session = Depends(get_db)):
         "tarefas_sem_responsavel": tarefas_sem_responsavel,
         # Instalações
         "instalacoes_sem_responsavel": instalacoes_sem_responsavel,
+        "instalacoes_sem_responsavel_hoje": instalacoes_sem_responsavel_hoje,
         # SLA médio
         "sla_medio_dias": sla_medio,
         # Funil

@@ -1299,7 +1299,7 @@ function Drawer({ sol, onClose, onTriar, onApproved, onRefused, onEdited }) {
   const initials = sol.razao_social.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
   const sla = slaRelativo(sol);
   const hasHistory = (sol.historico_recusas?.length > 0 || sol.motivo_recusa) && sol.status !== "cancelada";
-  const [historyOpen, setHistoryOpen] = useState(true);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const AVATAR_BG = {
     nova: "bg-blue-500", em_triagem: "bg-amber-500", aguardando_correcao: "bg-orange-500",

@@ -510,6 +510,8 @@ export default function InstalacaoDetalhe() {
   const [showEditarModal, setShowEditarModal] = useState(false);
   const [editarError, setEditarError] = useState("");
   const [editarSaving, setEditarSaving] = useState(false);
+  const [editDropdownOpen, setEditDropdownOpen] = useState(false);
+  const editDropdownRef = useRef(null);
 
   async function load() {
     setLoading(true);
@@ -536,6 +538,17 @@ export default function InstalacaoDetalhe() {
     usuariosApi.listar().then(({ data }) => setUsuarios(data.filter((u) => u.ativo))).catch(() => {});
     instalacaosApi.tipos().then(({ data }) => setTiposConfig(data)).catch(() => {});
   }, [id]);
+
+  useEffect(() => {
+    if (!editDropdownOpen) return;
+    function handler(e) {
+      if (editDropdownRef.current && !editDropdownRef.current.contains(e.target)) {
+        setEditDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [editDropdownOpen]);
 
   const elapsed = useElapsed(inst?.iniciado_em, inst?.finalizado_em);
 
@@ -729,33 +742,76 @@ export default function InstalacaoDetalhe() {
           <span className="text-gray-300">/</span>
           <span className="text-gray-700 font-medium">{inst.codigo}</span>
         </div>
-        <div className="flex items-center gap-2">
-          {inst.status === "agendada" && (
-            <button
-              onClick={() => { setEditarError(""); setShowEditarModal(true); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-all"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              Editar Instalação
-            </button>
-          )}
-          <button
-            onClick={() => setEditando((v) => !v)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-              editando ? "bg-gray-100 text-gray-600" : "bg-orange-50 text-orange-600 hover:bg-orange-100"
-            }`}
-          >
-            {editando ? "Cancelar edição" : (
-              <>
+        <div className="flex items-center gap-2" ref={editDropdownRef}>
+          {inst.status === "agendada" ? (
+            /* Quando agendada: dropdown unificado para evitar dois "Editar" lado a lado */
+            <div className="relative">
+              <button
+                onClick={() => setEditDropdownOpen((v) => !v)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                  editDropdownOpen || editando
+                    ? "bg-orange-100 text-orange-700"
+                    : "bg-orange-50 text-orange-600 hover:bg-orange-100"
+                }`}
+              >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
                 Editar
-              </>
-            )}
-          </button>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className={`transition-transform ${editDropdownOpen ? "rotate-180" : ""}`}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {editDropdownOpen && (
+                <div className="absolute right-0 top-full mt-1.5 w-52 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-30">
+                  <button
+                    onClick={() => { setEditarError(""); setShowEditarModal(true); setEditDropdownOpen(false); }}
+                    className="w-full flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0 mt-0.5">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800">Configuração</p>
+                      <p className="text-xs text-gray-400 mt-0.5">Tipo, data, responsável</p>
+                    </div>
+                  </button>
+                  <div className="border-t border-gray-50" />
+                  <button
+                    onClick={() => { setEditando((v) => !v); setEditDropdownOpen(false); }}
+                    className="w-full flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center shrink-0 mt-0.5">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ea580c" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800">{editando ? "Fechar edição" : "Editar campos"}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">Status, observações</p>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Demais status: botão simples de edição inline */
+            <button
+              onClick={() => setEditando((v) => !v)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                editando ? "bg-gray-100 text-gray-600" : "bg-orange-50 text-orange-600 hover:bg-orange-100"
+              }`}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              {editando ? "Cancelar edição" : "Editar"}
+            </button>
+          )}
         </div>
       </div>
 

@@ -95,7 +95,7 @@ const TIMELINE_FILTERS = [
 const FLASH_FIELDS = [
   "implantacoes_em_andamento", "implantacoes_atrasadas", "implantacoes_critico",
   "go_lives_semana", "taxa_conclusao", "tarefas_vencidas", "tarefas_sem_responsavel",
-  "solicitacoes_novas", "instalacoes_sem_responsavel",
+  "solicitacoes_novas", "instalacoes_sem_responsavel", "instalacoes_sem_responsavel_hoje",
 ];
 
 // ── Skeleton ───────────────────────────────────────────────────────────────────
@@ -237,10 +237,21 @@ function AlertStrip({ data }) {
       to: "/admin/triagem",
     });
   }
-  if ((data.instalacoes_sem_responsavel ?? 0) > 0) {
+  if ((data.instalacoes_sem_responsavel_hoje ?? 0) > 0) {
+    const n = data.instalacoes_sem_responsavel_hoje;
+    alerts.push({
+      key: "instalacoes_hoje", icon: "🚨",
+      title: `${n} instalaç${n > 1 ? "ões" : "ão"} HOJE sem responsável`,
+      desc: "Agendada(s) para hoje — atribua agora",
+      bg: "bg-red-50 border-red-300", titleColor: "text-red-800", descColor: "text-red-600",
+      btnBg: "bg-red-100 hover:bg-red-200 text-red-700",
+      to: "/instalacoes?sem_responsavel=1",
+    });
+  } else if ((data.instalacoes_sem_responsavel ?? 0) > 0) {
+    const n = data.instalacoes_sem_responsavel;
     alerts.push({
       key: "instalacoes", icon: "📦",
-      title: `${data.instalacoes_sem_responsavel} instalaç${data.instalacoes_sem_responsavel > 1 ? "ões" : "ão"} sem responsável`,
+      title: `${n} instalaç${n > 1 ? "ões" : "ão"} sem responsável`,
       desc: "Aguardando direcionamento",
       bg: "bg-orange-50 border-orange-200", titleColor: "text-orange-800", descColor: "text-orange-600",
       btnBg: "bg-orange-100 hover:bg-orange-200 text-orange-700",
@@ -964,11 +975,22 @@ export default function Dashboard() {
             <KpiCard
               label="Instalações S/ Resp."
               value={data.instalacoes_sem_responsavel ?? 0}
-              sub="Aguardando direcionamento"
-              icon="📦" color={data.instalacoes_sem_responsavel > 0 ? "text-orange-700" : "text-gray-400"}
+              sub={
+                (data.instalacoes_sem_responsavel_hoje ?? 0) > 0
+                  ? `${data.instalacoes_sem_responsavel_hoje} agendada${data.instalacoes_sem_responsavel_hoje > 1 ? "s" : ""} hoje!`
+                  : "Aguardando direcionamento"
+              }
+              icon={(data.instalacoes_sem_responsavel_hoje ?? 0) > 0 ? "🚨" : "📦"}
+              color={
+                (data.instalacoes_sem_responsavel_hoje ?? 0) > 0
+                  ? "text-red-700"
+                  : data.instalacoes_sem_responsavel > 0
+                    ? "text-orange-700"
+                    : "text-gray-400"
+              }
               to="/instalacoes?sem_responsavel=1"
-              urgent={data.instalacoes_sem_responsavel > 0}
-              flashing={flashKeys.has("instalacoes_sem_responsavel")}
+              urgent={(data.instalacoes_sem_responsavel ?? 0) > 0}
+              flashing={flashKeys.has("instalacoes_sem_responsavel") || flashKeys.has("instalacoes_sem_responsavel_hoje")}
             />
           </div>
 

@@ -15,7 +15,7 @@ from app.services import timeline_service
 
 def aprovar(db: Session, solicitacao_id: int, data: TriagemAprovar) -> Implantacao:
     sol = db.get(Solicitacao, solicitacao_id)
-    if not sol or sol.status not in ["nova", "em_triagem"]:
+    if not sol or sol.status not in ["nova", "em_triagem", "aguardando_correcao"]:
         raise HTTPException(400, "Solicitação inválida para aprovação")
 
     # 1. Criar cliente ou reutilizar existente pelo CNPJ
