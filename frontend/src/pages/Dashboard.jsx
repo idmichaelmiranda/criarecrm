@@ -237,24 +237,33 @@ function AlertStrip({ data }) {
       to: "/admin/triagem",
     });
   }
-  if ((data.instalacoes_sem_responsavel_hoje ?? 0) > 0) {
-    const n = data.instalacoes_sem_responsavel_hoje;
+  const _instVenc  = data.instalacoes_sem_responsavel_vencidas ?? 0;
+  const _instHoje  = data.instalacoes_sem_responsavel_hoje     ?? 0;
+  const _instTotal = data.instalacoes_sem_responsavel          ?? 0;
+  if (_instVenc > 0 || _instHoje > 0 || _instTotal > 0) {
+    // Monta descrição com breakdown dos casos mais críticos
+    const parts = [];
+    if (_instVenc > 0) parts.push(`${_instVenc} vencida${_instVenc > 1 ? "s" : ""}`);
+    if (_instHoje > 0) parts.push(`${_instHoje} hoje`);
+    const future = _instTotal - _instVenc - _instHoje;
+    if (future > 0) parts.push(`${future} futura${future > 1 ? "s" : ""}`);
+
+    const isCritico = _instVenc > 0;
+    const isUrgente = !isCritico && _instHoje > 0;
+
     alerts.push({
-      key: "instalacoes_hoje", icon: "🚨",
-      title: `${n} instalaç${n > 1 ? "ões" : "ão"} HOJE sem responsável`,
-      desc: "Agendada(s) para hoje — atribua agora",
-      bg: "bg-red-50 border-red-300", titleColor: "text-red-800", descColor: "text-red-600",
-      btnBg: "bg-red-100 hover:bg-red-200 text-red-700",
-      to: "/instalacoes?sem_responsavel=1",
-    });
-  } else if ((data.instalacoes_sem_responsavel ?? 0) > 0) {
-    const n = data.instalacoes_sem_responsavel;
-    alerts.push({
-      key: "instalacoes", icon: "📦",
-      title: `${n} instalaç${n > 1 ? "ões" : "ão"} sem responsável`,
-      desc: "Aguardando direcionamento",
-      bg: "bg-orange-50 border-orange-200", titleColor: "text-orange-800", descColor: "text-orange-600",
-      btnBg: "bg-orange-100 hover:bg-orange-200 text-orange-700",
+      key: "instalacoes",
+      icon: isCritico ? "🚨" : isUrgente ? "🚨" : "📦",
+      title: isCritico
+        ? `${_instVenc} instalaç${_instVenc > 1 ? "ões" : "ão"} vencida${_instVenc > 1 ? "s" : ""} sem responsável`
+        : isUrgente
+          ? `${_instHoje} instalaç${_instHoje > 1 ? "ões" : "ão"} HOJE sem responsável`
+          : `${_instTotal} instalaç${_instTotal > 1 ? "ões" : "ão"} sem responsável`,
+      desc: parts.join(" · ") || "Aguardando direcionamento",
+      bg:        isCritico ? "bg-red-50 border-red-300"         : isUrgente ? "bg-red-50 border-red-300"         : "bg-orange-50 border-orange-200",
+      titleColor:isCritico ? "text-red-800"                     : isUrgente ? "text-red-800"                     : "text-orange-800",
+      descColor: isCritico ? "text-red-600"                     : isUrgente ? "text-red-600"                     : "text-orange-600",
+      btnBg:     isCritico ? "bg-red-100 hover:bg-red-200 text-red-700" : isUrgente ? "bg-red-100 hover:bg-red-200 text-red-700" : "bg-orange-100 hover:bg-orange-200 text-orange-700",
       to: "/instalacoes?sem_responsavel=1",
     });
   }
@@ -972,26 +981,30 @@ export default function Dashboard() {
               urgent={data.tarefas_vencidas > 0}
               flashing={flashKeys.has("tarefas_vencidas")}
             />
-            <KpiCard
-              label="Instalações S/ Resp."
-              value={data.instalacoes_sem_responsavel ?? 0}
-              sub={
-                (data.instalacoes_sem_responsavel_hoje ?? 0) > 0
-                  ? `${data.instalacoes_sem_responsavel_hoje} agendada${data.instalacoes_sem_responsavel_hoje > 1 ? "s" : ""} hoje!`
-                  : "Aguardando direcionamento"
-              }
-              icon={(data.instalacoes_sem_responsavel_hoje ?? 0) > 0 ? "🚨" : "📦"}
-              color={
-                (data.instalacoes_sem_responsavel_hoje ?? 0) > 0
-                  ? "text-red-700"
-                  : data.instalacoes_sem_responsavel > 0
-                    ? "text-orange-700"
-                    : "text-gray-400"
-              }
-              to="/instalacoes?sem_responsavel=1"
-              urgent={(data.instalacoes_sem_responsavel ?? 0) > 0}
-              flashing={flashKeys.has("instalacoes_sem_responsavel") || flashKeys.has("instalacoes_sem_responsavel_hoje")}
-            />
+            {(() => {
+              const venc  = data.instalacoes_sem_responsavel_vencidas ?? 0;
+              const hoje  = data.instalacoes_sem_responsavel_hoje     ?? 0;
+              const total = data.instalacoes_sem_responsavel          ?? 0;
+              const future = total - venc - hoje;
+              const subParts = [];
+              if (venc   > 0) subParts.push(`${venc} vencida${venc > 1 ? "s" : ""}`);
+              if (hoje   > 0) subParts.push(`${hoje} hoje`);
+              if (future > 0) subParts.push(`${future} futura${future > 1 ? "s" : ""}`);
+              const isCritico = venc > 0;
+              const isUrgente = !isCritico && hoje > 0;
+              return (
+                <KpiCard
+                  label="Instalações S/ Resp."
+                  value={total}
+                  sub={subParts.length > 0 ? subParts.join(" · ") : "Aguardando direcionamento"}
+                  icon={isCritico || isUrgente ? "🚨" : "📦"}
+                  color={isCritico ? "text-red-700" : isUrgente ? "text-red-600" : total > 0 ? "text-orange-700" : "text-gray-400"}
+                  to="/instalacoes?sem_responsavel=1"
+                  urgent={total > 0}
+                  flashing={flashKeys.has("instalacoes_sem_responsavel") || flashKeys.has("instalacoes_sem_responsavel_hoje")}
+                />
+              );
+            })()}
           </div>
 
           {/* ── Alertas ── */}

@@ -166,13 +166,23 @@ def kpis(db: Session = Depends(get_db)):
         )
     ).scalar_one()
 
-    # Instalações agendadas para hoje sem responsável (urgência máxima)
+    # Instalações agendadas para hoje sem responsável
     instalacoes_sem_responsavel_hoje = db.execute(
         select(func.count()).select_from(InstalacaoModel)
         .where(
             InstalacaoModel.responsavel_id.is_(None),
             InstalacaoModel.status.notin_(["concluida", "cancelada"]),
             InstalacaoModel.data_agendada == today,
+        )
+    ).scalar_one()
+
+    # Instalações com data já passada e ainda sem responsável (crítico)
+    instalacoes_sem_responsavel_vencidas = db.execute(
+        select(func.count()).select_from(InstalacaoModel)
+        .where(
+            InstalacaoModel.responsavel_id.is_(None),
+            InstalacaoModel.status.notin_(["concluida", "cancelada"]),
+            InstalacaoModel.data_agendada < today,
         )
     ).scalar_one()
 
@@ -368,6 +378,7 @@ def kpis(db: Session = Depends(get_db)):
         # Instalações
         "instalacoes_sem_responsavel": instalacoes_sem_responsavel,
         "instalacoes_sem_responsavel_hoje": instalacoes_sem_responsavel_hoje,
+        "instalacoes_sem_responsavel_vencidas": instalacoes_sem_responsavel_vencidas,
         # SLA médio
         "sla_medio_dias": sla_medio,
         # Funil
