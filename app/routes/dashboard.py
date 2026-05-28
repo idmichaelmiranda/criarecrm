@@ -16,16 +16,6 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 _ACTIVE = ("em_andamento", "pausada")
 
-PIPELINE_STAGES = [
-    "Infraestrutura",
-    "Configuração",
-    "Migração de Dados",
-    "Treinamento",
-    "Homologação",
-    "Go Live",
-    "Pós-implantação",
-]
-
 MES_ABBR = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"]
 
 
@@ -39,7 +29,28 @@ def _etapa_atual(impl) -> str:
     done = sorted([e for e in impl.etapas if e.status == "concluida"], key=lambda e: e.ordem, reverse=True)
     if done:
         return done[0].nome
-    return "Infraestrutura"
+    if impl.etapas:
+        return sorted(impl.etapas, key=lambda e: e.ordem)[0].nome
+    return ""
+
+
+def _build_dynamic_pipeline(active_impls: list) -> tuple[dict, list[str]]:
+    """Derive pipeline stages dynamically from active implantações' etapas.
+
+    Returns (pipeline_dict, ordered_stage_names).
+    Stages ordered by weighted average ordem across all implantações.
+    """
+    meta: dict[str, dict] = {}
+    for impl in active_impls:
+        for e in impl.etapas:
+            if e.nome not in meta:
+                meta[e.nome] = {"cor": e.cor or "#6366f1", "ordem_sum": 0, "ordem_cnt": 0}
+            meta[e.nome]["ordem_sum"] += e.ordem
+            meta[e.nome]["ordem_cnt"] += 1
+
+    order = sorted(meta.keys(), key=lambda n: meta[n]["ordem_sum"] / meta[n]["ordem_cnt"])
+    pipeline = {nome: {"cor": meta[nome]["cor"], "count": 0, "items": []} for nome in order}
+    return pipeline, order
 
 
 @router.get("/kpis")
@@ -204,7 +215,7 @@ def kpis(db: Session = Depends(get_db)):
     ).scalars().unique().all()
 
     # ── Pipeline, fila, workload ──────────────────────────────────────────────
-    pipeline = {s: {"count": 0, "items": []} for s in PIPELINE_STAGES}
+    pipeline, stage_order = _build_dynamic_pipeline(active_impls)
     fila = []
     sla_dias_list = []
     consultores_map: dict = {}
@@ -242,16 +253,16 @@ def kpis(db: Session = Depends(get_db)):
             "consultor": impl.consultor,
         }
 
-        # Distribui nos buckets de todas as etapas em_andamento (pode aparecer em múltiplas colunas)
+        # Distribui nos buckets das etapas em_andamento (pode aparecer em múltiplas colunas)
         active_stage_names = [e.nome for e in impl.etapas if e.status == "em_andamento"]
         if not active_stage_names:
-            active_stage_names = [etapa_nome]
+            active_stage_names = [etapa_nome] if etapa_nome else []
 
         for stage_name in active_stage_names:
-            bucket = stage_name if stage_name in pipeline else PIPELINE_STAGES[0]
-            pipeline[bucket]["count"] += 1
-            if len(pipeline[bucket]["items"]) < 4:
-                pipeline[bucket]["items"].append(item)
+            if stage_name in pipeline:
+                pipeline[stage_name]["count"] += 1
+                if len(pipeline[stage_name]["items"]) < 4:
+                    pipeline[stage_name]["items"].append(item)
 
         fila.append(item)
 
@@ -276,7 +287,10 @@ def kpis(db: Session = Depends(get_db)):
     fila = fila[:15]
 
     sla_medio = round(sum(sla_dias_list) / len(sla_dias_list)) if sla_dias_list else None
-    pipeline_list = [{"nome": k, **v} for k, v in pipeline.items()]
+    pipeline_list = [
+        {"nome": nome, "cor": pipeline[nome]["cor"], "count": pipeline[nome]["count"], "items": pipeline[nome]["items"]}
+        for nome in stage_order
+    ]
     pipeline_total = len(active_impls)  # contagem real de implantações únicas
 
     workload = []

@@ -56,15 +56,19 @@ const PRIO_CFG = {
   baixa:   { label: "Baixa",   bg: "bg-gray-100",   text: "text-gray-500",   border: "border-gray-200"   },
 };
 
-const STAGE_COLORS = {
-  "Infraestrutura":    { bg: "bg-blue-500",   light: "bg-blue-50",   text: "text-blue-600",   border: "border-blue-200"   },
-  "Configuração":      { bg: "bg-violet-500", light: "bg-violet-50", text: "text-violet-600", border: "border-violet-200" },
-  "Migração de Dados": { bg: "bg-amber-500",  light: "bg-amber-50",  text: "text-amber-600",  border: "border-amber-200"  },
-  "Treinamento":       { bg: "bg-pink-500",   light: "bg-pink-50",   text: "text-pink-600",   border: "border-pink-200"   },
-  "Homologação":       { bg: "bg-cyan-500",   light: "bg-cyan-50",   text: "text-cyan-600",   border: "border-cyan-200"   },
-  "Go Live":           { bg: "bg-green-500",  light: "bg-green-50",  text: "text-green-600",  border: "border-green-200"  },
-  "Pós-implantação":   { bg: "bg-indigo-500", light: "bg-indigo-50", text: "text-indigo-600", border: "border-indigo-200" },
-};
+function stageStyle(hex) {
+  const c = hex && hex.startsWith("#") && hex.length >= 7 ? hex : "#6366f1";
+  const r = parseInt(c.slice(1, 3), 16);
+  const g = parseInt(c.slice(3, 5), 16);
+  const b = parseInt(c.slice(5, 7), 16);
+  return {
+    dot:    { backgroundColor: c },
+    header: { backgroundColor: `rgba(${r},${g},${b},0.08)` },
+    badge:  { backgroundColor: c, color: "#fff" },
+    text:   { color: c },
+    chip:   { backgroundColor: `rgba(${r},${g},${b},0.10)`, color: c, borderColor: `rgba(${r},${g},${b},0.30)` },
+  };
+}
 
 const TIMELINE_CFG = {
   solicitacao_criada:    { icon: "📥", color: "bg-indigo-100 text-indigo-600"   },
@@ -301,7 +305,7 @@ function PipelineBoard({ pipeline, selectedStage, onSelectStage, fullscreen = fa
     <div className="overflow-x-auto">
       <div className="flex gap-0 min-w-max">
         {pipeline.map((stage) => {
-          const sc = STAGE_COLORS[stage.nome] || STAGE_COLORS["Infraestrutura"];
+          const sc = stageStyle(stage.cor);
           const isSelected = selectedStage === stage.nome;
           return (
             <div
@@ -311,14 +315,15 @@ function PipelineBoard({ pipeline, selectedStage, onSelectStage, fullscreen = fa
                 ${isSelected ? "ring-2 ring-inset ring-orange-300" : ""}`}
             >
               <div
-                className={`px-3 py-2.5 border-b border-gray-100 flex items-center gap-2 ${sc.light}
+                className={`px-3 py-2.5 border-b border-gray-100 flex items-center gap-2
                   ${stage.count > 0 ? "cursor-pointer hover:brightness-95" : ""}`}
+                style={sc.header}
                 onClick={() => stage.count > 0 && onSelectStage(isSelected ? null : stage.nome)}
               >
-                <div className={`w-2 h-2 rounded-full shrink-0 ${sc.bg}`} />
-                <p className={`text-[11px] font-semibold truncate ${sc.text}`}>{stage.nome}</p>
+                <div className="w-2 h-2 rounded-full shrink-0" style={sc.dot} />
+                <p className="text-[11px] font-semibold truncate" style={sc.text}>{stage.nome}</p>
                 {stage.count > 0 && (
-                  <span className={`ml-auto shrink-0 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] font-bold ${sc.bg} text-white`}>
+                  <span className="ml-auto shrink-0 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] font-bold" style={sc.badge}>
                     {stage.count}
                   </span>
                 )}
@@ -450,11 +455,11 @@ function ProgressBar({ value }) {
   );
 }
 
-function FilaOperacional({ fila, filaTotal, stageFilter }) {
+function FilaOperacional({ fila, filaTotal, stageFilter, stageColorMap = {} }) {
   const navigate = useNavigate();
   const filtered = stageFilter ? fila.filter((i) => i.etapa_atual === stageFilter) : fila;
   if (!fila || fila.length === 0) return null;
-  const sc = (s) => STAGE_COLORS[s] || STAGE_COLORS["Infraestrutura"];
+  const sc = (s) => stageStyle(stageColorMap[s] || "#6366f1");
 
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
@@ -496,8 +501,9 @@ function FilaOperacional({ fila, filaTotal, stageFilter }) {
                     <p className="text-[10px] text-gray-400 font-mono">{item.codigo}</p>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-medium border ${sc(item.etapa_atual).light} ${sc(item.etapa_atual).text} ${sc(item.etapa_atual).border}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${sc(item.etapa_atual).bg}`} />
+                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-medium border"
+                      style={sc(item.etapa_atual).chip}>
+                      <span className="w-1.5 h-1.5 rounded-full" style={sc(item.etapa_atual).dot} />
                       {item.etapa_atual}
                     </span>
                   </td>
@@ -985,6 +991,7 @@ export default function Dashboard() {
               fila={data.fila}
               filaTotal={data.fila_total}
               stageFilter={selectedStage}
+              stageColorMap={Object.fromEntries((data.pipeline || []).map((s) => [s.nome, s.cor || "#6366f1"]))}
             />
           ) : (
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-10 text-center">
