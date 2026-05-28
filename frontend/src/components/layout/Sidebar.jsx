@@ -114,6 +114,16 @@ function NavGroup({ title, items, badge, pendenteBadge, installsBadge, hasPermis
 
 // ── Dropdown de notificações ──────────────────────────────────────────────────
 
+const NOTIF_TIPO = {
+  instalacao:  { bg: "bg-blue-100",    fg: "text-blue-500",    d: "M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18" },
+  triagem:     { bg: "bg-orange-100",  fg: "text-orange-500",  d: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" },
+  sla:         { bg: "bg-red-100",     fg: "text-red-500",     d: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" },
+  implantacao: { bg: "bg-emerald-100", fg: "text-emerald-600", d: "M13 10V3L4 14h7v7l9-11h-7z" },
+  sistema:     { bg: "bg-violet-100",  fg: "text-violet-500",  d: "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" },
+};
+
+const NOTIF_DEFAULT = { bg: "bg-gray-100", fg: "text-gray-400", d: "M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" };
+
 function NotifDropdown({ notifs, onMarcarLida, onMarcarTodas, onClose, navigate }) {
   const ref = useRef(null);
 
@@ -126,69 +136,106 @@ function NotifDropdown({ notifs, onMarcarLida, onMarcarTodas, onClose, navigate 
   }, [onClose]);
 
   const naoLidas = notifs.filter((n) => !n.lida);
+  const lidas    = notifs.filter((n) => n.lida);
+
+  function handleItemClick(n) {
+    onMarcarLida(n.id);
+    if (n.dados?.instalacao_id)  navigate(`/instalacoes/${n.dados.instalacao_id}`);
+    else if (n.dados?.implantacao_id) navigate(`/admin/implantacoes/${n.dados.implantacao_id}`);
+    else if (n.dados?.solicitacao_id) navigate("/admin/triagem");
+    onClose();
+  }
+
+  function NotifItem({ n }) {
+    const cfg = NOTIF_TIPO[n.tipo] || NOTIF_DEFAULT;
+    return (
+      <button
+        onClick={() => handleItemClick(n)}
+        className={`w-full text-left px-4 py-3.5 hover:bg-gray-50/80 transition-colors flex items-start gap-3 border-b border-gray-50 last:border-0 ${
+          !n.lida ? "bg-orange-50/40" : ""
+        }`}
+      >
+        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${cfg.bg}`}>
+          <svg className={`w-4 h-4 ${cfg.fg}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+            <path strokeLinecap="round" strokeLinejoin="round" d={cfg.d} />
+          </svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className={`text-[12.5px] leading-snug font-semibold ${!n.lida ? "text-gray-900" : "text-gray-600"}`}>
+            {n.titulo}
+          </p>
+          {n.mensagem && (
+            <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-2 leading-relaxed">{n.mensagem}</p>
+          )}
+          <p className="text-[10px] text-gray-400 mt-1.5 font-medium">{timeAgoFromUTC(n.created_at)}</p>
+        </div>
+        {!n.lida && <div className="w-2 h-2 rounded-full bg-orange-500 shrink-0 mt-1.5" />}
+      </button>
+    );
+  }
 
   return (
     <div
       ref={ref}
-      className="fixed z-50 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden"
-      style={{ left: "252px", bottom: "16px" }}
+      className="fixed z-50 w-96 bg-white rounded-2xl border border-gray-100 flex flex-col overflow-hidden"
+      style={{
+        left: "252px",
+        bottom: "16px",
+        maxHeight: "520px",
+        boxShadow: "0 8px 40px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)",
+      }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-        <span className="text-sm font-bold text-gray-800">Notificações</span>
+      <div className="flex items-center justify-between px-4 py-3.5 border-b border-gray-100 bg-gray-50/70 shrink-0">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold text-gray-800">Notificações</span>
+          {naoLidas.length > 0 && (
+            <span className="min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-orange-500 text-white text-[10px] font-bold leading-none">
+              {naoLidas.length}
+            </span>
+          )}
+        </div>
         {naoLidas.length > 0 && (
           <button
             onClick={onMarcarTodas}
-            className="text-[11px] text-orange-500 hover:text-orange-600 font-medium transition-colors"
+            className="text-[11px] text-orange-500 hover:text-orange-600 font-semibold transition-colors"
           >
             Marcar todas como lidas
           </button>
         )}
       </div>
 
-      {/* Lista */}
-      <div className="overflow-y-auto max-h-80">
+      {/* Content */}
+      <div className="overflow-y-auto flex-1">
         {notifs.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-8">Nenhuma notificação.</p>
+          <div className="flex flex-col items-center justify-center py-12 px-4">
+            <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mb-3">
+              <svg className="w-6 h-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <p className="text-sm font-semibold text-gray-700">Tudo em dia</p>
+            <p className="text-xs text-gray-400 mt-1 text-center">Nenhuma notificação no momento.</p>
+          </div>
         ) : (
-          notifs.map((n) => (
-            <button
-              key={n.id}
-              onClick={() => {
-                onMarcarLida(n.id);
-                if (n.dados?.instalacao_id) {
-                  navigate(`/instalacoes/${n.dados.instalacao_id}`);
-                }
-                onClose();
-              }}
-              className={`w-full text-left px-4 py-3 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors flex items-start gap-3 ${
-                !n.lida ? "bg-orange-50/50" : ""
-              }`}
-            >
-              {/* Ícone */}
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
-                !n.lida ? "bg-orange-100" : "bg-gray-100"
-              }`}>
-                <svg className={`w-4 h-4 ${!n.lida ? "text-orange-500" : "text-gray-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18" />
-                </svg>
-              </div>
-              {/* Texto */}
-              <div className="flex-1 min-w-0">
-                <p className={`text-xs font-semibold leading-snug truncate ${!n.lida ? "text-gray-800" : "text-gray-600"}`}>
-                  {n.titulo}
-                </p>
-                {n.mensagem && (
-                  <p className="text-[11px] text-gray-500 truncate mt-0.5">{n.mensagem}</p>
-                )}
-                <p className="text-[10px] text-gray-400 mt-1">{timeAgoFromUTC(n.created_at)}</p>
-              </div>
-              {/* Bolinha não lida */}
-              {!n.lida && (
-                <div className="w-2 h-2 rounded-full bg-orange-500 shrink-0 mt-1.5" />
-              )}
-            </button>
-          ))
+          <>
+            {naoLidas.length > 0 && (
+              <>
+                <div className="px-4 py-2 bg-orange-50/60 border-b border-orange-100/60 sticky top-0">
+                  <span className="text-[10px] font-bold text-orange-600 uppercase tracking-widest">Não lidas</span>
+                </div>
+                {naoLidas.map((n) => <NotifItem key={n.id} n={n} />)}
+              </>
+            )}
+            {lidas.length > 0 && (
+              <>
+                <div className="px-4 py-2 bg-gray-50 border-b border-gray-100 sticky top-0">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Anteriores</span>
+                </div>
+                {lidas.map((n) => <NotifItem key={n.id} n={n} />)}
+              </>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -387,13 +434,17 @@ export function Sidebar() {
             <button
               onClick={handleOpenNotifs}
               title="Notificações"
-              className="relative w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/8 transition-all shrink-0"
+              className={`relative w-8 h-8 flex items-center justify-center rounded-lg transition-all shrink-0 ${
+                showNotifs
+                  ? "text-orange-400 bg-orange-500/15"
+                  : "text-slate-500 hover:text-slate-300 hover:bg-white/8"
+              }`}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
               {notifCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold leading-none">
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold leading-none animate-pulse">
                   {notifCount > 9 ? "9+" : notifCount}
                 </span>
               )}
