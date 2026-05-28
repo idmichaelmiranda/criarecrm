@@ -327,7 +327,7 @@ function NovaInstalacaoModal({ onClose, onCreated, tiposConfig = [] }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col max-h-[90vh]">
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100 shrink-0">
@@ -348,9 +348,9 @@ function NovaInstalacaoModal({ onClose, onCreated, tiposConfig = [] }) {
           </div>
         )}
 
-        {/* Two-column body — no scroll */}
-        <form onSubmit={handleSubmit} className="flex flex-col">
-          <div className="grid grid-cols-[1fr_300px]">
+        {/* Two-column body */}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <div className="grid grid-cols-[1fr_300px] flex-1 min-h-0 overflow-y-auto">
 
             {/* ── Coluna esquerda: campos ── */}
             <div className="px-6 py-5 space-y-5 border-r border-gray-100">
