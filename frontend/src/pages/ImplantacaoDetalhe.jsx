@@ -1084,7 +1084,7 @@ function KanbanColumn({ etapa, subsIndex, implId, somentePendentes, filterText, 
           ? "border-blue-400 ring-2 ring-blue-300/50"
           : `border-gray-200 ${COL_BG[etapa.status] || "bg-gray-50"}`
         }
-        min-w-[272px] max-w-[272px]`}
+        flex-1 min-w-[256px] max-w-[300px]`}
       style={{ maxHeight: isExpanded ? "calc(100vh - 136px)" : "calc(100vh - 360px)", minHeight: 200 }}
     >
       {/* Column header */}

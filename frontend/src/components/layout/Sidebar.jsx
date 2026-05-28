@@ -177,10 +177,8 @@ function NotifDropdown({ notifs, onMarcarLida, onMarcarTodas, onClose, navigate 
   return (
     <div
       ref={ref}
-      className="fixed z-50 w-96 bg-white rounded-2xl border border-gray-100 flex flex-col overflow-hidden"
+      className="fixed z-50 w-96 bg-white rounded-2xl border border-gray-100 flex flex-col overflow-hidden left-[252px] top-3"
       style={{
-        left: "252px",
-        top: "12px",
         maxHeight: "520px",
         boxShadow: "0 8px 40px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)",
       }}

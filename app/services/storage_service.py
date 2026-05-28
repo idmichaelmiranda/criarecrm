@@ -159,6 +159,15 @@ def delete_sync(storage_path: str) -> None:
         client.request("DELETE", url, headers=_AUTH_HEADERS, json={"prefixes": [storage_path]})
 
 
+def _delete_from_bucket(storage_path: str, bucket: str) -> None:
+    """Remove arquivo de um bucket específico (ignora se não existir)."""
+    if not _USE_SUPABASE:
+        return
+    url = f"{SUPABASE_URL}/storage/v1/object/{bucket}"
+    with httpx.Client(timeout=10) as client:
+        client.request("DELETE", url, headers=_AUTH_HEADERS, json={"prefixes": [storage_path]})
+
+
 # ── Misc ──────────────────────────────────────────────────────────────────────
 
 def exists_sync(storage_path: str) -> bool:

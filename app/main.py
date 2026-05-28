@@ -87,7 +87,15 @@ def _migrate_storage_to_private(db) -> None:
     from app.models.template import Template, TemplateTarefa
     from app.models.instalacao import InstalacaoAnexo
 
-    paths: set[str] = set()
+    # Paths fixos de configuração do sistema (não rastreados no banco)
+    CONFIG_PATHS = [
+        "configs/base_zerada_meta.json",
+        "configs/erp_config.json",
+        "configs/email_config.json",
+        "configs/base_zerada.sql",
+    ]
+
+    paths: set[str] = set(CONFIG_PATHS)
 
     for row in db.execute(select(Solicitacao.certificado_path).where(Solicitacao.certificado_path.isnot(None))).scalars():
         paths.add(storage._to_storage_path(row))
@@ -112,6 +120,19 @@ def _migrate_storage_to_private(db) -> None:
 
     if migrated:
         print(f"[STORAGE MIGRATION] {migrated} arquivo(s) migrado(s) para bucket privado.")
+
+    # Remove configs do bucket público somente após confirmar que estão no privado
+    # (evita que dados sensíveis — SMTP, ERP — fiquem acessíveis via URL pública)
+    cleaned = 0
+    for path in CONFIG_PATHS:
+        try:
+            if storage._download_from_bucket(path, storage.PRIVATE_BUCKET) is not None:
+                storage._delete_from_bucket(path, storage.BUCKET)
+                cleaned += 1
+        except Exception as exc:
+            print(f"[STORAGE MIGRATION] Aviso ao limpar público {path}: {exc}")
+    if cleaned:
+        print(f"[STORAGE MIGRATION] {cleaned} config(s) removida(s) do bucket público.")
 
 
 def _migrate_sqlite():
