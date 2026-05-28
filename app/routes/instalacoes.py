@@ -19,7 +19,7 @@ from pydantic import BaseModel as PydanticBase
 from app.schemas.instalacao import (
     InstalacaoCreate, InstalacaoUpdate, InstalacaoEditar,
     InstalacaoListResponse, InstalacaoFullResponse,
-    ChecklistItemCreate, ChecklistItemUpdate,
+    ChecklistItemCreate, ChecklistItemUpdate, ChecklistItemResponse, ChecklistItemToggleResponse,
     ComentarioCreate, ComentarioResponse,
     TipoInstalacaoInfo, AnexoResponse,
 )
@@ -387,7 +387,7 @@ def deletar(instalacao_id: int, db: Session = Depends(get_db)):
 
 # ── Checklist ─────────────────────────────────────────────────────────────────
 
-@router.patch("/{instalacao_id}/checklist/{item_id}", response_model=InstalacaoFullResponse)
+@router.patch("/{instalacao_id}/checklist/{item_id}", response_model=ChecklistItemToggleResponse)
 def atualizar_item(instalacao_id: int, item_id: int, data: ChecklistItemUpdate, db: Session = Depends(get_db)):
     item = db.get(InstalacaoChecklist, item_id)
     if not item or item.instalacao_id != instalacao_id:
@@ -401,19 +401,22 @@ def atualizar_item(instalacao_id: int, item_id: int, data: ChecklistItemUpdate, 
     elif data.status in ("pendente", "nao_aplicavel"):
         item.data_conclusao = None
 
-    # Recalcular progresso
     inst = _load(instalacao_id, db)
     _recalcular_progresso(inst)
 
-    # Única transição automática permitida: agendada → em_execucao ao marcar o primeiro item.
-    # A transição para "concluida" é exclusiva do endpoint /finalizar.
+    # Única transição automática: agendada → em_execucao ao marcar o primeiro item.
     alguma_concluida = any(i.status == "concluido" for i in inst.checklist)
     if inst.status == "agendada" and alguma_concluida:
         inst.status = "em_execucao"
 
     inst.updated_at = datetime.now(timezone.utc)
     db.commit()
-    return _to_full_response(_load(instalacao_id, db), db)
+    db.refresh(item)
+    return ChecklistItemToggleResponse(
+        item=ChecklistItemResponse.model_validate(item),
+        progresso=inst.progresso,
+        instalacao_status=inst.status,
+    )
 
 
 @router.post("/{instalacao_id}/checklist", response_model=InstalacaoFullResponse, status_code=201)

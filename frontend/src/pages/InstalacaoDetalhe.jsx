@@ -170,18 +170,22 @@ function ProgBar({ value }) {
 
 function ChecklistItem({ item, instId, onUpdated, onDeleted, locked }) {
   const [loading, setLoading] = useState(false);
+  const [localStatus, setLocalStatus] = useState(item.status);
   const [showNota, setShowNota] = useState(false);
   const [notaEdit, setNotaEdit] = useState(item.nota || "");
   const [savingNota, setSavingNota] = useState(false);
 
+  useEffect(() => { setLocalStatus(item.status); }, [item.status]);
+
   async function cycleStatus() {
-    const next = item.status === "concluido" ? "pendente" : "concluido";
-    setLoading(true);
+    const next = localStatus === "concluido" ? "pendente" : "concluido";
+    setLocalStatus(next);
     try {
       const { data } = await instalacaosApi.atualizarItem(instId, item.id, { status: next });
       onUpdated(data);
-    } catch {}
-    finally { setLoading(false); }
+    } catch {
+      setLocalStatus(item.status);
+    }
   }
 
   async function handleDelete() {
@@ -203,7 +207,7 @@ function ChecklistItem({ item, instId, onUpdated, onDeleted, locked }) {
     finally { setSavingNota(false); }
   }
 
-  const isConcluido = item.status === "concluido";
+  const isConcluido = localStatus === "concluido";
   const temNota = Boolean(item.nota);
 
   return (
@@ -211,7 +215,7 @@ function ChecklistItem({ item, instId, onUpdated, onDeleted, locked }) {
       <div className="flex items-center gap-3 py-2.5 group">
         <button
           onClick={cycleStatus}
-          disabled={loading || locked}
+          disabled={locked}
           className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
             isConcluido
               ? "border-green-500 bg-green-500"
@@ -1162,7 +1166,7 @@ export default function InstalacaoDetalhe() {
                   <div>
                     {checklist.map((item) => (
                       <ChecklistItem key={item.id} item={item} instId={id}
-                        onUpdated={(u) => setInst(u)} onDeleted={(u) => setInst(u)}
+                        onUpdated={(resp) => setInst(prev => ({ ...prev, progresso: resp.progresso, status: resp.instalacao_status, checklist: prev.checklist.map(i => i.id === resp.item.id ? resp.item : i) }))} onDeleted={(u) => setInst(u)}
                         locked={!inst.iniciado_em || Boolean(inst.finalizado_em)} />
                     ))}
                   </div>
@@ -1206,7 +1210,7 @@ export default function InstalacaoDetalhe() {
                         </div>
                         {items.map((item) => (
                           <ChecklistItem key={item.id} item={item} instId={id}
-                            onUpdated={(u) => setInst(u)} onDeleted={(u) => setInst(u)}
+                            onUpdated={(resp) => setInst(prev => ({ ...prev, progresso: resp.progresso, status: resp.instalacao_status, checklist: prev.checklist.map(i => i.id === resp.item.id ? resp.item : i) }))} onDeleted={(u) => setInst(u)}
                             locked={!inst.iniciado_em || Boolean(inst.finalizado_em)} />
                         ))}
                       </div>
@@ -1216,7 +1220,7 @@ export default function InstalacaoDetalhe() {
                     <div>
                       {ungrouped.map((item) => (
                         <ChecklistItem key={item.id} item={item} instId={id}
-                          onUpdated={(u) => setInst(u)} onDeleted={(u) => setInst(u)}
+                          onUpdated={(resp) => setInst(prev => ({ ...prev, progresso: resp.progresso, status: resp.instalacao_status, checklist: prev.checklist.map(i => i.id === resp.item.id ? resp.item : i) }))} onDeleted={(u) => setInst(u)}
                           locked={!inst.iniciado_em || Boolean(inst.finalizado_em)} />
                       ))}
                     </div>

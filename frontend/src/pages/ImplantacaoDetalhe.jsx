@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import { Badge, PrioridadeBadge } from "../components/ui/Badge";
@@ -386,7 +386,6 @@ function SubItemRow({ sub, implId, onRefresh, onOptimisticToggle }) {
     setToggling(true);
     try {
       await implantacoesApi.atualizarChecklist(sub.id, { status: newStatus });
-      onRefresh();
     } catch {
       setLocalDone(isDone);
       onOptimisticToggle?.(sub.id, sub.status);
@@ -539,7 +538,6 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
     setToggling(true);
     try {
       await implantacoesApi.atualizarChecklist(item.id, { status: newStatus });
-      onRefresh();
     } catch {
       setLocalStatus(item.status);
       onOptimisticToggle?.(item.id, item.status);
@@ -553,7 +551,6 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
     onOptimisticToggle?.(item.id, newStatus);
     try {
       await implantacoesApi.atualizarChecklist(item.id, { status: newStatus });
-      onRefresh();
     } catch {
       setLocalStatus(item.status);
       onOptimisticToggle?.(item.id, item.status);
@@ -1808,7 +1805,7 @@ export default function ImplantacaoDetalhe() {
     impl.sla_status === "critico"  ? "text-amber-600 font-semibold" :
     "text-gray-600";
 
-  const subsIndex = buildSubsIndex(impl.checklist);
+  const subsIndex = useMemo(() => buildSubsIndex(impl.checklist), [impl.checklist]);
 
   const { total: lpTotal, done: lpDone } = impl.etapas.reduce(
     (acc, e) => { const r = leafProgress(e.itens, subsIndex); return { total: acc.total + r.total, done: acc.done + r.done }; },

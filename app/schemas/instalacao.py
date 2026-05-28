@@ -42,6 +42,12 @@ class ChecklistItemResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class ChecklistItemToggleResponse(BaseModel):
+    item: ChecklistItemResponse
+    progresso: int
+    instalacao_status: str
+
+
 class ChecklistItemCreate(BaseModel):
     titulo: str
     obrigatoria: bool = True
