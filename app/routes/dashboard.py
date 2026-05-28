@@ -20,9 +20,9 @@ MES_ABBR = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","D
 
 
 def _etapa_atual(impl) -> str:
-    in_prog = [e for e in impl.etapas if e.status == "em_andamento"]
+    in_prog = sorted([e for e in impl.etapas if e.status == "em_andamento"], key=lambda e: e.ordem)
     if in_prog:
-        return in_prog[0].nome
+        return in_prog[-1].nome  # etapa mais avançada (maior ordem)
     pending = sorted([e for e in impl.etapas if e.status == "pendente"], key=lambda e: e.ordem)
     if pending:
         return pending[0].nome
