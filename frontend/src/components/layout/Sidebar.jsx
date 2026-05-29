@@ -261,6 +261,60 @@ function NotifDropdown({ notifs, onMarcarLida, onMarcarTodas, onClose, navigate,
   );
 }
 
+// ── Popup senha do dia (modo colapsado) ──────────────────────────────────────
+
+function SenhaDiaPopup({ senhaDia, senhaLoading, senhaVisible, setSenhaVisible, senhaCopied, onCopy, onClose }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) onClose();
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [onClose]);
+
+  return (
+    <div
+      ref={ref}
+      className="fixed z-50 rounded-xl border border-white/10 shadow-2xl p-3.5 w-52"
+      style={{ left: "76px", bottom: "88px", background: "#1B2240" }}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-1.5">
+          <svg className="w-3 h-3 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+          </svg>
+          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Senha do dia</span>
+        </div>
+        <div className="flex items-center gap-0.5">
+          <button onClick={() => setSenhaVisible((v) => !v)} title={senhaVisible ? "Ocultar" : "Revelar"}
+            className="w-6 h-6 flex items-center justify-center rounded text-slate-500 hover:text-slate-300 transition-colors">
+            {senhaVisible
+              ? <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+              : <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+            }
+          </button>
+          <button onClick={onCopy} title={senhaCopied ? "Copiado!" : "Copiar"}
+            className={`w-6 h-6 flex items-center justify-center rounded transition-colors ${senhaCopied ? "text-emerald-400" : "text-slate-500 hover:text-slate-300"}`}>
+            {senhaCopied
+              ? <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+              : <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+            }
+          </button>
+        </div>
+      </div>
+      <p className="font-mono font-bold text-slate-200 text-sm tracking-wider break-all">
+        {senhaLoading
+          ? <span className="text-slate-500 text-xs font-normal">carregando...</span>
+          : senhaDia
+            ? (senhaVisible ? senhaDia : "• • • • • •")
+            : <span className="text-slate-500 text-xs font-normal">indisponível</span>
+        }
+      </p>
+    </div>
+  );
+}
+
 // ── Sidebar principal ─────────────────────────────────────────────────────────
 
 export function Sidebar({ collapsed = false, onToggle }) {
@@ -271,6 +325,11 @@ export function Sidebar({ collapsed = false, onToggle }) {
   const [notifs, setNotifs]                 = useState([]);
   const [showNotifs, setShowNotifs]         = useState(false);
   const [uploading, setUploading]           = useState(false);
+  const [senhaDia, setSenhaDia]             = useState(null);
+  const [senhaLoading, setSenhaLoading]     = useState(true);
+  const [senhaVisible, setSenhaVisible]     = useState(false);
+  const [senhaCopied, setSenhaCopied]       = useState(false);
+  const [showSenhaPopup, setShowSenhaPopup] = useState(false);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
   const { user, logout, hasPermission, updateUser } = useAuth();
@@ -325,6 +384,36 @@ export function Sidebar({ collapsed = false, onToggle }) {
     document.addEventListener("visibilitychange", onVisible);
     return () => { clearInterval(interval); document.removeEventListener("visibilitychange", onVisible); };
   }, []);
+
+  useEffect(() => {
+    async function fetchSenha() {
+      setSenhaLoading(true);
+      try {
+        const res = await fetch("http://criaresuporte1.no-ip.info:9000/api/gerente/v2/getpasswordfortoday");
+        const text = await res.text();
+        try {
+          const json = JSON.parse(text);
+          setSenhaDia(json.password ?? json.senha ?? json.data ?? json.value ?? String(json));
+        } catch {
+          setSenhaDia(text.trim());
+        }
+      } catch {
+        setSenhaDia(null);
+      } finally {
+        setSenhaLoading(false);
+      }
+    }
+    fetchSenha();
+    const now = new Date();
+    const msToMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 1) - now;
+    const t = setTimeout(fetchSenha, msToMidnight);
+    return () => clearTimeout(t);
+  }, []);
+
+  async function handleCopySenha() {
+    if (!senhaDia) return;
+    try { await navigator.clipboard.writeText(senhaDia); setSenhaCopied(true); setTimeout(() => setSenhaCopied(false), 2000); } catch {}
+  }
 
   async function handleOpenNotifs() {
     if (showNotifs) { setShowNotifs(false); return; }
@@ -481,6 +570,58 @@ export function Sidebar({ collapsed = false, onToggle }) {
         <NavGroup title="Administração" items={MENU.ADMINISTRACAO} badge={0}             pendenteBadge={pendentesCount} installsBadge={0}            hasPermission={hasPermission} collapsed={collapsed} />
       </nav>
 
+      {/* ── Senha do dia ── */}
+      {collapsed ? (
+        <div className="flex justify-center pb-1 shrink-0">
+          <button
+            onClick={() => setShowSenhaPopup((v) => !v)}
+            title="Senha do dia"
+            className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${
+              showSenhaPopup ? "text-amber-400 bg-amber-500/20" : "text-slate-600 hover:text-amber-400 hover:bg-amber-500/10"
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
+          </button>
+        </div>
+      ) : (
+        <div className="mx-3 mb-2 rounded-xl bg-white/[0.04] border border-white/[0.07] px-3 py-2.5 shrink-0">
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center gap-1.5">
+              <svg className="w-3 h-3 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              </svg>
+              <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Senha do dia</span>
+            </div>
+            <div className="flex items-center gap-0.5">
+              <button onClick={() => setSenhaVisible((v) => !v)} title={senhaVisible ? "Ocultar" : "Revelar"}
+                className="w-6 h-6 flex items-center justify-center rounded text-slate-600 hover:text-slate-300 transition-colors">
+                {senhaVisible
+                  ? <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                  : <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                }
+              </button>
+              <button onClick={handleCopySenha} title={senhaCopied ? "Copiado!" : "Copiar"}
+                className={`w-6 h-6 flex items-center justify-center rounded transition-colors ${senhaCopied ? "text-emerald-400" : "text-slate-600 hover:text-slate-300"}`}>
+                {senhaCopied
+                  ? <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  : <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                }
+              </button>
+            </div>
+          </div>
+          <p className="font-mono font-bold text-slate-200 text-sm tracking-wider break-all min-h-[18px]">
+            {senhaLoading
+              ? <span className="text-slate-600 text-xs font-normal font-sans">carregando...</span>
+              : senhaDia
+                ? (senhaVisible ? senhaDia : "• • • • • •")
+                : <span className="text-slate-600 text-xs font-normal font-sans">indisponível</span>
+            }
+          </p>
+        </div>
+      )}
+
       {/* ── Brand footer ── */}
       <div className={`border-t border-white/5 shrink-0 ${collapsed ? "px-0 py-3" : "px-4 py-4"}`}>
         {collapsed ? (
@@ -549,6 +690,19 @@ export function Sidebar({ collapsed = false, onToggle }) {
           onClose={() => setShowNotifs(false)}
           navigate={navigate}
           collapsed={collapsed}
+        />
+      )}
+
+      {/* ── Popup senha do dia (modo colapsado) ── */}
+      {showSenhaPopup && collapsed && (
+        <SenhaDiaPopup
+          senhaDia={senhaDia}
+          senhaLoading={senhaLoading}
+          senhaVisible={senhaVisible}
+          setSenhaVisible={setSenhaVisible}
+          senhaCopied={senhaCopied}
+          onCopy={handleCopySenha}
+          onClose={() => setShowSenhaPopup(false)}
         />
       )}
     </aside>

@@ -65,7 +65,7 @@ def obter(impl_id: int, db: Session = Depends(get_db)):
 
 @router.patch("/{impl_id}", response_model=ImplantacaoFullResponse)
 def atualizar(impl_id: int, data: ImplantacaoUpdate, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
-    implantacao_service.atualizar(db, impl_id, data, usuario=current_user.nome)
+    implantacao_service.atualizar(db, impl_id, data, usuario=current_user.nome, usuario_id=current_user.id)
     return implantacao_service.get_by_id(db, impl_id)
 
 
@@ -81,7 +81,7 @@ def criar_item(impl_id: int, data: ChecklistItemCreate, db: Session = Depends(ge
 
 @router.patch("/checklist/{item_id}", response_model=ChecklistItemResponse)
 def atualizar_item(item_id: int, data: ChecklistItemUpdate, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
-    return implantacao_service.atualizar_checklist_item(db, item_id, data, usuario=current_user.nome)
+    return implantacao_service.atualizar_checklist_item(db, item_id, data, usuario=current_user.nome, usuario_id=current_user.id)
 
 
 @router.delete("/checklist/{item_id}", status_code=204)

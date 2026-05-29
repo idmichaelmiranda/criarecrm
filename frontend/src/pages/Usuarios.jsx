@@ -64,13 +64,13 @@ function GroupBadge({ nome }) {
 }
 
 // ── Modal Editar/Criar ────────────────────────────────────────────────────────
-const EMPTY_FORM = { nome: "", email: "", senha: "", grupo_id: "", ativo: true };
+const EMPTY_FORM = { nome: "", email: "", senha: "", grupo_id: "", ativo: true, notif_conclusao: false };
 
 function EditModal({ titulo, grupos, inicial, onSave, onClose, loading, hasPermission }) {
   const isEdit = !!inicial?.id;
   const [form, setForm] = useState(
     isEdit
-      ? { nome: inicial.nome, email: inicial.email, senha: "", grupo_id: inicial.grupo_id ?? "", ativo: inicial.ativo }
+      ? { nome: inicial.nome, email: inicial.email, senha: "", grupo_id: inicial.grupo_id ?? "", ativo: inicial.ativo, notif_conclusao: inicial.notif_conclusao ?? false }
       : { ...EMPTY_FORM }
   );
   const [error, setError] = useState("");
@@ -83,7 +83,7 @@ function EditModal({ titulo, grupos, inicial, onSave, onClose, loading, hasPermi
     if (!form.nome.trim() || !form.email.trim()) { setError("Nome e e-mail são obrigatórios."); return; }
     if (!isEdit && !form.senha.trim()) { setError("Senha é obrigatória para novo usuário."); return; }
     if (!form.grupo_id) { setError("Selecione um grupo."); return; }
-    const payload = { nome: form.nome.trim(), email: form.email.trim(), grupo_id: Number(form.grupo_id), ativo: form.ativo };
+    const payload = { nome: form.nome.trim(), email: form.email.trim(), grupo_id: Number(form.grupo_id), ativo: form.ativo, notif_conclusao: form.notif_conclusao };
     if (form.senha.trim()) payload.senha = form.senha.trim();
     try { await onSave(payload); } catch (err) { setError(err.message); }
   }
@@ -139,6 +139,16 @@ function EditModal({ titulo, grupos, inicial, onSave, onClose, loading, hasPermi
                   <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform ${form.ativo ? "translate-x-4" : "translate-x-0.5"}`} />
                 </span>
                 {form.ativo ? "Ativo" : "Inativo"}
+              </button>
+            </div>
+            <div className="col-span-2">
+              <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Notificações de conclusão</label>
+              <button type="button" onClick={() => canEdit && set("notif_conclusao", !form.notif_conclusao)}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border-2 transition-all text-sm font-medium ${form.notif_conclusao ? "border-orange-400 bg-orange-50 text-orange-700" : "border-gray-200 bg-gray-50 text-gray-500"} ${!canEdit ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}>
+                <span className={`relative w-8 h-4 rounded-full transition-colors ${form.notif_conclusao ? "bg-orange-500" : "bg-gray-300"}`}>
+                  <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform ${form.notif_conclusao ? "translate-x-4" : "translate-x-0.5"}`} />
+                </span>
+                {form.notif_conclusao ? "Recebe notif. de conclusão" : "Sem notif. de conclusão"}
               </button>
             </div>
           </div>

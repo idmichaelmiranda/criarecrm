@@ -11,6 +11,35 @@ from app.schemas.implantacao import ImplantacaoUpdate, ChecklistItemUpdate, Chec
 from app.services import timeline_service
 
 
+def _notificar_conclusao_implantacao(db: Session, impl: "Implantacao", excluir_usuario_id: int | None = None) -> None:
+    """Notifica responsável da implantação + todos com notif_conclusao=True quando concluída."""
+    from app.models.notificacao import Notificacao
+    from app.models.usuario import Usuario
+    from app.models.cliente import Cliente
+    cliente = db.get(Cliente, impl.cliente_id)
+    cliente_nome = cliente.razao_social if cliente else f"Cliente #{impl.cliente_id}"
+    titulo = f"Implantação concluída — {cliente_nome}"
+    mensagem = f"{impl.nome or impl.codigo} foi concluída com sucesso."
+    dados = {"implantacao_id": impl.id}
+    notificados: set[int] = set()
+    if excluir_usuario_id:
+        notificados.add(excluir_usuario_id)
+
+    if impl.responsavel_id and impl.responsavel_id not in notificados:
+        db.add(Notificacao(usuario_id=impl.responsavel_id, tipo="implantacao",
+                           titulo=titulo, mensagem=mensagem, dados=dados, lida=False))
+        notificados.add(impl.responsavel_id)
+
+    usuarios_flag = db.execute(
+        select(Usuario).where(Usuario.notif_conclusao == True, Usuario.ativo == True)  # noqa: E712
+    ).scalars().all()
+    for u in usuarios_flag:
+        if u.id not in notificados:
+            db.add(Notificacao(usuario_id=u.id, tipo="implantacao",
+                               titulo=titulo, mensagem=mensagem, dados=dados, lida=False))
+            notificados.add(u.id)
+
+
 def _notificar_atribuicao_tarefa(db: Session, item: ChecklistItem, usuario_id: int) -> None:
     from app.models.notificacao import Notificacao
     from app.models.implantacao import Implantacao
@@ -106,7 +135,7 @@ def get_by_id(db: Session, impl_id: int) -> Implantacao:
     return impl
 
 
-def atualizar(db: Session, impl_id: int, data: ImplantacaoUpdate, usuario: str = "Sistema") -> Implantacao:
+def atualizar(db: Session, impl_id: int, data: ImplantacaoUpdate, usuario: str = "Sistema", usuario_id: int | None = None) -> Implantacao:
     impl = db.get(Implantacao, impl_id)
     if not impl:
         raise HTTPException(404, "Implantação não encontrada")
@@ -129,6 +158,7 @@ def atualizar(db: Session, impl_id: int, data: ImplantacaoUpdate, usuario: str =
             impl.data_conclusao = date.today()
             impl.progresso = 100
             _atualizar_sla_status(impl)
+            _notificar_conclusao_implantacao(db, impl, excluir_usuario_id=usuario_id)
         timeline_service.log(
             db,
             tipo="status_alterado",
@@ -145,7 +175,7 @@ def atualizar(db: Session, impl_id: int, data: ImplantacaoUpdate, usuario: str =
     return impl
 
 
-def atualizar_checklist_item(db: Session, item_id: int, data: ChecklistItemUpdate, usuario: str = "Sistema") -> ChecklistItem:
+def atualizar_checklist_item(db: Session, item_id: int, data: ChecklistItemUpdate, usuario: str = "Sistema", usuario_id: int | None = None) -> ChecklistItem:
     item = db.get(ChecklistItem, item_id)
     if not item:
         raise HTTPException(404, "Item não encontrado")
@@ -207,7 +237,7 @@ def atualizar_checklist_item(db: Session, item_id: int, data: ChecklistItemUpdat
         item.etapa_id = update_fields["etapa_id"]
 
     _recalcular_progresso(db, item.implantacao_id)
-    _sincronizar_etapas(db, item.implantacao_id, usuario=usuario)
+    _sincronizar_etapas(db, item.implantacao_id, usuario=usuario, usuario_id=usuario_id)
 
     db.commit()
     db.refresh(item)
@@ -473,7 +503,7 @@ def _recalcular_progresso(db: Session, implantacao_id: int) -> None:
         impl.updated_at = datetime.now()
 
 
-def _sincronizar_etapas(db: Session, implantacao_id: int, usuario: str = "Sistema") -> None:
+def _sincronizar_etapas(db: Session, implantacao_id: int, usuario: str = "Sistema", usuario_id: int | None = None) -> None:
     """Re-evaluate all etapa statuses based on current checklist state.
 
     Rules:
@@ -578,6 +608,7 @@ def _sincronizar_etapas(db: Session, implantacao_id: int, usuario: str = "Sistem
             titulo="Implantação concluída!",
             descricao="Todas as etapas e tarefas foram concluídas com sucesso.",
             usuario=usuario, icone="trophy", cor="#f59e0b", implantacao_id=impl.id)
+        _notificar_conclusao_implantacao(db, impl, excluir_usuario_id=usuario_id)
     elif not all_done and impl.status == "concluida":
         impl.status = "em_andamento"
         impl.data_conclusao = None

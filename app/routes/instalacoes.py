@@ -43,22 +43,30 @@ def _criar_notif_atribuicao(db: Session, inst: "Instalacao", usuario_id: int) ->
 
 
 def _criar_notif_conclusao(db: Session, inst: "Instalacao", finalizado_por: "Usuario") -> None:
-    """Notifica o criador da instalação quando ela é finalizada por outro usuário."""
-    if not inst.criado_por_id or inst.criado_por_id == finalizado_por.id:
-        return
+    """Notifica criador + usuários com notif_conclusao=True quando instalação é finalizada."""
     from app.models.notificacao import Notificacao
+    from app.models.usuario import Usuario as UsuarioModel
     from datetime import timezone as _tz
+    from sqlalchemy import select as _select
     cliente = db.get(Cliente, inst.cliente_id)
     cliente_nome = cliente.razao_social if cliente else f"Cliente #{inst.cliente_id}"
     data_str = datetime.now(_tz.utc).strftime("%d/%m/%Y %H:%M")
-    db.add(Notificacao(
-        usuario_id=inst.criado_por_id,
-        tipo="instalacao",
-        titulo=f"Instalação — {cliente_nome} finalizada",
-        mensagem=f"Finalizado por {finalizado_por.nome} em {data_str}",
-        dados={"instalacao_id": inst.id, "codigo": inst.codigo},
-        lida=False,
-    ))
+    titulo = f"Instalação — {cliente_nome} finalizada"
+    mensagem = f"Finalizado por {finalizado_por.nome} em {data_str}"
+    dados = {"instalacao_id": inst.id, "codigo": inst.codigo}
+    notificados: set[int] = {finalizado_por.id}
+    if inst.criado_por_id and inst.criado_por_id not in notificados:
+        db.add(Notificacao(usuario_id=inst.criado_por_id, tipo="instalacao",
+                           titulo=titulo, mensagem=mensagem, dados=dados, lida=False))
+        notificados.add(inst.criado_por_id)
+    usuarios_flag = db.execute(
+        _select(UsuarioModel).where(UsuarioModel.notif_conclusao == True, UsuarioModel.ativo == True)  # noqa: E712
+    ).scalars().all()
+    for u in usuarios_flag:
+        if u.id not in notificados:
+            db.add(Notificacao(usuario_id=u.id, tipo="instalacao",
+                               titulo=titulo, mensagem=mensagem, dados=dados, lida=False))
+            notificados.add(u.id)
 
 
 def _safe_storage_name(original: str) -> str:

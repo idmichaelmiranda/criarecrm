@@ -16,6 +16,7 @@ class UsuarioCreate(BaseModel):
     senha: str
     grupo_id: Optional[int] = None
     ativo: bool = True
+    notif_conclusao: bool = False
 
 
 class UsuarioUpdate(BaseModel):
@@ -24,6 +25,7 @@ class UsuarioUpdate(BaseModel):
     senha: Optional[str] = None
     grupo_id: Optional[int] = None
     ativo: Optional[bool] = None
+    notif_conclusao: Optional[bool] = None
 
 
 class UsuarioResponse(BaseModel):
@@ -35,6 +37,7 @@ class UsuarioResponse(BaseModel):
     grupo_nome: Optional[str] = None
     ativo: bool
     pendente: bool = False
+    notif_conclusao: bool = False
     avatar_url: Optional[str] = None
     created_at: datetime
     updated_at: datetime

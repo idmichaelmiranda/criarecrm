@@ -14,6 +14,7 @@ class Usuario(Base):
     grupo_id: Mapped[int | None] = mapped_column(ForeignKey("grupos_permissao.id"), nullable=True)
     ativo: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     pendente: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    notif_conclusao: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     access_token: Mapped[str | None] = mapped_column(String(80), nullable=True, index=True)
     access_token_expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     avatar_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
