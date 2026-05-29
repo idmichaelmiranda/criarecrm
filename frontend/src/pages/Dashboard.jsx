@@ -20,6 +20,14 @@ function timeAgo(iso, now = new Date()) {
   return `${Math.floor(diff / 86400)}d`;
 }
 
+function refreshLabel(lastRefresh, now) {
+  const diff = (now - lastRefresh) / 1000;
+  if (diff < 10)   return "atualizado agora";
+  if (diff < 60)   return "atualizado há instantes";
+  if (diff < 3600) return `atualizado há ${Math.floor(diff / 60)}min`;
+  return `atualizado há ${Math.floor(diff / 3600)}h`;
+}
+
 function fmtDate(iso) {
   if (!iso) return "—";
   return new Date(iso + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
@@ -843,9 +851,9 @@ export default function Dashboard() {
   const prevDataRef = useRef(null);
   const intervalRef = useRef(null);
 
-  // Atualiza "agora" a cada 30s para manter o saudação e o "atualizado há X" precisos
+  // Atualiza "agora" a cada 10s para manter saudação e contador de refresh precisos
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 30_000);
+    const id = setInterval(() => setNow(new Date()), 10_000);
     return () => clearInterval(id);
   }, []);
 
@@ -891,7 +899,7 @@ export default function Dashboard() {
           </h1>
           <p className="text-sm text-gray-400 mt-0.5">
             {lastRefresh
-              ? `Central Operacional · atualizado há ${timeAgo(lastRefresh.toISOString(), now)}`
+              ? `Central Operacional · ${refreshLabel(lastRefresh, now)}`
               : "Carregando dados operacionais…"}
           </p>
         </div>
