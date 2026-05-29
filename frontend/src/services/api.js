@@ -226,6 +226,7 @@ export const usuariosApi = {
   aprovar: (id, data) => api.post(`/usuarios/${id}/aprovar`, data),
   reenviarSenha: (id) => api.post(`/usuarios/${id}/reenviar-senha`),
   pendentesCount: () => api.get("/usuarios/pendentes/count"),
+  senhaDia: () => api.get("/usuarios/senha-dia"),
 };
 
 // ── Grupos de Permissão ───────────────────────────────────────────────────────

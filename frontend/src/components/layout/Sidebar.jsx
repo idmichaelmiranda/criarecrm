@@ -389,14 +389,8 @@ export function Sidebar({ collapsed = false, onToggle }) {
     async function fetchSenha() {
       setSenhaLoading(true);
       try {
-        const res = await fetch("http://criaresuporte1.no-ip.info:9000/api/gerente/v2/getpasswordfortoday");
-        const text = await res.text();
-        try {
-          const json = JSON.parse(text);
-          setSenhaDia(json.password ?? json.senha ?? json.data ?? json.value ?? String(json));
-        } catch {
-          setSenhaDia(text.trim());
-        }
+        const { data } = await usuariosApi.senhaDia();
+        setSenhaDia(data.senha || null);
       } catch {
         setSenhaDia(null);
       } finally {

@@ -1,4 +1,7 @@
 import secrets
+import json as _json
+import urllib.request
+import urllib.error
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -12,6 +15,25 @@ from app.services.auth_service import hash_password
 from app.dependencies.auth import get_current_user
 
 router = APIRouter(prefix="/usuarios", tags=["usuarios"])
+
+
+@router.get("/senha-dia")
+def senha_dia(_: Usuario = Depends(get_current_user)):
+    """Proxy para buscar a senha do dia do servidor de suporte interno."""
+    try:
+        with urllib.request.urlopen(
+            "http://criaresuporte1.no-ip.info:9000/api/gerente/v2/getpasswordfortoday",
+            timeout=5,
+        ) as resp:
+            raw = resp.read().decode("utf-8").strip()
+        try:
+            data = _json.loads(raw)
+            senha = data.get("password") or data.get("senha") or data.get("data") or data.get("value") or raw
+        except Exception:
+            senha = raw
+        return {"senha": senha}
+    except Exception:
+        raise HTTPException(503, "Servidor de senha indisponível")
 
 
 @router.get("/pendentes/count")
@@ -63,6 +85,7 @@ def criar(
         senha_hash=hash_password(data.senha),
         grupo_id=data.grupo_id,
         ativo=data.ativo,
+        notif_conclusao=data.notif_conclusao,
     )
     db.add(u)
     db.commit()
@@ -163,6 +186,8 @@ def atualizar(
         u.grupo_id = data.grupo_id
     if data.ativo is not None:
         u.ativo = data.ativo
+    if data.notif_conclusao is not None:
+        u.notif_conclusao = data.notif_conclusao
 
     u.updated_at = datetime.now(timezone.utc)
     db.commit()
