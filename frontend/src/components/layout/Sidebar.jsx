@@ -367,6 +367,7 @@ export function Sidebar({ collapsed = false, onToggle }) {
   }
 
   return (
+    <>
     <aside
       className="fixed inset-y-0 left-0 bg-[#1B2240] flex flex-col z-30 overflow-hidden transition-[width] duration-300 ease-in-out"
       style={{ width: collapsed ? "64px" : "240px" }}
@@ -539,20 +540,6 @@ export function Sidebar({ collapsed = false, onToggle }) {
         )}
       </div>
 
-      {/* ── Botão toggle (chevron na borda direita) ── */}
-      <button
-        onClick={onToggle}
-        title={collapsed ? "Expandir menu" : "Recolher menu"}
-        className="absolute top-1/2 -translate-y-1/2 -right-3 w-6 h-6 rounded-full bg-[#1B2240] border border-white/10 flex items-center justify-center text-slate-400 hover:text-slate-200 hover:border-white/25 transition-all shadow-lg z-10"
-      >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          {collapsed
-            ? <path d="M9 18l6-6-6-6" />
-            : <path d="M15 18l-6-6 6-6" />
-          }
-        </svg>
-      </button>
-
       {/* ── Dropdown de notificações ── */}
       {showNotifs && (
         <NotifDropdown
@@ -565,5 +552,24 @@ export function Sidebar({ collapsed = false, onToggle }) {
         />
       )}
     </aside>
+
+    {/* ── Botão toggle — fixed, fora da aside para não ser cortado pelo overflow-hidden ── */}
+    <button
+      onClick={onToggle}
+      title={collapsed ? "Expandir menu" : "Recolher menu"}
+      className="fixed top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#1B2240] border border-white/15 flex items-center justify-center text-slate-400 hover:text-white hover:border-white/40 transition-colors shadow-lg z-40"
+      style={{
+        left: collapsed ? "52px" : "228px",
+        transition: "left 300ms ease-in-out",
+      }}
+    >
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        {collapsed
+          ? <path d="M9 18l6-6-6-6" />
+          : <path d="M15 18l-6-6 6-6" />
+        }
+      </svg>
+    </button>
+    </>
   );
 }
