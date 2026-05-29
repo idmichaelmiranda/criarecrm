@@ -58,37 +58,50 @@ const MENU = {
   ],
 };
 
-function NavItem({ item, badge = 0, pendenteBadge = 0, installsBadge = 0 }) {
+// ── Nav Item ──────────────────────────────────────────────────────────────────
+
+function NavItem({ item, badge = 0, pendenteBadge = 0, installsBadge = 0, collapsed = false }) {
+  const hasBadge =
+    (item.badge && badge > 0) ||
+    (item.installsBadge && installsBadge > 0) ||
+    (item.pendenteBadge && pendenteBadge > 0);
+
   return (
     <NavLink
       to={item.to}
       end={item.end}
+      title={collapsed ? item.label : undefined}
       className={({ isActive }) =>
-        `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-          isActive
-            ? "bg-orange-500/15 text-orange-400"
-            : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
-        }`
+        `flex items-center rounded-lg text-sm font-medium transition-all duration-150 relative
+        ${collapsed ? "justify-center py-2.5 mx-1 px-0" : "gap-3 px-3 py-2.5"}
+        ${isActive ? "bg-orange-500/15 text-orange-400" : "text-slate-400 hover:text-slate-200 hover:bg-white/5"}`
       }
     >
-      <Icon d={item.d} />
-      <span className="flex-1 min-w-0 truncate">{item.label}</span>
-      {item.badge && badge > 0 && (
+      <div className="relative shrink-0">
+        <Icon d={item.d} />
+        {collapsed && hasBadge && (
+          <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-orange-500" />
+        )}
+      </div>
+
+      {!collapsed && <span className="flex-1 min-w-0 truncate">{item.label}</span>}
+
+      {!collapsed && item.badge && badge > 0 && (
         <span className="min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-orange-500 text-white text-[11px] font-bold leading-none">
           {badge > 99 ? "99+" : badge}
         </span>
       )}
-      {item.installsBadge && installsBadge > 0 && (
+      {!collapsed && item.installsBadge && installsBadge > 0 && (
         <span className="min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-orange-500 text-white text-[11px] font-bold leading-none">
           {installsBadge > 99 ? "99+" : installsBadge}
         </span>
       )}
-      {item.pendenteBadge && pendenteBadge > 0 && (
+      {!collapsed && item.pendenteBadge && pendenteBadge > 0 && (
         <span className="min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-amber-500 text-white text-[11px] font-bold leading-none">
           {pendenteBadge > 99 ? "99+" : pendenteBadge}
         </span>
       )}
-      {item.beta && (
+      {!collapsed && item.beta && (
         <span className="h-4 px-1.5 flex items-center justify-center rounded text-[9px] font-bold leading-none text-violet-300 bg-violet-500/20 border border-violet-500/30 uppercase tracking-wide">
           Beta
         </span>
@@ -97,16 +110,24 @@ function NavItem({ item, badge = 0, pendenteBadge = 0, installsBadge = 0 }) {
   );
 }
 
-function NavGroup({ title, items, badge, pendenteBadge, installsBadge, hasPermission }) {
+function NavGroup({ title, items, badge, pendenteBadge, installsBadge, hasPermission, collapsed = false }) {
   const visible = items.filter((i) => hasPermission(i.permission));
   if (visible.length === 0) return null;
   return (
-    <div className="pt-5 first:pt-0">
-      <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest px-3 pb-2">
-        {title}
-      </p>
+    <div className="pt-4 first:pt-0">
+      {collapsed
+        ? <div className="h-px bg-white/5 mx-2 mb-2 first:hidden" />
+        : <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest px-3 pb-2">{title}</p>
+      }
       {visible.map((item) => (
-        <NavItem key={item.to} item={item} badge={badge} pendenteBadge={pendenteBadge} installsBadge={installsBadge} />
+        <NavItem
+          key={item.to}
+          item={item}
+          badge={badge}
+          pendenteBadge={pendenteBadge}
+          installsBadge={installsBadge}
+          collapsed={collapsed}
+        />
       ))}
     </div>
   );
@@ -121,10 +142,9 @@ const NOTIF_TIPO = {
   implantacao: { bg: "bg-emerald-100", fg: "text-emerald-600", d: "M13 10V3L4 14h7v7l9-11h-7z" },
   sistema:     { bg: "bg-violet-100",  fg: "text-violet-500",  d: "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" },
 };
-
 const NOTIF_DEFAULT = { bg: "bg-gray-100", fg: "text-gray-400", d: "M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" };
 
-function NotifDropdown({ notifs, onMarcarLida, onMarcarTodas, onClose, navigate }) {
+function NotifDropdown({ notifs, onMarcarLida, onMarcarTodas, onClose, navigate, collapsed }) {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -140,7 +160,7 @@ function NotifDropdown({ notifs, onMarcarLida, onMarcarTodas, onClose, navigate 
 
   function handleItemClick(n) {
     onMarcarLida(n.id);
-    if (n.dados?.instalacao_id)  navigate(`/instalacoes/${n.dados.instalacao_id}`);
+    if (n.dados?.instalacao_id)       navigate(`/instalacoes/${n.dados.instalacao_id}`);
     else if (n.dados?.implantacao_id) navigate(`/admin/implantacoes/${n.dados.implantacao_id}`);
     else if (n.dados?.solicitacao_id) navigate("/admin/triagem");
     onClose();
@@ -174,16 +194,18 @@ function NotifDropdown({ notifs, onMarcarLida, onMarcarTodas, onClose, navigate 
     );
   }
 
+  const dropdownLeft = collapsed ? "76px" : "252px";
+
   return (
     <div
       ref={ref}
-      className="fixed z-50 w-96 bg-white rounded-2xl border border-gray-100 flex flex-col overflow-hidden left-[252px] top-3"
+      className="fixed z-50 w-96 bg-white rounded-2xl border border-gray-100 flex flex-col overflow-hidden top-3"
       style={{
+        left: dropdownLeft,
         maxHeight: "520px",
         boxShadow: "0 8px 40px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)",
       }}
     >
-      {/* Header */}
       <div className="flex items-center justify-between px-4 py-3.5 border-b border-gray-100 bg-gray-50/70 shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-bold text-gray-800">Notificações</span>
@@ -203,7 +225,6 @@ function NotifDropdown({ notifs, onMarcarLida, onMarcarTodas, onClose, navigate 
         )}
       </div>
 
-      {/* Content */}
       <div className="overflow-y-auto flex-1">
         {notifs.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4">
@@ -242,19 +263,18 @@ function NotifDropdown({ notifs, onMarcarLida, onMarcarTodas, onClose, navigate 
 
 // ── Sidebar principal ─────────────────────────────────────────────────────────
 
-export function Sidebar() {
-  const [triageCount, setTriageCount]         = useState(0);
-  const [pendentesCount, setPendentesCount]   = useState(0);
-  const [semRespCount, setSemRespCount]       = useState(0);
-  const [notifCount, setNotifCount]           = useState(0);
-  const [notifs, setNotifs]                   = useState([]);
-  const [showNotifs, setShowNotifs]           = useState(false);
-  const [uploading, setUploading]             = useState(false);
+export function Sidebar({ collapsed = false, onToggle }) {
+  const [triageCount, setTriageCount]       = useState(0);
+  const [pendentesCount, setPendentesCount] = useState(0);
+  const [semRespCount, setSemRespCount]     = useState(0);
+  const [notifCount, setNotifCount]         = useState(0);
+  const [notifs, setNotifs]                 = useState([]);
+  const [showNotifs, setShowNotifs]         = useState(false);
+  const [uploading, setUploading]           = useState(false);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
   const { user, logout, hasPermission, updateUser } = useAuth();
 
-  // ── Triagem badge ──────────────────────────────────────────────────────────
   useEffect(() => {
     if (!hasPermission("triagem.view")) return;
     const fetch = () =>
@@ -268,7 +288,6 @@ export function Sidebar() {
     return () => { clearInterval(interval); document.removeEventListener("visibilitychange", onVisible); };
   }, [hasPermission]);
 
-  // ── Usuários pendentes badge ───────────────────────────────────────────────
   useEffect(() => {
     if (!hasPermission("usuarios.view")) return;
     const fetch = () =>
@@ -282,7 +301,6 @@ export function Sidebar() {
     return () => { clearInterval(interval); document.removeEventListener("visibilitychange", onVisible); };
   }, [hasPermission]);
 
-  // ── Instalações sem responsável badge ─────────────────────────────────────
   useEffect(() => {
     if (!hasPermission("instalacoes.view")) return;
     const fetch = () =>
@@ -296,7 +314,6 @@ export function Sidebar() {
     return () => { clearInterval(interval); document.removeEventListener("visibilitychange", onVisible); };
   }, [hasPermission]);
 
-  // ── Notificações do usuário ────────────────────────────────────────────────
   useEffect(() => {
     const fetchCount = () =>
       notificacoesApi.naoLidasCount()
@@ -330,7 +347,6 @@ export function Sidebar() {
     setNotifCount(0);
   }
 
-  // ── Avatar upload ──────────────────────────────────────────────────────────
   const handleAvatarClick = () => { if (!uploading) fileInputRef.current?.click(); };
 
   const handleAvatarChange = useCallback(async (e) => {
@@ -351,119 +367,193 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="fixed inset-y-0 left-0 w-60 bg-[#1B2240] flex flex-col z-30">
-      {/* User header — topo */}
-      <div className="px-4 pt-4 pb-3 border-b border-white/5 shrink-0">
+    <aside
+      className="fixed inset-y-0 left-0 bg-[#1B2240] flex flex-col z-30 overflow-hidden transition-[width] duration-300 ease-in-out"
+      style={{ width: collapsed ? "64px" : "240px" }}
+    >
+      {/* ── Cabeçalho: avatar + info + sino ── */}
+      <div className={`border-b border-white/5 shrink-0 ${collapsed ? "px-0 pt-3 pb-3" : "px-4 pt-4 pb-3"}`}>
         {user && (
-          <div className="flex items-center gap-2">
-            {/* Avatar clicável */}
-            <button
-              onClick={handleAvatarClick}
-              title="Alterar foto"
-              disabled={uploading}
-              className="relative w-10 h-10 rounded-full shrink-0 group focus:outline-none"
-            >
-              {user.avatar_url ? (
-                <img src={user.avatar_url} alt={user.nome} className="w-10 h-10 rounded-full object-cover" />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
-                  <span className="text-orange-400 text-sm font-bold">{user.nome.charAt(0).toUpperCase()}</span>
-                </div>
-              )}
-              <span className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                {uploading ? (
-                  <svg className="w-4 h-4 text-white animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                  </svg>
+          collapsed ? (
+            /* Modo colapsado: avatar centralizado + sino abaixo */
+            <div className="flex flex-col items-center gap-2">
+              <button
+                onClick={handleAvatarClick}
+                title={user.nome}
+                disabled={uploading}
+                className="relative w-9 h-9 rounded-full shrink-0 group focus:outline-none"
+              >
+                {user.avatar_url ? (
+                  <img src={user.avatar_url} alt={user.nome} className="w-9 h-9 rounded-full object-cover" />
                 ) : (
-                  <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <div className="w-9 h-9 rounded-full bg-orange-500/20 flex items-center justify-center">
+                    <span className="text-orange-400 text-sm font-bold">{user.nome.charAt(0).toUpperCase()}</span>
+                  </div>
+                )}
+                <span className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
-                )}
-              </span>
-            </button>
-
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold text-slate-300 truncate">{user.nome}</p>
-              <p className="text-[10px] text-slate-600 truncate">{user.grupo_nome || "Sem grupo"}</p>
-            </div>
-
-            {/* Sino de notificações */}
-            <button
-              onClick={handleOpenNotifs}
-              title="Notificações"
-              className={`relative w-9 h-9 flex items-center justify-center rounded-lg transition-all shrink-0 ${
-                showNotifs
-                  ? "text-orange-400 bg-orange-500/20"
-                  : notifCount > 0
-                  ? "text-slate-300 bg-white/8 hover:bg-white/12"
-                  : "text-slate-500 hover:text-slate-300 hover:bg-white/8"
-              }`}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-              {notifCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold leading-none animate-pulse shadow-sm">
-                  {notifCount > 9 ? "9+" : notifCount}
                 </span>
-              )}
+              </button>
+
+              <button
+                onClick={handleOpenNotifs}
+                title="Notificações"
+                className={`relative w-8 h-8 flex items-center justify-center rounded-lg transition-all ${
+                  showNotifs ? "text-orange-400 bg-orange-500/20" : notifCount > 0 ? "text-slate-300 bg-white/8 hover:bg-white/12" : "text-slate-500 hover:text-slate-300 hover:bg-white/8"
+                }`}
+              >
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                {notifCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-0.5 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold leading-none animate-pulse">
+                    {notifCount > 9 ? "9+" : notifCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          ) : (
+            /* Modo expandido: layout original */
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleAvatarClick}
+                title="Alterar foto"
+                disabled={uploading}
+                className="relative w-10 h-10 rounded-full shrink-0 group focus:outline-none"
+              >
+                {user.avatar_url ? (
+                  <img src={user.avatar_url} alt={user.nome} className="w-10 h-10 rounded-full object-cover" />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
+                    <span className="text-orange-400 text-sm font-bold">{user.nome.charAt(0).toUpperCase()}</span>
+                  </div>
+                )}
+                <span className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  {uploading ? (
+                    <svg className="w-4 h-4 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  )}
+                </span>
+              </button>
+
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold text-slate-300 truncate">{user.nome}</p>
+                <p className="text-[10px] text-slate-600 truncate">{user.grupo_nome || "Sem grupo"}</p>
+              </div>
+
+              <button
+                onClick={handleOpenNotifs}
+                title="Notificações"
+                className={`relative w-9 h-9 flex items-center justify-center rounded-lg transition-all shrink-0 ${
+                  showNotifs ? "text-orange-400 bg-orange-500/20" : notifCount > 0 ? "text-slate-300 bg-white/8 hover:bg-white/12" : "text-slate-500 hover:text-slate-300 hover:bg-white/8"
+                }`}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                {notifCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold leading-none animate-pulse shadow-sm">
+                    {notifCount > 9 ? "9+" : notifCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          )
+        )}
+        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+      </div>
+
+      {/* ── Nav ── */}
+      <nav className={`flex-1 py-3 overflow-y-auto space-y-0.5 ${collapsed ? "px-0" : "px-3"}`}>
+        <NavGroup title="Operacional"   items={MENU.OPERACIONAL}   badge={triageCount}   pendenteBadge={0}              installsBadge={semRespCount} hasPermission={hasPermission} collapsed={collapsed} />
+        <NavGroup title="Configuração"  items={MENU.CONFIGURACAO}  badge={0}             pendenteBadge={0}              installsBadge={0}            hasPermission={hasPermission} collapsed={collapsed} />
+        <NavGroup title="Administração" items={MENU.ADMINISTRACAO} badge={0}             pendenteBadge={pendentesCount} installsBadge={0}            hasPermission={hasPermission} collapsed={collapsed} />
+      </nav>
+
+      {/* ── Brand footer ── */}
+      <div className={`border-t border-white/5 shrink-0 ${collapsed ? "px-0 py-3" : "px-4 py-4"}`}>
+        {collapsed ? (
+          /* Modo colapsado: logo centralizado + sair */
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-9 h-9 rounded-xl overflow-hidden ring-1 ring-white/10 shadow-lg shrink-0">
+              <img src="/logo.jpg" alt="CriareTI" className="w-full h-full object-cover" />
+            </div>
+            <button
+              onClick={handleLogout}
+              title="Sair"
+              className="w-8 h-8 flex items-center justify-center rounded-md text-slate-600 hover:text-slate-300 hover:bg-white/8 transition-all"
+            >
+              <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
             </button>
           </div>
+        ) : (
+          /* Modo expandido: layout original */
+          <>
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl overflow-hidden ring-1 ring-white/10 shrink-0 shadow-lg">
+                  <img src="/logo.jpg" alt="CriareTI" className="w-full h-full object-cover" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-white font-bold text-[15px] leading-none tracking-tight">CriareTI</p>
+                  <span className="inline-flex items-center mt-1.5 px-1.5 py-0.5 rounded-md bg-white/5 border border-white/8 text-[9px] font-semibold text-slate-400 uppercase tracking-widest leading-none">
+                    Implantações
+                  </span>
+                </div>
+              </div>
+              {hasPermission("configuracoes.view") && (
+                <button
+                  onClick={() => navigate("/admin/configuracoes")}
+                  title="Configurações"
+                  className="w-7 h-7 flex items-center justify-center rounded-md text-slate-600 hover:text-slate-300 hover:bg-white/8 transition-all shrink-0"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
+              )}
+            </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 text-xs text-slate-600 hover:text-slate-400 transition-colors py-1"
+            >
+              <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Sair
+            </button>
+          </>
         )}
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-0.5">
-        <NavGroup title="Operacional"   items={MENU.OPERACIONAL}   badge={triageCount}   pendenteBadge={0}             installsBadge={semRespCount} hasPermission={hasPermission} />
-        <NavGroup title="Configuração"  items={MENU.CONFIGURACAO}  badge={0}             pendenteBadge={0}             installsBadge={0}            hasPermission={hasPermission} />
-        <NavGroup title="Administração" items={MENU.ADMINISTRACAO} badge={0}             pendenteBadge={pendentesCount} installsBadge={0}            hasPermission={hasPermission} />
-      </nav>
+      {/* ── Botão toggle (chevron na borda direita) ── */}
+      <button
+        onClick={onToggle}
+        title={collapsed ? "Expandir menu" : "Recolher menu"}
+        className="absolute top-1/2 -translate-y-1/2 -right-3 w-6 h-6 rounded-full bg-[#1B2240] border border-white/10 flex items-center justify-center text-slate-400 hover:text-slate-200 hover:border-white/25 transition-all shadow-lg z-10"
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          {collapsed
+            ? <path d="M9 18l6-6-6-6" />
+            : <path d="M15 18l-6-6 6-6" />
+          }
+        </svg>
+      </button>
 
-      {/* Brand footer — rodapé */}
-      <div className="px-4 py-4 border-t border-white/5 shrink-0">
-        <div className="flex items-center justify-between gap-2 mb-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-xl overflow-hidden ring-1 ring-white/10 shrink-0 shadow-lg">
-              <img src="/logo.jpg" alt="CriareTI" className="w-full h-full object-cover" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-white font-bold text-[15px] leading-none tracking-tight">CriareTI</p>
-              <span className="inline-flex items-center mt-1.5 px-1.5 py-0.5 rounded-md bg-white/5 border border-white/8 text-[9px] font-semibold text-slate-400 uppercase tracking-widest leading-none">
-                Implantações
-              </span>
-            </div>
-          </div>
-          {hasPermission("configuracoes.view") && (
-            <button
-              onClick={() => navigate("/admin/configuracoes")}
-              title="Configurações"
-              className="w-7 h-7 flex items-center justify-center rounded-md text-slate-600 hover:text-slate-300 hover:bg-white/8 transition-all shrink-0"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </button>
-          )}
-        </div>
-
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-2 text-xs text-slate-600 hover:text-slate-400 transition-colors py-1"
-        >
-          <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          Sair
-        </button>
-      </div>
-
-      {/* Dropdown de notificações — posicionado à direita do sidebar */}
+      {/* ── Dropdown de notificações ── */}
       {showNotifs && (
         <NotifDropdown
           notifs={notifs}
@@ -471,6 +561,7 @@ export function Sidebar() {
           onMarcarTodas={handleMarcarTodas}
           onClose={() => setShowNotifs(false)}
           navigate={navigate}
+          collapsed={collapsed}
         />
       )}
     </aside>
