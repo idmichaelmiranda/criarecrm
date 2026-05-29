@@ -188,16 +188,14 @@ def kpis(db: Session = Depends(get_db)):
 
     # ── Gráfico mensal (últimos 6 meses, concluídas) ──────────────────────────
     six_months_ago = today - timedelta(days=183)
-    month_expr = (
+
+    impl_month_expr = (
         func.strftime("%Y-%m", Implantacao.data_conclusao)
         if IS_SQLITE else
         func.to_char(Implantacao.data_conclusao, "YYYY-MM")
     )
-    monthly_rows = db.execute(
-        select(
-            month_expr.label("month"),
-            func.count().label("total"),
-        )
+    impl_rows = db.execute(
+        select(impl_month_expr.label("month"), func.count().label("total"))
         .where(
             Implantacao.data_conclusao.isnot(None),
             Implantacao.data_conclusao >= six_months_ago,
@@ -205,7 +203,23 @@ def kpis(db: Session = Depends(get_db)):
         .group_by("month")
         .order_by("month")
     ).all()
-    monthly_map = {r.month: r.total for r in monthly_rows}
+    monthly_impl = {r.month: r.total for r in impl_rows}
+
+    inst_month_expr = (
+        func.strftime("%Y-%m", InstalacaoModel.data_conclusao)
+        if IS_SQLITE else
+        func.to_char(InstalacaoModel.data_conclusao, "YYYY-MM")
+    )
+    inst_rows = db.execute(
+        select(inst_month_expr.label("month"), func.count().label("total"))
+        .where(
+            InstalacaoModel.data_conclusao.isnot(None),
+            InstalacaoModel.data_conclusao >= six_months_ago,
+        )
+        .group_by("month")
+        .order_by("month")
+    ).all()
+    monthly_inst = {r.month: r.total for r in inst_rows}
 
     grafico_mensal = []
     for i in range(5, -1, -1):
@@ -218,7 +232,8 @@ def kpis(db: Session = Depends(get_db)):
         grafico_mensal.append({
             "month": key,
             "label": MES_ABBR[month - 1],
-            "total": monthly_map.get(key, 0),
+            "implantacoes": monthly_impl.get(key, 0),
+            "instalacoes": monthly_inst.get(key, 0),
             "is_current": i == 0,
         })
 

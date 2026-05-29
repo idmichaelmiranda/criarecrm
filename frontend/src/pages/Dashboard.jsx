@@ -657,7 +657,7 @@ function TimelineIntelligente({ items }) {
 
 function GraficoMensal({ dados }) {
   if (!dados || dados.length === 0) return null;
-  const max = Math.max(...dados.map((m) => m.total), 1);
+  const max = Math.max(...dados.map((m) => (m.implantacoes ?? m.total ?? 0) + (m.instalacoes ?? 0)), 1);
 
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
@@ -667,27 +667,42 @@ function GraficoMensal({ dados }) {
       </div>
       <div className="flex items-end gap-2" style={{ height: "96px" }}>
         {dados.map((m) => {
-          const barH = m.total > 0 ? Math.max(Math.round((m.total / max) * 80), 6) : 0;
+          const impl = m.implantacoes ?? m.total ?? 0;
+          const inst = m.instalacoes ?? 0;
+          const total = impl + inst;
+          const totalH = total > 0 ? Math.max(Math.round((total / max) * 80), 6) : 0;
+          const implH = total > 0 ? Math.round((impl / total) * totalH) : 0;
+          const instH = totalH - implH;
           return (
             <div key={m.month} className="flex-1 flex flex-col items-center gap-1 group">
-              <span className={`text-[10px] font-semibold tabular-nums ${m.total > 0 ? (m.is_current ? "text-orange-600" : "text-gray-500") : "invisible"}`}>
-                {m.total}
+              <span className={`text-[10px] font-semibold tabular-nums ${total > 0 ? "text-gray-500" : "invisible"}`}>
+                {total}
               </span>
-              <div className="w-full flex items-end justify-center" style={{ height: "64px" }}>
-                <div
-                  className={`w-full rounded-t-md transition-all ${m.is_current ? "bg-orange-500" : "bg-blue-400 group-hover:bg-blue-500"}`}
-                  style={{ height: `${barH}px` }}
-                  title={`${m.label}: ${m.total}`}
-                />
+              <div className="w-full flex flex-col justify-end" style={{ height: "64px" }}>
+                {instH > 0 && (
+                  <div
+                    className={`w-full transition-all ${m.is_current ? "bg-emerald-500" : "bg-emerald-400 group-hover:bg-emerald-500"}`}
+                    style={{ height: `${instH}px` }}
+                    title={`${m.label} — Instalações: ${inst}`}
+                  />
+                )}
+                {implH > 0 && (
+                  <div
+                    className={`w-full rounded-b-sm transition-all ${instH === 0 ? "rounded-t-md" : ""} ${m.is_current ? "bg-blue-600" : "bg-blue-400 group-hover:bg-blue-500"}`}
+                    style={{ height: `${implH}px` }}
+                    title={`${m.label} — Implantações: ${impl}`}
+                  />
+                )}
+                {total === 0 && <div className="w-full rounded-t-md bg-gray-100" style={{ height: "4px" }} />}
               </div>
-              <span className={`text-[10px] font-medium ${m.is_current ? "text-orange-600" : "text-gray-400"}`}>{m.label}</span>
+              <span className={`text-[10px] font-medium ${m.is_current ? "text-gray-600" : "text-gray-400"}`}>{m.label}</span>
             </div>
           );
         })}
       </div>
-      <div className="mt-3 pt-3 border-t border-gray-50 flex items-center gap-3 text-[10px] text-gray-400">
-        <div className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-orange-500 inline-block" />Mês atual</div>
-        <div className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-blue-400 inline-block" />Anteriores</div>
+      <div className="mt-3 pt-3 border-t border-gray-50 flex items-center gap-4 text-[10px] text-gray-400">
+        <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-blue-400 inline-block" />Implantações</div>
+        <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Instalações</div>
       </div>
     </div>
   );
