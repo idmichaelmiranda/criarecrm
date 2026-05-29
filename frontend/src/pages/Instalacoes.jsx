@@ -611,6 +611,14 @@ export default function Instalacoes() {
     return inst.tipos?.length > 0 ? inst.tipos : [inst.tipo];
   }
 
+  function isAtrasada(i) {
+    if (i.status === "concluida" || i.status === "cancelada" || i.finalizado_em) return false;
+    if (!i.data_agendada) return false;
+    const agendada = new Date(i.data_agendada + "T00:00:00");
+    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+    return agendada < hoje;
+  }
+
   const filtered = all
     .filter((i) => {
       if (tab === "ativas"    && !ATIVAS_STATUSES.includes(i.status))    return false;
@@ -629,25 +637,20 @@ export default function Instalacoes() {
     })
     .sort((a, b) => (isAtrasada(b) ? 1 : 0) - (isAtrasada(a) ? 1 : 0));
 
+  // Base para KPIs e counts respeita o filtro "Minhas instalações"
+  const kpiBase = filtroMeus ? all.filter((i) => i.responsavel_id === user?.id) : all;
+
   const counts = {
-    ativas:    all.filter((i) => ATIVAS_STATUSES.includes(i.status)).length,
-    historico: all.filter((i) => HISTORICO_STATUSES.includes(i.status)).length,
-    todos:     all.length,
+    ativas:    kpiBase.filter((i) => ATIVAS_STATUSES.includes(i.status)).length,
+    historico: kpiBase.filter((i) => HISTORICO_STATUSES.includes(i.status)).length,
+    todos:     kpiBase.length,
   };
 
   // KPIs
-  const kpiAgendadas    = all.filter((i) => i.status === "agendada").length;
-  const kpiExecucao     = all.filter((i) => i.status === "em_execucao").length;
-  const kpiConcluidas   = all.filter((i) => i.status === "concluida").length;
-  function isAtrasada(i) {
-    if (i.status === "concluida" || i.status === "cancelada" || i.finalizado_em) return false;
-    if (!i.data_agendada) return false;
-    const agendada = new Date(i.data_agendada + "T00:00:00");
-    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-    return agendada < hoje; // estritamente antes de hoje — agendada para hoje não é atrasada
-  }
-
-  const kpiAtrasadas = all.filter(isAtrasada).length;
+  const kpiAgendadas  = kpiBase.filter((i) => i.status === "agendada").length;
+  const kpiExecucao   = kpiBase.filter((i) => i.status === "em_execucao").length;
+  const kpiConcluidas = kpiBase.filter((i) => i.status === "concluida").length;
+  const kpiAtrasadas  = kpiBase.filter(isAtrasada).length;
 
   return (
     <Layout>
