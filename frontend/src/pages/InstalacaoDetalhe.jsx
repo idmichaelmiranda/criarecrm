@@ -610,7 +610,7 @@ export default function InstalacaoDetalhe() {
     if (!novoComentario.trim()) return;
     setSendingComentario(true);
     try {
-      await instalacaosApi.adicionarComentario(id, { conteudo: novoComentario.trim(), usuario: "Admin" });
+      await instalacaosApi.adicionarComentario(id, { conteudo: novoComentario.trim() });
       const { data } = await instalacaosApi.obter(id);
       setInst(data);
       setNovoComentario("");

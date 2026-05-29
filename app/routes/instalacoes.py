@@ -513,12 +513,12 @@ def finalizar(instalacao_id: int, data: FinalizarPayload, db: Session = Depends(
 # ── Comentários ───────────────────────────────────────────────────────────────
 
 @router.post("/{instalacao_id}/comentarios", response_model=ComentarioResponse, status_code=201)
-def adicionar_comentario(instalacao_id: int, data: ComentarioCreate, db: Session = Depends(get_db)):
+def adicionar_comentario(instalacao_id: int, data: ComentarioCreate, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
     if not db.get(Instalacao, instalacao_id):
         raise HTTPException(404, "Instalação não encontrada")
     c = InstalacaoComentario(
         instalacao_id=instalacao_id,
-        usuario=data.usuario,
+        usuario=current_user.nome,
         conteudo=data.conteudo,
     )
     db.add(c)
