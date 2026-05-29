@@ -141,14 +141,24 @@ function EditModal({ titulo, grupos, inicial, onSave, onClose, loading, hasPermi
                 {form.ativo ? "Ativo" : "Inativo"}
               </button>
             </div>
-            <div className="col-span-2">
-              <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Notificações de conclusão</label>
-              <button type="button" onClick={() => canEdit && set("notif_conclusao", !form.notif_conclusao)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border-2 transition-all text-sm font-medium ${form.notif_conclusao ? "border-orange-400 bg-orange-50 text-orange-700" : "border-gray-200 bg-gray-50 text-gray-500"} ${!canEdit ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}>
-                <span className={`relative w-8 h-4 rounded-full transition-colors ${form.notif_conclusao ? "bg-orange-500" : "bg-gray-300"}`}>
-                  <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform ${form.notif_conclusao ? "translate-x-4" : "translate-x-0.5"}`} />
-                </span>
-                {form.notif_conclusao ? "Recebe notif. de conclusão" : "Sem notif. de conclusão"}
+            <div className="col-span-2 flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center shrink-0">
+                  <svg className="w-3.5 h-3.5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-700 leading-none">Notificações de conclusão</p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">Alertas ao concluir implantações e instalações</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => canEdit && set("notif_conclusao", !form.notif_conclusao)}
+                className={`relative w-10 h-5 rounded-full transition-colors shrink-0 focus:outline-none ${form.notif_conclusao ? "bg-orange-500" : "bg-gray-300"} ${!canEdit ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+              >
+                <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${form.notif_conclusao ? "translate-x-5" : "translate-x-0.5"}`} />
               </button>
             </div>
           </div>
