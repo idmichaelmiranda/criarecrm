@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import { instalacaosApi, usuariosApi, configuracoesApi } from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
 
 function maskPhone(value) {
   const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -568,6 +569,7 @@ function NovaInstalacaoModal({ onClose, onCreated, tiposConfig = [] }) {
 export default function Instalacoes() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { user } = useAuth();
   const [all, setAll] = useState([]);
   const [tiposConfig, setTiposConfig] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -576,6 +578,7 @@ export default function Instalacoes() {
   const [tipoFiltro, setTipoFiltro] = useState("todos");
   const [showModal, setShowModal] = useState(false);
   const [filtroAtrasadas, setFiltroAtrasadas] = useState(false);
+  const [filtroMeus, setFiltroMeus] = useState(false);
   const [filtroSemResponsavel, setFiltroSemResponsavel] = useState(
     () => searchParams.get("sem_responsavel") === "1"
   );
@@ -615,6 +618,7 @@ export default function Instalacoes() {
       if (tipoFiltro !== "todos" && !getTipos(i).map(normalizeTipo).includes(tipoFiltro)) return false;
       if (filtroAtrasadas && !isAtrasada(i)) return false;
       if (filtroSemResponsavel && i.responsavel_id) return false;
+      if (filtroMeus && i.responsavel_id !== user?.id) return false;
       if (search) {
         const q = search.toLowerCase();
         const nome = (i.cliente_nome || "").toLowerCase();
@@ -762,6 +766,25 @@ export default function Instalacoes() {
               : Object.entries(TIPO_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)
             }
           </select>
+
+          <button
+            onClick={() => setFiltroMeus((v) => !v)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap border ${
+              filtroMeus
+                ? "bg-orange-500 text-white border-orange-500 shadow-sm"
+                : "bg-white text-gray-500 border-gray-200 hover:border-orange-300 hover:text-orange-500"
+            }`}
+          >
+            <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            Apenas os meus
+            {filtroMeus && (
+              <span className="ml-0.5 w-4 h-4 flex items-center justify-center rounded-full bg-white/25 text-[10px] font-bold">
+                {filtered.length}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
