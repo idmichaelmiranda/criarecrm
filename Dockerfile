@@ -8,19 +8,16 @@ RUN echo "firebird3.0-server-core firebird3.0-server-core/sysdba-password passwo
         libfbclient2 \
     && rm -rf /var/lib/apt/lists/*
 
-# Cria diretório unificado /opt/firebird com config + plugins
-# libfbclient lê firebird.conf em $FIREBIRD/ e busca plugins em $FIREBIRD/plugins/
+# Configura Firebird para modo embedded no /etc/firebird/3.0/firebird.conf
+# (path lido pelo libfbclient compilado no Debian — FIREBIRD env var é ignorada)
+# PluginsDirectory é obrigatório: o Debian instala engine12.so num path diferente
+# do que libfbclient espera, então sem isso o plugin não é encontrado e
+# o Firebird cai em cascata para o provider Remote (TCP) → erro "localhost"
 RUN PLUG_SRC=$(find /usr/lib -name "engine12.so" 2>/dev/null | head -1 | xargs -r dirname) && \
-    INTL_SRC=$(find /usr/lib -name "fbintl.so"   2>/dev/null | head -1 | xargs -r dirname) && \
-    cp -a /etc/firebird/3.0/. /opt/firebird/ && \
-    mkdir -p /opt/firebird/plugins /opt/firebird/intl && \
-    if [ -n "$PLUG_SRC" ]; then cp -a "$PLUG_SRC"/. /opt/firebird/plugins/; fi && \
-    if [ -n "$INTL_SRC" ]; then cp -a "$INTL_SRC"/. /opt/firebird/intl/; fi && \
-    printf "\nProviders = Engine12\nAllowFullAccess = true\nAuthClient = Legacy_Auth, Srp\nWireCrypt = Disabled\n" \
-        >> /opt/firebird/firebird.conf
-
-# libfbclient encontra firebird.conf + plugins através desta variável
-ENV FIREBIRD=/opt/firebird
+    echo "=== Firebird plugins found at: $PLUG_SRC ===" && \
+    if [ -z "$PLUG_SRC" ]; then echo "ERROR: engine12.so not found" && exit 1; fi && \
+    printf "\nProviders = Engine12\nPluginsDirectory = %s\nAllowFullAccess = true\nAuthClient = Legacy_Auth, Srp\nWireCrypt = Disabled\n" \
+        "$PLUG_SRC" >> /etc/firebird/3.0/firebird.conf
 
 WORKDIR /app
 
