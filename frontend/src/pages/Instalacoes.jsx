@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import { instalacaosApi, usuariosApi, configuracoesApi } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
-import { fmtDate } from "../utils/dateUtils";
+import { fmtDate, fmtDateOnly } from "../utils/dateUtils";
 
 function maskPhone(value) {
   const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -936,11 +936,17 @@ export default function Instalacoes() {
 
                     {/* Agendado / Concluída em */}
                     <td className="px-4 py-4">
-                      {concluida && inst.finalizado_em ? (
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-[10px] font-semibold text-green-600 uppercase tracking-wide leading-none">Concluída em</span>
-                          <span className="text-xs text-green-700 font-medium">{fmtDate(inst.finalizado_em)}</span>
-                        </div>
+                      {concluida ? (
+                        inst.finalizado_em ? (
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[10px] font-semibold text-green-600 uppercase tracking-wide leading-none">Concluída em</span>
+                            <span className="text-xs text-green-700 font-medium">{fmtDate(inst.finalizado_em)}</span>
+                          </div>
+                        ) : inst.data_agendada ? (
+                          <span className="text-xs text-gray-400">{fmtDateOnly(inst.data_agendada)}</span>
+                        ) : (
+                          <span className="text-gray-300 text-xs">—</span>
+                        )
                       ) : agendado ? (
                         <span className={`text-xs font-medium ${agendado.cls}`}>{agendado.label}</span>
                       ) : (
