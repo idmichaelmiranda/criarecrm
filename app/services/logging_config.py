@@ -27,7 +27,8 @@ class _SanitizeFilter(logging.Filter):
 
 def configure_logging() -> None:
     sanitizer = _SanitizeFilter()
-    for name in ("", "uvicorn", "uvicorn.error", "uvicorn.access", "fastapi"):
+    # uvicorn.access usa AccessFormatter que desempacota args — não sanitizar
+    for name in ("", "uvicorn", "uvicorn.error", "fastapi"):
         logger = logging.getLogger(name)
         if not any(isinstance(f, _SanitizeFilter) for f in logger.filters):
             logger.addFilter(sanitizer)
