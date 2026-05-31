@@ -8,8 +8,9 @@ RUN echo "firebird3.0-server-core firebird3.0-server-core/sysdba-password passwo
         libfbclient2 \
     && rm -rf /var/lib/apt/lists/*
 
-# Habilita autenticação Legacy para compatibilidade com fdb (SYSDBA/masterkey)
-RUN printf "\n# fdb compatibility\nAuthServer = Legacy_Auth, Srp\nAuthClient = Legacy_Auth, Srp\nWireCrypt = Disabled\n" \
+# Configura Firebird para modo embedded (Engine12 direto, sem tentar TCP)
+# Providers padrão é Remote,Engine12,Local — Remote tenta TCP e falha no Docker
+RUN printf "\n# fdb embedded mode\nAuthServer = Legacy_Auth, Srp\nAuthClient = Legacy_Auth, Srp\nWireCrypt = Disabled\nProviders = Engine12\n" \
     >> /etc/firebird/3.0/firebird.conf
 
 # Aponta fdb para o config do Firebird (necessário para embedded engine no Debian)
