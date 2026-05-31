@@ -8,12 +8,13 @@ RUN echo "firebird3.0-server firebird3.0-server/sysdba-password password masterk
         libfbclient2 \
     && rm -rf /var/lib/apt/lists/*
 
-# Embedded mode: libEngine12.so está em /usr/lib/x86_64-linux-gnu/firebird/3.0/plugins/
-# mas libfbclient procura em $FB_ROOT/plugins/ onde FB_ROOT = dir do .so = /usr/lib/x86_64-linux-gnu/
-# PluginsDirectory e IntlPath absolutos resolvem a discrepância de path do Debian
-# Providers = Engine12 sobrescreve o padrão Remote,Engine12,Loopback (última linha vence)
-RUN printf "\nProviders = Engine12\nPluginsDirectory = /usr/lib/x86_64-linux-gnu/firebird/3.0/plugins\nIntlPath = /usr/lib/x86_64-linux-gnu/firebird/3.0/intl\n" \
-    >> /etc/firebird/3.0/firebird.conf
+# SUBSTITUI o firebird.conf inteiro — append não estava funcionando.
+# FIREBIRD env var faz libfbclient ler config de $FIREBIRD/firebird.conf.
+# PluginsDirectory absoluto aponta para onde o Debian instalou libEngine12.so.
+RUN printf "Providers = Engine12\nPluginsDirectory = /usr/lib/x86_64-linux-gnu/firebird/3.0/plugins\nSecurityDatabase = /var/lib/firebird/3.0/system/security3.fdb\nAuthServer = Legacy_Auth\nAuthClient = Legacy_Auth\nWireCrypt = Disabled\n" \
+    > /etc/firebird/3.0/firebird.conf
+
+ENV FIREBIRD=/etc/firebird/3.0
 
 WORKDIR /app
 
