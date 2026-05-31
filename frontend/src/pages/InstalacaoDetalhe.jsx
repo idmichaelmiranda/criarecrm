@@ -59,16 +59,47 @@ function initials(nome) {
   return nome.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 }
 
-function useElapsed(iniciadoEm, finalizadoEm) {
+function toUtcMs(s) {
+  return new Date(
+    s.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(s) ? s : s + "Z"
+  ).getTime();
+}
+
+function useElapsed(iniciadoEm, finalizadoEm, pausadoEm, tempoPausadoSegundos) {
   const [elapsed, setElapsed] = useState(0);
   useEffect(() => {
     if (!iniciadoEm || finalizadoEm) return;
-    const start = new Date(iniciadoEm.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(iniciadoEm) ? iniciadoEm : iniciadoEm + "Z").getTime();
-    const tick = () => setElapsed(Math.floor((Date.now() - start) / 1000));
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, [iniciadoEm, finalizadoEm]);
+
+    const startMs   = toUtcMs(iniciadoEm);
+    const pausedSec = tempoPausadoSegundos || 0;
+    const calc      = () => Math.max(0, Math.floor((Date.now() - startMs) / 1000) - pausedSec);
+
+    // Parado: mostra tempo congelado até o momento da pausa
+    if (pausadoEm) {
+      const pausedAtMs = toUtcMs(pausadoEm);
+      setElapsed(Math.max(0, Math.floor((pausedAtMs - startMs) / 1000) - pausedSec));
+      return;
+    }
+
+    setElapsed(calc());
+    let timerId = setInterval(() => setElapsed(calc()), 1000);
+
+    // Congela o interval quando a aba fica em background (economiza CPU)
+    const onVis = () => {
+      if (document.hidden) {
+        clearInterval(timerId);
+      } else {
+        setElapsed(calc());
+        timerId = setInterval(() => setElapsed(calc()), 1000);
+      }
+    };
+    document.addEventListener("visibilitychange", onVis);
+
+    return () => {
+      clearInterval(timerId);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, [iniciadoEm, finalizadoEm, pausadoEm, tempoPausadoSegundos]);
   return elapsed;
 }
 
@@ -149,6 +180,101 @@ function ModalFinalizar({ elapsed, onConfirm, onClose, saving }) {
               className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 transition-colors"
             >
               {saving ? "Finalizando…" : "Confirmar Conclusão"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Modal de Pausa ────────────────────────────────────────────────────────────
+
+const MOTIVOS_PAUSA = [
+  { value: "intervalo",          label: "Intervalo" },
+  { value: "aguardando_cliente", label: "Aguardando cliente" },
+  { value: "problema_tecnico",   label: "Problema técnico" },
+  { value: "deslocamento",       label: "Deslocamento" },
+  { value: "outro",              label: "Outro" },
+];
+
+function ModalPausar({ elapsed, onConfirm, onClose, saving }) {
+  const [selecionado, setSelecionado] = useState("");
+  const [textoOutro, setTextoOutro] = useState("");
+
+  const isOutro = selecionado === "outro";
+
+  // O motivo gravado é o texto livre quando "Outro", senão o label do item selecionado
+  const motivoFinal = isOutro
+    ? (textoOutro.trim() || null)
+    : (MOTIVOS_PAUSA.find((m) => m.value === selecionado)?.label || null);
+
+  function handleSelect(value) {
+    setSelecionado((v) => v === value ? "" : value);
+    if (value !== "outro") setTextoOutro("");
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+        <div className="px-6 pt-6 pb-4 text-center">
+          <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-3">
+            <svg className="w-6 h-6 text-amber-600" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+            </svg>
+          </div>
+          <h2 className="text-base font-bold text-gray-900 mb-0.5">Pausar cronômetro</h2>
+          <p className="text-sm text-gray-400 mb-1">Tempo decorrido até agora</p>
+          <p className="text-2xl font-bold text-orange-500 mb-4">{formatDuration(elapsed)}</p>
+        </div>
+        <div className="px-6 pb-6 space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">
+              Motivo da pausa <span className="font-normal text-gray-400">(opcional)</span>
+            </label>
+            <div className="grid grid-cols-1 gap-1.5">
+              {MOTIVOS_PAUSA.map((m) => (
+                <button
+                  key={m.value}
+                  type="button"
+                  onClick={() => handleSelect(m.value)}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-sm border transition-colors ${
+                    selecionado === m.value
+                      ? "bg-amber-50 border-amber-400 text-amber-800 font-medium"
+                      : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+            {isOutro && (
+              <input
+                autoFocus
+                type="text"
+                maxLength={50}
+                value={textoOutro}
+                onChange={(e) => setTextoOutro(e.target.value)}
+                placeholder="Descreva o motivo…"
+                className="mt-2 w-full border border-amber-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-amber-500 transition"
+              />
+            )}
+          </div>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={() => onConfirm(motivoFinal)}
+              disabled={saving}
+              className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 disabled:opacity-50 transition-colors"
+            >
+              {saving ? "Pausando…" : "Pausar"}
             </button>
           </div>
         </div>
@@ -516,6 +642,9 @@ export default function InstalacaoDetalhe() {
   const [editarSaving, setEditarSaving] = useState(false);
   const [editDropdownOpen, setEditDropdownOpen] = useState(false);
   const editDropdownRef = useRef(null);
+  const [pausando, setPausando] = useState(false);
+  const [retomando, setRetomando] = useState(false);
+  const [showModalPausar, setShowModalPausar] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -554,7 +683,12 @@ export default function InstalacaoDetalhe() {
     return () => document.removeEventListener("mousedown", handler);
   }, [editDropdownOpen]);
 
-  const elapsed = useElapsed(inst?.iniciado_em, inst?.finalizado_em);
+  const elapsed = useElapsed(
+    inst?.iniciado_em,
+    inst?.finalizado_em,
+    inst?.pausado_em,
+    inst?.tempo_pausado_segundos,
+  );
 
   async function handleIniciar() {
     setIniciando(true);
@@ -563,6 +697,25 @@ export default function InstalacaoDetalhe() {
       setInst(data);
     } catch (err) { setError(err.message); }
     finally { setIniciando(false); }
+  }
+
+  async function handlePausar(motivo) {
+    setPausando(true);
+    try {
+      const { data } = await instalacaosApi.pausar(id, motivo);
+      setInst(data);
+      setShowModalPausar(false);
+    } catch (err) { setError(err.message); }
+    finally { setPausando(false); }
+  }
+
+  async function handleRetomar() {
+    setRetomando(true);
+    try {
+      const { data } = await instalacaosApi.retomar(id);
+      setInst(data);
+    } catch (err) { setError(err.message); }
+    finally { setRetomando(false); }
   }
 
   async function handleFinalizar(obsText) {
@@ -707,11 +860,20 @@ export default function InstalacaoDetalhe() {
   const concluidos = checklist.filter((i) => i.status === "concluido").length;
   const todasConcluidas = checklist.length > 0 && concluidos === checklist.length;
   const emAndamento = inst.iniciado_em && !inst.finalizado_em;
+  const estaPausada = emAndamento && Boolean(inst.pausado_em);
   const inputCls = "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 transition";
   const responsavelUser = inst.responsavel_id ? usuarios.find((u) => u.id === inst.responsavel_id) : null;
 
   return (
     <Layout>
+      {showModalPausar && (
+        <ModalPausar
+          elapsed={elapsed}
+          saving={pausando}
+          onConfirm={handlePausar}
+          onClose={() => setShowModalPausar(false)}
+        />
+      )}
       {showModalFinalizar && (
         <ModalFinalizar
           elapsed={elapsed}
@@ -939,19 +1101,73 @@ export default function InstalacaoDetalhe() {
 
               {emAndamento && (
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-xl px-4 py-3">
+                  {/* Timer display — muda de cor quando pausado */}
+                  <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
+                    estaPausada
+                      ? "bg-amber-50 border-amber-200"
+                      : "bg-orange-50 border-orange-200"
+                  }`}>
                     <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
-                      <span className="text-xs font-semibold text-orange-700">Em andamento</span>
+                      {estaPausada ? (
+                        <>
+                          <svg className="w-3.5 h-3.5 text-amber-500" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                          </svg>
+                          <span className="text-xs font-semibold text-amber-700">Pausada</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+                          <span className="text-xs font-semibold text-orange-700">Em andamento</span>
+                        </>
+                      )}
                     </div>
-                    <span className="font-mono text-lg font-bold text-orange-600 tabular-nums">
+                    <span className={`font-mono text-lg font-bold tabular-nums ${
+                      estaPausada ? "text-amber-600" : "text-orange-600"
+                    }`}>
                       {formatDuration(elapsed)}
                     </span>
                   </div>
+
+                  {/* Botão pausa / retomar */}
+                  {estaPausada ? (
+                    <button
+                      onClick={handleRetomar}
+                      disabled={retomando}
+                      className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100 disabled:opacity-50 transition-colors"
+                    >
+                      {retomando ? (
+                        <span className="w-3.5 h-3.5 rounded-full border-2 border-amber-600 border-t-transparent animate-spin" />
+                      ) : (
+                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      )}
+                      Retomar cronômetro
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setShowModalPausar(true)}
+                      className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold text-gray-500 bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                      </svg>
+                      Pausar cronômetro
+                    </button>
+                  )}
+
+                  {/* Finalizar — bloqueado se pausada */}
                   <button
                     onClick={() => setShowModalFinalizar(true)}
-                    disabled={!todasConcluidas}
-                    title={!todasConcluidas ? "Conclua todos os itens do checklist primeiro" : "Finalizar instalação"}
+                    disabled={!todasConcluidas || estaPausada}
+                    title={
+                      estaPausada
+                        ? "Retome o cronômetro antes de finalizar"
+                        : !todasConcluidas
+                          ? "Conclua todos os itens do checklist primeiro"
+                          : "Finalizar instalação"
+                    }
                     className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white bg-green-600 hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -962,15 +1178,19 @@ export default function InstalacaoDetalhe() {
                 </div>
               )}
 
-              {inst.finalizado_em && inst.duracao_minutos && (
+              {inst.finalizado_em && (inst.duracao_segundos || inst.duracao_minutos) && (
                 <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-4 py-3">
                   <div className="flex items-center gap-2">
                     <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span className="text-xs font-semibold text-green-700">Tempo total</span>
+                    <span className="text-xs font-semibold text-green-700">Tempo efetivo</span>
                   </div>
-                  <span className="text-sm font-bold text-green-700">{formatMinutes(inst.duracao_minutos)}</span>
+                  <span className="text-sm font-bold text-green-700">
+                    {inst.duracao_segundos
+                      ? formatDuration(inst.duracao_segundos)
+                      : formatMinutes(inst.duracao_minutos)}
+                  </span>
                 </div>
               )}
             </div>

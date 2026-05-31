@@ -12,26 +12,38 @@ from app.database.connection import get_db
 from app.models.usuario import Usuario
 from app.schemas.usuario import UsuarioCreate, UsuarioUpdate, UsuarioResponse, AprovarRequest
 from app.services.auth_service import hash_password
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import get_current_user, require_permission
 
 router = APIRouter(prefix="/usuarios", tags=["usuarios"])
 
 
+_SENHA_DIA_URL = "http://criaresuporte1.no-ip.info:9000/api/gerente/v2/getpasswordfortoday"
+_SENHA_DIA_ALLOWED_KEYS = {"password", "senha", "data", "value"}
+
+
 @router.get("/senha-dia")
-def senha_dia(_: Usuario = Depends(get_current_user)):
-    """Proxy para buscar a senha do dia do servidor de suporte interno."""
+def senha_dia(_: Usuario = Depends(require_permission("usuarios.edit"))):
+    """Proxy para buscar a senha do dia do servidor de suporte interno.
+    Restrito a usuários com permissão usuarios.edit (gestores/admin).
+    A URL de destino é fixa — não aceita parâmetros externos."""
     try:
-        with urllib.request.urlopen(
-            "http://criaresuporte1.no-ip.info:9000/api/gerente/v2/getpasswordfortoday",
-            timeout=5,
-        ) as resp:
-            raw = resp.read().decode("utf-8").strip()
+        with urllib.request.urlopen(_SENHA_DIA_URL, timeout=5) as resp:
+            if resp.status != 200:
+                raise HTTPException(503, "Servidor de senha indisponível")
+            raw = resp.read(4096).decode("utf-8", errors="replace").strip()
         try:
             data = _json.loads(raw)
-            senha = data.get("password") or data.get("senha") or data.get("data") or data.get("value") or raw
+            if not isinstance(data, dict):
+                raise ValueError("resposta inesperada")
+            senha = next(
+                (str(data[k]) for k in _SENHA_DIA_ALLOWED_KEYS if k in data and data[k]),
+                raw,
+            )
         except Exception:
             senha = raw
         return {"senha": senha}
+    except HTTPException:
+        raise
     except Exception:
         raise HTTPException(503, "Servidor de senha indisponível")
 
@@ -50,7 +62,7 @@ def pendentes_count(
 @router.get("/", response_model=list[UsuarioResponse])
 def listar(
     db: Session = Depends(get_db),
-    _: Usuario = Depends(get_current_user),
+    _: Usuario = Depends(require_permission("usuarios.view")),
 ):
     return db.execute(select(Usuario).order_by(Usuario.pendente.desc(), Usuario.nome)).scalars().all()
 
@@ -59,11 +71,16 @@ def listar(
 def obter(
     usuario_id: int,
     db: Session = Depends(get_db),
-    _: Usuario = Depends(get_current_user),
+    current_user: Usuario = Depends(get_current_user),
 ):
     u = db.get(Usuario, usuario_id)
     if not u:
         raise HTTPException(404, "Usuário não encontrado")
+    # Permite auto-consulta; caso contrário exige usuarios.view
+    if current_user.id != usuario_id:
+        permissoes = current_user.grupo.permissoes if current_user.grupo else []
+        if "usuarios.view" not in permissoes:
+            raise HTTPException(403, "Permissão 'usuarios.view' necessária")
     return u
 
 
@@ -71,7 +88,7 @@ def obter(
 def criar(
     data: UsuarioCreate,
     db: Session = Depends(get_db),
-    _: Usuario = Depends(get_current_user),
+    _: Usuario = Depends(require_permission("usuarios.create")),
 ):
     existing = db.execute(
         select(Usuario).where(Usuario.email == data.email)
@@ -98,7 +115,7 @@ def aprovar(
     usuario_id: int,
     data: AprovarRequest,
     db: Session = Depends(get_db),
-    _: Usuario = Depends(get_current_user),
+    _: Usuario = Depends(require_permission("usuarios.edit")),
 ):
     """Aprova um cadastro pendente, gera token de acesso e envia email de boas-vindas."""
     u = db.get(Usuario, usuario_id)
@@ -133,7 +150,7 @@ def aprovar(
 def reenviar_senha(
     usuario_id: int,
     db: Session = Depends(get_db),
-    _: Usuario = Depends(get_current_user),
+    _: Usuario = Depends(require_permission("usuarios.edit")),
 ):
     """Regenera o token de acesso e reenvia o e-mail de definição de senha."""
     u = db.get(Usuario, usuario_id)
@@ -170,6 +187,20 @@ def atualizar(
     u = db.get(Usuario, usuario_id)
     if not u:
         raise HTTPException(404, "Usuário não encontrado")
+
+    permissoes = current_user.grupo.permissoes if current_user.grupo else []
+    tem_permissao_edit = "usuarios.edit" in permissoes
+    is_self = current_user.id == usuario_id
+
+    # Campos que exigem permissão administrativa — não podem ser auto-editados
+    campos_admin = [data.nome, data.email, data.senha, data.grupo_id, data.ativo]
+    editando_campos_admin = any(v is not None for v in campos_admin)
+
+    if editando_campos_admin and not tem_permissao_edit:
+        raise HTTPException(403, "Permissão 'usuarios.edit' necessária para alterar esses campos")
+
+    if not is_self and not tem_permissao_edit:
+        raise HTTPException(403, "Permissão 'usuarios.edit' necessária para editar outros usuários")
 
     if data.nome is not None:
         u.nome = data.nome

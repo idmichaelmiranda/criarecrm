@@ -2,15 +2,20 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request as _StarletteRequest
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func
+
+from app.services.logging_config import configure_logging
+configure_logging()
 
 from app.database.connection import engine, Base, SessionLocal
 from app.models import (  # noqa: F401 — registra todos os modelos no metadata
     Solicitacao, Cliente, Template, TemplateEtapa, TemplateTarefa,
     Implantacao, ImplantacaoEtapa, ChecklistItem, TimelineEvento, Comentario,
     GrupoPermissao, Usuario,
-    Instalacao, InstalacaoChecklist, InstalacaoComentario, InstalacaoAnexo,
+    Instalacao, InstalacaoChecklist, InstalacaoComentario, InstalacaoAnexo, InstalacaoPausa,
     Notificacao,
 )
 from app.routes.solicitacoes import router as solicitacoes_router
@@ -57,6 +62,7 @@ app = FastAPI(
 )
 
 from app.config import FRONTEND_URL
+from app.database.connection import IS_SQLITE as _IS_SQLITE
 
 _cors_origins = ["http://localhost:5173"]
 if FRONTEND_URL:
@@ -69,6 +75,30 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+class _SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: _StarletteRequest, call_next):
+        response = await call_next(request)
+        h = response.headers
+        h["X-Content-Type-Options"] = "nosniff"
+        h["X-Frame-Options"] = "DENY"
+        h["X-XSS-Protection"] = "1; mode=block"
+        h["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        h["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+        h["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "object-src 'none'; "
+            "base-uri 'self'; "
+            "form-action 'self'; "
+            "frame-ancestors 'none'"
+        )
+        if not _IS_SQLITE:  # HSTS apenas em produção (HTTPS)
+            h["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload"
+        return response
+
+
+app.add_middleware(_SecurityHeadersMiddleware)
 
 
 def _migrate_storage_to_private(db) -> None:
@@ -174,6 +204,19 @@ def _migrate_sqlite():
         "ALTER TABLE instalacoes ADD COLUMN criado_por_id INTEGER REFERENCES usuarios(id)",
         "ALTER TABLE checklist_itens ADD COLUMN responsavel_id INTEGER REFERENCES usuarios(id)",
         "ALTER TABLE usuarios ADD COLUMN notif_conclusao BOOLEAN NOT NULL DEFAULT 0",
+        "ALTER TABLE instalacoes ADD COLUMN iniciado_por_id INTEGER REFERENCES usuarios(id)",
+        "ALTER TABLE instalacoes ADD COLUMN pausado_em DATETIME",
+        "ALTER TABLE instalacoes ADD COLUMN tempo_pausado_segundos INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE instalacoes ADD COLUMN duracao_segundos INTEGER",
+        """CREATE TABLE instalacao_pausas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            instalacao_id INTEGER NOT NULL REFERENCES instalacoes(id) ON DELETE CASCADE,
+            pausado_por_id INTEGER REFERENCES usuarios(id),
+            iniciado_em DATETIME NOT NULL,
+            retomado_em DATETIME,
+            duracao_segundos INTEGER,
+            motivo VARCHAR(50)
+        )""",
     ]
     with engine.connect() as conn:
         for ddl in new_cols:
@@ -181,7 +224,7 @@ def _migrate_sqlite():
                 conn.execute(text(ddl))
                 conn.commit()
             except Exception:
-                pass  # coluna já existe
+                pass  # coluna ou tabela já existe
         # Corrige sub-itens criados com etapa_id incorreto (devem ter etapa_id=NULL)
         try:
             conn.execute(text("UPDATE checklist_itens SET etapa_id = NULL WHERE parent_id IS NOT NULL"))
@@ -224,6 +267,20 @@ def _migrate_postgres() -> None:
         "ALTER TABLE instalacoes ADD COLUMN IF NOT EXISTS criado_por_id INTEGER REFERENCES usuarios(id)",
         "ALTER TABLE checklist_itens ADD COLUMN IF NOT EXISTS responsavel_id INTEGER REFERENCES usuarios(id)",
         "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS notif_conclusao BOOLEAN NOT NULL DEFAULT FALSE",
+        "ALTER TABLE instalacoes ADD COLUMN IF NOT EXISTS iniciado_por_id INTEGER REFERENCES usuarios(id)",
+        "ALTER TABLE instalacoes ADD COLUMN IF NOT EXISTS pausado_em TIMESTAMP",
+        "ALTER TABLE instalacoes ADD COLUMN IF NOT EXISTS tempo_pausado_segundos INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE instalacoes ADD COLUMN IF NOT EXISTS duracao_segundos INTEGER",
+        """CREATE TABLE IF NOT EXISTS instalacao_pausas (
+            id SERIAL PRIMARY KEY,
+            instalacao_id INTEGER NOT NULL REFERENCES instalacoes(id) ON DELETE CASCADE,
+            pausado_por_id INTEGER REFERENCES usuarios(id),
+            iniciado_em TIMESTAMP NOT NULL,
+            retomado_em TIMESTAMP,
+            duracao_segundos INTEGER,
+            motivo VARCHAR(50)
+        )""",
+        "CREATE INDEX IF NOT EXISTS ix_instalacao_pausas_instalacao_id ON instalacao_pausas (instalacao_id)",
         """CREATE TABLE IF NOT EXISTS instalacao_anexos (
             id SERIAL PRIMARY KEY,
             instalacao_id INTEGER NOT NULL REFERENCES instalacoes(id) ON DELETE CASCADE,
@@ -352,16 +409,19 @@ def _seed_auth(db: Session) -> None:
     db.add(analista_group)
     db.flush()
 
+    import secrets as _secrets
+    _senha_inicial = _secrets.token_urlsafe(16)
     admin_user = Usuario(
         nome="Administrador",
         email="admin@criare.com.br",
-        senha_hash=hash_password("admin123"),
+        senha_hash=hash_password(_senha_inicial),
         grupo_id=admin_group.id,
         ativo=True,
     )
     db.add(admin_user)
     db.commit()
     print("[OK] Auth seed: grupos 'Administrador' e 'Analista' + usuário admin@criare.com.br criados")
+    print(f"[SEGURANÇA] Senha inicial do admin: {_senha_inicial}  ← TROQUE IMEDIATAMENTE APÓS O PRIMEIRO LOGIN")
 
 
 def _seed_templates(db: Session) -> None:

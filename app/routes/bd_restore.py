@@ -4,9 +4,12 @@ import uuid
 from datetime import datetime, timedelta, date, timezone
 from pathlib import Path
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import Response
 from pydantic import BaseModel
+
+from app.models.usuario import Usuario
+from app.dependencies.auth import require_permission
 
 router = APIRouter(prefix="/bd-restore", tags=["BD Restore"])
 
@@ -539,7 +542,10 @@ class GerarRequest(BaseModel):
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.post("/analisar")
-async def analisar(arquivo: UploadFile = File(...)):
+async def analisar(
+    arquivo: UploadFile = File(...),
+    _: Usuario = Depends(require_permission("configuracoes.edit")),
+):
     ext = (arquivo.filename or "").rsplit(".", 1)[-1].lower()
     if ext not in ("fdb", "gdb", "ib"):
         raise HTTPException(
@@ -647,7 +653,10 @@ async def analisar(arquivo: UploadFile = File(...)):
 
 
 @router.post("/gerar")
-async def gerar(req: GerarRequest):
+async def gerar(
+    req: GerarRequest,
+    _: Usuario = Depends(require_permission("configuracoes.edit")),
+):
     if req.session_id not in _sessions:
         raise HTTPException(
             status_code=400,

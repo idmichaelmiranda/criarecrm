@@ -3,7 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
 from app.database.connection import get_db
-from app.services.auth_service import decode_token
+from app.services.auth_service import decode_token, is_token_revoked
 from app.models.usuario import Usuario
 
 security = HTTPBearer()
@@ -19,6 +19,13 @@ def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token inválido ou expirado",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    jti = payload.get("jti")
+    if jti and is_token_revoked(jti):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Sessão encerrada. Faça login novamente.",
             headers={"WWW-Authenticate": "Bearer"},
         )
     user_id = payload.get("sub")

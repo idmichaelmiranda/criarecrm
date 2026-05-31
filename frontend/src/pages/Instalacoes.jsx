@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import { instalacaosApi, usuariosApi, configuracoesApi } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
+import { fmtDate } from "../utils/dateUtils";
 
 function maskPhone(value) {
   const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -933,12 +934,18 @@ export default function Instalacoes() {
                       )}
                     </td>
 
-                    {/* Agendado */}
+                    {/* Agendado / Concluída em */}
                     <td className="px-4 py-4">
-                      {agendado
-                        ? <span className={`text-xs font-medium ${agendado.cls}`}>{agendado.label}</span>
-                        : <span className="text-gray-300 text-xs">—</span>
-                      }
+                      {concluida && inst.finalizado_em ? (
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[10px] font-semibold text-green-600 uppercase tracking-wide leading-none">Concluída em</span>
+                          <span className="text-xs text-green-700 font-medium">{fmtDate(inst.finalizado_em)}</span>
+                        </div>
+                      ) : agendado ? (
+                        <span className={`text-xs font-medium ${agendado.cls}`}>{agendado.label}</span>
+                      ) : (
+                        <span className="text-gray-300 text-xs">—</span>
+                      )}
                     </td>
 
                     {/* Seta */}

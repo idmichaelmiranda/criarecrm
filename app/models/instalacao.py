@@ -37,7 +37,11 @@ class Instalacao(Base):
     data_conclusao: Mapped[date] = mapped_column(Date, nullable=True)
 
     iniciado_em: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    iniciado_por_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"), nullable=True)
+    pausado_em: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    tempo_pausado_segundos: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     finalizado_em: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    duracao_segundos: Mapped[int] = mapped_column(Integer, nullable=True)
     duracao_minutos: Mapped[int] = mapped_column(Integer, nullable=True)
 
     progresso: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
@@ -62,6 +66,10 @@ class Instalacao(Base):
     anexos: Mapped[list["InstalacaoAnexo"]] = relationship(
         "InstalacaoAnexo", back_populates="instalacao",
         order_by="InstalacaoAnexo.created_at", cascade="all, delete-orphan"
+    )
+    pausas: Mapped[list["InstalacaoPausa"]] = relationship(
+        "InstalacaoPausa", back_populates="instalacao",
+        order_by="InstalacaoPausa.iniciado_em", cascade="all, delete-orphan"
     )
 
 
@@ -114,3 +122,21 @@ class InstalacaoAnexo(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     instalacao: Mapped["Instalacao"] = relationship("Instalacao", back_populates="anexos")
+
+
+class InstalacaoPausa(Base):
+    __tablename__ = "instalacao_pausas"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    instalacao_id: Mapped[int] = mapped_column(ForeignKey("instalacoes.id"), nullable=False)
+    pausado_por_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"), nullable=True)
+
+    iniciado_em: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    retomado_em: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    duracao_segundos: Mapped[int] = mapped_column(Integer, nullable=True)
+
+    motivo: Mapped[str] = mapped_column(String(50), nullable=True)
+    # intervalo | aguardando_cliente | problema_tecnico | deslocamento | outro
+
+    instalacao: Mapped["Instalacao"] = relationship("Instalacao", back_populates="pausas")
+    pausado_por: Mapped["Usuario"] = relationship("Usuario", foreign_keys=[pausado_por_id])

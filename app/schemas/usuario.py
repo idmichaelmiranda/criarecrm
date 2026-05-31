@@ -1,7 +1,15 @@
 from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel, EmailStr, model_validator
+from pydantic import BaseModel, EmailStr, field_validator, model_validator
 import app.services.storage_service as storage
+
+_MIN_PASSWORD_LEN = 8
+
+
+def _check_password(v: str) -> str:
+    if len(v) < _MIN_PASSWORD_LEN:
+        raise ValueError(f"A senha deve ter pelo menos {_MIN_PASSWORD_LEN} caracteres.")
+    return v
 
 
 class GrupoMinimo(BaseModel):
@@ -18,6 +26,11 @@ class UsuarioCreate(BaseModel):
     ativo: bool = True
     notif_conclusao: bool = False
 
+    @field_validator("senha")
+    @classmethod
+    def senha_minima(cls, v: str) -> str:
+        return _check_password(v)
+
 
 class UsuarioUpdate(BaseModel):
     nome: Optional[str] = None
@@ -26,6 +39,11 @@ class UsuarioUpdate(BaseModel):
     grupo_id: Optional[int] = None
     ativo: Optional[bool] = None
     notif_conclusao: Optional[bool] = None
+
+    @field_validator("senha")
+    @classmethod
+    def senha_minima(cls, v: Optional[str]) -> Optional[str]:
+        return _check_password(v) if v is not None else v
 
 
 class UsuarioResponse(BaseModel):
@@ -67,3 +85,8 @@ class AprovarRequest(BaseModel):
 
 class DefinirSenhaRequest(BaseModel):
     senha: str
+
+    @field_validator("senha")
+    @classmethod
+    def senha_minima(cls, v: str) -> str:
+        return _check_password(v)

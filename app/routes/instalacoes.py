@@ -10,7 +10,7 @@ import json
 from app.database.connection import get_db
 from app.dependencies.auth import get_current_user
 import app.services.storage_service as storage
-from app.models.instalacao import Instalacao, InstalacaoChecklist, InstalacaoComentario, InstalacaoAnexo
+from app.models.instalacao import Instalacao, InstalacaoChecklist, InstalacaoComentario, InstalacaoAnexo, InstalacaoPausa
 from app.models.cliente import Cliente
 from app.models.usuario import Usuario
 from app.models.template import Template, TemplateEtapa, TemplateTarefa
@@ -21,7 +21,7 @@ from app.schemas.instalacao import (
     InstalacaoListResponse, InstalacaoFullResponse,
     ChecklistItemCreate, ChecklistItemUpdate, ChecklistItemResponse, ChecklistItemToggleResponse,
     ComentarioCreate, ComentarioResponse,
-    TipoInstalacaoInfo, AnexoResponse,
+    TipoInstalacaoInfo, AnexoResponse, PausaResponse,
 )
 
 router = APIRouter(prefix="/instalacoes", tags=["instalacoes"])
@@ -100,6 +100,7 @@ def _load(instalacao_id: int, db: Session) -> Instalacao:
             selectinload(Instalacao.responsavel),
             selectinload(Instalacao.criado_por),
             selectinload(Instalacao.anexos),
+            selectinload(Instalacao.pausas),
         )
         .where(Instalacao.id == instalacao_id)
     ).scalar_one_or_none()
@@ -464,20 +465,82 @@ def deletar_item(instalacao_id: int, item_id: int, db: Session = Depends(get_db)
 
 # ── Timer ────────────────────────────────────────────────────────────────────
 
+class PausarPayload(PydanticBase):
+    motivo: str | None = None  # intervalo | aguardando_cliente | problema_tecnico | deslocamento | outro
+
+
 class FinalizarPayload(PydanticBase):
     observacao_final: str | None = None
 
 
+def _tz(dt: datetime) -> datetime:
+    """Garante que o datetime tenha timezone UTC."""
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
 @router.post("/{instalacao_id}/iniciar", response_model=InstalacaoFullResponse)
-def iniciar(instalacao_id: int, db: Session = Depends(get_db)):
+def iniciar(instalacao_id: int, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
     inst = db.get(Instalacao, instalacao_id)
     if not inst:
         raise HTTPException(404, "Instalação não encontrada")
     if inst.iniciado_em:
         raise HTTPException(400, "Instalação já foi iniciada")
-    inst.iniciado_em = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc)
+    inst.iniciado_em = now
+    inst.iniciado_por_id = current_user.id
+    inst.tempo_pausado_segundos = 0
+    inst.pausado_em = None
     inst.status = "em_execucao"
-    inst.updated_at = datetime.now(timezone.utc)
+    inst.updated_at = now
+    db.commit()
+    return _to_full_response(_load(instalacao_id, db), db)
+
+
+@router.post("/{instalacao_id}/pausar", response_model=InstalacaoFullResponse)
+def pausar(instalacao_id: int, data: PausarPayload, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    inst = db.get(Instalacao, instalacao_id)
+    if not inst:
+        raise HTTPException(404, "Instalação não encontrada")
+    if not inst.iniciado_em:
+        raise HTTPException(400, "Instalação não foi iniciada")
+    if inst.finalizado_em:
+        raise HTTPException(400, "Instalação já foi finalizada")
+    if inst.pausado_em:
+        raise HTTPException(400, "Instalação já está pausada")
+    now = datetime.now(timezone.utc)
+    inst.pausado_em = now
+    inst.updated_at = now
+    db.add(InstalacaoPausa(
+        instalacao_id=instalacao_id,
+        pausado_por_id=current_user.id,
+        iniciado_em=now,
+        motivo=data.motivo,
+    ))
+    db.commit()
+    return _to_full_response(_load(instalacao_id, db), db)
+
+
+@router.post("/{instalacao_id}/retomar", response_model=InstalacaoFullResponse)
+def retomar(instalacao_id: int, db: Session = Depends(get_db)):
+    inst = db.get(Instalacao, instalacao_id)
+    if not inst:
+        raise HTTPException(404, "Instalação não encontrada")
+    if not inst.pausado_em:
+        raise HTTPException(400, "Instalação não está pausada")
+    now = datetime.now(timezone.utc)
+    pausa_duracao = round((_tz(now) - _tz(inst.pausado_em)).total_seconds())
+    inst.tempo_pausado_segundos = (inst.tempo_pausado_segundos or 0) + pausa_duracao
+    inst.pausado_em = None
+    inst.updated_at = now
+    # Fecha o registro de pausa aberto (último sem retomado_em)
+    pausa_aberta = db.execute(
+        select(InstalacaoPausa)
+        .where(InstalacaoPausa.instalacao_id == instalacao_id, InstalacaoPausa.retomado_em.is_(None))
+        .order_by(InstalacaoPausa.iniciado_em.desc())
+    ).scalar_one_or_none()
+    if pausa_aberta:
+        pausa_aberta.retomado_em = now
+        pausa_aberta.duracao_segundos = pausa_duracao
     db.commit()
     return _to_full_response(_load(instalacao_id, db), db)
 
@@ -494,8 +557,27 @@ def finalizar(instalacao_id: int, data: FinalizarPayload, db: Session = Depends(
 
     now = datetime.now(timezone.utc)
     inst.finalizado_em = now
-    iniciado = inst.iniciado_em if inst.iniciado_em.tzinfo else inst.iniciado_em.replace(tzinfo=timezone.utc)
-    inst.duracao_minutos = max(1, round((now - iniciado).total_seconds() / 60))
+
+    tempo_total = round((_tz(now) - _tz(inst.iniciado_em)).total_seconds())
+    tempo_pausado = inst.tempo_pausado_segundos or 0
+
+    # Se ainda estava pausada ao finalizar, contabiliza e fecha o registro
+    if inst.pausado_em:
+        pausa_extra = round((_tz(now) - _tz(inst.pausado_em)).total_seconds())
+        tempo_pausado += pausa_extra
+        inst.pausado_em = None
+        pausa_aberta = db.execute(
+            select(InstalacaoPausa)
+            .where(InstalacaoPausa.instalacao_id == instalacao_id, InstalacaoPausa.retomado_em.is_(None))
+            .order_by(InstalacaoPausa.iniciado_em.desc())
+        ).scalar_one_or_none()
+        if pausa_aberta:
+            pausa_aberta.retomado_em = now
+            pausa_aberta.duracao_segundos = pausa_extra
+
+    duracao_efetiva = max(60, tempo_total - tempo_pausado)
+    inst.duracao_segundos = duracao_efetiva
+    inst.duracao_minutos = max(1, round(duracao_efetiva / 60))
     inst.status = "concluida"
     inst.data_conclusao = date.today()
     inst.updated_at = now

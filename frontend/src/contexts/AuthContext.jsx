@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
-import api from "../services/api";
+import api, { authApi } from "../services/api";
 
 const AuthContext = createContext(null);
 
@@ -13,6 +13,8 @@ export function AuthProvider({ children }) {
   const applyUser = (userData) => setUser(userData);
 
   const logout = useCallback(() => {
+    // Revoga o token no servidor (fire-and-forget — sessão local limpa imediatamente)
+    authApi.logout().catch(() => {});
     sessionStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(USER_KEY);
     setUser(null);

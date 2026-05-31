@@ -27,6 +27,28 @@ TIPO_LABELS = {
 }
 
 
+MOTIVO_PAUSA_LABELS = {
+    "intervalo":          "Intervalo",
+    "aguardando_cliente": "Aguardando cliente",
+    "problema_tecnico":   "Problema técnico",
+    "deslocamento":       "Deslocamento",
+    "outro":              "Outro",
+}
+
+
+# ── Pausas ────────────────────────────────────────────────────────────────────
+
+class PausaResponse(BaseModel):
+    id: int
+    iniciado_em: datetime
+    retomado_em: datetime | None = None
+    duracao_segundos: int | None = None
+    motivo: str | None = None
+    pausado_por_id: int | None = None
+
+    model_config = {"from_attributes": True}
+
+
 # ── Checklist ─────────────────────────────────────────────────────────────────
 
 class ChecklistItemResponse(BaseModel):
@@ -213,7 +235,11 @@ class InstalacaoFullResponse(BaseModel):
     data_agendada: date | None
     data_conclusao: date | None
     iniciado_em: datetime | None = None
+    iniciado_por_id: int | None = None
+    pausado_em: datetime | None = None
+    tempo_pausado_segundos: int = 0
     finalizado_em: datetime | None = None
+    duracao_segundos: int | None = None
     duracao_minutos: int | None = None
     progresso: int
     created_at: datetime
@@ -225,6 +251,7 @@ class InstalacaoFullResponse(BaseModel):
     checklist: list[ChecklistItemResponse] = []
     comentarios: list[ComentarioResponse] = []
     anexos: list[AnexoResponse] = []
+    pausas: list[PausaResponse] = []
 
     model_config = {"from_attributes": True}
 

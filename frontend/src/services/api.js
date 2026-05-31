@@ -153,6 +153,8 @@ export const instalacaosApi = {
   deletarItem: (instId, itemId) => api.delete(`/instalacoes/${instId}/checklist/${itemId}`),
   adicionarComentario: (instId, data) => api.post(`/instalacoes/${instId}/comentarios`, data),
   iniciar: (instId) => api.post(`/instalacoes/${instId}/iniciar`),
+  pausar: (instId, motivo = null) => api.post(`/instalacoes/${instId}/pausar`, { motivo }),
+  retomar: (instId) => api.post(`/instalacoes/${instId}/retomar`),
   finalizar: (instId, data) => api.post(`/instalacoes/${instId}/finalizar`, data),
   editarAntes: (instId, data) => api.put(`/instalacoes/${instId}/editar`, data),
   uploadAnexo: (instId, file, uploadedBy = "Admin") => {
@@ -206,6 +208,7 @@ export const configuracoesApi = {
 // ── Auth ──────────────────────────────────────────────────────────────────────
 export const authApi = {
   login: (email, senha) => api.post("/auth/login", { email, senha }),
+  logout: () => api.post("/auth/logout"),
   me: () => api.get("/auth/me"),
   registro: (data) => api.post("/auth/registro", data),
   definirSenha: (token, senha) => api.post(`/auth/definir-senha/${token}`, { senha }),

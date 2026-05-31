@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, Query
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import select
 
 from app.database.connection import get_db
 from app.schemas.solicitacao import (
@@ -9,12 +10,13 @@ from app.schemas.solicitacao import (
 )
 from app.schemas.implantacao import ImplantacaoListResponse
 from app.services import solicitacao_service, aprovacao_service
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import get_current_user, require_permission
 from app.models.usuario import Usuario
+from app.models.solicitacao import Solicitacao
 
 router = APIRouter(prefix="/solicitacoes", tags=["solicitacoes"])
 
-_auth = Depends(get_current_user)
+_auth = Depends(require_permission("triagem.view"))
 
 
 # ── Rotas PÚBLICAS (formulário externo + revisão pelo cliente) ────────────────
@@ -28,6 +30,15 @@ def criar(payload: SolicitacaoCreate, db: Session = Depends(get_db)):
 async def upload_certificado(
     sol_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)
 ):
+    # Fix 18: impede upload em solicitações já processadas — evita sobrescrever dados reais
+    # e reduz superfície de ataque do endpoint público (não requer autenticação)
+    sol = db.execute(
+        select(Solicitacao).where(Solicitacao.id == sol_id)
+    ).scalar_one_or_none()
+    if not sol:
+        raise HTTPException(404, "Solicitação não encontrada.")
+    if sol.status not in ("nova", "em_triagem"):
+        raise HTTPException(400, "Envio de certificado não permitido para este status.")
     path = await solicitacao_service.upload_certificado(db, sol_id, file)
     return {"certificado_path": path, "filename": file.filename}
 
