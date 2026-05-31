@@ -563,18 +563,23 @@ async def analisar(
             tmp_path = tmp.name
 
         try:
-            from firebird.driver import connect as fb_connect  # type: ignore
+            import fdb  # type: ignore
         except ImportError:
             raise HTTPException(
                 status_code=500,
-                detail="Biblioteca firebird-driver não instalada no servidor.",
+                detail="Biblioteca fdb não instalada no servidor.",
             )
 
+        # Firebird server roda como user 'firebird'; chmod garante leitura do temp file
+        os.chmod(tmp_path, 0o644)
+
         try:
-            con = fb_connect(
+            con = fdb.connect(
+                host="localhost",
                 database=tmp_path,
                 user="SYSDBA",
                 password="masterkey",
+                sql_dialect=3,
                 charset="UTF8",
             )
         except Exception as e:
