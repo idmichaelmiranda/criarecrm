@@ -12,8 +12,8 @@ RUN echo "firebird3.0-server-core firebird3.0-server-core/sysdba-password passwo
 # libfbclient lê firebird.conf em $FIREBIRD/ e busca plugins em $FIREBIRD/plugins/
 RUN PLUG_SRC=$(find /usr/lib -name "engine12.so" 2>/dev/null | head -1 | xargs -r dirname) && \
     INTL_SRC=$(find /usr/lib -name "fbintl.so"   2>/dev/null | head -1 | xargs -r dirname) && \
+    cp -a /etc/firebird/3.0/. /opt/firebird/ && \
     mkdir -p /opt/firebird/plugins /opt/firebird/intl && \
-    cp /etc/firebird/3.0/firebird.conf /opt/firebird/firebird.conf && \
     if [ -n "$PLUG_SRC" ]; then cp -a "$PLUG_SRC"/. /opt/firebird/plugins/; fi && \
     if [ -n "$INTL_SRC" ]; then cp -a "$INTL_SRC"/. /opt/firebird/intl/; fi && \
     printf "\nProviders = Engine12\nAllowFullAccess = true\nAuthClient = Legacy_Auth, Srp\nWireCrypt = Disabled\n" \
