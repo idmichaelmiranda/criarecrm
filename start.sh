@@ -1,12 +1,12 @@
 #!/bin/bash
-set -e
 
 # Garante diretório de runtime do Firebird
 mkdir -p /var/run/firebird/3.0
-chown firebird:firebird /var/run/firebird/3.0 2>/dev/null || true
+chown -R firebird:firebird /var/run/firebird 2>/dev/null || true
 
 # Inicia Firebird 3.0 server em background
-/usr/sbin/firebird -d 2>&1 &
+# fbguard é o binário correto no Debian (o antigo /usr/sbin/firebird não existe)
+su -s /bin/sh -c "/usr/sbin/fbguard -daemon -forever" firebird &
 echo "Firebird iniciado (PID $!)"
 sleep 3
 
