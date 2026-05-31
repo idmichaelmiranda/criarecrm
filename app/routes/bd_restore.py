@@ -563,8 +563,7 @@ async def analisar(
             tmp_path = tmp.name
 
         try:
-            from firebird.driver import connect as fb_connect, driver_config  # type: ignore
-            driver_config.server_defaults.providers.value = 'Engine12'
+            from firebird.driver import connect as fb_connect  # type: ignore
         except ImportError:
             raise HTTPException(
                 status_code=500,

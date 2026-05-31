@@ -1,6 +1,6 @@
 FROM python:3.12-slim
 
-# Instala Firebird 3.0 server (necessário para fdb abrir arquivos .fdb locais)
+# Instala Firebird 3.0 para leitura embedded de arquivos .fdb
 RUN echo "firebird3.0-server-core firebird3.0-server-core/sysdba-password password masterkey" | debconf-set-selections && \
     apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
@@ -8,9 +8,19 @@ RUN echo "firebird3.0-server-core firebird3.0-server-core/sysdba-password passwo
         libfbclient2 \
     && rm -rf /var/lib/apt/lists/*
 
-# Legacy_Auth necessário para SYSDBA/masterkey com firebird-driver embedded
-RUN printf "\nAuthServer = Legacy_Auth, Srp\nAuthClient = Legacy_Auth, Srp\nWireCrypt = Disabled\n" \
-    >> /etc/firebird/3.0/firebird.conf
+# Cria diretório unificado /opt/firebird com config + plugins
+# libfbclient lê firebird.conf em $FIREBIRD/ e busca plugins em $FIREBIRD/plugins/
+RUN PLUG_SRC=$(find /usr/lib -name "engine12.so" 2>/dev/null | head -1 | xargs -r dirname) && \
+    INTL_SRC=$(find /usr/lib -name "fbintl.so"   2>/dev/null | head -1 | xargs -r dirname) && \
+    mkdir -p /opt/firebird/plugins /opt/firebird/intl && \
+    cp /etc/firebird/3.0/firebird.conf /opt/firebird/firebird.conf && \
+    if [ -n "$PLUG_SRC" ]; then cp -a "$PLUG_SRC"/. /opt/firebird/plugins/; fi && \
+    if [ -n "$INTL_SRC" ]; then cp -a "$INTL_SRC"/. /opt/firebird/intl/; fi && \
+    printf "\nProviders = Engine12\nAllowFullAccess = true\nAuthClient = Legacy_Auth, Srp\nWireCrypt = Disabled\n" \
+        >> /opt/firebird/firebird.conf
+
+# libfbclient encontra firebird.conf + plugins através desta variável
+ENV FIREBIRD=/opt/firebird
 
 WORKDIR /app
 
