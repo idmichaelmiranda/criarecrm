@@ -12,6 +12,9 @@ RUN echo "firebird3.0-server-core firebird3.0-server-core/sysdba-password passwo
 RUN printf "\n# fdb compatibility\nAuthServer = Legacy_Auth, Srp\nAuthClient = Legacy_Auth, Srp\nWireCrypt = Disabled\n" \
     >> /etc/firebird/3.0/firebird.conf
 
+# Aponta fdb para o config do Firebird (necessário para embedded engine no Debian)
+ENV FIREBIRD_CONF=/etc/firebird/3.0/firebird.conf
+
 WORKDIR /app
 
 COPY requirements.txt .

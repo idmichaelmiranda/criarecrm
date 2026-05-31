@@ -572,7 +572,6 @@ async def analisar(
 
         try:
             con = fdb.connect(
-                host="localhost",
                 database=tmp_path,
                 user="SYSDBA",
                 password="masterkey",
