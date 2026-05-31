@@ -570,17 +570,13 @@ async def analisar(
                 detail="Biblioteca fdb não instalada no servidor.",
             )
 
-        # Firebird server roda como user 'firebird'; chmod garante leitura do temp file
-        os.chmod(tmp_path, 0o644)
-
         try:
             con = fdb.connect(
-                host="localhost",
                 database=tmp_path,
                 user="SYSDBA",
                 password="masterkey",
                 sql_dialect=3,
-                charset="UTF8",
+                charset="NONE",
             )
         except Exception as e:
             import traceback

@@ -1,25 +1,19 @@
 FROM python:3.12-slim
 
-# firebird3.0 (meta-pacote completo) em vez de apenas server-core
-# server-core sozinho não instala todos os arquivos necessários para o servidor subir
 RUN echo "firebird3.0-server firebird3.0-server/sysdba-password password masterkey" | debconf-set-selections && \
     echo "firebird3.0-server firebird3.0-server/sysdba-password-again password masterkey" | debconf-set-selections && \
     apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         firebird3.0-server \
         libfbclient2 \
-        gosu \
     && rm -rf /var/lib/apt/lists/*
 
-# Diagnóstico: mostra o que foi instalado (visível nos logs de build do Render)
-RUN echo "=== engine12.so ===" && \
-    find / -name "engine12.so" 2>/dev/null || echo "NOT FOUND" && \
-    echo "=== fb_smp_server ===" && \
-    find /usr -name "fb_smp_server" 2>/dev/null || echo "NOT FOUND" && \
-    echo "=== security3.fdb ===" && \
-    ls -la /var/lib/firebird/3.0/system/security3.fdb 2>/dev/null || echo "NOT FOUND" && \
-    echo "=== fbguard ===" && \
-    ls -la /usr/sbin/fbguard 2>/dev/null || echo "NOT FOUND"
+# Embedded mode: libEngine12.so está em /usr/lib/x86_64-linux-gnu/firebird/3.0/plugins/
+# mas libfbclient procura em $FB_ROOT/plugins/ onde FB_ROOT = dir do .so = /usr/lib/x86_64-linux-gnu/
+# PluginsDirectory e IntlPath absolutos resolvem a discrepância de path do Debian
+# Providers = Engine12 sobrescreve o padrão Remote,Engine12,Loopback (última linha vence)
+RUN printf "\nProviders = Engine12\nPluginsDirectory = /usr/lib/x86_64-linux-gnu/firebird/3.0/plugins\nIntlPath = /usr/lib/x86_64-linux-gnu/firebird/3.0/intl\n" \
+    >> /etc/firebird/3.0/firebird.conf
 
 WORKDIR /app
 
