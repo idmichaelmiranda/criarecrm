@@ -571,7 +571,11 @@ async def analisar(
             )
 
         try:
+            # chmod 644: o servidor Firebird (usuário 'firebird') precisa ler o arquivo.
+            # tempfile cria com 600 (só root); sem permissão de leitura o servidor recusa.
+            os.chmod(tmp_path, 0o644)
             con = _fb_connect(
+                host="localhost",    # TCP ao servidor local — embedded falha nesse ambiente
                 database=tmp_path,
                 user="SYSDBA",
                 password="masterkey",
