@@ -273,55 +273,29 @@ def _fetch_produto(cursor) -> list[dict]:
 
 def _fetch_clientes(cursor) -> list[dict]:
     """Todas as linhas da tabela CLIENTES do PAF Firebird com as colunas mapeadas.
-    Usa o catalogo RDB$RELATION_FIELDS para descobrir colunas existentes —
-    evita depender de cursor.description apos SELECT FIRST 0 que pode nao
-    atualizar description em firebirdsql quando 0 linhas sao retornadas."""
-    wanted_upper = [c.upper() for c in _CLIENTES_COLS]
+    Usa SELECT * para evitar erros de 'Column unknown' em databases PAF com
+    esquemas diferentes (colunas novas ausentes em versoes antigas).
+    Filtra em Python apenas as colunas de _CLIENTES_COLS que existirem."""
+    wanted_upper = {c.upper() for c in _CLIENTES_COLS}
 
-    # 1) Descobre colunas existentes via catalogo do sistema (mais confiavel)
-    actual_cols: set[str] = set()
-    try:
-        cursor.execute(
-            "SELECT TRIM(f.RDB$FIELD_NAME) FROM RDB$RELATION_FIELDS f "
-            "WHERE f.RDB$RELATION_NAME = 'CLIENTES' ORDER BY f.RDB$FIELD_POSITION"
-        )
-        for row in cursor.fetchall():
-            if row[0]:
-                actual_cols.add(row[0].strip().upper())
-    except Exception as e:
-        print(f"[BD-RESTORE] _fetch_clientes: erro ao ler RDB$RELATION_FIELDS: {e}")
-
-    # 2) Fallback: SELECT FIRST 1 garante que description e preenchido
-    if not actual_cols:
-        for tbl in ('"CLIENTES"', "CLIENTES"):
-            try:
-                cursor.execute(f"SELECT FIRST 1 * FROM {tbl}")
-                actual_cols = {d[0].upper() for d in cursor.description}
-                try:
-                    cursor.fetchone()  # consome a linha para liberar o cursor
-                except Exception:
-                    pass
-                break
-            except Exception as e:
-                print(f"[BD-RESTORE] _fetch_clientes fallback {tbl}: {e}")
-
-    sel = [c for c in wanted_upper if c in actual_cols]
-    print(f"[BD-RESTORE] _fetch_clientes: actual_cols={len(actual_cols)} sel={len(sel)}")
-    if not sel:
-        print(f"[BD-RESTORE] _fetch_clientes: sem colunas mapeadas — actual={sorted(actual_cols)[:8]}")
-        return []
-
-    cols_sql = ", ".join(f'"{c}"' for c in sel)
     for tbl in ('"CLIENTES"', "CLIENTES"):
         try:
-            cursor.execute(f"SELECT {cols_sql} FROM {tbl}")
+            cursor.execute(f"SELECT * FROM {tbl}")
+            desc = cursor.description
+            # Mapeia posicao → nome para as colunas que nos interessam
+            wanted_idx = [
+                (i, d[0].upper())
+                for i, d in enumerate(desc)
+                if d[0].upper() in wanted_upper
+            ]
+            print(f"[BD-RESTORE] _fetch_clientes {tbl}: {len(desc)} colunas totais, {len(wanted_idx)} mapeadas")
             rows: list[dict] = []
             for raw_row in cursor.fetchall():
-                rows.append({sel[i]: _read_blob(raw_row[i]) for i in range(len(sel))})
+                rows.append({col: _read_blob(raw_row[i]) for i, col in wanted_idx})
             print(f"[BD-RESTORE] _fetch_clientes: {len(rows)} clientes carregados")
             return rows
         except Exception as e:
-            print(f"[BD-RESTORE] _fetch_clientes SELECT erro em {tbl}: {e}")
+            print(f"[BD-RESTORE] _fetch_clientes erro em {tbl}: {e}")
             continue
     return []
 
