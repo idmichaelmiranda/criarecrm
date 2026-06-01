@@ -252,7 +252,7 @@ export const bdRestoreApi = {
     api.post(
       "/bd-restore/gerar",
       { session_id: sessionId, ambiente },
-      { responseType: "blob", timeout: 120_000 },
+      { responseType: "blob", timeout: 600_000 },
     ),
 };
 

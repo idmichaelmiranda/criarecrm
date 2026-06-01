@@ -938,19 +938,21 @@ async def gerar(
         + insert_clientes.encode("utf-8")
     )
 
-    # StreamingResponse: envia static_sql imediatamente, depois grupos e produtos
-    # em batches direto do cursor Firebird — sem acumular tudo em memoria.
+    # ── Streaming com keep-alive ──────────────────────────────────────────────
+    # Firebird demora para exportar tabelas grandes (31k+ produtos com BLOBs).
+    # Solucao: thread de background envia chunks via queue; async generator
+    # emite keep-alive SQL comments a cada 8s para Render nao cortar por inatividade.
+    import threading
+    import queue as _queue
+
     _tmp = tmp_path
     _session = session
 
-    def sql_stream():
-        yield static_sql
-
-        if not _tmp or not os.path.exists(_tmp):
-            yield b"\n-- AVISO: arquivo Firebird nao disponivel, grupos/produtos nao incluidos\n"
-            return
-
+    def _firebird_worker(q: "_queue.Queue[bytes | None]") -> None:
         try:
+            if not _tmp or not os.path.exists(_tmp):
+                q.put(b"\n-- AVISO: arquivo Firebird nao disponivel\n")
+                return
             os.chmod(_tmp, 0o666)
             con = _fb.connect(
                 host="localhost",
@@ -958,25 +960,54 @@ async def gerar(
                 user="SYSDBA",
                 password="masterkey",
                 charset="WIN1252",
-                timeout=120,
+                timeout=300,
             )
             try:
                 cursor = con.cursor()
-                yield _fetch_grupos_para_sql(cursor).encode("utf-8")
-                yield from _stream_produto_cursor(cursor)
+                q.put(_fetch_grupos_para_sql(cursor).encode("utf-8"))
+                for chunk in _stream_produto_cursor(cursor):
+                    q.put(chunk)
                 cursor.close()
             finally:
                 con.close()
         except Exception as e:
-            print(f"[BD-RESTORE/gerar] Erro Firebird no stream: {e}")
-            yield f"\n-- ERRO ao processar produtos: {e}\n".encode("utf-8")
+            print(f"[BD-RESTORE/gerar] Erro Firebird worker: {e}")
+            q.put(f"\n-- ERRO ao processar Firebird: {e}\n".encode("utf-8"))
         finally:
+            q.put(None)  # sentinela — indica fim do stream
             try:
                 os.unlink(_tmp)
             except OSError:
                 pass
             _session.pop("tmp_path", None)
 
+    async def sql_stream():
+        yield static_sql
+
+        data_q: "_queue.Queue[bytes | None]" = _queue.Queue(maxsize=20)
+        t = threading.Thread(target=_firebird_worker, args=(data_q,), daemon=True)
+        t.start()
+        print(f"[BD-RESTORE/gerar] thread Firebird iniciada — tmp={_tmp}")
+
+        ticks = 0
+        while True:
+            try:
+                chunk = data_q.get_nowait()
+            except _queue.Empty:
+                # Sem dados ainda — emite keep-alive para nao fechar conexao
+                await asyncio.sleep(8)
+                ticks += 1
+                yield f"-- aguardando Firebird ({ticks * 8}s)...\n".encode("utf-8")
+                continue
+
+            if chunk is None:
+                print(f"[BD-RESTORE/gerar] stream Firebird concluido ({ticks} keep-alives)")
+                break
+            yield chunk
+
+        t.join(timeout=2)
+
+    import asyncio
     return StreamingResponse(
         sql_stream(),
         media_type="application/octet-stream",
