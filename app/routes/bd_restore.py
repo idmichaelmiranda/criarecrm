@@ -422,6 +422,115 @@ def _gerar_clientes_sql(rows: list[dict], valid_perfil_ids: set | None = None) -
     return "".join(parts)
 
 
+def _fetch_grupos_para_sql(cursor) -> str:
+    """Busca pares (GRUPO, NOME_GRUPO) distintos com SELECT DISTINCT — 2 colunas, rapido.
+    Retorna o bloco SQL DELETE+INSERT pronto para ser enviado ao cliente."""
+    for tabela in ("produto_conv", "PRODUTO_CONV", "produto", "PRODUTO"):
+        for tbl in (f'"{tabela}"', tabela):
+            for cols in ('"GRUPO", "NOME_GRUPO"', "GRUPO, NOME_GRUPO"):
+                try:
+                    cursor.execute(f"SELECT DISTINCT {cols} FROM {tbl}")
+                except Exception:
+                    continue
+                try:
+                    grupos_map: dict = {}
+                    for row in cursor.fetchall():
+                        g, ng = row[0], _read_blob(row[1])
+                        if g is None:
+                            continue
+                        if g not in grupos_map or grupos_map[g] is None:
+                            grupos_map[g] = ng
+                    if not grupos_map:
+                        return (
+                            "\n\n-- ============================================================\n"
+                            "-- GRUPO — nenhum registro encontrado no PAF\n"
+                            "-- ============================================================\n"
+                        )
+                    grupos = sorted(grupos_map.items(), key=lambda x: (x[0] is None, x[0]))
+                    val_lines = [f"  ({_val_insert(g)}, {_esc(ng)})" for g, ng in grupos]
+                    return (
+                        "\n\n-- ============================================================\n"
+                        f"-- GRUPO — {len(grupos)} grupos migrados do PAF\n"
+                        "-- ============================================================\n\n"
+                        "DELETE FROM `grupo`;\n\n"
+                        "INSERT INTO `grupo` (`codgrupo`, `nomegrupo`) VALUES\n"
+                        + ",\n".join(val_lines) + ";\n"
+                    )
+                except Exception:
+                    continue
+    return (
+        "\n\n-- ============================================================\n"
+        "-- GRUPO — tabela nao encontrada no PAF\n"
+        "-- ============================================================\n"
+    )
+
+
+def _stream_produto_cursor(cursor):
+    """Sync generator: le produtos em batches via fetchmany e gera INSERT SQL.
+    Cada batch e enviado ao cliente assim que pronto — sem acumular tudo em memoria."""
+    col_list_mysql = ", ".join(f"`{c.lower()}`" for c in _PRODUTO_MYSQL_COLS)
+    _fb_cols_upper = [c.upper() for c in _PRODUTO_FB_COLS]
+
+    for tabela in ("produto_conv", "PRODUTO_CONV", "produto", "PRODUTO"):
+        for tbl in (f'"{tabela}"', tabela):
+            try:
+                cursor.execute(f"SELECT FIRST 0 * FROM {tbl}")
+                avail = {d[0].upper() for d in cursor.description}
+                sel = [c for c in _fb_cols_upper if c in avail]
+                if not sel:
+                    continue
+                cols_sql = ", ".join(f'"{c}"' for c in sel)
+                cursor.execute(f"SELECT {cols_sql} FROM {tbl}")
+                desc = cursor.description
+                col_names = [d[0].upper() for d in desc]
+
+                yield (
+                    "\n\n-- ============================================================\n"
+                    "-- PRODUTO\n"
+                    "-- ============================================================\n\n"
+                    "DELETE FROM `produto`;\n\n"
+                ).encode("utf-8")
+
+                seen_ids: set = set()
+                total = 0
+
+                while True:
+                    raw_rows = cursor.fetchmany(500)
+                    if not raw_rows:
+                        break
+                    batch: list[dict] = []
+                    for raw_row in raw_rows:
+                        row = {col_names[i]: _read_blob(raw_row[i]) for i in range(len(col_names))}
+                        pid = row.get("ID_PRODUTO")
+                        if pid in seen_ids:
+                            continue
+                        seen_ids.add(pid)
+                        batch.append(row)
+                    if batch:
+                        val_tuples = []
+                        for row in batch:
+                            vals = [_val_insert(row.get(c)) for c in _fb_cols_upper]
+                            for mysql_col in _PRODUTO_MYSQL_COLS[len(_PRODUTO_FB_COLS):]:
+                                vals.append(_PRODUTO_FIXED_VALUES[mysql_col])
+                            val_tuples.append("  (" + ", ".join(vals) + ")")
+                        total += len(batch)
+                        yield (
+                            f"INSERT INTO `produto` ({col_list_mysql}) VALUES\n"
+                            + ",\n".join(val_tuples) + ";\n\n"
+                        ).encode("utf-8")
+
+                yield (
+                    f"-- {total} produtos unicos inseridos\n"
+                    "UPDATE `produto` SET `empresas_participantes` = ';1;';\n"
+                ).encode("utf-8")
+                return
+
+            except Exception:
+                continue
+
+    yield b"\n-- PRODUTO: nenhum registro encontrado no PAF\n"
+
+
 def _gerar_grupos_sql(produto_rows: list[dict]) -> str:
     """DELETE + INSERT na tabela grupos a partir dos pares únicos (grupo, nome_grupo)
     extraídos das linhas de produto já buscadas do Firebird."""
@@ -721,47 +830,12 @@ async def gerar(
     amb_label        = "PRODUCAO" if ambiente == 1 else "HOMOLOGACAO"
 
     from app.services import storage_service as storage
-    import asyncio as _asyncio
     import firebirdsql as _fb  # type: ignore
+    from fastapi.responses import StreamingResponse
 
     base_bytes = storage.download_sync(_BASE_SQL_STORAGE)
     if base_bytes is None:
         raise HTTPException(400, "base_zerada.sql não encontrado — faça upload em Configurações")
-
-    # Busca produtos do arquivo Firebird (operacao lenta — roda em thread)
-    if tmp_path and os.path.exists(tmp_path):
-        def _buscar_produtos(path: str) -> list[dict]:
-            os.chmod(path, 0o666)
-            con = _fb.connect(
-                host="localhost",
-                database=path,
-                user="SYSDBA",
-                password="masterkey",
-                charset="WIN1252",
-                timeout=120,
-            )
-            try:
-                cursor = con.cursor()
-                rows = _fetch_produto(cursor)
-                cursor.close()
-            finally:
-                con.close()
-            return rows
-
-        try:
-            produto_rows = await _asyncio.to_thread(_buscar_produtos, tmp_path)
-        except Exception as e:
-            print(f"[BD-RESTORE/gerar] Erro ao buscar produtos: {e}")
-            produto_rows = []
-        finally:
-            # Apaga o temp independente de sucesso ou falha
-            try:
-                os.unlink(tmp_path)
-            except OSError:
-                pass
-            session.pop("tmp_path", None)
-    else:
-        produto_rows = []
 
     # CODIGO_N fixo em 1 — base_zerada sempre inicia com 1, não altera a PK
     codigo_n = 1
@@ -822,41 +896,67 @@ async def gerar(
         "`CODIGO_N` = 1",
     )
 
-    # ── DELETE + INSERT perfilclientes (antes de clientes — FK id_perfil) ───────
-    # ID_EMPRESA é forçado para codigo_n do PAF — garante consistência com o UPDATE de empresas
     insert_perfil   = _gerar_insert_generico(
         perfil_cols, perfil_rows, "perfilclientes",
         overrides={"ID_EMPRESA": str(codigo_n)},
     )
-
-    # ── DELETE + INSERT clientes ──────────────────────────────────────────────
-    # valid_perfil_set garante que ID_PERFIL órfãos viram NULL (evita FK violation)
     insert_clientes = _gerar_clientes_sql(clientes, valid_perfil_set or None)
-
-    # ── DELETE + INSERT grupos (antes de produto — produto.grupo pode ser FK) ──
-    insert_grupos  = _gerar_grupos_sql(produto_rows)
-
-    # ── DELETE + INSERT produto (deduplicado por id_produto → coditem) ────────
-    insert_produto = _gerar_produto_sql(produto_rows)
 
     sufixo = "prod" if ambiente == 1 else "homolog"
     nome_base = filename.rsplit(".", 1)[0]
     output_filename = f"restore_{nome_base}_{sufixo}.sql"
 
-    header_bytes = b"create database bdsia;\nuse bdsia;\n\n"
-    content = (
-        header_bytes
+    # Partes estaticas (ja em memoria — enviadas imediatamente ao cliente)
+    static_sql = (
+        b"create database bdsia;\nuse bdsia;\n\n"
         + base_bytes
         + header_comment.encode("utf-8")
-        + update_empresa.encode("utf-8")   # UPDATE empresas
-        + insert_perfil.encode("utf-8")    # PERFILCLIENTES antes de clientes (FK)
-        + insert_clientes.encode("utf-8")  # CLIENTES
-        + insert_grupos.encode("utf-8")    # GRUPO antes de produto (FK codgrupo)
-        + insert_produto.encode("utf-8")   # PRODUTO (deduplicado por id_produto)
+        + update_empresa.encode("utf-8")
+        + insert_perfil.encode("utf-8")
+        + insert_clientes.encode("utf-8")
     )
 
-    return Response(
-        content=content,
+    # StreamingResponse: envia static_sql imediatamente, depois grupos e produtos
+    # em batches direto do cursor Firebird — sem acumular tudo em memoria.
+    _tmp = tmp_path
+    _session = session
+
+    def sql_stream():
+        yield static_sql
+
+        if not _tmp or not os.path.exists(_tmp):
+            yield b"\n-- AVISO: arquivo Firebird nao disponivel, grupos/produtos nao incluidos\n"
+            return
+
+        try:
+            os.chmod(_tmp, 0o666)
+            con = _fb.connect(
+                host="localhost",
+                database=_tmp,
+                user="SYSDBA",
+                password="masterkey",
+                charset="WIN1252",
+                timeout=120,
+            )
+            try:
+                cursor = con.cursor()
+                yield _fetch_grupos_para_sql(cursor).encode("utf-8")
+                yield from _stream_produto_cursor(cursor)
+                cursor.close()
+            finally:
+                con.close()
+        except Exception as e:
+            print(f"[BD-RESTORE/gerar] Erro Firebird no stream: {e}")
+            yield f"\n-- ERRO ao processar produtos: {e}\n".encode("utf-8")
+        finally:
+            try:
+                os.unlink(_tmp)
+            except OSError:
+                pass
+            _session.pop("tmp_path", None)
+
+    return StreamingResponse(
+        sql_stream(),
         media_type="application/octet-stream",
         headers={"Content-Disposition": f'attachment; filename="{output_filename}"'},
     )
