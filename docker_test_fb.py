@@ -5,13 +5,15 @@ print(f'FIREBIRD env: {os.environ.get("FIREBIRD", "nao definido")}')
 from firebird.driver import driver_config, connect, create_database
 
 print(f'driver default host: {driver_config.server_defaults.host.value!r}')
-print(f'driver default user: {driver_config.server_defaults.user.value!r}')
 
 p = tempfile.mktemp(suffix='.fdb')
 try:
-    c = create_database(database=p, user='SYSDBA', password='masterkey')
+    # Sem credenciais explícitas — mesmo comportamento do isql-fb que funciona.
+    # O engine embedded com AuthClient=Srp,Legacy_Auth aceita conexões locais
+    # sem user/password (usa autenticação pelo OS ou SYSDBA como padrão embedded).
+    c = create_database(database=p)
     c.close()
-    c2 = connect(database=p, user='SYSDBA', password='masterkey')
+    c2 = connect(database=p)
     c2.close()
     print('=== EMBEDDED MODE OK ===')
 except Exception as e:

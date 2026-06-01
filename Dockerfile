@@ -68,15 +68,10 @@ print("rc:", r2.returncode)
 print("diag.fdb existe:", os.path.exists("/tmp/diag.fdb"))
 EOF
 
-# Config temporária com Trusted auth — sem security3.fdb — só para o teste de build.
-# AuthClient=Trusted deixa o engine embedded autenticar pelo usuário do OS,
-# sem precisar consultar security3.fdb (que não existe durante o docker build).
-RUN mkdir -p /tmp/fb-embedded && \
-    printf "Providers = Engine12\nPluginsDirectory = /usr/lib/x86_64-linux-gnu/firebird/3.0/plugins\nAuthClient = Trusted\nWireCrypt = Disabled\n" \
-    > /tmp/fb-embedded/firebird.conf
-
-# Teste obrigatório: falha o build se embedded mode não funcionar
-RUN FIREBIRD=/tmp/fb-embedded python3 docker_test_fb.py
+# Teste obrigatório: falha o build se embedded mode não funcionar.
+# Usa a config do sistema (FIREBIRD=/etc/firebird/3.0) sem credenciais explícitas,
+# mesmo comportamento do isql-fb que confirmamos funcionar no step de diagnóstico.
+RUN python3 docker_test_fb.py
 
 RUN mkdir -p uploads/avatars
 
