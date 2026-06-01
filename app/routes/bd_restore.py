@@ -279,29 +279,33 @@ def _fetch_produto(cursor) -> list[dict]:
 
 
 def _fetch_clientes(cursor) -> list[dict]:
-    """Todas as linhas da tabela CLIENTES do PAF Firebird com as colunas mapeadas.
-    Usa SELECT FIRST 0 para descobrir o schema, depois monta SELECT com CAST em BLOBs
-    (igual ao _stream_produto_cursor) para evitar erros de leitura lazy em fetchall.
-    Usa fetchmany para processar em lotes sem acumular tudo em memória de uma vez."""
-    wanted_upper_list = [c.upper() for c in _CLIENTES_COLS]
+    """Todas as linhas de CLIENTES com as colunas de _CLIENTES_COLS.
+    Usa SELECT * + filtro Python para tolerar esquemas PAF com colunas ausentes/extras.
+    _read_blob lê BLOBs texto (OBSERVACAO etc.) sem limite de tamanho — CAST AS VARCHAR(N)
+    falha com 'string right truncation' quando o texto excede N caracteres."""
+    wanted_upper = {c.upper() for c in _CLIENTES_COLS}
 
     for tbl in ('"CLIENTES"', "CLIENTES"):
         try:
-            cursor.execute(f"SELECT FIRST 0 * FROM {tbl}")
-            description = cursor.description
-            cols_sql, col_names = _build_cols_no_blob(description, wanted_upper_list)
-            if not cols_sql:
-                print(f"[BD-RESTORE] _fetch_clientes {tbl}: nenhuma coluna mapeada disponível")
+            cursor.execute(f"SELECT * FROM {tbl}")
+            desc = cursor.description
+            idx_map = [
+                (i, d[0].upper())
+                for i, d in enumerate(desc)
+                if d[0].upper() in wanted_upper
+            ]
+            if not idx_map:
+                print(f"[BD-RESTORE] _fetch_clientes {tbl}: nenhuma coluna mapeada")
                 continue
-            print(f"[BD-RESTORE] _fetch_clientes {tbl}: {len(description)} colunas totais, {len(col_names)} mapeadas")
-            cursor.execute(f"SELECT {cols_sql} FROM {tbl}")
+            print(f"[BD-RESTORE] _fetch_clientes {tbl}: {len(desc)} colunas totais, {len(idx_map)} mapeadas")
             rows: list[dict] = []
+            cursor.arraysize = 200
             while True:
-                batch = cursor.fetchmany(500)
+                batch = cursor.fetchmany(200)
                 if not batch:
                     break
                 for raw_row in batch:
-                    rows.append({col_names[i]: raw_row[i] for i in range(len(col_names))})
+                    rows.append({col: _read_blob(raw_row[i]) for i, col in idx_map})
             print(f"[BD-RESTORE] _fetch_clientes: {len(rows)} clientes carregados")
             return rows
         except Exception as e:
@@ -864,6 +868,7 @@ async def analisar(
             **resultado,
             "session_id": session_id,
             "clientes_orphaned_perfil": orphaned_perfil_ids,
+            "clientes_lidos": len(clientes_rows),
         }
 
     finally:

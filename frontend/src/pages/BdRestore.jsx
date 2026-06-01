@@ -266,7 +266,7 @@ function FirebirdContent({ state }) {
     file, dragging, setDragging, analisando, analise, gerando, geradoOk, erroGeral,
     fileRef, handleDrop, handleFileInput, removerArquivo, analisar, gerarBase,
     step1Done, step2Done, step2Locked, step3Locked,
-    orphanedPerfil,
+    orphanedPerfil, clientesLidos,
   } = state;
 
   return (
@@ -406,6 +406,19 @@ function FirebirdContent({ state }) {
                   No script gerado esses clientes terão <span className="font-semibold">ID_PERFIL = NULL</span> para evitar violação de chave estrangeira.
                 </p>
               </div>
+            </div>
+          </div>
+        )}
+
+        {clientesLidos === 0 && analise?.clientes > 0 && (
+          <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl">
+            <div className="flex items-start gap-2">
+              <svg className="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-xs font-semibold text-red-700">
+                Falha ao ler dados de CLIENTES — o SQL será gerado sem clientes. Verifique os logs do servidor.
+              </p>
             </div>
           </div>
         )}
@@ -703,6 +716,7 @@ export default function BdRestore() {
   const [geradoOk, setGeradoOk]           = useState(false);
   const [erroGeral, setErroGeral]         = useState(null);
   const [orphanedPerfil, setOrphanedPerfil] = useState([]);
+  const [clientesLidos, setClientesLidos]   = useState(null);
   const fileRef = useRef(null);
   const analysisGenRef = useRef(0);
 
@@ -739,6 +753,7 @@ export default function BdRestore() {
     setGeradoOk(false);
     setErroGeral(null);
     setOrphanedPerfil([]);
+    setClientesLidos(null);
     if (fileRef.current) fileRef.current.value = "";
   }
 
@@ -748,6 +763,7 @@ export default function BdRestore() {
     setAnalisando(true);
     setAnalise(null);
     setOrphanedPerfil([]);
+    setClientesLidos(null);
     setGeradoOk(false);
     setErroGeral(null);
     try {
@@ -755,9 +771,10 @@ export default function BdRestore() {
       form.append("arquivo", file);
       const { data } = await bdRestoreApi.analisar(form);
       if (analysisGenRef.current !== myGen) return;  // X foi clicado — descarta
-      const { session_id, clientes_orphaned_perfil, ...contagens } = data;
+      const { session_id, clientes_orphaned_perfil, clientes_lidos, ...contagens } = data;
       setSessionId(session_id || null);
       setOrphanedPerfil(clientes_orphaned_perfil || []);
+      setClientesLidos(clientes_lidos ?? null);
       setAnalise(contagens);
     } catch (err) {
       if (analysisGenRef.current !== myGen) return;  // X foi clicado — descarta
@@ -829,7 +846,7 @@ export default function BdRestore() {
     file, dragging, setDragging, analisando, analise, gerando, geradoOk, setGeradoOk,
     erroGeral, fileRef, handleDrop, handleFileInput, removerArquivo, analisar, gerarBase,
     step1Done, step2Done, step2Locked, step3Locked,
-    orphanedPerfil,
+    orphanedPerfil, clientesLidos,
   };
 
   return (
