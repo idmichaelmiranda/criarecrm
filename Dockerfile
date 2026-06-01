@@ -1,24 +1,33 @@
-# Firebird 2.5 está em Debian bullseye (não em bookworm).
-# O banco importado pelos usuários é ODS 11.2 (Firebird 2.5) — o servidor 3.0
-# rejeita ODS 11.2 com "found 11.2, support 12.2".
-FROM python:3.12-slim-bullseye
+# Ubuntu 20.04 tem firebird2.5-superclassic no universe.
+# Debian bullseye/bookworm nao tem mais o pacote 2.5.
+# Firebird 3.0 rejeita ODS 11.2 (banco Firebird 2.5): "found 11.2, support 12.2".
+FROM ubuntu:20.04
 
-RUN echo "firebird2.5-superclassic firebird2.5-superclassic/sysdba-password password masterkey" | debconf-set-selections && \
-    echo "firebird2.5-superclassic firebird2.5-superclassic/sysdba-password-again password masterkey" | debconf-set-selections && \
-    apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        software-properties-common ca-certificates curl \
+    && add-apt-repository -y ppa:deadsnakes/ppa \
+    && echo "firebird2.5-superclassic firebird2.5-superclassic/sysdba-password password masterkey" | debconf-set-selections \
+    && echo "firebird2.5-superclassic firebird2.5-superclassic/sysdba-password-again password masterkey" | debconf-set-selections \
+    && apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        python3.12 \
+        python3.12-distutils \
         firebird2.5-superclassic \
+    && curl -fsSL https://bootstrap.pypa.io/get-pip.py | python3.12 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN python3.12 -m pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Teste de build: verifica Firebird 2.5 embedded (isql-fb usa libfbembed, nao Engine12)
-RUN python3 docker_test_fb.py
+# Teste: isql-fb Firebird 2.5 em embedded (libfbembed — sem issues de Engine12/RTLD)
+RUN python3.12 docker_test_fb.py
 
 RUN mkdir -p uploads/avatars
 
