@@ -167,9 +167,16 @@ def _read_blob(val):
 
 def _build_cols_no_blob(description, wanted_upper: list[str]) -> tuple[str, list[str]]:
     """Monta a lista de colunas para SELECT evitando leitura lazy de BLOBs.
-    Colunas BLOB (internal_size == 0 ou None) recebem CAST(...AS VARCHAR(500))
-    para que o servidor Firebird retorne texto direto, sem round-trips por linha.
+    - BLOB texto (internal_size==0 e tipo STRING): CAST AS VARCHAR(500)
+    - BLOB binario (internal_size==0 e tipo BINARY): NULL — CAST falharia no Firebird
+    - Coluna normal: seleciona diretamente
     Retorna (cols_sql, col_names_upper)."""
+    try:
+        import firebirdsql as _fb_mod
+        _binary_type = _fb_mod.BINARY
+    except Exception:
+        _binary_type = None
+
     avail: dict[str, tuple] = {d[0].upper(): d for d in description}
     parts: list[str] = []
     names: list[str] = []
@@ -180,7 +187,10 @@ def _build_cols_no_blob(description, wanted_upper: list[str]) -> tuple[str, list
         internal_size = d[3]
         is_blob = (internal_size is None or internal_size == 0)
         if is_blob:
-            parts.append(f'CAST("{c}" AS VARCHAR(500))')
+            if _binary_type is not None and d[1] is _binary_type:
+                parts.append("NULL")          # BLOB binario — sem cast possivel
+            else:
+                parts.append(f'CAST("{c}" AS VARCHAR(500))')  # BLOB texto
         else:
             parts.append(f'"{c}"')
         names.append(c)
@@ -263,19 +273,23 @@ def _fetch_produto(cursor) -> list[dict]:
 
 def _fetch_clientes(cursor) -> list[dict]:
     """Todas as linhas da tabela CLIENTES do PAF Firebird com as colunas mapeadas.
-    BLOBs detectados via cursor.description recebem CAST AS VARCHAR para evitar
-    round-trips TCP por linha."""
+    Usa _read_blob() por celula — correto para qualquer tipo (VARCHAR, BLOB texto,
+    BLOB binario). Para ~300 clientes o overhead de lazy reads e aceitavel."""
     wanted_upper = [c.upper() for c in _CLIENTES_COLS]
 
     for tbl in ('"CLIENTES"', "CLIENTES"):
         try:
             cursor.execute(f"SELECT FIRST 0 * FROM {tbl}")
-            cols_sql, col_names = _build_cols_no_blob(cursor.description, wanted_upper)
+            avail = {d[0].upper() for d in cursor.description}
+            sel = [c for c in wanted_upper if c in avail]
+            if not sel:
+                continue
+            cols_sql = ", ".join(f'"{c}"' for c in sel)
             cursor.execute(f"SELECT {cols_sql} FROM {tbl}")
             cursor.arraysize = 5000
             rows: list[dict] = []
             for raw_row in cursor.fetchall():
-                rows.append({col_names[i]: raw_row[i] for i in range(len(col_names))})
+                rows.append({sel[i]: _read_blob(raw_row[i]) for i in range(len(sel))})
             return rows
         except Exception:
             continue
