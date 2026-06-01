@@ -208,10 +208,11 @@ def _fetch_produto(cursor) -> list[dict]:
                 # Descobre colunas disponiveis sem transferir dados (FIRST 0)
                 cursor.execute(f"SELECT FIRST 0 * FROM {tbl}")
                 avail = {d[0].upper() for d in cursor.description}
-                # Mantém a ordem original de _PRODUTO_FB_COLS + NOME_GRUPO
-                sel = [c for c in (_PRODUTO_FB_COLS + ["NOME_GRUPO"]) if c.upper() in avail]
+                # Usa UPPERCASE no SELECT — Firebird trata identificadores entre aspas
+                # como case-sensitive; as colunas reais estao em maiúsculas.
+                sel = [c.upper() for c in (_PRODUTO_FB_COLS + ["NOME_GRUPO"]) if c.upper() in avail]
                 if not sel:
-                    sel = list(avail)
+                    sel = sorted(avail)
 
                 cols_sql = ", ".join(f'"{c}"' for c in sel)
                 cursor.execute(f"SELECT {cols_sql} FROM {tbl}")
