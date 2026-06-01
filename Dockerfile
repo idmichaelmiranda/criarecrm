@@ -11,7 +11,7 @@ RUN echo "firebird3.0-server firebird3.0-server/sysdba-password password masterk
 # SUBSTITUI o firebird.conf inteiro — append não estava funcionando.
 # FIREBIRD env var faz libfbclient ler config de $FIREBIRD/firebird.conf.
 # PluginsDirectory absoluto aponta para onde o Debian instalou libEngine12.so.
-RUN printf "Providers = Engine12\nPluginsDirectory = /usr/lib/x86_64-linux-gnu/firebird/3.0/plugins\nSecurityDatabase = /var/lib/firebird/3.0/system/security3.fdb\nAuthServer = Legacy_Auth\nAuthClient = Legacy_Auth\nWireCrypt = Disabled\n" \
+RUN printf "Providers = Engine12\nPluginsDirectory = /usr/lib/x86_64-linux-gnu/firebird/3.0/plugins\nSecurityDatabase = /var/lib/firebird/3.0/system/security3.fdb\nAuthServer = Srp, Legacy_Auth\nAuthClient = Srp, Legacy_Auth\n" \
     > /etc/firebird/3.0/firebird.conf
 
 ENV FIREBIRD=/etc/firebird/3.0
@@ -30,8 +30,15 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# Config temporária com Trusted auth — sem security3.fdb — só para o teste de build.
+# AuthClient=Trusted deixa o engine embedded autenticar pelo usuário do OS,
+# sem precisar consultar security3.fdb (que não existe durante o docker build).
+RUN mkdir -p /tmp/fb-embedded && \
+    printf "Providers = Engine12\nPluginsDirectory = /usr/lib/x86_64-linux-gnu/firebird/3.0/plugins\nAuthClient = Trusted\nWireCrypt = Disabled\n" \
+    > /tmp/fb-embedded/firebird.conf
+
 # Teste obrigatório: falha o build se embedded mode não funcionar
-RUN python3 docker_test_fb.py
+RUN FIREBIRD=/tmp/fb-embedded python3 docker_test_fb.py
 
 RUN mkdir -p uploads/avatars
 
