@@ -766,7 +766,10 @@ async def analisar(
 
                 cursor.close()
             finally:
-                con.close()
+                try:
+                    con.close()
+                except Exception:
+                    pass  # _op_response inesperado ao fechar — dados ja foram buscados
 
             return resultado, empresas_data, cert_data, clientes_rows, perfil_cols, perfil_rows
 
@@ -969,7 +972,10 @@ async def gerar(
                     q.put(chunk)
                 cursor.close()
             finally:
-                con.close()
+                try:
+                    con.close()
+                except Exception:
+                    pass  # _op_response inesperado ao fechar — chunks ja enviados
         except Exception as e:
             print(f"[BD-RESTORE/gerar] Erro Firebird worker: {e}")
             q.put(f"\n-- ERRO ao processar Firebird: {e}\n".encode("utf-8"))
