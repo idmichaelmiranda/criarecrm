@@ -591,7 +591,7 @@ async def analisar(
                 database=tmp_path,
                 user="SYSDBA",
                 password="masterkey",
-                charset="NONE",
+                charset="WIN1252",
             )
         except Exception as e:
             import traceback
