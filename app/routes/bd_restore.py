@@ -805,15 +805,15 @@ async def analisar(
                 empresas_data            = _fetch_row(cursor, "EMPRESAS")
                 cert_data                = _fetch_row(cursor, "CERTIFICADO_DIGITAL")
 
-                # Conexão separada com charset=NONE para tolerar bytes inválidos em WIN1252.
-                # charset=NONE: Firebird envia bytes brutos sem conversão de charset.
-                # _fetch_clientes converte bytes→str via _decode_str (fallback latin-1).
+                # Conexão separada com charset=LATIN1 (iso-8859-1) para tolerar bytes
+                # inválidos em cp1252 (ex.: 0x81 indefinido no WIN1252).
+                # iso-8859-1 aceita todos os 256 bytes sem exceção.
                 con_cli = _fb.connect(
                     host="localhost",
                     database=path,
                     user="SYSDBA",
                     password="masterkey",
-                    charset="NONE",
+                    charset="LATIN1",
                     timeout=60,
                 )
                 try:
