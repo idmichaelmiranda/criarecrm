@@ -25,6 +25,10 @@ RUN curl -fsSL \
 RUN echo "/opt/firebird/lib" > /etc/ld.so.conf.d/firebird.conf && ldconfig
 ENV PATH="/opt/firebird/bin:$PATH"
 
+# Diagnostico: mostra o que o buildroot.tar.gz instalou
+RUN echo "=== /opt/firebird/bin ===" && ls /opt/firebird/bin/ 2>/dev/null || echo "AUSENTE" ; \
+    echo "=== isql* ===" && find /opt/firebird /usr/bin /usr/local/bin -name "isql*" 2>/dev/null || true
+
 WORKDIR /app
 
 COPY requirements.txt .
