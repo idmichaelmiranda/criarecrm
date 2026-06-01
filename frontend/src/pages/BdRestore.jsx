@@ -471,6 +471,15 @@ function FirebirdContent({ state }) {
           </div>
         )}
 
+        {erroGeral && !gerando && (
+          <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl mt-2">
+            <svg className="w-4 h-4 text-red-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-xs text-red-700">{erroGeral}</p>
+          </div>
+        )}
+
         {gerando && (
           <div className="flex items-center justify-center gap-3 py-8">
             <span className="w-5 h-5 rounded-full border-2 border-orange-300 border-t-orange-500 animate-spin" />
@@ -754,8 +763,9 @@ export default function BdRestore() {
   }
 
   async function gerarBase(ambiente) {
+    console.log("[BD-RESTORE] gerarBase chamado — sessionId:", sessionId, "ambiente:", ambiente);
     if (!sessionId) {
-      setErroGeral("Sessão expirada. Repita a análise no Passo 2.");
+      setErroGeral("Sessão expirada. Repita o Passo 2 (Analisar) antes de gerar.");
       return;
     }
     setGerando(true);
