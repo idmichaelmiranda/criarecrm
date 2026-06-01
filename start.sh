@@ -5,10 +5,10 @@ echo "[startup] Iniciando servidor Firebird 2.5..."
 start-stop-daemon --start --quiet \
     --chuid firebird:firebird \
     --background \
-    --exec /usr/sbin/fbguard -- -daemon 2>/dev/null || true
+    --exec /opt/firebird/bin/fbguard -- -daemon 2>/dev/null || true
 
 # Aguarda porta 3050 ficar disponivel (ate 30s)
-python3.12 - <<'PYEOF'
+python3 - <<'PYEOF'
 import socket, time, sys
 for i in range(30):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -22,4 +22,4 @@ for i in range(30):
 print('[startup] AVISO: Firebird nao respondeu em 30s')
 PYEOF
 
-exec python3.12 -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+exec python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000
