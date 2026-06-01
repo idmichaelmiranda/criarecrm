@@ -1,9 +1,7 @@
 #!/bin/bash
 mkdir -p uploads/avatars
 
-echo "[startup] Iniciando servidor Firebird..."
-
-# start-stop-daemon inicia fbguard como usuario 'firebird' (igual ao init.d do Debian)
+echo "[startup] Iniciando servidor Firebird 2.5..."
 start-stop-daemon --start --quiet \
     --chuid firebird:firebird \
     --background \
@@ -18,10 +16,10 @@ for i in range(30):
     ok = s.connect_ex(('127.0.0.1', 3050)) == 0
     s.close()
     if ok:
-        print(f'[startup] Firebird pronto ({i+1}s)')
+        print(f'[startup] Firebird 2.5 pronto ({i+1}s)')
         sys.exit(0)
     time.sleep(1)
-print('[startup] AVISO: Firebird nao respondeu em 30s — continuando sem ele')
+print('[startup] AVISO: Firebird nao respondeu em 30s')
 PYEOF
 
 exec uvicorn app.main:app --host 0.0.0.0 --port 8000

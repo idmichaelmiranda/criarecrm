@@ -1,27 +1,14 @@
-FROM python:3.12-slim
+# Firebird 2.5 está em Debian bullseye (não em bookworm).
+# O banco importado pelos usuários é ODS 11.2 (Firebird 2.5) — o servidor 3.0
+# rejeita ODS 11.2 com "found 11.2, support 12.2".
+FROM python:3.12-slim-bullseye
 
-RUN echo "firebird3.0-server firebird3.0-server/sysdba-password password masterkey" | debconf-set-selections && \
-    echo "firebird3.0-server firebird3.0-server/sysdba-password-again password masterkey" | debconf-set-selections && \
+RUN echo "firebird2.5-superclassic firebird2.5-superclassic/sysdba-password password masterkey" | debconf-set-selections && \
+    echo "firebird2.5-superclassic firebird2.5-superclassic/sysdba-password-again password masterkey" | debconf-set-selections && \
     apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        firebird3.0-server \
-        libfbclient2 \
+        firebird2.5-superclassic \
     && rm -rf /var/lib/apt/lists/*
-
-# SUBSTITUI o firebird.conf inteiro — append não estava funcionando.
-# FIREBIRD env var faz libfbclient ler config de $FIREBIRD/firebird.conf.
-# PluginsDirectory absoluto aponta para onde o Debian instalou libEngine12.so.
-RUN printf "Providers = Remote, Engine12\nPluginsDirectory = /usr/lib/x86_64-linux-gnu/firebird/3.0/plugins\nSecurityDatabase = /var/lib/firebird/3.0/system/security3.fdb\nAuthServer = Srp, Legacy_Auth\nAuthClient = Srp, Legacy_Auth\nDatabaseAccess = Full\nRemoteServicePort = 3050\n" \
-    > /etc/firebird/3.0/firebird.conf
-
-ENV FIREBIRD=/etc/firebird/3.0
-
-# Garante senha SYSDBA=masterkey no security3.fdb.
-# O postinst do apt falhou em mudar a senha porque o embedded não estava configurado ainda.
-# Agora com Engine12 + PluginsDirectory corretos, gsec consegue usar modo embedded.
-RUN FIREBIRD=/etc/firebird/3.0 gsec -user SYSDBA -password "" -modify SYSDBA -pw masterkey 2>&1 || \
-    FIREBIRD=/etc/firebird/3.0 gsec -user SYSDBA -password "masterkey" -modify SYSDBA -pw masterkey 2>&1 || \
-    echo "gsec: senha ja masterkey ou erro nao-critico"
 
 WORKDIR /app
 
@@ -30,48 +17,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Diagnóstico: ctypes para ver erro exato ao carregar Engine12 e isql-fb com verificação
-RUN python3 - <<'EOF'
-import ctypes, os, subprocess, sys
-
-print("=== libfbclient.so.2 ===")
-try:
-    ctypes.CDLL("libfbclient.so.2")
-    print("OK")
-except OSError as e:
-    print(f"FAILED: {e}")
-
-print("=== plugins dir (todos arquivos) ===")
-r_ls = subprocess.run(["ls", "-la", "/usr/lib/x86_64-linux-gnu/firebird/3.0/plugins/"],
-                      capture_output=True, text=True)
-print(r_ls.stdout or "DIR AUSENTE")
-
-engine = "/usr/lib/x86_64-linux-gnu/firebird/3.0/plugins/libEngine12.so"
-print(f"=== ctypes Engine12 ({engine}) ===")
-if os.path.exists(engine):
-    try:
-        ctypes.CDLL(engine)
-        print("OK")
-    except OSError as e:
-        print(f"FAILED: {e}")
-else:
-    print("arquivo nao existe")
-
-print("=== isql-fb CREATE DATABASE ===")
-r2 = subprocess.run(
-    ["isql-fb"],
-    input="CREATE DATABASE '/tmp/diag.fdb';\nQUIT;\n",
-    capture_output=True, text=True
-)
-print("stdout:", r2.stdout.strip())
-print("stderr:", r2.stderr.strip())
-print("rc:", r2.returncode)
-print("diag.fdb existe:", os.path.exists("/tmp/diag.fdb"))
-EOF
-
-# Teste obrigatório: falha o build se embedded mode não funcionar.
-# Usa a config do sistema (FIREBIRD=/etc/firebird/3.0) sem credenciais explícitas,
-# mesmo comportamento do isql-fb que confirmamos funcionar no step de diagnóstico.
+# Teste de build: verifica Firebird 2.5 embedded (isql-fb usa libfbembed, nao Engine12)
 RUN python3 docker_test_fb.py
 
 RUN mkdir -p uploads/avatars

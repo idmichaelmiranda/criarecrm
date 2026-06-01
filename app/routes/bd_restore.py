@@ -563,45 +563,35 @@ async def analisar(
             tmp_path = tmp.name
 
         try:
-            from firebird.driver import connect as _fb_connect  # type: ignore
+            import firebirdsql as _fb  # type: ignore
         except ImportError:
             raise HTTPException(
                 status_code=500,
-                detail="Biblioteca firebird-driver não instalada no servidor.",
+                detail="Biblioteca firebirdsql não instalada no servidor.",
             )
 
-        # Verifica conectividade com o servidor antes de tentar abrir o banco
+        # Verifica servidor antes de tentar
         import socket as _sock
-        try:
-            _s = _sock.socket(_sock.AF_INET, _sock.SOCK_STREAM)
-            _s.settimeout(3)
-            _result = _s.connect_ex(('127.0.0.1', 3050))
-            _s.close()
-            if _result != 0:
-                raise HTTPException(
-                    status_code=503,
-                    detail="Servidor Firebird não está acessível (porta 3050). "
-                           "Aguarde alguns segundos e tente novamente.",
-                )
-        except HTTPException:
-            raise
-        except Exception as _se:
+        _s = _sock.socket(_sock.AF_INET, _sock.SOCK_STREAM)
+        _s.settimeout(3)
+        _up = _s.connect_ex(('127.0.0.1', 3050)) == 0
+        _s.close()
+        if not _up:
             raise HTTPException(
                 status_code=503,
-                detail=f"Erro ao verificar servidor Firebird: {_se}",
+                detail="Servidor Firebird não acessível (porta 3050). Tente novamente em instantes.",
             )
 
         try:
-            # chmod 666: servidor Firebird roda como usuario 'firebird'.
-            # tempfile cria com 600 (owner root); servidor precisa ler E escrever
-            # (Firebird atualiza header/lock mesmo em queries de leitura).
+            # chmod 666: servidor roda como usuario 'firebird', precisa ler e
+            # escrever no arquivo (Firebird atualiza header/lock mesmo em leitura).
             os.chmod(tmp_path, 0o666)
-            con = _fb_connect(
-                database=f"localhost:{tmp_path}",  # TCP — 'localhost:path' parseado pela libfbclient
+            con = _fb.connect(
+                host="localhost",
+                database=tmp_path,
                 user="SYSDBA",
                 password="masterkey",
                 charset="NONE",
-                no_db_triggers=True,  # segurança com BDs legados (Firebird 2.5)
             )
         except Exception as e:
             import traceback
