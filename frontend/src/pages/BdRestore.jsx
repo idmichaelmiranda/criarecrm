@@ -704,6 +704,7 @@ export default function BdRestore() {
   const [erroGeral, setErroGeral]         = useState(null);
   const [orphanedPerfil, setOrphanedPerfil] = useState([]);
   const fileRef = useRef(null);
+  const analysisGenRef = useRef(0);
 
   function handleDrop(e) {
     e.preventDefault();
@@ -730,6 +731,8 @@ export default function BdRestore() {
   }
 
   function removerArquivo() {
+    analysisGenRef.current += 1;  // invalida qualquer análise em andamento
+    setAnalisando(false);
     setFile(null);
     setAnalise(null);
     setSessionId(null);
@@ -741,6 +744,7 @@ export default function BdRestore() {
 
   async function analisar() {
     if (!file) return;
+    const myGen = ++analysisGenRef.current;
     setAnalisando(true);
     setAnalise(null);
     setOrphanedPerfil([]);
@@ -750,15 +754,16 @@ export default function BdRestore() {
       const form = new FormData();
       form.append("arquivo", file);
       const { data } = await bdRestoreApi.analisar(form);
-      // Separa session_id dos dados de contagem
+      if (analysisGenRef.current !== myGen) return;  // X foi clicado — descarta
       const { session_id, clientes_orphaned_perfil, ...contagens } = data;
       setSessionId(session_id || null);
       setOrphanedPerfil(clientes_orphaned_perfil || []);
       setAnalise(contagens);
     } catch (err) {
+      if (analysisGenRef.current !== myGen) return;  // X foi clicado — descarta
       setErroGeral(err.message || "Erro ao analisar o arquivo");
     } finally {
-      setAnalisando(false);
+      if (analysisGenRef.current === myGen) setAnalisando(false);
     }
   }
 

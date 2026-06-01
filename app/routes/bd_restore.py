@@ -141,7 +141,7 @@ def _contar_registros(cursor, tabela: str) -> int | None:
     return None
 
 
-def _contar_distintos_produto(cursor) -> int | None:
+def _contar_distintos_produto(cursor, con=None) -> int | None:
     for col in _PRODUTO_PK_CANDIDATES:
         for sql in (
             f'SELECT COUNT(DISTINCT "{col}") FROM "PRODUTO"',
@@ -151,6 +151,13 @@ def _contar_distintos_produto(cursor) -> int | None:
                 cursor.execute(sql)
                 return cursor.fetchone()[0]
             except Exception:
+                # Rollback apos falha — queries com coluna inexistente deixam
+                # a transacao Firebird em estado que bloqueia proximas queries
+                if con is not None:
+                    try:
+                        con.rollback()
+                    except Exception:
+                        pass
                 continue
     return None
 
@@ -273,29 +280,34 @@ def _fetch_produto(cursor) -> list[dict]:
 
 def _fetch_clientes(cursor) -> list[dict]:
     """Todas as linhas da tabela CLIENTES do PAF Firebird com as colunas mapeadas.
-    Usa SELECT * para evitar erros de 'Column unknown' em databases PAF com
-    esquemas diferentes (colunas novas ausentes em versoes antigas).
-    Filtra em Python apenas as colunas de _CLIENTES_COLS que existirem."""
-    wanted_upper = {c.upper() for c in _CLIENTES_COLS}
+    Usa SELECT FIRST 0 para descobrir o schema, depois monta SELECT com CAST em BLOBs
+    (igual ao _stream_produto_cursor) para evitar erros de leitura lazy em fetchall.
+    Usa fetchmany para processar em lotes sem acumular tudo em memória de uma vez."""
+    wanted_upper_list = [c.upper() for c in _CLIENTES_COLS]
 
     for tbl in ('"CLIENTES"', "CLIENTES"):
         try:
-            cursor.execute(f"SELECT * FROM {tbl}")
-            desc = cursor.description
-            # Mapeia posicao → nome para as colunas que nos interessam
-            wanted_idx = [
-                (i, d[0].upper())
-                for i, d in enumerate(desc)
-                if d[0].upper() in wanted_upper
-            ]
-            print(f"[BD-RESTORE] _fetch_clientes {tbl}: {len(desc)} colunas totais, {len(wanted_idx)} mapeadas")
+            cursor.execute(f"SELECT FIRST 0 * FROM {tbl}")
+            description = cursor.description
+            cols_sql, col_names = _build_cols_no_blob(description, wanted_upper_list)
+            if not cols_sql:
+                print(f"[BD-RESTORE] _fetch_clientes {tbl}: nenhuma coluna mapeada disponível")
+                continue
+            print(f"[BD-RESTORE] _fetch_clientes {tbl}: {len(description)} colunas totais, {len(col_names)} mapeadas")
+            cursor.execute(f"SELECT {cols_sql} FROM {tbl}")
             rows: list[dict] = []
-            for raw_row in cursor.fetchall():
-                rows.append({col: _read_blob(raw_row[i]) for i, col in wanted_idx})
+            while True:
+                batch = cursor.fetchmany(500)
+                if not batch:
+                    break
+                for raw_row in batch:
+                    rows.append({col_names[i]: raw_row[i] for i in range(len(col_names))})
             print(f"[BD-RESTORE] _fetch_clientes: {len(rows)} clientes carregados")
             return rows
         except Exception as e:
+            import traceback as _tb
             print(f"[BD-RESTORE] _fetch_clientes erro em {tbl}: {e}")
+            print(_tb.format_exc())
             continue
     return []
 
@@ -772,14 +784,31 @@ async def analisar(
                 if total_produto is not None:
                     resultado["produto"] = {
                         "total": total_produto,
-                        "distintos": _contar_distintos_produto(cursor),
+                        # passa con para rollback apos falhas de coluna inexistente
+                        "distintos": _contar_distintos_produto(cursor, con),
                     }
 
                 # Produto NAO e buscado aqui — tabela grande (10k-100k linhas).
                 # O arquivo temp sobrevive na sessao; /gerar busca os dados la.
                 empresas_data            = _fetch_row(cursor, "EMPRESAS")
                 cert_data                = _fetch_row(cursor, "CERTIFICADO_DIGITAL")
-                clientes_rows            = _fetch_clientes(cursor)
+
+                # Reset da transacao antes dos clientes — _contar_distintos_produto
+                # pode ter feito rollbacks que deixam o estado da conexao inconsistente
+                try:
+                    con.rollback()
+                except Exception:
+                    pass
+
+                cursor_cli = con.cursor()
+                try:
+                    clientes_rows = _fetch_clientes(cursor_cli)
+                finally:
+                    try:
+                        cursor_cli.close()
+                    except Exception:
+                        pass
+
                 perfil_cols, perfil_rows = _fetch_all_generic(cursor, "PERFILCLIENTES")
 
                 cursor.close()
