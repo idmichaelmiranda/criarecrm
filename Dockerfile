@@ -31,26 +31,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Teste obrigatório: falha o build se embedded mode não funcionar
-# Garante que o deploy não vai com configuração quebrada
-RUN python3 -c "
-import os, tempfile
-from firebird.driver import connect
-
-path = tempfile.mktemp(suffix='.fdb')
-try:
-    from firebird.driver import create_database
-    con = create_database(f\"create database '{path}' page_size 8192\")
-    con.close()
-    con2 = connect(database=path, user='SYSDBA', password='masterkey')
-    con2.close()
-    print('=== EMBEDDED MODE OK ===')
-except Exception as e:
-    print(f'=== EMBEDDED MODE FAILED: {e} ===')
-    raise SystemExit(1)
-finally:
-    try: os.unlink(path)
-    except: pass
-"
+RUN python3 docker_test_fb.py
 
 RUN mkdir -p uploads/avatars
 
