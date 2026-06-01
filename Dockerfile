@@ -18,9 +18,7 @@ RUN groupadd --system --gid 84 firebird 2>/dev/null || true && \
 RUN curl -fsSL \
     "https://github.com/FirebirdSQL/firebird/releases/download/R2_5_9/FirebirdCS-2.5.9.27139-0.amd64.tar.gz" \
     | tar -xz -C /tmp && \
-    cd /tmp/FirebirdCS-2.5.9.27139-0.amd64 && \
-    printf 'masterkey\nmasterkey\n' | bash install.sh -silent 2>&1 && \
-    test -x /opt/firebird/bin/isql-fb && \
+    tar -xzf /tmp/FirebirdCS-2.5.9.27139-0.amd64/buildroot.tar.gz -C / && \
     rm -rf /tmp/FirebirdCS-2.5.9.27139-0.amd64
 
 # Registra libs do Firebird para o linker e adiciona binarios ao PATH
