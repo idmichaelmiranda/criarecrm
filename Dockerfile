@@ -30,6 +30,18 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# Diagnóstico: verifica plugins, dependências e config antes do teste
+RUN echo "=== plugins dir ===" && \
+    ls -la /usr/lib/x86_64-linux-gnu/firebird/3.0/plugins/ 2>&1 || echo "DIR AUSENTE" && \
+    echo "=== ldd Engine12 ===" && \
+    ldd /usr/lib/x86_64-linux-gnu/firebird/3.0/plugins/libEngine12.so 2>&1 || echo "ENGINE12 AUSENTE/QUEBRADO" && \
+    echo "=== security3.fdb ===" && \
+    ls -la /var/lib/firebird/3.0/system/ 2>&1 || echo "SYSTEM DIR AUSENTE" && \
+    echo "=== ldconfig firebird ===" && \
+    ldconfig -p 2>/dev/null | grep -i firebird || echo "nenhuma lib firebird no cache" && \
+    echo "=== isql-fb embedded test ===" && \
+    printf "CREATE DATABASE '/tmp/diag.fdb';\nQUIT;\n" | isql-fb 2>&1 || true
+
 # Config temporária com Trusted auth — sem security3.fdb — só para o teste de build.
 # AuthClient=Trusted deixa o engine embedded autenticar pelo usuário do OS,
 # sem precisar consultar security3.fdb (que não existe durante o docker build).
