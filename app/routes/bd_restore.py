@@ -280,9 +280,9 @@ def _fetch_produto(cursor) -> list[dict]:
 
 def _fetch_clientes(cursor) -> list[dict]:
     """Todas as linhas de CLIENTES com as colunas de _CLIENTES_COLS.
-    Usa SELECT * + filtro Python para tolerar esquemas PAF com colunas ausentes/extras.
-    _read_blob lê BLOBs texto (OBSERVACAO etc.) sem limite de tamanho — CAST AS VARCHAR(N)
-    falha com 'string right truncation' quando o texto excede N caracteres."""
+    Requer conexão aberta com charset=NONE (bytes brutos) para tolerar bancos PAF
+    com bytes inválidos em WIN1252 (ex.: 0x81 que o cp1252 não aceita).
+    Converte bytes→str via _decode_str (UTF-8 → CP1252 → latin-1 fallback)."""
     wanted_upper = {c.upper() for c in _CLIENTES_COLS}
 
     for tbl in ('"CLIENTES"', "CLIENTES"):
@@ -305,7 +305,15 @@ def _fetch_clientes(cursor) -> list[dict]:
                 if not batch:
                     break
                 for raw_row in batch:
-                    rows.append({col: _read_blob(raw_row[i]) for i, col in idx_map})
+                    row: dict = {}
+                    for i, col in idx_map:
+                        v = _read_blob(raw_row[i])
+                        # charset=NONE retorna bytes para VARCHAR/CHAR/BLOB texto.
+                        # _decode_str converte com fallback latin-1 (aceita 0x00-0xFF).
+                        if isinstance(v, (bytes, bytearray)):
+                            v = _decode_str(v)
+                        row[col] = v
+                    rows.append(row)
             print(f"[BD-RESTORE] _fetch_clientes: {len(rows)} clientes carregados")
             return rows
         except Exception as e:
@@ -797,19 +805,27 @@ async def analisar(
                 empresas_data            = _fetch_row(cursor, "EMPRESAS")
                 cert_data                = _fetch_row(cursor, "CERTIFICADO_DIGITAL")
 
-                # Reset da transacao antes dos clientes — _contar_distintos_produto
-                # pode ter feito rollbacks que deixam o estado da conexao inconsistente
+                # Conexão separada com charset=NONE para tolerar bytes inválidos em WIN1252.
+                # charset=NONE: Firebird envia bytes brutos sem conversão de charset.
+                # _fetch_clientes converte bytes→str via _decode_str (fallback latin-1).
+                con_cli = _fb.connect(
+                    host="localhost",
+                    database=path,
+                    user="SYSDBA",
+                    password="masterkey",
+                    charset="NONE",
+                    timeout=60,
+                )
                 try:
-                    con.rollback()
-                except Exception:
-                    pass
-
-                cursor_cli = con.cursor()
-                try:
+                    cursor_cli = con_cli.cursor()
                     clientes_rows = _fetch_clientes(cursor_cli)
-                finally:
                     try:
                         cursor_cli.close()
+                    except Exception:
+                        pass
+                finally:
+                    try:
+                        con_cli.close()
                     except Exception:
                         pass
 
