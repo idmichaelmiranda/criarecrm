@@ -830,7 +830,9 @@ async def gerar(
     req: GerarRequest,
     _: Usuario = Depends(require_permission("configuracoes.edit")),
 ):
+    print(f"[BD-RESTORE/gerar] session_id={req.session_id} ambiente={req.ambiente} sessions_ativas={list(_sessions.keys())[:5]}")
     if req.session_id not in _sessions:
+        print(f"[BD-RESTORE/gerar] SESSAO NAO ENCONTRADA — sessoes ativas: {len(_sessions)}")
         raise HTTPException(
             status_code=400,
             detail="Sessão inválida ou expirada. Repita a análise no Passo 2.",

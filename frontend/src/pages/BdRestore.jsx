@@ -777,7 +777,16 @@ export default function BdRestore() {
       window.URL.revokeObjectURL(url);
       setGeradoOk(true);
     } catch (err) {
-      setErroGeral(err.message || "Erro ao gerar base de dados");
+      // Com responseType:"blob", erros do servidor chegam como Blob — ler como texto
+      let msg = err.message || "Erro ao gerar base de dados";
+      try {
+        if (err.response?.data instanceof Blob) {
+          const text = await err.response.data.text();
+          const parsed = JSON.parse(text);
+          msg = parsed.detail || text || msg;
+        }
+      } catch (_) {}
+      setErroGeral(msg);
     } finally {
       setGerando(false);
     }
