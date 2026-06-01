@@ -575,8 +575,7 @@ async def analisar(
             # tempfile cria com 600 (só root); sem permissão de leitura o servidor recusa.
             os.chmod(tmp_path, 0o644)
             con = _fb_connect(
-                host="localhost",    # TCP ao servidor local — embedded falha nesse ambiente
-                database=tmp_path,
+                database=f"localhost:{tmp_path}",  # DSN TCP — embedded falha nesse ambiente
                 user="SYSDBA",
                 password="masterkey",
                 charset="NONE",
