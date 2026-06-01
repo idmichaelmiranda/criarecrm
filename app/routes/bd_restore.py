@@ -195,14 +195,26 @@ def _fetch_all_generic(cursor, tabela: str) -> tuple[list[str], list[dict]]:
 
 
 def _fetch_produto(cursor) -> list[dict]:
-    """Lê produto_conv (fallback: produto) do PAF Firebird via SELECT *.
-    Usar SELECT * evita falha silenciosa quando colunas específicas não existem.
-    Deduplica por id_produto em Python — múltiplos códigos de barras por produto.
-    nome_grupo é capturado aqui e usado depois para popular a tabela grupo."""
+    """Lê produto_conv (fallback: produto) do PAF Firebird.
+    Seleciona SOMENTE as colunas necessarias para evitar transferir BLOBs grandes
+    (IMAGEM, FOTO, etc.) que nao sao usados na geracao SQL.
+    Deduplica por id_produto em Python — multiplos codigos de barras por produto.
+    nome_grupo e capturado aqui e usado depois para popular a tabela grupo."""
+    _needed_upper = {c.upper() for c in _PRODUTO_FB_COLS} | {"NOME_GRUPO"}
+
     for tabela in ("produto_conv", "PRODUTO_CONV", "produto", "PRODUTO"):
-        for sql in (f'SELECT * FROM "{tabela}"', f"SELECT * FROM {tabela}"):
+        for tbl in (f'"{tabela}"', tabela):
             try:
-                cursor.execute(sql)
+                # Descobre colunas disponiveis sem transferir dados (FIRST 0)
+                cursor.execute(f"SELECT FIRST 0 * FROM {tbl}")
+                avail = {d[0].upper() for d in cursor.description}
+                # Mantém a ordem original de _PRODUTO_FB_COLS + NOME_GRUPO
+                sel = [c for c in (_PRODUTO_FB_COLS + ["NOME_GRUPO"]) if c.upper() in avail]
+                if not sel:
+                    sel = list(avail)
+
+                cols_sql = ", ".join(f'"{c}"' for c in sel)
+                cursor.execute(f"SELECT {cols_sql} FROM {tbl}")
                 desc = cursor.description
                 col_names = [d[0].upper() for d in desc]
                 seen_ids: set = set()
@@ -582,17 +594,49 @@ async def analisar(
                 detail="Servidor Firebird não acessível (porta 3050). Tente novamente em instantes.",
             )
 
-        try:
-            # chmod 666: servidor roda como usuario 'firebird', precisa ler e
-            # escrever no arquivo (Firebird atualiza header/lock mesmo em leitura).
-            os.chmod(tmp_path, 0o666)
+        import asyncio as _asyncio
+
+        def _executar_no_firebird(path: str):
+            os.chmod(path, 0o666)
             con = _fb.connect(
                 host="localhost",
-                database=tmp_path,
+                database=path,
                 user="SYSDBA",
                 password="masterkey",
                 charset="WIN1252",
+                timeout=60,
             )
+            try:
+                cursor = con.cursor()
+
+                resultado: dict = {}
+                for key, tabela in TABELAS.items():
+                    resultado[key] = _contar_registros(cursor, tabela)
+
+                total_produto = resultado.get("produto")
+                if total_produto is not None:
+                    resultado["produto"] = {
+                        "total": total_produto,
+                        "distintos": _contar_distintos_produto(cursor),
+                    }
+
+                empresas_data            = _fetch_row(cursor, "EMPRESAS")
+                cert_data                = _fetch_row(cursor, "CERTIFICADO_DIGITAL")
+                clientes_rows            = _fetch_clientes(cursor)
+                perfil_cols, perfil_rows = _fetch_all_generic(cursor, "PERFILCLIENTES")
+                produto_rows             = _fetch_produto(cursor)
+
+                cursor.close()
+            finally:
+                con.close()
+
+            return resultado, empresas_data, cert_data, clientes_rows, perfil_cols, perfil_rows, produto_rows
+
+        try:
+            (
+                resultado, empresas_data, cert_data,
+                clientes_rows, perfil_cols, perfil_rows, produto_rows,
+            ) = await _asyncio.to_thread(_executar_no_firebird, tmp_path)
         except Exception as e:
             import traceback
             print(f"[BD-RESTORE] Erro ao conectar Firebird: {e}")
@@ -601,32 +645,6 @@ async def analisar(
                 status_code=422,
                 detail=f"Não foi possível abrir o banco Firebird. Detalhe: {e}",
             )
-
-        try:
-            cursor = con.cursor()
-
-            # ── Contagens por tabela ──────────────────────────────────────────
-            resultado: dict = {}
-            for key, tabela in TABELAS.items():
-                resultado[key] = _contar_registros(cursor, tabela)
-
-            total_produto = resultado.get("produto")
-            if total_produto is not None:
-                resultado["produto"] = {
-                    "total": total_produto,
-                    "distintos": _contar_distintos_produto(cursor),
-                }
-
-            # ── Dados completos para Passo 3 ──────────────────────────────────
-            empresas_data            = _fetch_row(cursor, "EMPRESAS")
-            cert_data                = _fetch_row(cursor, "CERTIFICADO_DIGITAL")
-            clientes_rows            = _fetch_clientes(cursor)
-            perfil_cols, perfil_rows = _fetch_all_generic(cursor, "PERFILCLIENTES")
-            produto_rows             = _fetch_produto(cursor)
-
-            cursor.close()
-        finally:
-            con.close()
 
         # Diagnóstico: ID_PERFIL em CLIENTES sem correspondente em PERFILCLIENTES
         valid_perfil_set = {
