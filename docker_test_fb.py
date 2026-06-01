@@ -1,30 +1,16 @@
-import subprocess, os, sys, tempfile, glob
+import subprocess, os, sys, tempfile
 
-# isql-fb pode ter nome diferente dependendo de como o buildroot foi montado.
-# install.sh normalmente cria o symlink isql-fb; sem ele, o binario pode ser 'isql'.
-candidates = [
-    '/opt/firebird/bin/isql-fb',
-    '/opt/firebird/bin/isql',
-    '/usr/bin/isql-fb',
-    '/usr/local/bin/isql-fb',
-]
+# buildroot.tar.gz instala o binario como 'isql' (sem sufixo -fb).
+# install.sh cria o symlink /usr/bin/isql-fb, mas nao rodamos install.sh.
+ISQL = '/opt/firebird/bin/isql'
 
-isql_cmd = None
-for c in candidates:
-    if os.path.isfile(c) and os.access(c, os.X_OK):
-        isql_cmd = c
-        break
-
-if isql_cmd is None:
-    print('=== isql-fb NAO ENCONTRADO ===')
-    print('Conteudo de /opt/firebird/bin/:')
-    for f in sorted(glob.glob('/opt/firebird/bin/*')):
-        print(' ', f)
+if not os.path.isfile(ISQL):
+    print(f'=== FALHOU: {ISQL} nao encontrado ===')
     sys.exit(1)
 
 p = tempfile.mktemp(suffix='.fdb')
 sql = f"CREATE DATABASE '{p}';\nQUIT;\n"
-r = subprocess.run([isql_cmd], input=sql, capture_output=True, text=True)
+r = subprocess.run([ISQL], input=sql, capture_output=True, text=True)
 
 success = r.returncode == 0 and os.path.exists(p)
 if os.path.exists(p):
@@ -34,7 +20,7 @@ if os.path.exists(p):
         pass
 
 if success:
-    print(f'=== EMBEDDED MODE OK (Firebird 2.5) via {isql_cmd} ===')
+    print('=== EMBEDDED MODE OK (Firebird 2.5) ===')
 else:
     print(f'=== EMBEDDED FAILED === rc={r.returncode}')
     print(f'stdout: {r.stdout!r}')

@@ -2,7 +2,7 @@ FROM python:3.12-slim
 
 # Dependencias de runtime para Firebird 2.5 no Debian
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        libstdc++6 curl adduser \
+        libstdc++6 curl adduser libncurses6 libtinfo6 \
     && rm -rf /var/lib/apt/lists/*
 
 # Cria usuario/grupo firebird para o servidor
@@ -21,13 +21,13 @@ RUN curl -fsSL \
     tar -xzf /tmp/FirebirdCS-2.5.9.27139-0.amd64/buildroot.tar.gz -C / && \
     rm -rf /tmp/FirebirdCS-2.5.9.27139-0.amd64
 
-# Registra libs do Firebird para o linker e adiciona binarios ao PATH
-RUN echo "/opt/firebird/lib" > /etc/ld.so.conf.d/firebird.conf && ldconfig
+# Registra libs do Firebird para o linker e adiciona binarios ao PATH.
+# libncurses.so.5 foi removido no Debian Bookworm; symlink para .so.6 satisfaz isql/gsec.
+RUN echo "/opt/firebird/lib" > /etc/ld.so.conf.d/firebird.conf && \
+    ln -sf /usr/lib/x86_64-linux-gnu/libncurses.so.6 /usr/lib/x86_64-linux-gnu/libncurses.so.5 && \
+    ln -sf /usr/lib/x86_64-linux-gnu/libtinfo.so.6   /usr/lib/x86_64-linux-gnu/libtinfo.so.5   && \
+    ldconfig
 ENV PATH="/opt/firebird/bin:$PATH"
-
-# Diagnostico: mostra o que o buildroot.tar.gz instalou
-RUN echo "=== /opt/firebird/bin ===" && ls /opt/firebird/bin/ 2>/dev/null || echo "AUSENTE" ; \
-    echo "=== isql* ===" && find /opt/firebird /usr/bin /usr/local/bin -name "isql*" 2>/dev/null || true
 
 WORKDIR /app
 
