@@ -30,17 +30,43 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Diagnóstico: verifica plugins, dependências e config antes do teste
-RUN echo "=== plugins dir ===" && \
-    ls -la /usr/lib/x86_64-linux-gnu/firebird/3.0/plugins/ 2>&1 || echo "DIR AUSENTE" && \
-    echo "=== ldd Engine12 ===" && \
-    ldd /usr/lib/x86_64-linux-gnu/firebird/3.0/plugins/libEngine12.so 2>&1 || echo "ENGINE12 AUSENTE/QUEBRADO" && \
-    echo "=== security3.fdb ===" && \
-    ls -la /var/lib/firebird/3.0/system/ 2>&1 || echo "SYSTEM DIR AUSENTE" && \
-    echo "=== ldconfig firebird ===" && \
-    ldconfig -p 2>/dev/null | grep -i firebird || echo "nenhuma lib firebird no cache" && \
-    echo "=== isql-fb embedded test ===" && \
-    printf "CREATE DATABASE '/tmp/diag.fdb';\nQUIT;\n" | isql-fb 2>&1 || true
+# Diagnóstico: ctypes para ver erro exato ao carregar Engine12 e isql-fb com verificação
+RUN python3 - <<'EOF'
+import ctypes, os, subprocess, sys
+
+print("=== libfbclient.so.2 ===")
+try:
+    ctypes.CDLL("libfbclient.so.2")
+    print("OK")
+except OSError as e:
+    print(f"FAILED: {e}")
+
+print("=== find libEngine12.so ===")
+r = subprocess.run(["find", "/usr", "-name", "libEngine12.so"], capture_output=True, text=True)
+print(r.stdout.strip() or "NAO ENCONTRADO")
+
+engine = "/usr/lib/x86_64-linux-gnu/firebird/3.0/plugins/libEngine12.so"
+print(f"=== ctypes Engine12 ({engine}) ===")
+if os.path.exists(engine):
+    try:
+        ctypes.CDLL(engine)
+        print("OK")
+    except OSError as e:
+        print(f"FAILED: {e}")
+else:
+    print("arquivo nao existe")
+
+print("=== isql-fb CREATE DATABASE ===")
+r2 = subprocess.run(
+    ["isql-fb"],
+    input="CREATE DATABASE '/tmp/diag.fdb';\nQUIT;\n",
+    capture_output=True, text=True
+)
+print("stdout:", r2.stdout.strip())
+print("stderr:", r2.stderr.strip())
+print("rc:", r2.returncode)
+print("diag.fdb existe:", os.path.exists("/tmp/diag.fdb"))
+EOF
 
 # Config temporária com Trusted auth — sem security3.fdb — só para o teste de build.
 # AuthClient=Trusted deixa o engine embedded autenticar pelo usuário do OS,
