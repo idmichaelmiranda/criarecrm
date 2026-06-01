@@ -165,6 +165,28 @@ def _read_blob(val):
     return val
 
 
+def _build_cols_no_blob(description, wanted_upper: list[str]) -> tuple[str, list[str]]:
+    """Monta a lista de colunas para SELECT evitando leitura lazy de BLOBs.
+    Colunas BLOB (internal_size == 0 ou None) recebem CAST(...AS VARCHAR(500))
+    para que o servidor Firebird retorne texto direto, sem round-trips por linha.
+    Retorna (cols_sql, col_names_upper)."""
+    avail: dict[str, tuple] = {d[0].upper(): d for d in description}
+    parts: list[str] = []
+    names: list[str] = []
+    for c in wanted_upper:
+        if c not in avail:
+            continue
+        d = avail[c]
+        internal_size = d[3]
+        is_blob = (internal_size is None or internal_size == 0)
+        if is_blob:
+            parts.append(f'CAST("{c}" AS VARCHAR(500))')
+        else:
+            parts.append(f'"{c}"')
+        names.append(c)
+    return ", ".join(parts), names
+
+
 def _fetch_row(cursor, tabela: str) -> dict:
     """Primeira linha de uma tabela como dict com chaves em MAIÚSCULAS."""
     for sql in (f'SELECT * FROM "{tabela}"', f"SELECT * FROM {tabela}"):
@@ -240,23 +262,20 @@ def _fetch_produto(cursor) -> list[dict]:
 
 
 def _fetch_clientes(cursor) -> list[dict]:
-    """Todas as linhas da tabela CLIENTES do PAF Firebird com as colunas mapeadas."""
-    cols_quoted = ", ".join(f'"{c}"' for c in _CLIENTES_COLS)
-    cols_plain  = ", ".join(_CLIENTES_COLS)
+    """Todas as linhas da tabela CLIENTES do PAF Firebird com as colunas mapeadas.
+    BLOBs detectados via cursor.description recebem CAST AS VARCHAR para evitar
+    round-trips TCP por linha."""
+    wanted_upper = [c.upper() for c in _CLIENTES_COLS]
 
-    for sql in (
-        f'SELECT {cols_quoted} FROM "CLIENTES"',
-        f"SELECT {cols_plain} FROM CLIENTES",
-    ):
+    for tbl in ('"CLIENTES"', "CLIENTES"):
         try:
-            cursor.execute(sql)
-            desc = cursor.description
+            cursor.execute(f"SELECT FIRST 0 * FROM {tbl}")
+            cols_sql, col_names = _build_cols_no_blob(cursor.description, wanted_upper)
+            cursor.execute(f"SELECT {cols_sql} FROM {tbl}")
+            cursor.arraysize = 5000
             rows: list[dict] = []
             for raw_row in cursor.fetchall():
-                rows.append({
-                    desc[i][0].upper(): _read_blob(raw_row[i])
-                    for i in range(len(desc))
-                })
+                rows.append({col_names[i]: raw_row[i] for i in range(len(col_names))})
             return rows
         except Exception:
             continue
@@ -475,14 +494,15 @@ def _stream_produto_cursor(cursor):
         for tbl in (f'"{tabela}"', tabela):
             try:
                 cursor.execute(f"SELECT FIRST 0 * FROM {tbl}")
-                avail = {d[0].upper() for d in cursor.description}
-                sel = [c for c in _fb_cols_upper if c in avail]
-                if not sel:
+                avail_upper = {d[0].upper() for d in cursor.description}
+                wanted = [c for c in _fb_cols_upper if c in avail_upper]
+                if not wanted:
                     continue
-                cols_sql = ", ".join(f'"{c}"' for c in sel)
+                # CAST em BLOBs: evita round-trip TCP por linha para leitura lazy
+                cols_sql, col_names = _build_cols_no_blob(cursor.description, wanted)
                 cursor.execute(f"SELECT {cols_sql} FROM {tbl}")
-                desc = cursor.description
-                col_names = [d[0].upper() for d in desc]
+                # arraysize maior = menos round-trips de prefetch com firebirdsql
+                cursor.arraysize = 5000
 
                 yield (
                     "\n\n-- ============================================================\n"
@@ -495,7 +515,7 @@ def _stream_produto_cursor(cursor):
                 total = 0
 
                 while True:
-                    raw_rows = cursor.fetchmany(500)
+                    raw_rows = cursor.fetchmany(5000)
                     if not raw_rows:
                         break
                     batch: list[dict] = []
