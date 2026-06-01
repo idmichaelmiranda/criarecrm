@@ -41,9 +41,10 @@ try:
 except OSError as e:
     print(f"FAILED: {e}")
 
-print("=== find libEngine12.so ===")
-r = subprocess.run(["find", "/usr", "-name", "libEngine12.so"], capture_output=True, text=True)
-print(r.stdout.strip() or "NAO ENCONTRADO")
+print("=== plugins dir (todos arquivos) ===")
+r_ls = subprocess.run(["ls", "-la", "/usr/lib/x86_64-linux-gnu/firebird/3.0/plugins/"],
+                      capture_output=True, text=True)
+print(r_ls.stdout or "DIR AUSENTE")
 
 engine = "/usr/lib/x86_64-linux-gnu/firebird/3.0/plugins/libEngine12.so"
 print(f"=== ctypes Engine12 ({engine}) ===")
