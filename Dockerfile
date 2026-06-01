@@ -16,6 +16,13 @@ RUN printf "Providers = Engine12\nPluginsDirectory = /usr/lib/x86_64-linux-gnu/f
 
 ENV FIREBIRD=/etc/firebird/3.0
 
+# Garante senha SYSDBA=masterkey no security3.fdb.
+# O postinst do apt falhou em mudar a senha porque o embedded não estava configurado ainda.
+# Agora com Engine12 + PluginsDirectory corretos, gsec consegue usar modo embedded.
+RUN FIREBIRD=/etc/firebird/3.0 gsec -user SYSDBA -password "" -modify SYSDBA -pw masterkey 2>&1 || \
+    FIREBIRD=/etc/firebird/3.0 gsec -user SYSDBA -password "masterkey" -modify SYSDBA -pw masterkey 2>&1 || \
+    echo "gsec: senha ja masterkey ou erro nao-critico"
+
 WORKDIR /app
 
 COPY requirements.txt .
