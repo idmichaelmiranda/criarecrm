@@ -695,12 +695,6 @@ async def gerar(
             detail="Sessão inválida ou expirada. Repita a análise no Passo 2.",
         )
 
-    if not BASE_SQL_PATH.exists():
-        raise HTTPException(
-            status_code=500,
-            detail="base_zerada.sql não encontrado. Configure em Configurações → Base Zerada.",
-        )
-
     session   = _sessions[req.session_id]
     emp: dict        = session["empresas"]
     cert: dict       = session["certificado"]
