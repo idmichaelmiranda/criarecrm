@@ -19,11 +19,13 @@ RUN curl -fsSL \
     "https://github.com/FirebirdSQL/firebird/releases/download/R2_5_9/FirebirdCS-2.5.9.27139-0.amd64.tar.gz" \
     | tar -xz -C /tmp && \
     cd /tmp/FirebirdCS-2.5.9.27139-0.amd64 && \
-    printf 'masterkey\nmasterkey\n' | bash install.sh -silent 2>&1 | tail -10 && \
+    printf 'masterkey\nmasterkey\n' | bash install.sh -silent 2>&1 && \
+    test -x /opt/firebird/bin/isql-fb && \
     rm -rf /tmp/FirebirdCS-2.5.9.27139-0.amd64
 
-# Registra libs do Firebird para o linker
+# Registra libs do Firebird para o linker e adiciona binarios ao PATH
 RUN echo "/opt/firebird/lib" > /etc/ld.so.conf.d/firebird.conf && ldconfig
+ENV PATH="/opt/firebird/bin:$PATH"
 
 WORKDIR /app
 
