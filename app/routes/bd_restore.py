@@ -121,6 +121,13 @@ def _cleanup_sessions() -> None:
     cutoff = datetime.utcnow() - _SESSION_TTL
     expired = [k for k, v in _sessions.items() if v["created_at"] < cutoff]
     for k in expired:
+        # Apaga o arquivo temporario do banco Firebird se ainda existir
+        tmp = _sessions[k].get("tmp_path")
+        if tmp:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
         del _sessions[k]
 
 
@@ -597,7 +604,7 @@ async def analisar(
 
         import asyncio as _asyncio
 
-        def _executar_no_firebird(path: str):
+        def _analisar_no_firebird(path: str):
             os.chmod(path, 0o666)
             con = _fb.connect(
                 host="localhost",
@@ -621,23 +628,24 @@ async def analisar(
                         "distintos": _contar_distintos_produto(cursor),
                     }
 
+                # Produto NAO e buscado aqui — tabela grande (10k-100k linhas).
+                # O arquivo temp sobrevive na sessao; /gerar busca os dados la.
                 empresas_data            = _fetch_row(cursor, "EMPRESAS")
                 cert_data                = _fetch_row(cursor, "CERTIFICADO_DIGITAL")
                 clientes_rows            = _fetch_clientes(cursor)
                 perfil_cols, perfil_rows = _fetch_all_generic(cursor, "PERFILCLIENTES")
-                produto_rows             = _fetch_produto(cursor)
 
                 cursor.close()
             finally:
                 con.close()
 
-            return resultado, empresas_data, cert_data, clientes_rows, perfil_cols, perfil_rows, produto_rows
+            return resultado, empresas_data, cert_data, clientes_rows, perfil_cols, perfil_rows
 
         try:
             (
                 resultado, empresas_data, cert_data,
-                clientes_rows, perfil_cols, perfil_rows, produto_rows,
-            ) = await _asyncio.to_thread(_executar_no_firebird, tmp_path)
+                clientes_rows, perfil_cols, perfil_rows,
+            ) = await _asyncio.to_thread(_analisar_no_firebird, tmp_path)
         except Exception as e:
             import traceback
             print(f"[BD-RESTORE] Erro ao conectar Firebird: {e}")
@@ -662,14 +670,16 @@ async def analisar(
         _sessions[session_id] = {
             "created_at":       datetime.utcnow(),
             "filename":         arquivo.filename or "arquivo.fdb",
+            "tmp_path":         tmp_path,   # arquivo sobrevive ate /gerar
             "empresas":         empresas_data,
             "certificado":      cert_data,
             "clientes":         clientes_rows,
             "perfil_cols":      perfil_cols,
             "perfil_rows":      perfil_rows,
             "valid_perfil_set": valid_perfil_set,
-            "produto_rows":     produto_rows,
         }
+        # tmp_path nao e apagado aqui — sera apagado pelo /gerar ou pelo cleanup de sessao
+        tmp_path = None
 
         return {
             **resultado,
@@ -678,6 +688,7 @@ async def analisar(
         }
 
     finally:
+        # Apaga o temp apenas se a sessao NAO foi criada (erro antes do session_id)
         if tmp_path:
             try:
                 os.unlink(tmp_path)
@@ -696,23 +707,61 @@ async def gerar(
             detail="Sessão inválida ou expirada. Repita a análise no Passo 2.",
         )
 
-    session   = _sessions[req.session_id]
+    session          = _sessions[req.session_id]
     emp: dict        = session["empresas"]
     cert: dict       = session["certificado"]
     clientes: list         = session["clientes"]
     perfil_cols: list      = session.get("perfil_cols", [])
     perfil_rows: list      = session.get("perfil_rows", [])
     valid_perfil_set: set  = session.get("valid_perfil_set", set())
-    produto_rows: list     = session.get("produto_rows", [])
     filename: str    = session["filename"]
+    tmp_path: str | None   = session.get("tmp_path")
     ambiente         = req.ambiente
     now              = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     amb_label        = "PRODUCAO" if ambiente == 1 else "HOMOLOGACAO"
 
     from app.services import storage_service as storage
+    import asyncio as _asyncio
+    import firebirdsql as _fb  # type: ignore
+
     base_bytes = storage.download_sync(_BASE_SQL_STORAGE)
     if base_bytes is None:
         raise HTTPException(400, "base_zerada.sql não encontrado — faça upload em Configurações")
+
+    # Busca produtos do arquivo Firebird (operacao lenta — roda em thread)
+    if tmp_path and os.path.exists(tmp_path):
+        def _buscar_produtos(path: str) -> list[dict]:
+            os.chmod(path, 0o666)
+            con = _fb.connect(
+                host="localhost",
+                database=path,
+                user="SYSDBA",
+                password="masterkey",
+                charset="WIN1252",
+                timeout=120,
+            )
+            try:
+                cursor = con.cursor()
+                rows = _fetch_produto(cursor)
+                cursor.close()
+            finally:
+                con.close()
+            return rows
+
+        try:
+            produto_rows = await _asyncio.to_thread(_buscar_produtos, tmp_path)
+        except Exception as e:
+            print(f"[BD-RESTORE/gerar] Erro ao buscar produtos: {e}")
+            produto_rows = []
+        finally:
+            # Apaga o temp independente de sucesso ou falha
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            session.pop("tmp_path", None)
+    else:
+        produto_rows = []
 
     # CODIGO_N fixo em 1 — base_zerada sempre inicia com 1, não altera a PK
     codigo_n = 1
