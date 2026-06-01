@@ -573,9 +573,9 @@ async def analisar(
         try:
             # chmod 644: o servidor Firebird (usuário 'firebird') precisa ler o arquivo.
             # tempfile cria com 600 (só root); sem permissão de leitura o servidor recusa.
-            os.chmod(tmp_path, 0o666)  # firebird user precisa escrever (lock + header)
+            os.chmod(tmp_path, 0o666)  # firebird user (servidor) precisa de escrita
             con = _fb_connect(
-                dsn=f"localhost:{tmp_path}",  # dsn= parseia host:path; database= nao
+                database=f"localhost:{tmp_path}",  # host:path → TCP ao servidor local
                 user="SYSDBA",
                 password="masterkey",
                 charset="NONE",
