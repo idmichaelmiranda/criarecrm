@@ -570,15 +570,38 @@ async def analisar(
                 detail="Biblioteca firebird-driver não instalada no servidor.",
             )
 
+        # Verifica conectividade com o servidor antes de tentar abrir o banco
+        import socket as _sock
         try:
-            # chmod 644: o servidor Firebird (usuário 'firebird') precisa ler o arquivo.
-            # tempfile cria com 600 (só root); sem permissão de leitura o servidor recusa.
-            os.chmod(tmp_path, 0o666)  # firebird user (servidor) precisa de escrita
+            _s = _sock.socket(_sock.AF_INET, _sock.SOCK_STREAM)
+            _s.settimeout(3)
+            _result = _s.connect_ex(('127.0.0.1', 3050))
+            _s.close()
+            if _result != 0:
+                raise HTTPException(
+                    status_code=503,
+                    detail="Servidor Firebird não está acessível (porta 3050). "
+                           "Aguarde alguns segundos e tente novamente.",
+                )
+        except HTTPException:
+            raise
+        except Exception as _se:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Erro ao verificar servidor Firebird: {_se}",
+            )
+
+        try:
+            # chmod 666: servidor Firebird roda como usuario 'firebird'.
+            # tempfile cria com 600 (owner root); servidor precisa ler E escrever
+            # (Firebird atualiza header/lock mesmo em queries de leitura).
+            os.chmod(tmp_path, 0o666)
             con = _fb_connect(
-                database=f"localhost:{tmp_path}",  # host:path → TCP ao servidor local
+                database=f"localhost:{tmp_path}",  # TCP — 'localhost:path' parseado pela libfbclient
                 user="SYSDBA",
                 password="masterkey",
                 charset="NONE",
+                no_db_triggers=True,  # segurança com BDs legados (Firebird 2.5)
             )
         except Exception as e:
             import traceback
