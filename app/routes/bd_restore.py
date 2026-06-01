@@ -273,25 +273,55 @@ def _fetch_produto(cursor) -> list[dict]:
 
 def _fetch_clientes(cursor) -> list[dict]:
     """Todas as linhas da tabela CLIENTES do PAF Firebird com as colunas mapeadas.
-    Usa _read_blob() por celula — correto para qualquer tipo (VARCHAR, BLOB texto,
-    BLOB binario). Para ~300 clientes o overhead de lazy reads e aceitavel."""
+    Usa o catalogo RDB$RELATION_FIELDS para descobrir colunas existentes —
+    evita depender de cursor.description apos SELECT FIRST 0 que pode nao
+    atualizar description em firebirdsql quando 0 linhas sao retornadas."""
     wanted_upper = [c.upper() for c in _CLIENTES_COLS]
 
+    # 1) Descobre colunas existentes via catalogo do sistema (mais confiavel)
+    actual_cols: set[str] = set()
+    try:
+        cursor.execute(
+            "SELECT TRIM(f.RDB$FIELD_NAME) FROM RDB$RELATION_FIELDS f "
+            "WHERE f.RDB$RELATION_NAME = 'CLIENTES' ORDER BY f.RDB$FIELD_POSITION"
+        )
+        for row in cursor.fetchall():
+            if row[0]:
+                actual_cols.add(row[0].strip().upper())
+    except Exception as e:
+        print(f"[BD-RESTORE] _fetch_clientes: erro ao ler RDB$RELATION_FIELDS: {e}")
+
+    # 2) Fallback: SELECT FIRST 1 garante que description e preenchido
+    if not actual_cols:
+        for tbl in ('"CLIENTES"', "CLIENTES"):
+            try:
+                cursor.execute(f"SELECT FIRST 1 * FROM {tbl}")
+                actual_cols = {d[0].upper() for d in cursor.description}
+                try:
+                    cursor.fetchone()  # consome a linha para liberar o cursor
+                except Exception:
+                    pass
+                break
+            except Exception as e:
+                print(f"[BD-RESTORE] _fetch_clientes fallback {tbl}: {e}")
+
+    sel = [c for c in wanted_upper if c in actual_cols]
+    print(f"[BD-RESTORE] _fetch_clientes: actual_cols={len(actual_cols)} sel={len(sel)}")
+    if not sel:
+        print(f"[BD-RESTORE] _fetch_clientes: sem colunas mapeadas — actual={sorted(actual_cols)[:8]}")
+        return []
+
+    cols_sql = ", ".join(f'"{c}"' for c in sel)
     for tbl in ('"CLIENTES"', "CLIENTES"):
         try:
-            cursor.execute(f"SELECT FIRST 0 * FROM {tbl}")
-            avail = {d[0].upper() for d in cursor.description}
-            sel = [c for c in wanted_upper if c in avail]
-            if not sel:
-                continue
-            cols_sql = ", ".join(f'"{c}"' for c in sel)
             cursor.execute(f"SELECT {cols_sql} FROM {tbl}")
-            cursor.arraysize = 5000
             rows: list[dict] = []
             for raw_row in cursor.fetchall():
                 rows.append({sel[i]: _read_blob(raw_row[i]) for i in range(len(sel))})
+            print(f"[BD-RESTORE] _fetch_clientes: {len(rows)} clientes carregados")
             return rows
-        except Exception:
+        except Exception as e:
+            print(f"[BD-RESTORE] _fetch_clientes SELECT erro em {tbl}: {e}")
             continue
     return []
 
