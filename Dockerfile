@@ -11,7 +11,7 @@ RUN echo "firebird3.0-server firebird3.0-server/sysdba-password password masterk
 # SUBSTITUI o firebird.conf inteiro — append não estava funcionando.
 # FIREBIRD env var faz libfbclient ler config de $FIREBIRD/firebird.conf.
 # PluginsDirectory absoluto aponta para onde o Debian instalou libEngine12.so.
-RUN printf "Providers = Engine12\nPluginsDirectory = /usr/lib/x86_64-linux-gnu/firebird/3.0/plugins\nSecurityDatabase = /var/lib/firebird/3.0/system/security3.fdb\nAuthServer = Srp, Legacy_Auth\nAuthClient = Srp, Legacy_Auth\nDatabaseAccess = Full\nRemoteServicePort = 3050\n" \
+RUN printf "Providers = Remote, Engine12\nPluginsDirectory = /usr/lib/x86_64-linux-gnu/firebird/3.0/plugins\nSecurityDatabase = /var/lib/firebird/3.0/system/security3.fdb\nAuthServer = Srp, Legacy_Auth\nAuthClient = Srp, Legacy_Auth\nDatabaseAccess = Full\nRemoteServicePort = 3050\n" \
     > /etc/firebird/3.0/firebird.conf
 
 ENV FIREBIRD=/etc/firebird/3.0
