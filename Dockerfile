@@ -16,11 +16,11 @@ RUN groupadd --system --gid 84 firebird 2>/dev/null || true && \
 # Firebird 3.0 rejeita ODS 11.2 (bancos Firebird 2.5) com "found 11.2, support 12.2".
 # O tar.gz oficial funciona em qualquer Linux (nao depende de repo Debian/Ubuntu).
 RUN curl -fsSL \
-    "https://github.com/FirebirdSQL/firebird/releases/download/R2_5_9/Firebird-2.5.9.27139-0.amd64.tar.gz" \
+    "https://github.com/FirebirdSQL/firebird/releases/download/R2_5_9/FirebirdCS-2.5.9.27139-0.amd64.tar.gz" \
     | tar -xz -C /tmp && \
-    cd /tmp/Firebird-2.5.9.27139-0.amd64 && \
+    cd /tmp/FirebirdCS-2.5.9.27139-0.amd64 && \
     printf 'masterkey\nmasterkey\n' | bash install.sh -silent 2>&1 | tail -10 && \
-    rm -rf /tmp/Firebird-2.5.9.27139-0.amd64
+    rm -rf /tmp/FirebirdCS-2.5.9.27139-0.amd64
 
 # Registra libs do Firebird para o linker
 RUN echo "/opt/firebird/lib" > /etc/ld.so.conf.d/firebird.conf && ldconfig
