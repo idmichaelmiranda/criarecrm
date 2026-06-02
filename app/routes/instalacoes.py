@@ -116,6 +116,9 @@ def _to_list_response(inst: Instalacao, cliente: Cliente | None) -> InstalacaoLi
     item.responsavel_nome = inst.responsavel.nome if inst.responsavel else None
     if inst.responsavel and inst.responsavel.avatar_path:
         item.responsavel_avatar_url = storage.avatar_url(inst.responsavel.avatar_path)
+    # Recalcula progresso do checklist em tempo real — ignora valor defasado do banco
+    total = len(inst.checklist)
+    item.progresso = round(sum(1 for c in inst.checklist if c.status == "concluido") / total * 100) if total else 0
     return item
 
 
@@ -183,7 +186,10 @@ def _checklist_from_template(tipo: str, db: Session) -> list[tuple[str, bool]]:
 def listar(db: Session = Depends(get_db)):
     rows = db.execute(
         select(Instalacao)
-        .options(selectinload(Instalacao.responsavel))
+        .options(
+            selectinload(Instalacao.responsavel),
+            selectinload(Instalacao.checklist),
+        )
         .order_by(Instalacao.created_at.desc())
     ).scalars().all()
     return [_to_list_response(inst, db.get(Cliente, inst.cliente_id)) for inst in rows]
