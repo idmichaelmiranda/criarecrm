@@ -64,6 +64,28 @@ const TABS = [
   { key: "todos",     label: "Todas"     },
 ];
 
+function calcPresetRange(key) {
+  const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+  const fmt = (d) => d.toISOString().slice(0, 10);
+  if (key === "hoje") return { ini: fmt(hoje), fim: fmt(hoje) };
+  if (key === "semana") {
+    const dom = new Date(hoje); dom.setDate(hoje.getDate() - hoje.getDay());
+    const sab = new Date(dom);  sab.setDate(dom.getDate() + 6);
+    return { ini: fmt(dom), fim: fmt(sab) };
+  }
+  if (key === "mes") {
+    const ini = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    const fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+    return { ini: fmt(ini), fim: fmt(fim) };
+  }
+  if (key === "mes_passado") {
+    const ini = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
+    const fim = new Date(hoje.getFullYear(), hoje.getMonth(), 0);
+    return { ini: fmt(ini), fim: fmt(fim) };
+  }
+  return { ini: "", fim: "" };
+}
+
 function ProgBar({ value }) {
   const color = value === 100 ? "bg-green-500" : value > 50 ? "bg-blue-500" : value > 0 ? "bg-orange-400" : "bg-gray-200";
   return (
@@ -583,12 +605,27 @@ export default function Instalacoes() {
   const [filtroSemResponsavel, setFiltroSemResponsavel] = useState(
     () => searchParams.get("sem_responsavel") === "1"
   );
+  const [filtroDataAberto, setFiltroDataAberto] = useState(false);
+  const [filtroDataCampo, setFiltroDataCampo] = useState("agendada");
+  const [filtroDataInicio, setFiltroDataInicio] = useState("");
+  const [filtroDataFim, setFiltroDataFim] = useState("");
+  const filtroDataRef = useRef(null);
 
   // Quando vem do dashboard com sem_responsavel=1, força tab "ativas"
   useEffect(() => {
     if (searchParams.get("sem_responsavel") === "1") {
       setTab("ativas");
     }
+  }, []);
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (filtroDataRef.current && !filtroDataRef.current.contains(e.target)) {
+        setFiltroDataAberto(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
   const tiposMap = Object.fromEntries(tiposConfig.map((t) => [t.tipo, t]));
@@ -628,6 +665,13 @@ export default function Instalacoes() {
       if (filtroAtrasadas && !isAtrasada(i)) return false;
       if (filtroSemResponsavel && i.responsavel_id) return false;
       if (filtroMeus && i.responsavel_id !== user?.id) return false;
+      if (filtroDataInicio || filtroDataFim) {
+        const campoVal = filtroDataCampo === "agendada" ? i.data_agendada : i.data_conclusao;
+        if (!campoVal) return false;
+        const d = new Date(campoVal + "T00:00:00");
+        if (filtroDataInicio && d < new Date(filtroDataInicio + "T00:00:00")) return false;
+        if (filtroDataFim   && d > new Date(filtroDataFim   + "T00:00:00")) return false;
+      }
       if (search) {
         const q = search.toLowerCase();
         const nome = (i.cliente_nome || "").toLowerCase();
@@ -771,6 +815,107 @@ export default function Instalacoes() {
             }
           </select>
 
+          {/* Filtro de período */}
+          <div className="relative" ref={filtroDataRef}>
+            <button
+              onClick={() => setFiltroDataAberto((v) => !v)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap border ${
+                (filtroDataInicio || filtroDataFim)
+                  ? "bg-blue-500 text-white border-blue-500 shadow-sm"
+                  : "bg-white text-gray-500 border-gray-200 hover:border-blue-300 hover:text-blue-500"
+              }`}
+            >
+              <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Período
+              {(filtroDataInicio || filtroDataFim) && (
+                <span className="ml-0.5 w-1.5 h-1.5 rounded-full bg-white/80" />
+              )}
+            </button>
+
+            {filtroDataAberto && (
+              <div className="absolute top-full right-0 mt-1.5 z-50 bg-white rounded-xl border border-gray-200 shadow-xl p-4 w-72">
+                {/* Campo: Agendamento ou Conclusão */}
+                <div className="mb-3">
+                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Filtrar por</p>
+                  <div className="flex rounded-lg border border-gray-200 overflow-hidden text-xs font-medium">
+                    {[{ key: "agendada", label: "Agendamento" }, { key: "conclusao", label: "Conclusão" }].map(({ key, label }) => (
+                      <button
+                        key={key}
+                        onClick={() => setFiltroDataCampo(key)}
+                        className={`flex-1 py-1.5 transition-colors ${
+                          filtroDataCampo === key
+                            ? "bg-blue-500 text-white"
+                            : "text-gray-500 hover:bg-gray-50"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Presets rápidos */}
+                <div className="mb-3">
+                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Acesso rápido</p>
+                  <div className="grid grid-cols-2 gap-1">
+                    {[
+                      { key: "hoje",        label: "Hoje" },
+                      { key: "semana",      label: "Esta semana" },
+                      { key: "mes",         label: "Este mês" },
+                      { key: "mes_passado", label: "Mês passado" },
+                    ].map(({ key, label }) => {
+                      const r = calcPresetRange(key);
+                      const ativo = filtroDataInicio === r.ini && filtroDataFim === r.fim;
+                      return (
+                        <button
+                          key={key}
+                          onClick={() => { setFiltroDataInicio(r.ini); setFiltroDataFim(r.fim); setFiltroDataAberto(false); }}
+                          className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-colors text-left ${
+                            ativo ? "bg-blue-100 text-blue-700" : "bg-gray-50 text-gray-600 hover:bg-blue-50 hover:text-blue-600"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Range personalizado */}
+                <div className="mb-3">
+                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Personalizado</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="date"
+                      value={filtroDataInicio}
+                      onChange={(e) => setFiltroDataInicio(e.target.value)}
+                      className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-blue-400 transition text-gray-600"
+                    />
+                    <span className="text-gray-300 text-xs shrink-0">→</span>
+                    <input
+                      type="date"
+                      value={filtroDataFim}
+                      onChange={(e) => setFiltroDataFim(e.target.value)}
+                      className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-blue-400 transition text-gray-600"
+                    />
+                  </div>
+                </div>
+
+                {/* Limpar */}
+                {(filtroDataInicio || filtroDataFim) && (
+                  <button
+                    onClick={() => { setFiltroDataInicio(""); setFiltroDataFim(""); setFiltroDataAberto(false); }}
+                    className="w-full text-xs text-gray-400 hover:text-red-500 transition-colors py-1 text-center"
+                  >
+                    Limpar filtro de período
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
           <button
             onClick={() => setFiltroMeus((v) => !v)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap border ${
@@ -791,6 +936,28 @@ export default function Instalacoes() {
           </button>
         </div>
       </div>
+
+      {/* Chip: filtro de período ativo */}
+      {(filtroDataInicio || filtroDataFim) && (
+        <div className="flex items-center gap-2 mb-3">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200">
+            <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            {filtroDataCampo === "agendada" ? "Agendamento" : "Conclusão"}
+            {filtroDataInicio && filtroDataFim
+              ? `: ${fmtDateOnly(filtroDataInicio)} → ${fmtDateOnly(filtroDataFim)}`
+              : filtroDataInicio
+              ? `: a partir de ${fmtDateOnly(filtroDataInicio)}`
+              : `: até ${fmtDateOnly(filtroDataFim)}`}
+            <button
+              onClick={() => { setFiltroDataInicio(""); setFiltroDataFim(""); }}
+              className="ml-1 hover:text-blue-900 transition-colors"
+            >✕</button>
+          </span>
+          <span className="text-xs text-gray-400">{filtered.length} instalaç{filtered.length !== 1 ? "ões" : "ão"} encontrada{filtered.length !== 1 ? "s" : ""}</span>
+        </div>
+      )}
 
       {/* Chip: filtro sem responsável ativo */}
       {filtroSemResponsavel && (
