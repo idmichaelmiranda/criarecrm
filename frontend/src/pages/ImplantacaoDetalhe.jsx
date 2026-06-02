@@ -1790,7 +1790,8 @@ export default function ImplantacaoDetalhe() {
           const updatedSubs = item.subitens.map(s => s.id === itemId ? { ...s, status: newStatus } : s);
           let parentStatus = item.status;
           if (newStatus === "concluido" || newStatus === "nao_aplicavel") {
-            const allDone = updatedSubs.every(s => s.status === "concluido" || s.status === "nao_aplicavel");
+            const activeSubs = updatedSubs.filter(s => !s.arquivado);
+            const allDone = activeSubs.length > 0 && activeSubs.every(s => s.status === "concluido" || s.status === "nao_aplicavel");
             if (allDone) parentStatus = "concluido";
           } else if (newStatus === "pendente" && item.status === "concluido") {
             parentStatus = "pendente";

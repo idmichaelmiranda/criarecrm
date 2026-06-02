@@ -472,7 +472,10 @@ def _sincronizar_pai(db: Session, parent_id: int, sub_novo_status: str) -> None:
         return
     db.flush()
     subitens = db.execute(
-        select(ChecklistItem).where(ChecklistItem.parent_id == parent_id)
+        select(ChecklistItem).where(
+            ChecklistItem.parent_id == parent_id,
+            ChecklistItem.arquivado == False,  # noqa: E712
+        )
     ).scalars().all()
     if not subitens:
         return
