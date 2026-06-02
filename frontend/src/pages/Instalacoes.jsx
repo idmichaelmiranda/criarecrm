@@ -61,7 +61,6 @@ const HISTORICO_STATUSES = ["concluida", "cancelada"];
 const TABS = [
   { key: "ativas",    label: "Ativas"    },
   { key: "historico", label: "Histórico" },
-  { key: "todos",     label: "Todas"     },
 ];
 
 function calcPresetRange(key) {
@@ -688,7 +687,6 @@ export default function Instalacoes() {
   const counts = {
     ativas:    kpiBase.filter((i) => ATIVAS_STATUSES.includes(i.status)).length,
     historico: kpiBase.filter((i) => HISTORICO_STATUSES.includes(i.status)).length,
-    todos:     kpiBase.length,
   };
 
   // KPIs
@@ -738,7 +736,7 @@ export default function Instalacoes() {
           <button
             key={k.label}
             onClick={() => {
-              if (k.atrasadas) { setFiltroAtrasadas((v) => !v); setTab("todos"); }
+              if (k.atrasadas) { setFiltroAtrasadas((v) => !v); setTab("ativas"); }
               else if (k.tab) { setTab(k.tab); setFiltroAtrasadas(false); }
             }}
             className={`${k.bg} rounded-xl p-4 text-left transition-all hover:shadow-sm cursor-pointer ${k.atrasadas && kpiAtrasadas > 0 ? "ring-2 ring-red-300" : ""}`}
