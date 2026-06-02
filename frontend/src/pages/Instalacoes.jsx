@@ -835,31 +835,32 @@ export default function Instalacoes() {
             </button>
 
             {filtroDataAberto && (
-              <div className="absolute top-full right-0 mt-1.5 z-50 bg-white rounded-xl border border-gray-200 shadow-xl p-4 w-72">
-                {/* Campo: Agendamento ou Conclusão */}
-                <div className="mb-3">
-                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Filtrar por</p>
-                  <div className="flex rounded-lg border border-gray-200 overflow-hidden text-xs font-medium">
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50 bg-white rounded-2xl border border-gray-100 shadow-2xl w-68 overflow-hidden" style={{ width: 268 }}>
+                {/* Header */}
+                <div className="px-4 pt-3 pb-2.5 border-b border-gray-100">
+                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Filtrar por período</p>
+                </div>
+
+                <div className="px-4 pt-3 pb-1">
+                  {/* Toggle Agendamento / Conclusão */}
+                  <div className="flex bg-gray-100 rounded-lg p-0.5 text-xs font-medium mb-3">
                     {[{ key: "agendada", label: "Agendamento" }, { key: "conclusao", label: "Conclusão" }].map(({ key, label }) => (
                       <button
                         key={key}
                         onClick={() => setFiltroDataCampo(key)}
-                        className={`flex-1 py-1.5 transition-colors ${
+                        className={`flex-1 py-1.5 rounded-md transition-all text-center ${
                           filtroDataCampo === key
-                            ? "bg-blue-500 text-white"
-                            : "text-gray-500 hover:bg-gray-50"
+                            ? "bg-white text-gray-800 shadow-sm font-semibold"
+                            : "text-gray-400 hover:text-gray-600"
                         }`}
                       >
                         {label}
                       </button>
                     ))}
                   </div>
-                </div>
 
-                {/* Presets rápidos */}
-                <div className="mb-3">
-                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Acesso rápido</p>
-                  <div className="grid grid-cols-2 gap-1">
+                  {/* Presets */}
+                  <div className="grid grid-cols-2 gap-1.5 mb-3">
                     {[
                       { key: "hoje",        label: "Hoje" },
                       { key: "semana",      label: "Esta semana" },
@@ -872,8 +873,10 @@ export default function Instalacoes() {
                         <button
                           key={key}
                           onClick={() => { setFiltroDataInicio(r.ini); setFiltroDataFim(r.fim); setFiltroDataAberto(false); }}
-                          className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-colors text-left ${
-                            ativo ? "bg-blue-100 text-blue-700" : "bg-gray-50 text-gray-600 hover:bg-blue-50 hover:text-blue-600"
+                          className={`px-3 py-2 rounded-lg text-xs font-medium transition-all text-center border ${
+                            ativo
+                              ? "bg-blue-50 text-blue-700 border-blue-200"
+                              : "bg-gray-50 text-gray-600 border-transparent hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100"
                           }`}
                         >
                           {label}
@@ -883,34 +886,44 @@ export default function Instalacoes() {
                   </div>
                 </div>
 
-                {/* Range personalizado */}
-                <div className="mb-3">
-                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Personalizado</p>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="date"
-                      value={filtroDataInicio}
-                      onChange={(e) => setFiltroDataInicio(e.target.value)}
-                      className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-blue-400 transition text-gray-600"
-                    />
-                    <span className="text-gray-300 text-xs shrink-0">→</span>
-                    <input
-                      type="date"
-                      value={filtroDataFim}
-                      onChange={(e) => setFiltroDataFim(e.target.value)}
-                      className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-blue-400 transition text-gray-600"
-                    />
+                {/* Divider + Range personalizado */}
+                <div className="border-t border-gray-100 px-4 py-3">
+                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Personalizado</p>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-[11px] text-gray-400 w-5 shrink-0">De</span>
+                      <input
+                        type="date"
+                        value={filtroDataInicio}
+                        onChange={(e) => setFiltroDataInicio(e.target.value)}
+                        className="flex-1 text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition text-gray-700"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-[11px] text-gray-400 w-5 shrink-0">Até</span>
+                      <input
+                        type="date"
+                        value={filtroDataFim}
+                        onChange={(e) => setFiltroDataFim(e.target.value)}
+                        className="flex-1 text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition text-gray-700"
+                      />
+                    </div>
                   </div>
                 </div>
 
-                {/* Limpar */}
+                {/* Rodapé: limpar */}
                 {(filtroDataInicio || filtroDataFim) && (
-                  <button
-                    onClick={() => { setFiltroDataInicio(""); setFiltroDataFim(""); setFiltroDataAberto(false); }}
-                    className="w-full text-xs text-gray-400 hover:text-red-500 transition-colors py-1 text-center"
-                  >
-                    Limpar filtro de período
-                  </button>
+                  <div className="border-t border-gray-100 px-4 py-2.5">
+                    <button
+                      onClick={() => { setFiltroDataInicio(""); setFiltroDataFim(""); setFiltroDataAberto(false); }}
+                      className="w-full flex items-center justify-center gap-1.5 text-xs text-gray-400 hover:text-red-500 transition-colors"
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      Limpar filtro de período
+                    </button>
+                  </div>
                 )}
               </div>
             )}
