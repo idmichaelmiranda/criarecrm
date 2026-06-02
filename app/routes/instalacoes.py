@@ -410,6 +410,7 @@ def atualizar_item(instalacao_id: int, item_id: int, data: ChecklistItemUpdate, 
     elif data.status in ("pendente", "nao_aplicavel"):
         item.data_conclusao = None
 
+    db.flush()  # garante que o novo status do item está visível para _load
     inst = _load(instalacao_id, db)
     _recalcular_progresso(inst)
 
@@ -455,6 +456,7 @@ def deletar_item(instalacao_id: int, item_id: int, db: Session = Depends(get_db)
     if not item or item.instalacao_id != instalacao_id:
         raise HTTPException(404, "Item não encontrado")
     db.delete(item)
+    db.flush()  # garante que o item deletado não aparece no checklist do _load
 
     inst = _load(instalacao_id, db)
     _recalcular_progresso(inst)
