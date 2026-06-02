@@ -858,6 +858,7 @@ export default function InstalacaoDetalhe() {
 
   const checklist = inst.checklist || [];
   const concluidos = checklist.filter((i) => i.status === "concluido").length;
+  const progresso = checklist.length === 0 ? 0 : Math.round(concluidos / checklist.length * 100);
   const todasConcluidas = checklist.length > 0 && concluidos === checklist.length;
   const emAndamento = inst.iniciado_em && !inst.finalizado_em;
   const estaPausada = emAndamento && Boolean(inst.pausado_em);
@@ -1073,9 +1074,9 @@ export default function InstalacaoDetalhe() {
             <div className="mb-4">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-xs text-gray-500 font-medium">Progresso</span>
-                <span className="text-xs font-bold text-gray-700">{inst.progresso}%</span>
+                <span className="text-xs font-bold text-gray-700">{progresso}%</span>
               </div>
-              <ProgBar value={inst.progresso} />
+              <ProgBar value={progresso} />
               <p className="text-[11px] text-gray-400 mt-1">{concluidos} de {checklist.length} itens concluídos</p>
             </div>
 
