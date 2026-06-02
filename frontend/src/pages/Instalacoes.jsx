@@ -828,6 +828,7 @@ export default function Instalacoes() {
                 <th className="text-left px-4 py-3 w-40">Progresso</th>
                 <th className="text-left px-4 py-3">Responsável</th>
                 <th className="text-left px-4 py-3">Agendado</th>
+                <th className="text-left px-4 py-3">Concluído</th>
                 <th className="px-4 py-3 w-8" />
               </tr>
             </thead>
@@ -934,21 +935,21 @@ export default function Instalacoes() {
                       )}
                     </td>
 
-                    {/* Agendado / Concluída em */}
+                    {/* Agendado */}
                     <td className="px-4 py-4">
-                      {concluida ? (
-                        inst.finalizado_em ? (
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-[10px] font-semibold text-green-600 uppercase tracking-wide leading-none">Concluída em</span>
-                            <span className="text-xs text-green-700 font-medium">{fmtDate(inst.finalizado_em)}</span>
-                          </div>
-                        ) : inst.data_agendada ? (
-                          <span className="text-xs text-gray-400">{fmtDateOnly(inst.data_agendada)}</span>
-                        ) : (
-                          <span className="text-gray-300 text-xs">—</span>
-                        )
-                      ) : agendado ? (
+                      {agendado ? (
                         <span className={`text-xs font-medium ${agendado.cls}`}>{agendado.label}</span>
+                      ) : inst.data_agendada ? (
+                        <span className="text-xs text-gray-500">{fmtDateOnly(inst.data_agendada)}</span>
+                      ) : (
+                        <span className="text-gray-300 text-xs">—</span>
+                      )}
+                    </td>
+
+                    {/* Concluído */}
+                    <td className="px-4 py-4">
+                      {inst.data_conclusao ? (
+                        <span className="text-xs font-medium text-green-700">{fmtDateOnly(inst.data_conclusao)}</span>
                       ) : (
                         <span className="text-gray-300 text-xs">—</span>
                       )}

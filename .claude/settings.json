@@ -3,7 +3,46 @@
     "allow": [
       "Bash(git commit *)",
       "Bash(git push *)",
-      "Bash(python -)"
+      "Bash(python -)",
+      "Bash(Get-ChildItem -Path \"c:\\\\criarecrm\\\\frontend\" -Force)",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\criarecrm\\\\frontend\\\\src\" -Recurse | Where-Object { -not $_.PSIsContainer } | Select-Object FullName)",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\criarecrm\\\\frontend\\\\src\" -Recurse | ForEach-Object { $_.FullName -replace [regex]::Escape\\(\"c:\\\\criarecrm\\\\frontend\\\\\"\\), \"\" } | head -50)",
+      "Bash(xargs grep -l \"class ImplantacaoEtapa\\\\|class ChecklistItem\\\\|class TimelineEvento\")",
+      "Bash(Select-Object Name)",
+      "Bash(Get-ChildItem -Path \"c:\\\\criarecrm\" -Recurse -Include \"solicitacoes.py\", \"solicitacao.py\", \"implantacao_service.py\", \"Triagem*.jsx\")",
+      "Bash(Select-Object FullName)",
+      "Bash(Get-ChildItem -Path \"c:\\\\criarecrm\" -Recurse -Include \"*aprovacao*\")",
+      "Bash(xargs grep -l \"notif\\\\|Notif\")",
+      "Bash(xargs grep -l \"notif\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\criarecrm\\\\frontend\\\\src\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\criarecrm\" -Recurse -File | Where-Object { $_.Extension -in @\\('.py', '.json', '.ts', '.js'\\) } | Measure-Object | Select-Object -ExpandProperty Count)",
+      "Bash(python -c \"import app.models.instalacao; import app.routes.instalacoes; import app.schemas.instalacao; print\\('OK'\\)\")",
+      "Bash(python -c ' *)",
+      "PowerShell([System.Environment]::OSVersion.VersionString)",
+      "Read(//c/Users/micha/.claude/**)",
+      "Read(//c/Windows/Media/**)",
+      "PowerShell([System.Media.SystemSounds]::Beep.Play\\(\\); Start-Sleep -Milliseconds 500; Write-Output \"beep_ok\")",
+      "Bash(Get-ChildItem \"C:\\\\Windows\\\\Media\\\\\" -Filter \"*.wav\" | Select-Object -ExpandProperty Name | Sort-Object)",
+      "Bash(docker build *)",
+      "Bash(git -C c:\\\\criarecrm status)",
+      "Read(//usr/local/lib/python3.12/site-packages/firebird/driver/**)",
+      "Bash(python -c \"import firebird.driver; import inspect; print\\(inspect.getfile\\(firebird.driver.core\\)\\)\")",
+      "Bash(C:\\\\criarecrm\\\\venv\\\\Scripts\\\\python.exe -c \"import firebird.driver.core as c; import inspect; print\\(inspect.getfile\\(c\\)\\)\")",
+      "PowerShell(C:\\\\criarecrm\\\\venv\\\\Scripts\\\\python.exe -c \"import firebird.driver.core as c; import inspect; print\\(inspect.getfile\\(c\\)\\)\")",
+      "WebSearch",
+      "WebFetch(domain:firebird-driver.readthedocs.io)",
+      "Bash(wsl -d docker-desktop find /var/lib/docker -name \"core.py\" -path \"*/firebird/driver/*\")",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(gh api *)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:firebirdsql.org)",
+      "Bash(dir \"c:\\\\criarecrm\\\\app\\\\routes\")",
+      "Bash(git -C c:\\\\criarecrm diff --stat)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\micha\\.claude"
     ]
   }
 }
