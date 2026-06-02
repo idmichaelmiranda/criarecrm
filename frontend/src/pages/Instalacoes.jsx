@@ -937,10 +937,15 @@ export default function Instalacoes() {
 
                     {/* Agendado */}
                     <td className="px-4 py-4">
-                      {agendado ? (
-                        <span className={`text-xs font-medium ${agendado.cls}`}>{agendado.label}</span>
-                      ) : inst.data_agendada ? (
-                        <span className="text-xs text-gray-500">{fmtDateOnly(inst.data_agendada)}</span>
+                      {inst.data_agendada ? (
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-xs text-gray-600">{fmtDateOnly(inst.data_agendada)}</span>
+                          {atrasada && !concluida && (
+                            <span className="text-[10px] font-semibold text-red-500 uppercase tracking-wide leading-none">
+                              {Math.abs(Math.round((new Date(inst.data_agendada + "T00:00:00") - new Date().setHours(0,0,0,0)) / 86400000))}d atraso
+                            </span>
+                          )}
+                        </div>
                       ) : (
                         <span className="text-gray-300 text-xs">—</span>
                       )}
