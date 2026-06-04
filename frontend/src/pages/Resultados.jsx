@@ -7,8 +7,11 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
-import MarkerClusterGroup from "react-leaflet-cluster";
 import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+// Fix Leaflet default icon broken by Vite bundler
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({ iconUrl: "", shadowUrl: "", iconRetinaUrl: "" });
 
 // ── Paleta ────────────────────────────────────────────────────────────────────
 const C = {
@@ -300,12 +303,11 @@ function AbaMapa({ filtros }) {
               url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
               attribution='&copy; <a href="https://carto.com">CARTO</a>'
             />
-            <MarkerClusterGroup chunkedLoading>
               {visiveis.map(p => (
                 <CircleMarker key={p.id} center={[p.lat, p.lng]}
-                  radius={8}
+                  radius={9}
                   fillColor={STATUS_COR_MAPA[p.status] || "#9ca3af"}
-                  fillOpacity={0.85}
+                  fillOpacity={0.88}
                   color="#fff" weight={1.5}>
                   <Popup>
                     <div className="text-xs space-y-1 min-w-[180px]">
@@ -324,7 +326,6 @@ function AbaMapa({ filtros }) {
                   </Popup>
                 </CircleMarker>
               ))}
-            </MarkerClusterGroup>
           </MapContainer>
         )}
       </div>
