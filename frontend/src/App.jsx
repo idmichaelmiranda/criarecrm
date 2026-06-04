@@ -59,7 +59,7 @@ export default function App() {
             <PrivateRoute permission="templates.view"><Templates /></PrivateRoute>
           } />
           <Route path="/admin/resultados" element={
-            <PrivateRoute permission="resultados.view"><Resultados /></PrivateRoute>
+            <PrivateRoute permission="dashboard.view"><Resultados /></PrivateRoute>
           } />
           <Route path="/admin/templates/:id" element={
             <PrivateRoute permission="templates.edit"><TemplateEditor /></PrivateRoute>
