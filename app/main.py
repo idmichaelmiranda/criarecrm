@@ -30,6 +30,7 @@ from app.routes.grupos_permissao import router as grupos_router
 from app.routes.bd_restore import router as bd_restore_router
 from app.routes.instalacoes import router as instalacoes_router
 from app.routes.notificacoes import router as notificacoes_router
+from app.routes.resultados import router as resultados_router
 from app.dependencies.auth import get_current_user
 
 @asynccontextmanager
@@ -357,6 +358,7 @@ app.include_router(grupos_router,        prefix="/api/v1", dependencies=_auth_de
 app.include_router(bd_restore_router,    prefix="/api/v1", dependencies=_auth_dep)
 app.include_router(instalacoes_router,   prefix="/api/v1", dependencies=_auth_dep)
 app.include_router(notificacoes_router,  prefix="/api/v1", dependencies=_auth_dep)
+app.include_router(resultados_router,    prefix="/api/v1", dependencies=_auth_dep)
 
 
 @app.api_route("/api/v1/health", methods=["GET", "HEAD"])
@@ -376,6 +378,7 @@ ALL_PERMISSIONS = [
     "configuracoes.view","configuracoes.edit",
     "usuarios.view",     "usuarios.create", "usuarios.edit", "usuarios.delete",
     "grupos.view",       "grupos.create",   "grupos.edit",   "grupos.delete",
+    "resultados.view",
 ]
 
 ANALISTA_PERMISSIONS = [

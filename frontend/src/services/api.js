@@ -256,4 +256,15 @@ export const bdRestoreApi = {
     ),
 };
 
+// ── Resultados ────────────────────────────────────────────────────────────────
+export const resultadosApi = {
+  visaoGeral:    (params) => api.get("/resultados/visao-geral",    { params }),
+  evolucao:      (params) => api.get("/resultados/evolucao-mensal", { params }),
+  equipe:        (params) => api.get("/resultados/equipe",         { params }),
+  produtos:      (params) => api.get("/resultados/produtos",       { params }),
+  porEstado:     (params) => api.get("/resultados/por-estado",     { params }),
+  clientesMapa:  (params) => api.get("/resultados/clientes-mapa",  { params }),
+  porConsultor:  (params) => api.get("/resultados/por-consultor",  { params }),
+};
+
 export default api;

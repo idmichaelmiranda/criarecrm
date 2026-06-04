@@ -12,6 +12,7 @@ import ImplantacaoDetalhe from "./pages/ImplantacaoDetalhe";
 import Clientes from "./pages/Clientes";
 import ClienteDetalhe from "./pages/ClienteDetalhe";
 import Templates from "./pages/Templates";
+import Resultados from "./pages/Resultados";
 import TemplateEditor from "./pages/TemplateEditor";
 import Configuracoes from "./pages/Configuracoes";
 import Usuarios from "./pages/Usuarios";
@@ -56,6 +57,9 @@ export default function App() {
           } />
           <Route path="/admin/templates" element={
             <PrivateRoute permission="templates.view"><Templates /></PrivateRoute>
+          } />
+          <Route path="/admin/resultados" element={
+            <PrivateRoute permission="resultados.view"><Resultados /></PrivateRoute>
           } />
           <Route path="/admin/templates/:id" element={
             <PrivateRoute permission="templates.edit"><TemplateEditor /></PrivateRoute>
