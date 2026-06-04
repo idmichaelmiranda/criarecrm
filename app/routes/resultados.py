@@ -136,41 +136,52 @@ def visao_geral(
     }
 
 
+def _mes_range(hoje: date, meses_atras: int) -> tuple[date, date]:
+    """Retorna (primeiro_dia, primeiro_dia_mes_seguinte) para N meses atrás."""
+    mes = hoje.month - meses_atras
+    ano = hoje.year
+    while mes <= 0:
+        mes += 12
+        ano -= 1
+    ref  = date(ano, mes, 1)
+    prox = date(ano + 1, 1, 1) if mes == 12 else date(ano, mes + 1, 1)
+    return ref, prox
+
+
 @router.get("/evolucao-mensal")
 def evolucao_mensal(
     meses: int = Query(12),
     db: Session = Depends(get_db),
 ):
     hoje = date.today()
+
+    # Carrega todos uma vez e filtra em Python — evita N queries
+    impl_all = db.execute(select(Implantacao)).scalars().all()
+    inst_all = db.execute(select(Instalacao)).scalars().all()
+
     resultado = []
-
     for i in range(meses - 1, -1, -1):
-        ref = (hoje.replace(day=1) - timedelta(days=i * 28)).replace(day=1)
-        if ref.month == 12:
-            prox = ref.replace(year=ref.year + 1, month=1)
-        else:
-            prox = ref.replace(month=ref.month + 1)
+        ref, prox = _mes_range(hoje, i)
 
-        impl = db.execute(
-            select(Implantacao).where(
-                Implantacao.created_at >= datetime.combine(ref, datetime.min.time()),
-                Implantacao.created_at <  datetime.combine(prox, datetime.min.time()),
-            )
-        ).scalars().all()
+        # Criados neste mês
+        impl_mes = [x for x in impl_all if ref <= x.created_at.date() < prox]
+        inst_mes = [x for x in inst_all if ref <= x.created_at.date() < prox]
 
-        inst = db.execute(
-            select(Instalacao).where(
-                Instalacao.created_at >= datetime.combine(ref, datetime.min.time()),
-                Instalacao.created_at <  datetime.combine(prox, datetime.min.time()),
-            )
-        ).scalars().all()
+        # Concluídos neste mês (pela data de conclusão real, não criação)
+        impl_concl = sum(
+            1 for x in impl_all
+            if x.data_conclusao and ref <= x.data_conclusao < prox
+        )
+        inst_concl = sum(
+            1 for x in inst_all
+            if x.data_conclusao and ref <= x.data_conclusao < prox
+        )
 
         resultado.append({
-            "mes":           _mes_label(ref),
-            "implantacoes":  len(impl),
-            "instalacoes":   len(inst),
-            "concluidas":    sum(1 for x in impl if x.status == "concluida") +
-                             sum(1 for x in inst if x.status == "concluida"),
+            "mes":          _mes_label(ref),
+            "implantacoes": len(impl_mes),
+            "instalacoes":  len(inst_mes),
+            "concluidas":   impl_concl + inst_concl,
         })
 
     return resultado
