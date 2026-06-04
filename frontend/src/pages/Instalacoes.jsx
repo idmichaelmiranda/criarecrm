@@ -239,6 +239,8 @@ function NovaInstalacaoModal({ onClose, onCreated, tiposConfig = [] }) {
     cliente_id: "",
     cliente_nome: "",
     cliente_cnpj: "",
+    cliente_cidade: "",
+    cliente_estado: "",
     tipos: [],
     prioridade: "normal",
     responsavel_id: "",
@@ -286,11 +288,11 @@ function NovaInstalacaoModal({ onClose, onCreated, tiposConfig = [] }) {
 
   function selectCliente(c) {
     // ERP may not return an id — fall back to cnpj so the field is always truthy
-    setForm((f) => ({ ...f, cliente_id: c.id || c.cnpj || c.nome, cliente_nome: c.nome, cliente_cnpj: c.cnpj }));
+    setForm((f) => ({ ...f, cliente_id: c.id || c.cnpj || c.nome, cliente_nome: c.nome, cliente_cnpj: c.cnpj, cliente_cidade: c.cidade || "", cliente_estado: c.estado || "" }));
   }
 
   function clearCliente() {
-    setForm((f) => ({ ...f, cliente_id: "", cliente_nome: "", cliente_cnpj: "" }));
+    setForm((f) => ({ ...f, cliente_id: "", cliente_nome: "", cliente_cnpj: "", cliente_cidade: "", cliente_estado: "" }));
     setCnpjInput("");
     setClienteFound(null);
     setClienteError("");
@@ -325,6 +327,8 @@ function NovaInstalacaoModal({ onClose, onCreated, tiposConfig = [] }) {
         id: form.cliente_id,
         nome: form.cliente_nome,
         cnpj: form.cliente_cnpj,
+        cidade: form.cliente_cidade,
+        estado: form.cliente_estado,
       });
 
       const { data } = await instalacaosApi.criar({

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, CircleMarker, Tooltip, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { resultadosApi } from "../services/api";
 
@@ -16,10 +16,18 @@ const STATUS_LABEL = {
   cancelada:    "Cancelada",
 };
 
+function ZoomWatcher({ onZoom }) {
+  useMapEvents({ zoomend: (e) => onZoom(e.target.getZoom()) });
+  return null;
+}
+
+const TIPO_LABEL = { implantacao: "Implantação", instalacao: "Instalação" };
+
 export default function ResultadosMapaTab({ filtros }) {
   const [pontos,       setPontos]       = useState([]);
   const [loading,      setLoading]      = useState(true);
   const [filtroStatus, setFiltroStatus] = useState("todos");
+  const [zoom,         setZoom]         = useState(4);
 
   useEffect(() => {
     setLoading(true);
@@ -88,6 +96,7 @@ export default function ResultadosMapaTab({ filtros }) {
               url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
               attribution='&copy; <a href="https://carto.com">CARTO</a>'
             />
+            <ZoomWatcher onZoom={setZoom} />
             {visiveis.map(p => (
               <CircleMarker
                 key={p.id}
@@ -98,28 +107,38 @@ export default function ResultadosMapaTab({ filtros }) {
                 color="#fff"
                 weight={1.5}
               >
-                <Popup>
-                  <div style={{ minWidth: 180, fontSize: 12 }}>
-                    <p style={{ fontWeight: 700, marginBottom: 4 }}>{p.cliente_nome}</p>
-                    <p style={{ color: "#6b7280", marginBottom: 6 }}>{p.cidade} — {p.estado}</p>
-                    <p>
-                      <span style={{ color: "#9ca3af" }}>Status: </span>
-                      <span style={{ fontWeight: 600, color: STATUS_COR[p.status] }}>
-                        {STATUS_LABEL[p.status] || p.status}
-                      </span>
-                    </p>
-                    {p.consultor && (
-                      <p><span style={{ color: "#9ca3af" }}>Consultor: </span>{p.consultor}</p>
-                    )}
-                    {p.data_prevista && (
+                {zoom >= 7 ? (
+                  <Tooltip permanent direction="top" offset={[0, -10]}>
+                    <span style={{ fontSize: 11, fontWeight: 600 }}>{p.cidade}</span>
+                  </Tooltip>
+                ) : (
+                  <Tooltip sticky>
+                    <div style={{ minWidth: 180, fontSize: 12 }}>
+                      <p style={{ fontWeight: 700, marginBottom: 4 }}>{p.cliente_nome}</p>
+                      <p style={{ color: "#6b7280", marginBottom: 6 }}>{p.cidade} — {p.estado}</p>
                       <p>
-                        <span style={{ color: "#9ca3af" }}>Prevista: </span>
-                        {new Date(p.data_prevista).toLocaleDateString("pt-BR")}
+                        <span style={{ color: "#9ca3af" }}>Tipo: </span>
+                        <span style={{ fontWeight: 600 }}>{TIPO_LABEL[p.tipo] || p.tipo}</span>
                       </p>
-                    )}
-                    <p><span style={{ color: "#9ca3af" }}>Progresso: </span>{p.progresso}%</p>
-                  </div>
-                </Popup>
+                      <p>
+                        <span style={{ color: "#9ca3af" }}>Status: </span>
+                        <span style={{ fontWeight: 600, color: STATUS_COR[p.status] }}>
+                          {STATUS_LABEL[p.status] || p.status}
+                        </span>
+                      </p>
+                      {p.consultor && (
+                        <p><span style={{ color: "#9ca3af" }}>Consultor: </span>{p.consultor}</p>
+                      )}
+                      {p.data_prevista && (
+                        <p>
+                          <span style={{ color: "#9ca3af" }}>Prevista: </span>
+                          {new Date(p.data_prevista).toLocaleDateString("pt-BR")}
+                        </p>
+                      )}
+                      <p><span style={{ color: "#9ca3af" }}>Progresso: </span>{p.progresso}%</p>
+                    </div>
+                  </Tooltip>
+                )}
               </CircleMarker>
             ))}
           </MapContainer>

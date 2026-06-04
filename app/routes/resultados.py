@@ -324,20 +324,35 @@ def por_estado(
     return result
 
 
+_STATUS_INST = {
+    "agendada":    "em_andamento",
+    "em_execucao": "em_andamento",
+    "concluida":   "concluida",
+    "cancelada":   "cancelada",
+}
+
 @router.get("/clientes-mapa")
 def clientes_mapa(
     periodo_dias: int = Query(365),
     db: Session = Depends(get_db),
 ):
     desde = _desde(periodo_dias)
+    desde_dt = datetime.combine(desde, datetime.min.time())
 
     implantacoes = db.execute(
         select(Implantacao)
         .options(selectinload(Implantacao.cliente))
-        .where(Implantacao.created_at >= datetime.combine(desde, datetime.min.time()))
+        .where(Implantacao.created_at >= desde_dt)
+    ).scalars().all()
+
+    instalacoes = db.execute(
+        select(Instalacao)
+        .options(selectinload(Instalacao.cliente))
+        .where(Instalacao.created_at >= desde_dt)
     ).scalars().all()
 
     result = []
+
     for impl in implantacoes:
         c = impl.cliente
         if not c:
@@ -347,24 +362,49 @@ def clientes_mapa(
         coords = ESTADO_CENTROIDES.get(uf)
         if not coords:
             continue
-
-        # Pequeno deslocamento determinístico por ID (evita sobreposição total)
         lat = coords[0] + (impl.id % 11 - 5) * 0.15
         lng = coords[1] + (impl.id % 7  - 3) * 0.20
-
         result.append({
-            "id":          impl.id,
-            "cliente_id":  c.id,
+            "id":           f"impl_{impl.id}",
+            "cliente_id":   c.id,
             "cliente_nome": c.razao_social,
-            "cidade":      cidade,
-            "estado":      uf,
-            "lat":         round(lat, 4),
-            "lng":         round(lng, 4),
-            "status":      impl.status,
-            "consultor":   impl.consultor or "",
+            "cidade":       cidade,
+            "estado":       uf,
+            "lat":          round(lat, 4),
+            "lng":          round(lng, 4),
+            "status":       impl.status,
+            "tipo":         "implantacao",
+            "consultor":    impl.consultor or "",
             "data_prevista": impl.data_prevista.isoformat() if impl.data_prevista else None,
-            "progresso":   impl.progresso,
-            "sla_status":  impl.sla_status,
+            "progresso":    impl.progresso,
+            "sla_status":   impl.sla_status,
+        })
+
+    for inst in instalacoes:
+        c = inst.cliente
+        if not c:
+            continue
+        uf = _get_estado(c)
+        cidade = _get_cidade(c)
+        coords = ESTADO_CENTROIDES.get(uf)
+        if not coords:
+            continue
+        lat = coords[0] + (inst.id % 13 - 6) * 0.15
+        lng = coords[1] + (inst.id % 9  - 4) * 0.20
+        result.append({
+            "id":           f"inst_{inst.id}",
+            "cliente_id":   c.id,
+            "cliente_nome": c.razao_social,
+            "cidade":       cidade,
+            "estado":       uf,
+            "lat":          round(lat, 4),
+            "lng":          round(lng, 4),
+            "status":       _STATUS_INST.get(inst.status, "em_andamento"),
+            "tipo":         "instalacao",
+            "consultor":    inst.consultor or "",
+            "data_prevista": inst.data_agendada.isoformat() if inst.data_agendada else None,
+            "progresso":    inst.progresso,
+            "sla_status":   None,
         })
 
     return result

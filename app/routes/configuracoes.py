@@ -180,8 +180,10 @@ def _normalize_clients(raw) -> list[dict]:
             item.get("CodCliente") or item.get("codigo") or
             item.get("id") or item.get("Id") or item.get("ID") or ""
         )
+        cidade = item.get("cidade") or item.get("Cidade") or item.get("municipio") or ""
+        estado = (item.get("estado") or item.get("Estado") or item.get("uf") or item.get("UF") or "").upper()
         if nome:
-            result.append({"id": str(cod), "nome": nome, "cnpj": cnpj})
+            result.append({"id": str(cod), "nome": nome, "cnpj": cnpj, "cidade": cidade, "estado": estado})
     return result
 
 
@@ -265,9 +267,17 @@ def erp_resolve_cliente(data: dict, db: Session = Depends(get_db)):
         fmt = f"{cnpj_digits[:2]}.{cnpj_digits[2:5]}.{cnpj_digits[5:8]}/{cnpj_digits[8:12]}-{cnpj_digits[12:14]}"
         existing = db.execute(select(Cliente).where(Cliente.cnpj == fmt)).scalar_one_or_none()
 
+    cidade = (data.get("cidade") or "").strip()
+    estado = (data.get("estado") or "").strip().upper()
+
     if not existing:
         cnpj_store = cnpj_raw or cnpj_digits or f"erp_{nome[:10]}"
         email_stub = f"erp_{cnpj_digits or re.sub(chr(32), '_', nome[:20])}@erp.local"
+        endereco = {}
+        if cidade:
+            endereco["cidade"] = cidade
+        if estado:
+            endereco["estado"] = estado
         stub = Cliente(
             razao_social=nome,
             cnpj=cnpj_store,
@@ -275,11 +285,21 @@ def erp_resolve_cliente(data: dict, db: Session = Depends(get_db)):
             telefone_celular="",
             ativo=True,
             origem="erp",
+            endereco=endereco or None,
         )
         db.add(stub)
         db.commit()
         db.refresh(stub)
         existing = stub
+    elif (cidade or estado) and not (existing.endereco or {}).get("cidade"):
+        # Atualiza stub existente que ainda não tem endereço
+        end = dict(existing.endereco or {})
+        if cidade:
+            end["cidade"] = cidade
+        if estado:
+            end["estado"] = estado
+        existing.endereco = end
+        db.commit()
 
     return {"cliente_id": existing.id, "nome": existing.razao_social, "cnpj": existing.cnpj}
 
