@@ -304,6 +304,77 @@ def erp_resolve_cliente(data: dict, db: Session = Depends(get_db)):
     return {"cliente_id": existing.id, "nome": existing.razao_social, "cnpj": existing.cnpj}
 
 
+@router.post("/erp/fix-enderecos", dependencies=[_auth])
+def fix_enderecos_erp(db: Session = Depends(get_db)):
+    """
+    Endpoint de uso único: consulta o ERP para todos os clientes de instalações
+    que não têm cidade/estado gravados e corrige o banco de dados.
+    """
+    from app.models.instalacao import Instalacao
+    from app.models.cliente import Cliente
+    from sqlalchemy.orm import selectinload
+
+    cfg = _read_erp_config()
+    base_url = (cfg.get("base_url") or "").rstrip("/")
+    if not base_url:
+        raise HTTPException(400, "Integração ERP não configurada.")
+
+    token = cfg.get("api_token") or ""
+    headers = {"Accept": "application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+
+    instalacoes = db.execute(
+        select(Instalacao).options(selectinload(Instalacao.cliente))
+    ).scalars().all()
+
+    # Deduplica clientes para não consultar o mesmo CNPJ mais de uma vez
+    clientes_sem_end = {}
+    for inst in instalacoes:
+        c = inst.cliente
+        if c and not (c.endereco or {}).get("cidade") and c.cnpj:
+            clientes_sem_end[c.id] = c
+
+    resultados = []
+    with httpx.Client(timeout=20) as client:
+        for c in clientes_sem_end.values():
+            cnpj_digits = re.sub(r"\D", "", c.cnpj)
+            if len(cnpj_digits) not in (11, 14):
+                resultados.append({"cliente": c.razao_social, "status": "cnpj_invalido"})
+                continue
+            try:
+                resp = client.get(
+                    f"{base_url}{ERP_CLIENT_ENDPOINT}",
+                    headers=headers,
+                    params={"CNPJ": cnpj_digits},
+                )
+                if resp.status_code >= 400:
+                    resultados.append({"cliente": c.razao_social, "status": "nao_encontrado_erp"})
+                    continue
+                data = resp.json()
+                cidade = (data.get("cidade") or "").strip()
+                estado = (data.get("estado") or "").strip().upper()
+                if cidade or estado:
+                    end = dict(c.endereco or {})
+                    if cidade:
+                        end["cidade"] = cidade
+                    if estado:
+                        end["estado"] = estado
+                    c.endereco = end
+                    db.commit()
+                    resultados.append({"cliente": c.razao_social, "cidade": cidade, "estado": estado, "status": "corrigido"})
+                else:
+                    resultados.append({"cliente": c.razao_social, "status": "sem_dados_erp"})
+            except Exception as e:
+                resultados.append({"cliente": c.razao_social, "status": f"erro: {str(e)}"})
+
+    return {
+        "total_instalacoes": len(instalacoes),
+        "clientes_corrigidos": sum(1 for r in resultados if r["status"] == "corrigido"),
+        "detalhes": resultados,
+    }
+
+
 @router.post("/erp/testar", dependencies=[_auth])
 def testar_erp(data: ErpConfig):
     existing = _read_erp_config()
