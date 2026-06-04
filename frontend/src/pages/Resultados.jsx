@@ -8,10 +8,6 @@ import {
 } from "recharts";
 import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import L from "leaflet";
-// Fix Leaflet default icon broken by Vite bundler
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({ iconUrl: "", shadowUrl: "", iconRetinaUrl: "" });
 
 // ── Paleta ────────────────────────────────────────────────────────────────────
 const C = {
