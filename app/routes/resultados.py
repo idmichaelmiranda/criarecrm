@@ -16,6 +16,8 @@ router = APIRouter(prefix="/resultados", tags=["resultados"])
 
 TIPO_LABEL = {
     "instalacao_pdv": "PDV Adicional", "pdv": "PDV Adicional",
+    "instalacao_sia_pdv": "SIA PDV", "sia_pdv": "SIA PDV",
+    "instalacao_sia": "SIA", "sia": "SIA",
     "instalacao_coletor": "Coletor Mobile", "coletor": "Coletor Mobile",
     "instalacao_forca_vendas": "Força de Vendas", "forca_vendas": "Força de Vendas",
     "instalacao_impressora": "Impressora", "impressora": "Impressora",
@@ -33,6 +35,14 @@ ESTADO_CENTROIDES = {
     "RR": (1.99, -61.33),   "RS": (-30.17, -53.50),  "SC": (-27.45, -50.95),
     "SE": (-10.57, -37.45), "SP": (-22.19, -48.79),  "TO": (-9.47, -48.33),
 }
+
+def _normalizar_tipo(t: str) -> str:
+    """Converte 'instalacao_sia_pdv' → busca no TIPO_LABEL; fallback: humaniza."""
+    if t in TIPO_LABEL:
+        return TIPO_LABEL[t]
+    # Remove prefixo instalacao_ e humaniza
+    chave = t.replace("instalacao_", "").replace("_", " ").title()
+    return chave or t
 
 def _parse_tipos(inst: Instalacao) -> list[str]:
     raw = inst.tipos_json
@@ -236,7 +246,7 @@ def produtos(
     for inst in instalacoes:
         tipos = _parse_tipos(inst)
         for t in tipos:
-            chave = TIPO_LABEL.get(t, t)
+            chave = _normalizar_tipo(t)
             if chave not in contagem:
                 contagem[chave] = {"produto": chave, "total": 0, "concluidas": 0, "tempos": []}
             contagem[chave]["total"] += 1
