@@ -17,6 +17,7 @@ export const PERMISSIONS = {
   GRUPOS_CREATE:        "grupos.create",
   GRUPOS_EDIT:          "grupos.edit",
   GRUPOS_DELETE:        "grupos.delete",
+  RESULTADOS_VIEW:      "resultados.view",
 };
 
 export const PERMISSION_LABELS = {
@@ -38,6 +39,7 @@ export const PERMISSION_LABELS = {
   "grupos.create":       "Criar Grupos",
   "grupos.edit":         "Editar Grupos",
   "grupos.delete":       "Excluir Grupos",
+  "resultados.view":     "Visualizar Resultados",
 };
 
 export const PERMISSION_MODULES = [
@@ -72,5 +74,9 @@ export const PERMISSION_MODULES = [
   {
     label: "Grupos de Permissão",
     permissions: ["grupos.view", "grupos.create", "grupos.edit", "grupos.delete"],
+  },
+  {
+    label: "Resultados",
+    permissions: ["resultados.view"],
   },
 ];
