@@ -373,7 +373,7 @@ function NovaInstalacaoModal({ onClose, onCreated, tiposConfig = [] }) {
 
         {/* Two-column body */}
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-          <div className="grid grid-cols-[1fr_300px] flex-1 min-h-0 overflow-y-auto">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_300px] flex-1 min-h-0 overflow-y-auto">
 
             {/* ── Coluna esquerda: campos ── */}
             <div className="px-6 py-5 space-y-5 border-r border-gray-100">
@@ -996,17 +996,18 @@ export default function Instalacoes() {
             <p className="text-sm text-gray-400">Nenhuma instalação encontrada.</p>
           </div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
             <thead>
               <tr className="border-b-2 border-gray-100 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
                 <th className="p-0 w-1" />
                 <th className="text-left px-5 py-3">Cliente</th>
-                <th className="text-left px-4 py-3">Tipo</th>
+                <th className="text-left px-4 py-3 hidden sm:table-cell">Tipo</th>
                 <th className="text-left px-4 py-3">Status</th>
-                <th className="text-left px-4 py-3 w-40">Progresso</th>
-                <th className="text-left px-4 py-3">Responsável</th>
-                <th className="text-left px-4 py-3">Agendado</th>
-                <th className="text-left px-4 py-3">Concluído</th>
+                <th className="text-left px-4 py-3 w-40 hidden md:table-cell">Progresso</th>
+                <th className="text-left px-4 py-3 hidden md:table-cell">Responsável</th>
+                <th className="text-left px-4 py-3 hidden sm:table-cell">Agendado</th>
+                <th className="text-left px-4 py-3 hidden sm:table-cell">Concluído</th>
                 <th className="px-4 py-3 w-8" />
               </tr>
             </thead>
@@ -1059,7 +1060,7 @@ export default function Instalacoes() {
                     </td>
 
                     {/* Tipo */}
-                    <td className="px-4 py-4">
+                    <td className="px-4 py-4 hidden sm:table-cell">
                       <div className="flex flex-wrap gap-1">
                         {getTipos(inst).map((t) => {
                           const td = tiposMap[normalizeTipo(t)];
@@ -1088,7 +1089,7 @@ export default function Instalacoes() {
                     </td>
 
                     {/* Progresso */}
-                    <td className="px-4 py-4">
+                    <td className="px-4 py-4 hidden md:table-cell">
                       <div className="flex items-center gap-2.5">
                         <div className="flex-1">
                           <ProgBar value={inst.progresso} />
@@ -1102,7 +1103,7 @@ export default function Instalacoes() {
                     </td>
 
                     {/* Responsável com avatar */}
-                    <td className="px-4 py-4">
+                    <td className="px-4 py-4 hidden md:table-cell">
                       {inst.responsavel_nome ? (
                         <div className="flex items-center gap-2">
                           <Avatar nome={inst.responsavel_nome} avatarUrl={inst.responsavel_avatar_url} />
@@ -1114,7 +1115,7 @@ export default function Instalacoes() {
                     </td>
 
                     {/* Agendado */}
-                    <td className="px-4 py-4">
+                    <td className="px-4 py-4 hidden sm:table-cell">
                       {inst.data_agendada ? (
                         <div className="flex flex-col gap-0.5">
                           <span className="text-xs text-gray-600">{fmtDateOnly(inst.data_agendada)}</span>
@@ -1130,7 +1131,7 @@ export default function Instalacoes() {
                     </td>
 
                     {/* Concluído */}
-                    <td className="px-4 py-4">
+                    <td className="px-4 py-4 hidden sm:table-cell">
                       {inst.data_conclusao ? (
                         <span className="text-xs font-medium text-green-700">{fmtDateOnly(inst.data_conclusao)}</span>
                       ) : (
@@ -1149,6 +1150,7 @@ export default function Instalacoes() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </Layout>

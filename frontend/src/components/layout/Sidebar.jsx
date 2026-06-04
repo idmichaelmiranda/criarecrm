@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { solicitacoesApi, usuariosApi, authApi, instalacaosApi, notificacoesApi } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
@@ -145,7 +145,7 @@ const NOTIF_TIPO = {
 };
 const NOTIF_DEFAULT = { bg: "bg-gray-100", fg: "text-gray-400", d: "M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" };
 
-function NotifDropdown({ notifs, onMarcarLida, onMarcarTodas, onClose, navigate, collapsed }) {
+function NotifDropdown({ notifs, onMarcarLida, onMarcarTodas, onClose, navigate, collapsed, isMobile }) {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -195,14 +195,16 @@ function NotifDropdown({ notifs, onMarcarLida, onMarcarTodas, onClose, navigate,
     );
   }
 
-  const dropdownLeft = collapsed ? "76px" : "252px";
+  const dropdownLeft = isMobile ? "8px" : (collapsed ? "76px" : "252px");
 
   return (
     <div
       ref={ref}
-      className="fixed z-50 w-96 bg-white rounded-2xl border border-gray-100 flex flex-col overflow-hidden top-3"
+      className="fixed z-50 bg-white rounded-2xl border border-gray-100 flex flex-col overflow-hidden top-3"
       style={{
         left: dropdownLeft,
+        right: isMobile ? "8px" : "auto",
+        width: isMobile ? "auto" : "384px",
         maxHeight: "520px",
         boxShadow: "0 8px 40px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)",
       }}
@@ -278,7 +280,7 @@ function SenhaDiaPopup({ senhaDia, senhaLoading, senhaVisible, setSenhaVisible, 
     <div
       ref={ref}
       className="fixed z-50 rounded-xl border border-white/10 shadow-2xl p-3.5 w-52"
-      style={{ left: "76px", bottom: "88px", background: "#1B2240" }}
+      style={{ left: "clamp(8px, 76px, calc(100vw - 224px))", bottom: "88px", background: "#1B2240" }}
     >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
@@ -318,7 +320,7 @@ function SenhaDiaPopup({ senhaDia, senhaLoading, senhaVisible, setSenhaVisible, 
 
 // ── Sidebar principal ─────────────────────────────────────────────────────────
 
-export function Sidebar({ collapsed = false, onToggle }) {
+export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMobile = false, onMobileClose }) {
   const [triageCount, setTriageCount]       = useState(0);
   const [pendentesCount, setPendentesCount] = useState(0);
   const [semRespCount, setSemRespCount]     = useState(0);
@@ -332,8 +334,14 @@ export function Sidebar({ collapsed = false, onToggle }) {
   const [senhaCopied, setSenhaCopied]       = useState(false);
   const [showSenhaPopup, setShowSenhaPopup] = useState(false);
   const fileInputRef = useRef(null);
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
+  const location  = useLocation();
   const { user, logout, hasPermission, updateUser } = useAuth();
+
+  // Fecha sidebar mobile ao navegar
+  useEffect(() => {
+    if (onMobileClose) onMobileClose();
+  }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!hasPermission("triagem.view")) return;
@@ -453,8 +461,10 @@ export function Sidebar({ collapsed = false, onToggle }) {
   return (
     <>
     <aside
-      className="fixed inset-y-0 left-0 bg-[#1B2240] flex flex-col z-30 overflow-hidden transition-[width] duration-300 ease-in-out"
-      style={{ width: collapsed ? "64px" : "240px" }}
+      className={`fixed inset-y-0 left-0 bg-[#1B2240] flex flex-col z-30 overflow-hidden
+        transition-[width,transform] duration-300 ease-in-out
+        ${isMobile && !mobileOpen ? "-translate-x-full" : "translate-x-0"}`}
+      style={{ width: isMobile ? "240px" : (collapsed ? "64px" : "240px") }}
     >
       {/* ── Cabeçalho: avatar + info + sino ── */}
       <div className={`border-b border-white/5 shrink-0 ${collapsed ? "px-0 pt-3 pb-3" : "px-4 pt-4 pb-3"}`}>
@@ -685,6 +695,7 @@ export function Sidebar({ collapsed = false, onToggle }) {
           onClose={() => setShowNotifs(false)}
           navigate={navigate}
           collapsed={collapsed}
+          isMobile={isMobile}
         />
       )}
 
@@ -702,11 +713,11 @@ export function Sidebar({ collapsed = false, onToggle }) {
       )}
     </aside>
 
-    {/* ── Botão toggle — tab visível na borda direita do sidebar ── */}
+    {/* ── Botão toggle — tab visível na borda direita do sidebar (apenas desktop) ── */}
     <button
       onClick={onToggle}
       title={collapsed ? "Expandir menu" : "Recolher menu"}
-      className="fixed top-1/2 -translate-y-1/2 z-40 flex items-center justify-center
+      className="fixed top-1/2 -translate-y-1/2 z-40 hidden md:flex items-center justify-center
                  bg-[#2a3458] hover:bg-orange-500
                  border border-l-0 border-white/20 hover:border-orange-400
                  text-slate-300 hover:text-white

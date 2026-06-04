@@ -1378,7 +1378,7 @@ function KanbanTab({ etapas, subsIndex, implId, somentePendentes, columnRefs, on
 
       {/* ── Board ───────────────────────────────────────────── */}
       <div
-        className={isExpanded ? "flex gap-3 overflow-x-auto flex-1 pb-2" : "flex gap-3 overflow-x-auto pb-4 -mx-6 px-6"}
+        className={isExpanded ? "flex gap-3 overflow-x-auto flex-1 pb-2" : "flex gap-3 overflow-x-auto pb-4 -mx-3 px-3 sm:-mx-4 sm:px-4 md:-mx-6 md:px-6"}
         style={{ scrollbarWidth: "thin" }}
       >
         {sorted.map((etapa, idx) => (

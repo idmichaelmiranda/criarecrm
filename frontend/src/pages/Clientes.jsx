@@ -139,21 +139,21 @@ function ClienteRow({ c, onClick }) {
       </td>
 
       {/* CNPJ */}
-      <td className="px-4 py-3.5 whitespace-nowrap">
+      <td className="px-4 py-3.5 whitespace-nowrap hidden sm:table-cell">
         <span className="text-xs font-mono text-gray-500 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
           {formatCnpj(c.cnpj)}
         </span>
       </td>
 
       {/* Cidade / UF */}
-      <td className="px-4 py-3.5 whitespace-nowrap">
+      <td className="px-4 py-3.5 whitespace-nowrap hidden md:table-cell">
         {local
           ? <span className="text-sm text-gray-600">{local}</span>
           : <span className="text-gray-300 text-sm">—</span>}
       </td>
 
       {/* Regime */}
-      <td className="px-4 py-3.5">
+      <td className="px-4 py-3.5 hidden lg:table-cell">
         <RegimeBadge regime={regime} />
       </td>
 
@@ -171,7 +171,7 @@ function ClienteRow({ c, onClick }) {
       </td>
 
       {/* Atualizado */}
-      <td className="px-4 py-3.5 whitespace-nowrap text-xs text-gray-400">
+      <td className="px-4 py-3.5 whitespace-nowrap text-xs text-gray-400 hidden sm:table-cell">
         {fmtDate(c.updated_at)}
       </td>
 
@@ -453,11 +453,11 @@ export default function Clientes() {
                             Empresa <SortIcon active={sortField === "name"} dir={sortDir} />
                           </button>
                         </th>
-                        <th className="px-4 py-3">CNPJ</th>
-                        <th className="px-4 py-3">Cidade / UF</th>
-                        <th className="px-4 py-3">Regime</th>
+                        <th className="px-4 py-3 hidden sm:table-cell">CNPJ</th>
+                        <th className="px-4 py-3 hidden md:table-cell">Cidade / UF</th>
+                        <th className="px-4 py-3 hidden lg:table-cell">Regime</th>
                         <th className="px-4 py-3">Status</th>
-                        <th className="px-4 py-3">
+                        <th className="px-4 py-3 hidden sm:table-cell">
                           <button onClick={() => toggleSort("updated")} className="hover:text-gray-600 transition-colors flex items-center gap-1">
                             Atualizado <SortIcon active={sortField === "updated"} dir={sortDir} />
                           </button>

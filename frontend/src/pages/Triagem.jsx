@@ -73,7 +73,7 @@ function Section({ title, children }) {
       <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest pb-2 mb-3 border-b border-gray-100">
         {title}
       </p>
-      <div className="grid grid-cols-2 gap-x-6 gap-y-4">{children}</div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">{children}</div>
     </div>
   );
 }
@@ -189,11 +189,11 @@ function AprovarModal({ sol, onClose, onApproved }) {
         {step === "form" && (
           <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
 
-            {/* Corpo: dois painéis lado a lado */}
-            <div className="flex flex-1 min-h-0 divide-x divide-gray-100">
+            {/* Corpo: dois painéis — coluna em mobile, lado a lado em md+ */}
+            <div className="flex flex-col md:flex-row flex-1 min-h-0 md:divide-x divide-gray-100 overflow-y-auto md:overflow-hidden">
 
               {/* Painel esquerdo: módulos */}
-              <div className="flex flex-col w-[42%] shrink-0">
+              <div className="flex flex-col md:w-[42%] shrink-0 min-h-[240px] md:min-h-0 border-b md:border-b-0 divide-gray-100">
                 <div className="px-5 pt-4 pb-2 shrink-0">
                   <p className="text-xs font-semibold text-gray-500">
                     Módulos de Implantação
@@ -269,8 +269,8 @@ function AprovarModal({ sol, onClose, onApproved }) {
               </div>
 
               {/* Painel direito: configuração */}
-              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-                <div className="grid grid-cols-2 gap-3">
+              <div className="flex-1 md:overflow-y-auto px-6 py-4 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-gray-500 mb-1.5">Consultor</label>
                     <input type="text" value={form.consultor} onChange={(e) => setForm((f) => ({ ...f, consultor: e.target.value }))} placeholder="Nome do consultor" className={inp} />
@@ -368,7 +368,7 @@ function AprovarModal({ sol, onClose, onApproved }) {
                   <p className="text-xs text-gray-500">{clienteExistente.nome_fantasia}</p>
                 )}
               </div>
-              <div className="px-4 py-3 grid grid-cols-2 gap-3">
+              <div className="px-4 py-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-0.5">CNPJ</p>
                   <p className="text-xs font-mono text-gray-700">{clienteExistente.cnpj}</p>
@@ -472,7 +472,7 @@ function RecusarModal({ sol, onClose, onRefused }) {
               Seções que o cliente deve corrigir *
               <span className="text-gray-400 font-normal ml-1">(apenas estas ficarão editáveis)</span>
             </label>
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
               {SECOES_CORRECAO.map((s) => {
                 const checked = camposSelecionados.includes(s.key);
                 return (
