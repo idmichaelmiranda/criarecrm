@@ -401,8 +401,8 @@ export default function Landing() {
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] pointer-events-none"
           style={{ background: "radial-gradient(circle at 30% 80%, rgba(99,102,241,0.06) 0%, transparent 65%)" }} />
 
-        <div className="relative max-w-6xl mx-auto px-6 pt-24 pb-28">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-16 sm:pt-24 pb-16 sm:pb-28">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
 
             {/* Left: text */}
             <div>
@@ -472,7 +472,7 @@ export default function Landing() {
             </div>
 
             {/* Right: ecosystem visualization */}
-            <div className="relative h-[560px]">
+            <div className="relative h-[320px] sm:h-[420px] lg:h-[560px]">
               <CriareEcosystem />
             </div>
           </div>
@@ -487,7 +487,7 @@ export default function Landing() {
 
       {/* ── Como funciona ── */}
       <section id="como-funciona" style={{ background: "linear-gradient(180deg, #0b0f1a 0%, #0d1321 55%, #0b0f1a 100%)" }}>
-        <div className="max-w-6xl mx-auto px-6 py-24">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-24">
         <div className="text-center mb-16">
           <p className="text-xs font-bold text-orange-500 uppercase tracking-widest mb-3">Como funciona</p>
           <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white mb-4">
@@ -672,10 +672,10 @@ export default function Landing() {
 
       {/* ── Confiança / Trust signals ── */}
       <section id="seguranca" style={{ background: "linear-gradient(180deg, #0b0f1a 0%, #0d1321 55%, #0b0f1a 100%)" }}>
-        <div className="max-w-6xl mx-auto px-6 py-20">
-        <div className="rounded-3xl px-10 py-12"
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-20">
+        <div className="rounded-3xl px-5 py-8 sm:px-10 sm:py-12"
           style={{ background: "#111827", border: "1px solid rgba(255,255,255,0.05)" }}>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
 
             {/* Left */}
             <div>
@@ -700,7 +700,7 @@ export default function Landing() {
             </div>
 
             {/* Right: trust items */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 { icon: "🔒", title: "LGPD Compliant",       desc: "Dados protegidos conforme a Lei Geral de Proteção de Dados" },
                 { icon: "🛡️", title: "Conexão segura",       desc: "Transmissão criptografada SSL/TLS em todo o formulário"       },
@@ -723,8 +723,8 @@ export default function Landing() {
       <SectionDivider nextId="cta" />
 
       {/* ── CTA Final ── */}
-      <section id="cta" className="max-w-6xl mx-auto px-6 pb-24">
-        <div className="rounded-3xl p-12 text-center relative overflow-hidden"
+      <section id="cta" className="max-w-6xl mx-auto px-4 sm:px-6 pb-12 sm:pb-24">
+        <div className="rounded-3xl p-6 sm:p-12 text-center relative overflow-hidden"
           style={{
             background: "linear-gradient(135deg, rgba(245,99,22,0.18) 0%, rgba(245,99,22,0.06) 100%)",
             border: "1px solid rgba(245,99,22,0.22)",

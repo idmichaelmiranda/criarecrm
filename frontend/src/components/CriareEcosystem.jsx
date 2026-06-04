@@ -42,10 +42,10 @@ const SERVICES = [
   },
 ];
 
-// R=200 → chord entre adjacentes = 2×200×sin(π/7) ≈ 173px → espaço para cards de 148px com ~25px de gap
-const ORBIT_R = 200;
-const CARD_W  = 148;
-const LOGO_SZ = 96;
+// Valores base para o container de referência (560px altura)
+const ORBIT_R_BASE = 200;
+const CARD_W_BASE  = 148;
+const LOGO_SZ_BASE = 96;
 
 function initParticles(w, h) {
   return Array.from({ length: 55 }, () => ({
@@ -86,6 +86,7 @@ export default function CriareEcosystem() {
 
   const [positions, setPositions] = useState([]);
   const [hovered,   setHovered]   = useState(null);
+  const [sizes, setSizes] = useState({ orbitR: ORBIT_R_BASE, cardW: CARD_W_BASE, logoSz: LOGO_SZ_BASE });
 
   useEffect(() => {
     const canvas    = canvasRef.current;
@@ -94,12 +95,12 @@ export default function CriareEcosystem() {
 
     const dpr = window.devicePixelRatio || 1;
 
-    function computeNodes(w, h) {
+    function computeNodes(w, h, orbitR) {
       const cx = w / 2;
       const cy = h / 2;
       return SERVICES.map((_, i) => {
         const a = (2 * Math.PI * i) / SERVICES.length - Math.PI / 2;
-        return { x: cx + ORBIT_R * Math.cos(a), y: cy + ORBIT_R * Math.sin(a) };
+        return { x: cx + orbitR * Math.cos(a), y: cy + orbitR * Math.sin(a) };
       });
     }
 
@@ -108,6 +109,14 @@ export default function CriareEcosystem() {
       const prevH = s.current.h;
       const w = container.clientWidth;
       const h = container.clientHeight;
+
+      // Escala dinâmica: reduz órbita e cards em telas menores
+      const scale  = Math.max(0.52, Math.min(1, Math.min(w, h) / 560));
+      const orbitR = Math.round(ORBIT_R_BASE * scale);
+      const cardW  = Math.round(CARD_W_BASE  * scale);
+      const logoSz = Math.round(LOGO_SZ_BASE * scale);
+      s.current.orbitR = orbitR;
+      setSizes({ orbitR, cardW, logoSz });
 
       canvas.width        = w * dpr;
       canvas.height       = h * dpr;
@@ -121,7 +130,7 @@ export default function CriareEcosystem() {
       s.current.h  = h;
       s.current.cx = w / 2;
       s.current.cy = h / 2;
-      s.current.nodes = computeNodes(w, h);
+      s.current.nodes = computeNodes(w, h, orbitR);
 
       if (!s.current.ready) {
         s.current.particles = initParticles(w, h);
@@ -149,7 +158,7 @@ export default function CriareEcosystem() {
 
       s.current.angle += 0.004;
       const ang = s.current.angle;
-      const R   = ORBIT_R;
+      const R   = s.current.orbitR || ORBIT_R_BASE;
 
       // ── Orbit rings ──────────────────────────────────────────────────────────
 
@@ -327,8 +336,8 @@ export default function CriareEcosystem() {
         <div
           style={{
             position: "relative",
-            width: LOGO_SZ,
-            height: LOGO_SZ,
+            width: sizes.logoSz,
+            height: sizes.logoSz,
             borderRadius: 26,
             overflow: "hidden",
             border: "1.5px solid rgba(245,99,22,0.6)",
@@ -358,7 +367,7 @@ export default function CriareEcosystem() {
             style={{
               top: pos.y,
               left: pos.x,
-              width: CARD_W,
+              width: sizes.cardW,
               transform: "translate(-50%, -50%)",
               zIndex: 10,
             }}

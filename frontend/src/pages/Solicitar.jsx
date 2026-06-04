@@ -296,7 +296,7 @@ function BankSelector({ setValue, watch }) {
 
 function Step0({ r, e, sv }) {
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div className="col-span-2">
         <CnpjInput register={r} errors={e} setValue={sv} />
       </div>
@@ -314,7 +314,7 @@ function Step0({ r, e, sv }) {
 
 function Step1({ r, e }) {
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div className="col-span-2">
         <Input label="E-mail *" type="email" placeholder="contato@empresa.com.br"
           error={e.email?.message}
@@ -331,7 +331,7 @@ function Step1({ r, e }) {
 
 function Step2({ r, e, sv }) {
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <CepInput name="cep" label="CEP *" register={r} errors={e} setValue={sv} required
         fieldMap={{ logradouro: "endereco", bairro: "bairro", cidade: "cidade", estado: "estado" }} />
       <Input label="Número *" placeholder="Ex: 123"
@@ -360,7 +360,7 @@ function Step3({ r, e }) {
       }>
         Solicite estas informações diretamente com o escritório de contabilidade da empresa antes de prosseguir.
       </InfoBanner>
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div className="col-span-2">
         <Input label="Nome do Contador *" placeholder="Nome completo"
           error={e.nome_contador?.message}
@@ -385,7 +385,7 @@ function Step3({ r, e }) {
 
 function Step4({ r, e, sv }) {
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <CepInput name="cep_contador" label="CEP" register={r} errors={e} setValue={sv}
         fieldMap={{ logradouro: "end_contador", bairro: "bairro_contador", cidade: "cidade_contador", estado: "estado_contador" }} />
       <Input label="Número" placeholder="Ex: 123" {...r("num_contador")} />
@@ -401,7 +401,7 @@ function Step4({ r, e, sv }) {
 
 function Step5({ r, sv, watch }) {
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <BankSelector setValue={sv} watch={watch} />
       <Select label="Tipo de Conta" options={CONTA_OPTIONS} {...r("tipo_conta")} />
       <div>
@@ -440,7 +440,7 @@ function Step6({ r, watch }) {
       }>
         Em caso de dúvidas sobre estas informações, consulte o contador responsável pela empresa antes de preencher.
       </InfoBanner>
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div className="col-span-2">
         <Select label="CRT — Código de Regime Tributário" options={CRT_OPTIONS} {...r("crt")} />
       </div>
@@ -531,7 +531,7 @@ function Step7({ r, watch }) {
 function Step8({ r, certFile, onCertChange }) {
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Input label="CSC" placeholder="Código de segurança" {...r("csc")} />
         <Input label="Token NFCe" placeholder="Token da SEFAZ" {...r("token")} />
         <Input label="Última Série NFCe" placeholder="Ex: 001" {...r("ultima_serie_nfce")} />
@@ -785,8 +785,8 @@ export default function Solicitar() {
       </header>
 
       {/* ── Content ── */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 pt-20 pb-24">
-        <div className="w-full max-w-xl">
+      <main className="flex-1 overflow-y-auto flex flex-col items-center px-4 sm:px-6 pt-20 pb-24">
+        <div className="w-full max-w-xl my-auto">
 
           {/* Step label */}
           <div className="mb-7">
