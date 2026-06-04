@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Layout } from "../components/layout/Layout";
 import { resultadosApi } from "../services/api";
 import {
@@ -6,8 +6,9 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer,
 } from "recharts";
-import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
+
+// Leaflet carregado somente quando o usuário abre a aba Mapa
+const MapaTab = lazy(() => import("./ResultadosMapaTab"));
 
 // ── Paleta ────────────────────────────────────────────────────────────────────
 const C = {
@@ -227,112 +228,7 @@ function AbaVisaoGeral({ filtros }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// ABA 2 — MAPA
-// ═══════════════════════════════════════════════════════════════════════════════
-const STATUS_COR_MAPA = {
-  concluida:    "#10b981",
-  em_andamento: "#3b82f6",
-  pausada:      "#f59e0b",
-  cancelada:    "#9ca3af",
-};
-
-const STATUS_LABEL_MAPA = {
-  concluida:    "Concluída",
-  em_andamento: "Em andamento",
-  pausada:      "Pausada",
-  cancelada:    "Cancelada",
-};
-
-function AbaMapa({ filtros }) {
-  const [pontos,  setPontos]  = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filtroStatus, setFiltroStatus] = useState("todos");
-
-  useEffect(() => {
-    setLoading(true);
-    resultadosApi.clientesMapa({ periodo_dias: filtros.periodo })
-      .then(r => setPontos(r.data))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [filtros.periodo]);
-
-  const visiveis = filtroStatus === "todos" ? pontos : pontos.filter(p => p.status === filtroStatus);
-
-  const legendas = [
-    { status: "concluida",    label: "Concluída" },
-    { status: "em_andamento", label: "Em andamento" },
-    { status: "pausada",      label: "Pausada" },
-    { status: "cancelada",    label: "Cancelada" },
-  ];
-
-  return (
-    <div className="space-y-4">
-      {/* Filtro de status */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-wrap items-center gap-3">
-        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider shrink-0">Status:</span>
-        <button onClick={() => setFiltroStatus("todos")}
-          className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${filtroStatus === "todos" ? "bg-gray-800 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
-          Todos ({pontos.length})
-        </button>
-        {legendas.map(l => (
-          <button key={l.status} onClick={() => setFiltroStatus(l.status)}
-            className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors flex items-center gap-1.5 ${filtroStatus === l.status ? "text-white" : "text-gray-600 bg-gray-100 hover:bg-gray-200"}`}
-            style={filtroStatus === l.status ? { backgroundColor: STATUS_COR_MAPA[l.status] } : {}}>
-            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: STATUS_COR_MAPA[l.status] }} />
-            {l.label} ({pontos.filter(p => p.status === l.status).length})
-          </button>
-        ))}
-        <span className="ml-auto text-xs text-gray-400">{visiveis.length} ponto{visiveis.length !== 1 ? "s" : ""} visível{visiveis.length !== 1 ? "s" : ""}</span>
-      </div>
-
-      {/* Mapa */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden" style={{ height: 520 }}>
-        {loading ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="w-6 h-6 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" />
-          </div>
-        ) : (
-          <MapContainer center={[-14.5, -51.5]} zoom={4} style={{ height: "100%", width: "100%" }}
-            scrollWheelZoom={true}>
-            <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-              attribution='&copy; <a href="https://carto.com">CARTO</a>'
-            />
-              {visiveis.map(p => (
-                <CircleMarker key={p.id} center={[p.lat, p.lng]}
-                  radius={9}
-                  fillColor={STATUS_COR_MAPA[p.status] || "#9ca3af"}
-                  fillOpacity={0.88}
-                  color="#fff" weight={1.5}>
-                  <Popup>
-                    <div className="text-xs space-y-1 min-w-[180px]">
-                      <p className="font-bold text-gray-900 text-sm">{p.cliente_nome}</p>
-                      <p className="text-gray-500">{p.cidade} — {p.estado}</p>
-                      <hr className="border-gray-100 my-1" />
-                      <p><span className="text-gray-400">Status:</span>{" "}
-                        <span className="font-semibold" style={{ color: STATUS_COR_MAPA[p.status] }}>
-                          {STATUS_LABEL_MAPA[p.status] || p.status}
-                        </span>
-                      </p>
-                      {p.consultor && <p><span className="text-gray-400">Consultor:</span> {p.consultor}</p>}
-                      {p.data_prevista && <p><span className="text-gray-400">Prevista:</span> {new Date(p.data_prevista).toLocaleDateString("pt-BR")}</p>}
-                      <p><span className="text-gray-400">Progresso:</span> {p.progresso}%</p>
-                    </div>
-                  </Popup>
-                </CircleMarker>
-              ))}
-          </MapContainer>
-        )}
-      </div>
-
-      {/* Nota sobre coordenadas */}
-      <p className="text-[11px] text-gray-400 text-center">
-        * Coordenadas aproximadas baseadas no estado do cliente.
-      </p>
-    </div>
-  );
-}
+// MapaTab (aba 2) é lazy-loaded via React.lazy — Leaflet só carrega ao abrir a aba
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ABA 3 — EQUIPE
@@ -706,7 +602,11 @@ export default function Resultados() {
 
       {/* Conteúdo da aba */}
       {activeTab === "visao-geral" && <AbaVisaoGeral filtros={filtros} />}
-      {activeTab === "mapa"        && <AbaMapa        filtros={filtros} />}
+      {activeTab === "mapa"        && (
+        <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="w-6 h-6 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" /></div>}>
+          <MapaTab filtros={filtros} />
+        </Suspense>
+      )}
       {activeTab === "equipe"      && <AbaEquipe       filtros={filtros} />}
       {activeTab === "produtos"    && <AbaProdutos     filtros={filtros} />}
       {activeTab === "regioes"     && <AbaRegioes      filtros={filtros} />}
