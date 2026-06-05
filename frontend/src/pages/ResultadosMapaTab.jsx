@@ -176,6 +176,9 @@ export default function ResultadosMapaTab({ filtros }) {
           <MapContainer
             center={[-14.5, -51.5]}
             zoom={4}
+            minZoom={3}
+            maxBounds={[[-35, -75], [6, -28]]}
+            maxBoundsViscosity={1.0}
             style={{ height: "100%", width: "100%" }}
             scrollWheelZoom
           >
