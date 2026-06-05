@@ -428,6 +428,7 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
   }
 
   async function handleOpenNotifs() {
+    console.log("[NOTIF] clicou, showNotifs=", showNotifs);
     if (showNotifs) { setShowNotifs(false); return; }
     setNotifLoading(true);
     try {
