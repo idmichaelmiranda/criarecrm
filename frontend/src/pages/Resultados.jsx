@@ -7,8 +7,14 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-// Leaflet carregado somente quando o usuário abre a aba Mapa
-const MapaTab = lazy(() => import("./ResultadosMapaTab"));
+// Leaflet carregado somente quando o usuário abre a aba Mapa.
+// Se o chunk não existir (build novo, cache antigo), recarrega a página automaticamente.
+const MapaTab = lazy(() =>
+  import("./ResultadosMapaTab").catch(() => {
+    window.location.reload();
+    return new Promise(() => {});
+  })
+);
 
 // ── Paleta ────────────────────────────────────────────────────────────────────
 const C = {
