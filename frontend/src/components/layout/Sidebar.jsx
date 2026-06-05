@@ -149,7 +149,7 @@ const NOTIF_TIPO = {
 };
 const NOTIF_DEFAULT = { bg: "bg-gray-100", fg: "text-gray-400", d: "M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" };
 
-function NotifDropdown({ notifs, onMarcarLida, onMarcarTodas, onClose, navigate, collapsed, isMobile }) {
+function NotifDropdown({ notifs, loading, onMarcarLida, onMarcarTodas, onClose, navigate, collapsed, isMobile }) {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -233,7 +233,11 @@ function NotifDropdown({ notifs, onMarcarLida, onMarcarTodas, onClose, navigate,
       </div>
 
       <div className="overflow-y-auto flex-1">
-        {notifs.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <span className="w-6 h-6 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" />
+          </div>
+        ) : notifs.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4">
             <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mb-3">
               <svg className="w-6 h-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -425,18 +429,15 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
 
   const handleCloseNotifs = useCallback(() => setShowNotifs(false), []);
 
-  async function handleOpenNotifs() {
+  function handleOpenNotifs() {
     if (showNotifs) { setShowNotifs(false); return; }
-    setNotifLoading(true);
-    try {
-      const { data } = await notificacoesApi.listar();
-      setNotifs(data);
-    } catch {
-      setNotifs([]);
-    } finally {
-      setNotifLoading(false);
-    }
+    // Abre imediatamente — carrega notificações em background
     setShowNotifs(true);
+    setNotifLoading(true);
+    notificacoesApi.listar()
+      .then(({ data }) => setNotifs(data))
+      .catch(() => setNotifs([]))
+      .finally(() => setNotifLoading(false));
   }
 
   async function handleMarcarLida(id) {
@@ -708,6 +709,7 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
       {showNotifs && (
         <NotifDropdown
           notifs={notifs}
+          loading={notifLoading}
           onMarcarLida={handleMarcarLida}
           onMarcarTodas={handleMarcarTodas}
           onClose={handleCloseNotifs}
