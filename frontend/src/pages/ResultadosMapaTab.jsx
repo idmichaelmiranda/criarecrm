@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { MapContainer, TileLayer, CircleMarker, Tooltip, Popup, GeoJSON } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { resultadosApi } from "../services/api";
@@ -23,6 +23,22 @@ export default function ResultadosMapaTab({ filtros }) {
   const [filtroStatus,  setFiltroStatus]  = useState("todos");
   const [filtroTipo,    setFiltroTipo]    = useState("todos");
   const [estadosGeo,    setEstadosGeo]    = useState(null);
+  const [mapaFull,      setMapaFull]      = useState(false);
+  const mapaRef = useRef(null);
+
+  useEffect(() => {
+    function onFsChange() { setMapaFull(!!document.fullscreenElement); }
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
+
+  function toggleMapaFull() {
+    if (!document.fullscreenElement) {
+      mapaRef.current?.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  }
 
   useEffect(() => {
     fetch("/brazil-states.geojson")
@@ -130,7 +146,28 @@ export default function ResultadosMapaTab({ filtros }) {
       )}
 
       {/* Mapa */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden" style={{ height: 520 }}>
+      <div
+        ref={mapaRef}
+        className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden relative"
+        style={{ height: mapaFull ? "100vh" : 520 }}
+      >
+        {/* Botão fullscreen do mapa */}
+        <button
+          onClick={toggleMapaFull}
+          title={mapaFull ? "Sair da tela cheia" : "Expandir mapa"}
+          className="absolute top-3 right-3 z-[1000] bg-white bg-opacity-90 hover:bg-opacity-100 border border-gray-200 rounded-lg p-1.5 shadow-sm transition-all"
+          style={{ lineHeight: 0 }}
+        >
+          {mapaFull ? (
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M15 9h4.5M15 9V4.5M9 15v4.5M9 15H4.5M15 15h4.5M15 15v4.5" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+            </svg>
+          )}
+        </button>
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="w-6 h-6 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" />
