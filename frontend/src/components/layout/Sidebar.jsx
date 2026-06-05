@@ -1,5 +1,6 @@
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { solicitacoesApi, usuariosApi, authApi, instalacaosApi, notificacoesApi } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 import { timeAgoFromUTC } from "../../utils/dateUtils";
@@ -151,10 +152,8 @@ const NOTIF_DEFAULT = { bg: "bg-gray-100", fg: "text-gray-400", d: "M15 17h5l-1.
 
 function NotifDropdown({ notifs, loading, onMarcarLida, onMarcarTodas, onClose, navigate, collapsed, isMobile }) {
   const ref = useRef(null);
-  console.log("[NOTIF-DROPDOWN] renderizou, isMobile=", isMobile, "collapsed=", collapsed);
 
   useEffect(() => {
-    console.log("[NOTIF-DROPDOWN] useEffect - ref:", ref.current);
     function handleClick(e) {
       if (ref.current && !ref.current.contains(e.target)) onClose();
     }
@@ -430,20 +429,16 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
   }
 
   async function handleOpenNotifs() {
-    console.log("[NOTIF] clicou, showNotifs=", showNotifs);
     if (showNotifs) { setShowNotifs(false); return; }
     setNotifLoading(true);
     try {
       const { data } = await notificacoesApi.listar();
       setNotifs(data);
-      console.log("[NOTIF] api ok, total=", data?.length);
-    } catch (e) {
+    } catch {
       setNotifs([]);
-      console.error("[NOTIF] api erro:", e?.message);
     } finally {
       setNotifLoading(false);
     }
-    console.log("[NOTIF] setShowNotifs(true)");
     setShowNotifs(true);
   }
 
@@ -712,8 +707,8 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
         )}
       </div>
 
-      {/* ── Dropdown de notificações ── */}
-      {showNotifs && (
+      {/* ── Dropdown de notificações — Portal para escapar do overflow:hidden ── */}
+      {showNotifs && createPortal(
         <NotifDropdown
           notifs={notifs}
           loading={notifLoading}
@@ -723,7 +718,8 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
           navigate={navigate}
           collapsed={collapsed}
           isMobile={isMobile}
-        />
+        />,
+        document.body
       )}
 
       {/* ── Popup senha do dia (modo colapsado) ── */}
