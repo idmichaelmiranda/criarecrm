@@ -643,7 +643,7 @@ export default function Resultados() {
       {activeTab === "visao-geral" && <AbaVisaoGeral filtros={filtros} />}
       {activeTab === "mapa"        && (
         <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="w-6 h-6 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" /></div>}>
-          <MapaTab filtros={filtros} />
+          <MapaTab filtros={filtros} onFiltroChange={setFiltro} />
         </Suspense>
       )}
       {activeTab === "equipe"      && <AbaEquipe       filtros={filtros} />}
