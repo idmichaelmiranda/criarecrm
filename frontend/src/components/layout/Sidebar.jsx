@@ -151,8 +151,10 @@ const NOTIF_DEFAULT = { bg: "bg-gray-100", fg: "text-gray-400", d: "M15 17h5l-1.
 
 function NotifDropdown({ notifs, loading, onMarcarLida, onMarcarTodas, onClose, navigate, collapsed, isMobile }) {
   const ref = useRef(null);
+  console.log("[NOTIF-DROPDOWN] renderizou, isMobile=", isMobile, "collapsed=", collapsed);
 
   useEffect(() => {
+    console.log("[NOTIF-DROPDOWN] useEffect - ref:", ref.current);
     function handleClick(e) {
       if (ref.current && !ref.current.contains(e.target)) onClose();
     }
@@ -434,11 +436,14 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
     try {
       const { data } = await notificacoesApi.listar();
       setNotifs(data);
-    } catch {
+      console.log("[NOTIF] api ok, total=", data?.length);
+    } catch (e) {
       setNotifs([]);
+      console.error("[NOTIF] api erro:", e?.message);
     } finally {
       setNotifLoading(false);
     }
+    console.log("[NOTIF] setShowNotifs(true)");
     setShowNotifs(true);
   }
 
