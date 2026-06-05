@@ -362,8 +362,9 @@ def clientes_mapa(
         coords = ESTADO_CENTROIDES.get(uf)
         if not coords:
             continue
-        lat = coords[0] + (impl.id % 11 - 5) * 0.15
-        lng = coords[1] + (impl.id % 7  - 3) * 0.20
+        # Implantações ficam ao norte do centróide (dlat > 0)
+        lat = coords[0] + 0.10 + (impl.id % 6) * 0.10
+        lng = coords[1] + ((impl.id * 3) % 13 - 6) * 0.15
         result.append({
             "id":           f"impl_{impl.id}",
             "cliente_id":   c.id,
@@ -389,8 +390,9 @@ def clientes_mapa(
         coords = ESTADO_CENTROIDES.get(uf)
         if not coords:
             continue
-        lat = coords[0] + (inst.id % 13 - 6) * 0.15
-        lng = coords[1] + (inst.id % 9  - 4) * 0.20
+        # Instalações ficam ao sul do centróide (dlat < 0)
+        lat = coords[0] - 0.10 - (inst.id % 6) * 0.10
+        lng = coords[1] + ((inst.id * 5) % 13 - 6) * 0.15
         result.append({
             "id":           f"inst_{inst.id}",
             "cliente_id":   c.id,
