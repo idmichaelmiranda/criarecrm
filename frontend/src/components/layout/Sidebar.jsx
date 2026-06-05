@@ -427,17 +427,18 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
     try { await navigator.clipboard.writeText(senhaDia); setSenhaCopied(true); setTimeout(() => setSenhaCopied(false), 2000); } catch {}
   }
 
-  const handleCloseNotifs = useCallback(() => setShowNotifs(false), []);
-
-  function handleOpenNotifs() {
+  async function handleOpenNotifs() {
     if (showNotifs) { setShowNotifs(false); return; }
-    // Abre imediatamente — carrega notificações em background
-    setShowNotifs(true);
     setNotifLoading(true);
-    notificacoesApi.listar()
-      .then(({ data }) => setNotifs(data))
-      .catch(() => setNotifs([]))
-      .finally(() => setNotifLoading(false));
+    try {
+      const { data } = await notificacoesApi.listar();
+      setNotifs(data);
+    } catch {
+      setNotifs([]);
+    } finally {
+      setNotifLoading(false);
+    }
+    setShowNotifs(true);
   }
 
   async function handleMarcarLida(id) {
@@ -712,7 +713,7 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
           loading={notifLoading}
           onMarcarLida={handleMarcarLida}
           onMarcarTodas={handleMarcarTodas}
-          onClose={handleCloseNotifs}
+          onClose={() => setShowNotifs(false)}
           navigate={navigate}
           collapsed={collapsed}
           isMobile={isMobile}
