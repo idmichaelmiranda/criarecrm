@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { MapContainer, TileLayer, CircleMarker, Tooltip, useMapEvents } from "react-leaflet";
+import { useState, useEffect, useCallback } from "react";
+import { MapContainer, TileLayer, CircleMarker, Tooltip, Popup, GeoJSON } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { resultadosApi } from "../services/api";
 
@@ -15,19 +15,20 @@ const STATUS_LABEL = {
   pausada:      "Pausada",
   cancelada:    "Cancelada",
 };
-
-function ZoomWatcher({ onZoom }) {
-  useMapEvents({ zoomend: (e) => onZoom(e.target.getZoom()) });
-  return null;
-}
-
 const TIPO_LABEL = { implantacao: "Implantação", instalacao: "Instalação" };
 
 export default function ResultadosMapaTab({ filtros }) {
-  const [pontos,       setPontos]       = useState([]);
-  const [loading,      setLoading]      = useState(true);
-  const [filtroStatus, setFiltroStatus] = useState("todos");
-  const [zoom,         setZoom]         = useState(4);
+  const [pontos,        setPontos]        = useState([]);
+  const [loading,       setLoading]       = useState(true);
+  const [filtroStatus,  setFiltroStatus]  = useState("todos");
+  const [estadosGeo,    setEstadosGeo]    = useState(null);
+
+  useEffect(() => {
+    fetch("/brazil-states.geojson")
+      .then(r => r.json())
+      .then(setEstadosGeo)
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -41,12 +42,23 @@ export default function ResultadosMapaTab({ filtros }) {
     ? pontos
     : pontos.filter(p => p.status === filtroStatus);
 
+  // Estados que têm ao menos 1 ponto (todos os pontos, não só os filtrados)
+  const estadosAtivos = new Set(pontos.map(p => p.estado).filter(Boolean));
+
   const legendas = [
     { status: "concluida",    label: "Concluída" },
     { status: "em_andamento", label: "Em andamento" },
     { status: "pausada",      label: "Pausada" },
     { status: "cancelada",    label: "Cancelada" },
   ];
+
+  const styleEstado = useCallback((feature) => {
+    const uf = feature.properties?.sigla;
+    const desbloqueado = estadosAtivos.has(uf);
+    return desbloqueado
+      ? { fillColor: "#f97316", fillOpacity: 0.08, color: "#f97316", weight: 1.5, opacity: 0.7 }
+      : { fillColor: "#000000", fillOpacity: 0.58, color: "#374151", weight: 0.4, opacity: 0.5 };
+  }, [estadosAtivos]);
 
   return (
     <div className="space-y-4">
@@ -79,6 +91,21 @@ export default function ResultadosMapaTab({ filtros }) {
         </span>
       </div>
 
+      {/* Legenda dos estados */}
+      {estadosAtivos.size > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider shrink-0">Estados ativos:</span>
+          {[...estadosAtivos].sort().map(uf => (
+            <span key={uf} className="px-2 py-0.5 rounded-full text-xs font-bold bg-orange-50 text-orange-600 border border-orange-200">
+              {uf}
+            </span>
+          ))}
+          <span className="ml-auto text-xs text-gray-400">
+            {estadosAtivos.size} de 27 estado{estadosAtivos.size !== 1 ? "s" : ""} desbloqueado{estadosAtivos.size !== 1 ? "s" : ""}
+          </span>
+        </div>
+      )}
+
       {/* Mapa */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden" style={{ height: 520 }}>
         {loading ? (
@@ -96,49 +123,59 @@ export default function ResultadosMapaTab({ filtros }) {
               url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
               attribution='&copy; <a href="https://carto.com">CARTO</a>'
             />
-            <ZoomWatcher onZoom={setZoom} />
+
+            {/* Fog of war — estados bloqueados/desbloqueados */}
+            {estadosGeo && (
+              <GeoJSON
+                key={[...estadosAtivos].join(",")}
+                data={estadosGeo}
+                style={styleEstado}
+              />
+            )}
+
+            {/* Marcadores dos clientes */}
             {visiveis.map(p => (
               <CircleMarker
                 key={p.id}
                 center={[p.lat, p.lng]}
                 radius={9}
                 fillColor={STATUS_COR[p.status] || "#9ca3af"}
-                fillOpacity={0.88}
+                fillOpacity={0.9}
                 color="#fff"
                 weight={1.5}
               >
-                {zoom >= 7 ? (
-                  <Tooltip permanent direction="top" offset={[0, -10]}>
-                    <span style={{ fontSize: 11, fontWeight: 600 }}>{p.cidade}</span>
-                  </Tooltip>
-                ) : (
-                  <Tooltip sticky>
-                    <div style={{ minWidth: 180, fontSize: 12 }}>
-                      <p style={{ fontWeight: 700, marginBottom: 4 }}>{p.cliente_nome}</p>
-                      <p style={{ color: "#6b7280", marginBottom: 6 }}>{p.cidade} — {p.estado}</p>
+                {/* Cidade sempre visível no hover */}
+                <Tooltip sticky direction="top" offset={[0, -6]}>
+                  <span style={{ fontSize: 11, fontWeight: 600 }}>{p.cidade || p.estado}</span>
+                </Tooltip>
+
+                {/* Card completo no clique */}
+                <Popup minWidth={200}>
+                  <div style={{ fontSize: 12, lineHeight: 1.6 }}>
+                    <p style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{p.cliente_nome}</p>
+                    <p style={{ color: "#6b7280", marginBottom: 6 }}>{p.cidade} — {p.estado}</p>
+                    <p>
+                      <span style={{ color: "#9ca3af" }}>Tipo: </span>
+                      <span style={{ fontWeight: 600 }}>{TIPO_LABEL[p.tipo] || p.tipo || "—"}</span>
+                    </p>
+                    <p>
+                      <span style={{ color: "#9ca3af" }}>Status: </span>
+                      <span style={{ fontWeight: 600, color: STATUS_COR[p.status] }}>
+                        {STATUS_LABEL[p.status] || p.status}
+                      </span>
+                    </p>
+                    {p.consultor && (
+                      <p><span style={{ color: "#9ca3af" }}>Consultor: </span>{p.consultor}</p>
+                    )}
+                    {p.data_prevista && (
                       <p>
-                        <span style={{ color: "#9ca3af" }}>Tipo: </span>
-                        <span style={{ fontWeight: 600 }}>{TIPO_LABEL[p.tipo] || p.tipo}</span>
+                        <span style={{ color: "#9ca3af" }}>Prevista: </span>
+                        {new Date(p.data_prevista).toLocaleDateString("pt-BR")}
                       </p>
-                      <p>
-                        <span style={{ color: "#9ca3af" }}>Status: </span>
-                        <span style={{ fontWeight: 600, color: STATUS_COR[p.status] }}>
-                          {STATUS_LABEL[p.status] || p.status}
-                        </span>
-                      </p>
-                      {p.consultor && (
-                        <p><span style={{ color: "#9ca3af" }}>Consultor: </span>{p.consultor}</p>
-                      )}
-                      {p.data_prevista && (
-                        <p>
-                          <span style={{ color: "#9ca3af" }}>Prevista: </span>
-                          {new Date(p.data_prevista).toLocaleDateString("pt-BR")}
-                        </p>
-                      )}
-                      <p><span style={{ color: "#9ca3af" }}>Progresso: </span>{p.progresso}%</p>
-                    </div>
-                  </Tooltip>
-                )}
+                    )}
+                    <p><span style={{ color: "#9ca3af" }}>Progresso: </span>{p.progresso}%</p>
+                  </div>
+                </Popup>
               </CircleMarker>
             ))}
           </MapContainer>
@@ -146,7 +183,7 @@ export default function ResultadosMapaTab({ filtros }) {
       </div>
 
       <p className="text-[11px] text-gray-400 text-center">
-        * Coordenadas aproximadas baseadas no estado do cliente.
+        * Coordenadas aproximadas baseadas no estado do cliente. Estados desbloqueados conforme operações ativas.
       </p>
     </div>
   );
