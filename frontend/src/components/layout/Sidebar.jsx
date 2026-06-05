@@ -331,6 +331,7 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
   const [notifCount, setNotifCount]         = useState(0);
   const [notifs, setNotifs]                 = useState([]);
   const [showNotifs, setShowNotifs]         = useState(false);
+  const [notifLoading, setNotifLoading]     = useState(false);
   const [uploading, setUploading]           = useState(false);
   const [senhaDia, setSenhaDia]             = useState(null);
   const [senhaLoading, setSenhaLoading]     = useState(true);
@@ -422,12 +423,19 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
     try { await navigator.clipboard.writeText(senhaDia); setSenhaCopied(true); setTimeout(() => setSenhaCopied(false), 2000); } catch {}
   }
 
+  const handleCloseNotifs = useCallback(() => setShowNotifs(false), []);
+
   async function handleOpenNotifs() {
     if (showNotifs) { setShowNotifs(false); return; }
+    setNotifLoading(true);
     try {
       const { data } = await notificacoesApi.listar();
       setNotifs(data);
-    } catch {}
+    } catch {
+      setNotifs([]);
+    } finally {
+      setNotifLoading(false);
+    }
     setShowNotifs(true);
   }
 
@@ -504,10 +512,13 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
                   showNotifs ? "text-orange-400 bg-orange-500/20" : notifCount > 0 ? "text-slate-300 bg-white/8 hover:bg-white/12" : "text-slate-500 hover:text-slate-300 hover:bg-white/8"
                 }`}
               >
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                {notifCount > 0 && (
+                {notifLoading
+                  ? <span className="w-4 h-4 rounded-full border-2 border-slate-400 border-t-transparent animate-spin" />
+                  : <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                }
+                {!notifLoading && notifCount > 0 && (
                   <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-0.5 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold leading-none animate-pulse">
                     {notifCount > 9 ? "9+" : notifCount}
                   </span>
@@ -557,10 +568,13 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
                   showNotifs ? "text-orange-400 bg-orange-500/20" : notifCount > 0 ? "text-slate-300 bg-white/8 hover:bg-white/12" : "text-slate-500 hover:text-slate-300 hover:bg-white/8"
                 }`}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                {notifCount > 0 && (
+                {notifLoading
+                  ? <span className="w-5 h-5 rounded-full border-2 border-slate-400 border-t-transparent animate-spin" />
+                  : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                }
+                {!notifLoading && notifCount > 0 && (
                   <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold leading-none animate-pulse shadow-sm">
                     {notifCount > 9 ? "9+" : notifCount}
                   </span>
@@ -696,7 +710,7 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
           notifs={notifs}
           onMarcarLida={handleMarcarLida}
           onMarcarTodas={handleMarcarTodas}
-          onClose={() => setShowNotifs(false)}
+          onClose={handleCloseNotifs}
           navigate={navigate}
           collapsed={collapsed}
           isMobile={isMobile}
