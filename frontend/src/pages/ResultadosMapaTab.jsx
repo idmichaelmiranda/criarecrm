@@ -3,19 +3,14 @@ import { MapContainer, TileLayer, CircleMarker, Tooltip, Popup, GeoJSON } from "
 import "leaflet/dist/leaflet.css";
 import { resultadosApi } from "../services/api";
 
-const STATUS_COR = {
-  concluida:    "#10b981",
-  em_andamento: "#3b82f6",
-  pausada:      "#f59e0b",
-  cancelada:    "#9ca3af",
-};
-const STATUS_LABEL = {
-  concluida:    "Concluída",
-  em_andamento: "Em andamento",
-  pausada:      "Pausada",
-  cancelada:    "Cancelada",
-};
+// Cor = tipo (identidade visual no mapa)
+const TIPO_COR   = { implantacao: "#3b82f6", instalacao: "#10b981" };
 const TIPO_LABEL = { implantacao: "Implantação", instalacao: "Instalação" };
+
+// Status = opacidade (intensidade do ponto)
+const STATUS_OPACITY = { concluida: 1.0, em_andamento: 0.65, pausada: 0.45, cancelada: 0.25 };
+const STATUS_LABEL   = { concluida: "Concluída", em_andamento: "Em andamento", pausada: "Pausada", cancelada: "Cancelada" };
+const STATUS_COR_TEXTO = { concluida: "#10b981", em_andamento: "#3b82f6", pausada: "#f59e0b", cancelada: "#9ca3af" };
 
 export default function ResultadosMapaTab({ filtros }) {
   const [pontos,        setPontos]        = useState([]);
@@ -81,21 +76,23 @@ export default function ResultadosMapaTab({ filtros }) {
 
   return (
     <div className="space-y-4">
-      {/* Filtro por tipo */}
+      {/* Filtro por tipo — cor identifica o tipo no mapa */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3 flex flex-wrap items-center gap-3">
         <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider shrink-0">Tipo:</span>
         {[
-          { key: "todos",        label: "Todos",          count: pontos.length },
-          { key: "implantacao",  label: "Implantações",   count: pontos.filter(p => p.tipo === "implantacao").length },
-          { key: "instalacao",   label: "Instalações",    count: pontos.filter(p => p.tipo === "instalacao").length },
+          { key: "todos",       label: "Todos",         count: pontos.length,                                          cor: null },
+          { key: "implantacao", label: "Implantações",  count: pontos.filter(p => p.tipo === "implantacao").length,    cor: TIPO_COR.implantacao },
+          { key: "instalacao",  label: "Instalações",   count: pontos.filter(p => p.tipo === "instalacao").length,     cor: TIPO_COR.instalacao  },
         ].map(t => (
           <button
             key={t.key}
             onClick={() => setFiltroTipo(t.key)}
-            className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
-              filtroTipo === t.key ? "bg-orange-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+              filtroTipo === t.key ? "text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
+            style={filtroTipo === t.key ? { backgroundColor: t.cor ?? "#1f2937" } : {}}
           >
+            {t.cor && <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: t.cor }} />}
             {t.label} ({t.count})
           </button>
         ))}
@@ -116,12 +113,10 @@ export default function ResultadosMapaTab({ filtros }) {
           <button
             key={l.status}
             onClick={() => setFiltroStatus(l.status)}
-            className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors flex items-center gap-1.5 ${
-              filtroStatus === l.status ? "text-white" : "text-gray-600 bg-gray-100 hover:bg-gray-200"
+            className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+              filtroStatus === l.status ? "bg-gray-800 text-white" : "text-gray-600 bg-gray-100 hover:bg-gray-200"
             }`}
-            style={filtroStatus === l.status ? { backgroundColor: STATUS_COR[l.status] } : {}}
           >
-            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: STATUS_COR[l.status] }} />
             {l.label} ({pontosFiltrados.filter(p => p.status === l.status).length})
           </button>
         ))}
@@ -202,8 +197,8 @@ export default function ResultadosMapaTab({ filtros }) {
                 key={p.id}
                 center={[p.lat, p.lng]}
                 radius={9}
-                fillColor={STATUS_COR[p.status] || "#9ca3af"}
-                fillOpacity={0.9}
+                fillColor={TIPO_COR[p.tipo] || "#9ca3af"}
+                fillOpacity={STATUS_OPACITY[p.status] ?? 0.8}
                 color="#fff"
                 weight={1.5}
               >
@@ -223,7 +218,7 @@ export default function ResultadosMapaTab({ filtros }) {
                     </p>
                     <p>
                       <span style={{ color: "#9ca3af" }}>Status: </span>
-                      <span style={{ fontWeight: 600, color: STATUS_COR[p.status] }}>
+                      <span style={{ fontWeight: 600, color: STATUS_COR_TEXTO[p.status] }}>
                         {STATUS_LABEL[p.status] || p.status}
                       </span>
                     </p>
