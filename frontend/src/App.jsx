@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { PresentationProvider } from "./contexts/PresentationContext";
 import { PrivateRoute } from "./components/auth/PrivateRoute";
 import Landing from "./pages/Landing";
 import Solicitar from "./pages/Solicitar";
@@ -26,6 +27,7 @@ import DefinirSenha from "./pages/DefinirSenha";
 export default function App() {
   return (
     <BrowserRouter>
+      <PresentationProvider>
       <AuthProvider>
         <Routes>
           {/* Public routes */}
@@ -86,6 +88,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
+      </PresentationProvider>
     </BrowserRouter>
   );
 }

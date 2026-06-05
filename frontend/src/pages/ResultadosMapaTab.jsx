@@ -19,7 +19,7 @@ const PERIODO_OPTS = [
   { value: "365", label: "1 ano"    },
 ];
 
-export default function ResultadosMapaTab({ filtros, onFiltroChange }) {
+export default function ResultadosMapaTab({ filtros, onFiltroChange, presentationMode = false }) {
   const [pontos,         setPontos]         = useState([]);
   const [loading,        setLoading]        = useState(true);
   const [filtroStatus,   setFiltroStatus]   = useState("todos");
@@ -83,9 +83,9 @@ export default function ResultadosMapaTab({ filtros, onFiltroChange }) {
   }, [estadosAtivos]);
 
   return (
-    <div className="space-y-4">
-      {/* Filtro por tipo — cor identifica o tipo no mapa */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3 flex flex-wrap items-center gap-3">
+    <div className={presentationMode ? "" : "space-y-4"}>
+      {/* Filtro por tipo — oculto em apresentação */}
+      {!presentationMode && <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3 flex flex-wrap items-center gap-3">
         <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider shrink-0">Tipo:</span>
         {[
           { key: "todos",       label: "Todos",         count: pontos.length,                                          cor: null },
@@ -104,10 +104,10 @@ export default function ResultadosMapaTab({ filtros, onFiltroChange }) {
             {t.label} ({t.count})
           </button>
         ))}
-      </div>
+      </div>}
 
-      {/* Filtro de status */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-wrap items-center gap-3">
+      {/* Filtro de status — oculto em apresentação */}
+      {!presentationMode && <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-wrap items-center gap-3">
         <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider shrink-0">Status:</span>
         <button
           onClick={() => setFiltroStatus("todos")}
@@ -131,10 +131,10 @@ export default function ResultadosMapaTab({ filtros, onFiltroChange }) {
         <span className="ml-auto text-xs text-gray-400">
           {visiveis.length} ponto{visiveis.length !== 1 ? "s" : ""} visível{visiveis.length !== 1 ? "s" : ""}
         </span>
-      </div>
+      </div>}
 
-      {/* Legenda dos estados */}
-      {estadosAtivos.size > 0 && (
+      {/* Legenda dos estados — oculta em apresentação */}
+      {!presentationMode && estadosAtivos.size > 0 && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3 flex flex-wrap items-center gap-2">
           <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider shrink-0">Estados ativos:</span>
           {[...estadosAtivos].sort().map(uf => (
@@ -152,7 +152,7 @@ export default function ResultadosMapaTab({ filtros, onFiltroChange }) {
       <div
         ref={mapaRef}
         className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden relative"
-        style={{ height: mapaFull ? "100vh" : 520 }}
+        style={{ height: (mapaFull || presentationMode) ? "100vh" : 520 }}
       >
         {/* ── Indicador de filtros ativos (topo central, sempre visível no mapa) ── */}
         {!loading && (filtroTipo !== "todos" || filtroStatus !== "todos" || filtros.periodo !== "365") && (
@@ -193,23 +193,25 @@ export default function ResultadosMapaTab({ filtros, onFiltroChange }) {
             </svg>
             Filtros
           </button>
-          {/* Botão fullscreen */}
-          <button
-            onClick={toggleMapaFull}
-            title={mapaFull ? "Sair da tela cheia" : "Expandir mapa"}
-            className="bg-white bg-opacity-90 hover:bg-opacity-100 border border-gray-200 rounded-lg p-1.5 shadow-sm transition-all"
-            style={{ lineHeight: 0 }}
-          >
-            {mapaFull ? (
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M15 9h4.5M15 9V4.5M9 15v4.5M9 15H4.5M15 15h4.5M15 15v4.5" />
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
-              </svg>
-            )}
-          </button>
+          {/* Botão fullscreen — oculto em modo apresentação (já está fullscreen) */}
+          {!presentationMode && (
+            <button
+              onClick={toggleMapaFull}
+              title={mapaFull ? "Sair da tela cheia" : "Expandir mapa"}
+              className="bg-white bg-opacity-90 hover:bg-opacity-100 border border-gray-200 rounded-lg p-1.5 shadow-sm transition-all"
+              style={{ lineHeight: 0 }}
+            >
+              {mapaFull ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M15 9h4.5M15 9V4.5M9 15v4.5M9 15H4.5M15 15h4.5M15 15v4.5" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                </svg>
+              )}
+            </button>
+          )}
         </div>
 
         {/* ── Painel de filtros inline ── */}
@@ -377,9 +379,11 @@ export default function ResultadosMapaTab({ filtros, onFiltroChange }) {
         )}
       </div>
 
-      <p className="text-[11px] text-gray-400 text-center">
-        * Coordenadas aproximadas baseadas no estado do cliente. Estados desbloqueados conforme operações ativas.
-      </p>
+      {!presentationMode && (
+        <p className="text-[11px] text-gray-400 text-center">
+          * Coordenadas aproximadas baseadas no estado do cliente. Estados desbloqueados conforme operações ativas.
+        </p>
+      )}
     </div>
   );
 }

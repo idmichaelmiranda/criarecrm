@@ -1,4 +1,6 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
+import { usePresentationMode } from "../contexts/PresentationContext";
 import { Layout } from "../components/layout/Layout";
 import { resultadosApi } from "../services/api";
 import {
@@ -524,34 +526,153 @@ const TABS = [
   { key: "regioes",     label: "Regiões",       icon: "M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" },
 ];
 
+// ── HUD flutuante do modo apresentação ────────────────────────────────────────
+function PresentationHUD({ activeTab, onChangeTab, filtros, onExit }) {
+  const [escVisible, setEscVisible] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setEscVisible(false), 3000);
+    return () => clearTimeout(t);
+  }, []);
+
+  const tabIdx       = TABS.findIndex(t => t.key === activeTab);
+  const prevTab      = TABS[(tabIdx - 1 + TABS.length) % TABS.length];
+  const nextTab      = TABS[(tabIdx + 1) % TABS.length];
+  const periodoLabel = PERIODOS.find(p => p.value === filtros.periodo)?.label ?? "";
+  const filtroTexto  = `${periodoLabel}${filtros.estado ? ` · ${filtros.estado}` : " · Todo o Brasil"}`;
+
+  return createPortal(
+    <>
+      {/* Badge filtro + botão Sair — canto superior direito */}
+      <div className="fixed top-4 right-4 z-[9999] flex items-center gap-2">
+        <div className="bg-black/50 text-white/90 text-xs px-3 py-1.5 rounded-full backdrop-blur-sm font-medium pointer-events-none select-none">
+          {filtroTexto}
+        </div>
+        <button onClick={onExit}
+          className="bg-black/50 text-white/60 hover:text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-sm transition-colors font-medium">
+          ✕ Sair
+        </button>
+      </div>
+
+      {/* Dica ESC — fade após 3s */}
+      <div
+        className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] bg-black/50 text-white/70 text-xs px-3 py-1.5 rounded-full backdrop-blur-sm pointer-events-none select-none transition-opacity duration-700"
+        style={{ opacity: escVisible ? 1 : 0 }}
+      >
+        ← → para navegar · ESC para sair
+      </div>
+
+      {/* HUD de navegação — rodapé centralizado */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-3 bg-black/60 backdrop-blur-sm rounded-2xl px-5 py-3 shadow-2xl select-none">
+        <button onClick={() => onChangeTab(prevTab.key)}
+          className="flex items-center gap-1.5 text-xs text-white/60 hover:text-white transition-colors">
+          <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          <span className="max-w-[90px] truncate">{prevTab.label}</span>
+        </button>
+
+        <div className="h-4 w-px bg-white/20 shrink-0" />
+
+        <div className="flex items-center gap-1.5">
+          {TABS.map((t) => (
+            <button key={t.key} onClick={() => onChangeTab(t.key)} title={t.label}
+              className="h-1.5 rounded-full transition-all duration-200"
+              style={{ width: t.key === activeTab ? "20px" : "6px", background: t.key === activeTab ? "#f97316" : "rgba(255,255,255,0.3)" }} />
+          ))}
+        </div>
+
+        <div className="h-4 w-px bg-white/20 shrink-0" />
+
+        <span className="text-xs font-semibold text-orange-300 min-w-[80px] text-center">
+          {TABS[tabIdx].label}
+        </span>
+
+        <span className="text-[11px] text-white/40 tabular-nums shrink-0">
+          {tabIdx + 1} / {TABS.length}
+        </span>
+
+        <div className="h-4 w-px bg-white/20 shrink-0" />
+
+        <button onClick={() => onChangeTab(nextTab.key)}
+          className="flex items-center gap-1.5 text-xs text-white/60 hover:text-white transition-colors">
+          <span className="max-w-[90px] truncate">{nextTab.label}</span>
+          <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </>,
+    document.body
+  );
+}
+
 export default function Resultados() {
-  const [activeTab,   setActiveTab]   = useState("visao-geral");
-  const [filtros,     setFiltros]     = useState({ periodo: "365", estado: "" });
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [fullscreen,  setFullscreen]  = useState(false);
+  const { setOn: setPresentationCtx } = usePresentationMode();
+  const [activeTab,        setActiveTab]        = useState("visao-geral");
+  const [filtros,          setFiltros]          = useState({ periodo: "365", estado: "" });
+  const [filtersOpen,      setFiltersOpen]      = useState(false);
+  const [presentationMode, setPresentationMode] = useState(false);
+  const [tabVisible,       setTabVisible]       = useState(true);
+  const fadeRef     = useRef(null);
+  const activeTabRef = useRef(activeTab);
+
+  useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
 
   function setFiltro(key, val) {
     setFiltros(prev => ({ ...prev, [key]: val }));
   }
 
-  function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
+  const changeTab = useCallback((key) => {
+    if (fadeRef.current) clearTimeout(fadeRef.current);
+    setTabVisible(false);
+    fadeRef.current = setTimeout(() => {
+      setActiveTab(key);
+      setTabVisible(true);
+    }, 110);
+  }, []);
+
+  function togglePresentation() {
+    if (!presentationMode) {
+      setPresentationMode(true);
+      setPresentationCtx(true);
+      document.documentElement.requestFullscreen().catch(() => {
+        setPresentationMode(false);
+        setPresentationCtx(false);
+      });
     } else {
-      document.exitFullscreen().catch(() => {});
+      setPresentationMode(false);
+      setPresentationCtx(false);
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     }
   }
 
   useEffect(() => {
-    function onFsChange() { setFullscreen(!!document.fullscreenElement); }
+    function onFsChange() {
+      if (!document.fullscreenElement) {
+        setPresentationMode(false);
+        setPresentationCtx(false);
+      }
+    }
     document.addEventListener("fullscreenchange", onFsChange);
     return () => document.removeEventListener("fullscreenchange", onFsChange);
-  }, []);
+  }, [setPresentationCtx]);
+
+  useEffect(() => {
+    if (!presentationMode) return;
+    function onKey(e) {
+      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT") return;
+      const idx = TABS.findIndex(t => t.key === activeTabRef.current);
+      if (e.key === "ArrowRight") { e.preventDefault(); changeTab(TABS[(idx + 1) % TABS.length].key); }
+      if (e.key === "ArrowLeft")  { e.preventDefault(); changeTab(TABS[(idx - 1 + TABS.length) % TABS.length].key); }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [presentationMode, changeTab]);
 
   return (
     <Layout>
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4 mb-6">
+      {/* Header — oculto em modo apresentação */}
+      {!presentationMode && <div className="flex items-start justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">Resultados</h1>
           <p className="text-sm text-gray-400 mt-0.5">Centro de inteligência operacional</p>
@@ -570,11 +691,11 @@ export default function Resultados() {
             )}
           </button>
           <button
-            onClick={toggleFullscreen}
-            title={fullscreen ? "Sair da tela cheia" : "Apresentação — tela cheia"}
+            onClick={togglePresentation}
+            title={presentationMode ? "Sair da apresentação" : "Modo apresentação — tela cheia"}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border transition-all bg-white text-gray-600 border-gray-200 hover:border-orange-300"
           >
-            {fullscreen ? (
+            {presentationMode ? (
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M15 9h4.5M15 9V4.5M9 15v4.5M9 15H4.5M15 15h4.5M15 15v4.5" />
               </svg>
@@ -583,13 +704,13 @@ export default function Resultados() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
               </svg>
             )}
-            {fullscreen ? "Minimizar" : "Apresentação"}
+            {presentationMode ? "Minimizar" : "Apresentação"}
           </button>
         </div>
-      </div>
+      </div>}
 
       {/* Filtros globais */}
-      {filtersOpen && (
+      {!presentationMode && filtersOpen && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
           <div>
             <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Período</label>
@@ -615,13 +736,13 @@ export default function Resultados() {
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-5">
+      {/* Tabs — ocultas em modo apresentação */}
+      {!presentationMode && <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-5">
         <div className="flex items-center gap-1 px-3 pt-2 overflow-x-auto">
           {TABS.map(t => (
             <button
               key={t.key}
-              onClick={() => setActiveTab(t.key)}
+              onClick={() => changeTab(t.key)}
               className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap mb-1 ${
                 activeTab === t.key
                   ? "bg-orange-50 text-orange-600"
@@ -637,18 +758,33 @@ export default function Resultados() {
             </button>
           ))}
         </div>
+      </div>}
+
+      {/* Conteúdo da aba com fade */}
+      <div
+        style={{ opacity: tabVisible ? 1 : 0, transition: "opacity 0.11s ease" }}
+        className={presentationMode && activeTab !== "mapa" ? "p-6 pb-24" : ""}
+      >
+        {activeTab === "visao-geral" && <AbaVisaoGeral filtros={filtros} />}
+        {activeTab === "mapa"        && (
+          <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="w-6 h-6 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" /></div>}>
+            <MapaTab filtros={filtros} onFiltroChange={setFiltro} presentationMode={presentationMode} />
+          </Suspense>
+        )}
+        {activeTab === "equipe"      && <AbaEquipe       filtros={filtros} />}
+        {activeTab === "produtos"    && <AbaProdutos     filtros={filtros} />}
+        {activeTab === "regioes"     && <AbaRegioes      filtros={filtros} />}
       </div>
 
-      {/* Conteúdo da aba */}
-      {activeTab === "visao-geral" && <AbaVisaoGeral filtros={filtros} />}
-      {activeTab === "mapa"        && (
-        <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="w-6 h-6 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" /></div>}>
-          <MapaTab filtros={filtros} onFiltroChange={setFiltro} />
-        </Suspense>
+      {/* HUD de apresentação */}
+      {presentationMode && (
+        <PresentationHUD
+          activeTab={activeTab}
+          onChangeTab={changeTab}
+          filtros={filtros}
+          onExit={togglePresentation}
+        />
       )}
-      {activeTab === "equipe"      && <AbaEquipe       filtros={filtros} />}
-      {activeTab === "produtos"    && <AbaProdutos     filtros={filtros} />}
-      {activeTab === "regioes"     && <AbaRegioes      filtros={filtros} />}
     </Layout>
   );
 }
