@@ -163,6 +163,50 @@ export default function ResultadosMapaTab({ filtros }) {
             </svg>
           )}
         </button>
+        {/* Legenda flutuante — canto inferior esquerdo */}
+        {!loading && (
+          <div className="absolute bottom-8 left-3 z-[1000] bg-gray-900 bg-opacity-85 backdrop-blur-sm rounded-xl shadow-xl p-3 text-xs select-none" style={{ minWidth: 148 }}>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Legenda</p>
+
+            <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Tipo</p>
+            <div className="flex flex-col gap-1.5 mb-3">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full shrink-0 border border-white border-opacity-30" style={{ backgroundColor: TIPO_COR.implantacao }} />
+                <span className="text-gray-200">Implantação</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full shrink-0 border border-white border-opacity-30" style={{ backgroundColor: TIPO_COR.instalacao }} />
+                <span className="text-gray-200">Instalação</span>
+              </div>
+            </div>
+
+            <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Status</p>
+            <div className="flex flex-col gap-1.5 mb-3">
+              {[
+                { label: "Concluída",    op: 1.0  },
+                { label: "Em andamento", op: 0.65 },
+                { label: "Pausada",      op: 0.45 },
+                { label: "Cancelada",    op: 0.25 },
+              ].map(s => (
+                <div key={s.label} className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full shrink-0 border border-white border-opacity-20" style={{ backgroundColor: "#94a3b8", opacity: s.op }} />
+                  <span className="text-gray-300" style={{ opacity: 0.5 + s.op * 0.5 }}>{s.label}</span>
+                </div>
+              ))}
+            </div>
+
+            <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Estados</p>
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded shrink-0 border border-orange-400" style={{ backgroundColor: "#f97316", opacity: 0.15 }} />
+              <span className="text-gray-300">Desbloqueado</span>
+            </div>
+            <div className="flex items-center gap-2 mt-1.5">
+              <span className="w-3 h-3 rounded shrink-0 border border-gray-600" style={{ backgroundColor: "#000", opacity: 0.8 }} />
+              <span className="text-gray-500">Bloqueado</span>
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="w-6 h-6 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" />
