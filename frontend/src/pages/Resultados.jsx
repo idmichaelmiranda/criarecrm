@@ -519,13 +519,28 @@ const TABS = [
 ];
 
 export default function Resultados() {
-  const [activeTab, setActiveTab] = useState("visao-geral");
-  const [filtros, setFiltros]     = useState({ periodo: "365", estado: "" });
+  const [activeTab,   setActiveTab]   = useState("visao-geral");
+  const [filtros,     setFiltros]     = useState({ periodo: "365", estado: "" });
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [fullscreen,  setFullscreen]  = useState(false);
 
   function setFiltro(key, val) {
     setFiltros(prev => ({ ...prev, [key]: val }));
   }
+
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  }
+
+  useEffect(() => {
+    function onFsChange() { setFullscreen(!!document.fullscreenElement); }
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
 
   return (
     <Layout>
@@ -535,18 +550,36 @@ export default function Resultados() {
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">Resultados</h1>
           <p className="text-sm text-gray-400 mt-0.5">Centro de inteligência operacional</p>
         </div>
-        <button
-          onClick={() => setFiltersOpen(v => !v)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border transition-all ${filtersOpen ? "bg-orange-500 text-white border-orange-500" : "bg-white text-gray-600 border-gray-200 hover:border-orange-300"}`}
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
-          </svg>
-          Filtros
-          {(filtros.periodo !== "365" || filtros.estado) && (
-            <span className="w-2 h-2 rounded-full bg-white shrink-0" />
-          )}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setFiltersOpen(v => !v)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border transition-all ${filtersOpen ? "bg-orange-500 text-white border-orange-500" : "bg-white text-gray-600 border-gray-200 hover:border-orange-300"}`}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
+            </svg>
+            Filtros
+            {(filtros.periodo !== "365" || filtros.estado) && (
+              <span className="w-2 h-2 rounded-full bg-white shrink-0" />
+            )}
+          </button>
+          <button
+            onClick={toggleFullscreen}
+            title={fullscreen ? "Sair da tela cheia" : "Apresentação — tela cheia"}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border transition-all bg-white text-gray-600 border-gray-200 hover:border-orange-300"
+          >
+            {fullscreen ? (
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M15 9h4.5M15 9V4.5M9 15v4.5M9 15H4.5M15 15h4.5M15 15v4.5" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+              </svg>
+            )}
+            {fullscreen ? "Minimizar" : "Apresentação"}
+          </button>
+        </div>
       </div>
 
       {/* Filtros globais */}

@@ -21,6 +21,7 @@ export default function ResultadosMapaTab({ filtros }) {
   const [pontos,        setPontos]        = useState([]);
   const [loading,       setLoading]       = useState(true);
   const [filtroStatus,  setFiltroStatus]  = useState("todos");
+  const [filtroTipo,    setFiltroTipo]    = useState("todos");
   const [estadosGeo,    setEstadosGeo]    = useState(null);
 
   useEffect(() => {
@@ -38,9 +39,11 @@ export default function ResultadosMapaTab({ filtros }) {
       .finally(() => setLoading(false));
   }, [filtros.periodo]);
 
-  const visiveis = filtroStatus === "todos"
-    ? pontos
-    : pontos.filter(p => p.status === filtroStatus);
+  const pontosFiltrados = pontos
+    .filter(p => filtroTipo   === "todos" || p.tipo   === filtroTipo)
+    .filter(p => filtroStatus === "todos" || p.status === filtroStatus);
+
+  const visiveis = pontosFiltrados;
 
   // Estados que têm ao menos 1 ponto (todos os pontos, não só os filtrados)
   const estadosAtivos = new Set(pontos.map(p => p.estado).filter(Boolean));
@@ -62,6 +65,26 @@ export default function ResultadosMapaTab({ filtros }) {
 
   return (
     <div className="space-y-4">
+      {/* Filtro por tipo */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3 flex flex-wrap items-center gap-3">
+        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider shrink-0">Tipo:</span>
+        {[
+          { key: "todos",        label: "Todos",          count: pontos.length },
+          { key: "implantacao",  label: "Implantações",   count: pontos.filter(p => p.tipo === "implantacao").length },
+          { key: "instalacao",   label: "Instalações",    count: pontos.filter(p => p.tipo === "instalacao").length },
+        ].map(t => (
+          <button
+            key={t.key}
+            onClick={() => setFiltroTipo(t.key)}
+            className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+              filtroTipo === t.key ? "bg-orange-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            {t.label} ({t.count})
+          </button>
+        ))}
+      </div>
+
       {/* Filtro de status */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-wrap items-center gap-3">
         <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider shrink-0">Status:</span>
@@ -71,7 +94,7 @@ export default function ResultadosMapaTab({ filtros }) {
             filtroStatus === "todos" ? "bg-gray-800 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
           }`}
         >
-          Todos ({pontos.length})
+          Todos ({pontosFiltrados.length})
         </button>
         {legendas.map(l => (
           <button
@@ -83,7 +106,7 @@ export default function ResultadosMapaTab({ filtros }) {
             style={filtroStatus === l.status ? { backgroundColor: STATUS_COR[l.status] } : {}}
           >
             <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: STATUS_COR[l.status] }} />
-            {l.label} ({pontos.filter(p => p.status === l.status).length})
+            {l.label} ({pontosFiltrados.filter(p => p.status === l.status).length})
           </button>
         ))}
         <span className="ml-auto text-xs text-gray-400">
@@ -101,7 +124,7 @@ export default function ResultadosMapaTab({ filtros }) {
             </span>
           ))}
           <span className="ml-auto text-xs text-gray-400">
-            {estadosAtivos.size} de 27 estado{estadosAtivos.size !== 1 ? "s" : ""} desbloqueado{estadosAtivos.size !== 1 ? "s" : ""}
+            {estadosAtivos.size} de 27 estados desbloqueados
           </span>
         </div>
       )}
