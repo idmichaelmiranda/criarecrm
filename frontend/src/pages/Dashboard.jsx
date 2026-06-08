@@ -689,10 +689,15 @@ function GraficoMensal({ dados }) {
           const instH = totalH - implH;
           return (
             <div key={m.month} className="flex-1 flex flex-col items-center gap-1 group">
-              <span className={`text-[10px] font-semibold tabular-nums ${total > 0 ? "text-gray-500" : "invisible"}`}>
-                {total}
-              </span>
-              <div className="w-full flex flex-col justify-end" style={{ height: "64px" }}>
+              <div className="w-full relative flex flex-col justify-end" style={{ height: "64px" }}>
+                {total > 0 && (
+                  <span
+                    className="absolute left-0 right-0 text-center text-[10px] font-semibold tabular-nums text-gray-500 pointer-events-none"
+                    style={{ bottom: `${totalH + 3}px` }}
+                  >
+                    {total}
+                  </span>
+                )}
                 {instH > 0 && (
                   <div
                     className={`w-full transition-all ${m.is_current ? "bg-emerald-500" : "bg-emerald-400 group-hover:bg-emerald-500"}`}
