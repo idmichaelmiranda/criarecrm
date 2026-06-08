@@ -87,6 +87,7 @@ const TIMELINE_CFG = {
   etapa_concluida:       { icon: "🏁", color: "bg-blue-100 text-blue-700"       },
   checklist_concluido:   { icon: "☑️", color: "bg-emerald-100 text-emerald-600" },
   checklist_desmarcado:  { icon: "↩️", color: "bg-amber-100 text-amber-600"    },
+  tarefa_adicionada:     { icon: "➕", color: "bg-violet-100 text-violet-600"   },
   comentario:            { icon: "💬", color: "bg-purple-100 text-purple-600"   },
   status_alterado:       { icon: "🔄", color: "bg-slate-100 text-slate-600"     },
   implantacao_concluida: { icon: "🟢", color: "bg-green-100 text-green-700"     },
@@ -586,7 +587,12 @@ function FilaOperacional({ fila, filaTotal, stageFilter, stageColorMap = {} }) {
 
 function TimelineIntelligente({ items }) {
   const [filter, setFilter] = useState("todos");
-  const filtered = filter === "todos" ? items : items.filter((ev) => ev.tipo === filter);
+  const TAREFAS_TIPOS = new Set(["checklist_concluido", "checklist_desmarcado", "tarefa_adicionada"]);
+  const filtered = filter === "todos"
+    ? items
+    : filter === "checklist_concluido"
+      ? items.filter((ev) => TAREFAS_TIPOS.has(ev.tipo))
+      : items.filter((ev) => ev.tipo === filter);
 
   const groups = [];
   let current = null;

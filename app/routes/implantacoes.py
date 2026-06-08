@@ -75,8 +75,8 @@ def adicionar_comentario(impl_id: int, data: ComentarioCreate, db: Session = Dep
 
 
 @router.post("/{impl_id}/checklist", response_model=ChecklistItemResponse, status_code=201)
-def criar_item(impl_id: int, data: ChecklistItemCreate, db: Session = Depends(get_db)):
-    return implantacao_service.criar_checklist_item(db, impl_id, data)
+def criar_item(impl_id: int, data: ChecklistItemCreate, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    return implantacao_service.criar_checklist_item(db, impl_id, data, usuario=current_user.nome)
 
 
 @router.patch("/checklist/{item_id}", response_model=ChecklistItemResponse)

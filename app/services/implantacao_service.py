@@ -244,7 +244,7 @@ def atualizar_checklist_item(db: Session, item_id: int, data: ChecklistItemUpdat
     return item
 
 
-def criar_checklist_item(db: Session, implantacao_id: int, data: ChecklistItemCreate) -> ChecklistItem:
+def criar_checklist_item(db: Session, implantacao_id: int, data: ChecklistItemCreate, usuario: str = "Sistema") -> ChecklistItem:
     impl = db.get(Implantacao, implantacao_id)
     if not impl:
         raise HTTPException(404, "Implantação não encontrada")
@@ -266,6 +266,18 @@ def criar_checklist_item(db: Session, implantacao_id: int, data: ChecklistItemCr
         data_prazo=data.data_prazo,
     )
     db.add(item)
+    db.flush()
+
+    timeline_service.log(
+        db,
+        tipo="tarefa_adicionada",
+        titulo=f'Tarefa "{data.titulo}" adicionada',
+        usuario=usuario,
+        icone="check-square",
+        cor="#8b5cf6",
+        implantacao_id=implantacao_id,
+    )
+
     db.commit()
     db.refresh(item)
     return item
