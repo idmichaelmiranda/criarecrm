@@ -684,7 +684,7 @@ function GraficoMensal({ dados }) {
           const impl = m.implantacoes ?? m.total ?? 0;
           const inst = m.instalacoes ?? 0;
           const total = impl + inst;
-          const totalH = total > 0 ? Math.max(Math.round((total / max) * 80), 6) : 0;
+          const totalH = total > 0 ? Math.max(Math.round((total / max) * 49), 6) : 0;
           const implH = total > 0 ? Math.round((impl / total) * totalH) : 0;
           const instH = totalH - implH;
           return (
