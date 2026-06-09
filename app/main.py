@@ -366,6 +366,23 @@ def health():
     return {"status": "ok", "version": "2.0.0"}
 
 
+@app.get("/api/v1/discord/testar")
+def testar_discord_publico():
+    import os, httpx as _httpx
+    url = os.getenv("DISCORD_WEBHOOK_URL")
+    if not url:
+        return {"ok": False, "erro": "DISCORD_WEBHOOK_URL não configurada no servidor"}
+    try:
+        resp = _httpx.post(url, json={
+            "embeds": [{"title": "🧪 Teste de conexão", "description": "Webhook do CriareCRM funcionando!", "color": 0x10B981}]
+        }, timeout=8)
+        if resp.status_code in (200, 204):
+            return {"ok": True, "message": "Mensagem enviada com sucesso!"}
+        return {"ok": False, "erro": f"Discord retornou HTTP {resp.status_code}", "body": resp.text[:300]}
+    except Exception as exc:
+        return {"ok": False, "erro": str(exc)}
+
+
 # ── Seeds ─────────────────────────────────────────────────────────────────────
 
 ALL_PERMISSIONS = [
