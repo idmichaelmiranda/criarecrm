@@ -287,6 +287,18 @@ def criar(data: InstalacaoCreate, db: Session = Depends(get_db), current_user: U
             ordem += 1
 
     db.commit()
+
+    from app.services import discord_service
+    _cliente_obj = db.get(Cliente, inst.cliente_id)
+    _cliente_nome = _cliente_obj.razao_social if _cliente_obj else f"Cliente #{inst.cliente_id}"
+    _tipos_str = ", ".join(tipo_nomes_map.values())
+    _resp_nome: str | None = None
+    if inst.responsavel_id:
+        _resp = db.get(Usuario, inst.responsavel_id)
+        _resp_nome = _resp.nome if _resp else None
+    _data_str = inst.data_agendada.strftime("%d/%m/%Y") if inst.data_agendada else None
+    discord_service.notify_nova_instalacao(inst.codigo, _cliente_nome, _tipos_str, responsavel=_resp_nome, data_agendada=_data_str)
+
     return _to_full_response(_load(inst.id, db), db)
 
 
@@ -597,6 +609,16 @@ def finalizar(instalacao_id: int, data: FinalizarPayload, db: Session = Depends(
 
     _criar_notif_conclusao(db, inst, current_user)
     db.commit()
+
+    from app.services import discord_service
+    _cli = db.get(Cliente, inst.cliente_id)
+    discord_service.notify_instalacao_concluida(
+        inst.codigo,
+        _cli.razao_social if _cli else f"Cliente #{inst.cliente_id}",
+        current_user.nome,
+        inst.duracao_minutos or 0,
+    )
+
     return _to_full_response(_load(instalacao_id, db), db)
 
 

@@ -44,6 +44,10 @@ def create_solicitacao(db: Session, data: SolicitacaoCreate) -> Solicitacao:
 
     db.commit()
     db.refresh(sol)
+
+    from app.services import discord_service
+    discord_service.notify_nova_triagem(sol.razao_social, cnpj=sol.cnpj)
+
     return sol
 
 
