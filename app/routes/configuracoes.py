@@ -413,6 +413,7 @@ def testar_erp(data: ErpConfig):
     return {"message": f"Conexão OK — {len(clientes)} cliente(s) encontrado(s).", "total": len(clientes)}
 
 
+@router.get("/discord/testar")
 @router.post("/discord/testar", dependencies=[_auth])
 def testar_discord():
     import os
