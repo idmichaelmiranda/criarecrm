@@ -1,21 +1,19 @@
 import json
 import os
 import threading
-import urllib.request
+
+import httpx
 
 
 def _send(payload: dict) -> None:
     url = os.getenv("DISCORD_WEBHOOK_URL")
     if not url:
+        print("[DISCORD] DISCORD_WEBHOOK_URL não configurada — notificação ignorada.")
         return
     try:
-        body = json.dumps(payload).encode()
-        req = urllib.request.Request(
-            url, data=body,
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-        urllib.request.urlopen(req, timeout=5)
+        resp = httpx.post(url, json=payload, timeout=8)
+        if resp.status_code not in (200, 204):
+            print(f"[DISCORD] Resposta inesperada: {resp.status_code} {resp.text[:200]}")
     except Exception as exc:
         print(f"[DISCORD] Erro ao enviar notificação: {exc}")
 

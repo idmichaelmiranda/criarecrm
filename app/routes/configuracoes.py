@@ -411,3 +411,26 @@ def testar_erp(data: ErpConfig):
 
     clientes = _normalize_clients(raw)
     return {"message": f"Conexão OK — {len(clientes)} cliente(s) encontrado(s).", "total": len(clientes)}
+
+
+@router.post("/discord/testar", dependencies=[_auth])
+def testar_discord():
+    import os
+    url = os.getenv("DISCORD_WEBHOOK_URL")
+    if not url:
+        raise HTTPException(400, "Variável DISCORD_WEBHOOK_URL não configurada no servidor.")
+    try:
+        resp = httpx.post(url, json={
+            "embeds": [{
+                "title": "🧪 Teste de conexão",
+                "description": "Webhook do CriareCRM funcionando corretamente.",
+                "color": 0x10B981,
+            }]
+        }, timeout=8)
+        if resp.status_code in (200, 204):
+            return {"ok": True, "message": "Mensagem enviada com sucesso!"}
+        raise HTTPException(502, f"Discord retornou HTTP {resp.status_code}: {resp.text[:200]}")
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(502, f"Erro ao enviar: {str(exc)}")
