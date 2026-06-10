@@ -209,20 +209,22 @@ def cancelar(db: Session, solicitacao_id: int, motivo: str | None = None) -> Sol
 
 def _dispatch_revisao_email(email: str, razao_social: str, motivo: str, token: str) -> None:
     from app.services import email_service
+    from app.config import RESEND_API_KEY
     cfg = email_service.get_config()
-    if not cfg or not cfg.get("host"):
-        print("[EMAIL] Config de email não encontrada — email não enviado.")
+    if not RESEND_API_KEY and (not cfg or not cfg.get("host")):
+        print("[EMAIL] Nenhum provider configurado (RESEND_API_KEY ausente e SMTP sem host) — revisão não enviada.")
         return
-    frontend_url = (cfg.get("frontend_url") or "").rstrip("/")
+    frontend_url = (cfg.get("frontend_url") if cfg else None or "").rstrip("/")
     link = f"{frontend_url}/revisao/{token}"
     email_service.send_revisao_email_async(email, razao_social, motivo, link)
 
 
 def _dispatch_triagem_email(email: str, razao_social: str) -> None:
     from app.services import email_service
+    from app.config import RESEND_API_KEY
     cfg = email_service.get_config()
-    if not cfg or not cfg.get("host"):
-        print("[EMAIL] Config de email não encontrada — email não enviado.")
+    if not RESEND_API_KEY and (not cfg or not cfg.get("host")):
+        print("[EMAIL] Nenhum provider configurado (RESEND_API_KEY ausente e SMTP sem host) — triagem não enviada.")
         return
     email_service.send_triagem_email_async(email, razao_social)
 

@@ -135,9 +135,10 @@ def aprovar(db: Session, solicitacao_id: int, data: TriagemAprovar) -> Implantac
 
 def _dispatch_aprovacao_email(email: str, razao_social: str, codigo: str) -> None:
     from app.services import email_service
+    from app.config import RESEND_API_KEY
     cfg = email_service.get_config()
-    if not cfg or not cfg.get("host"):
-        print("[EMAIL] Config de email não encontrada — email não enviado.")
+    if not RESEND_API_KEY and (not cfg or not cfg.get("host")):
+        print("[EMAIL] Nenhum provider configurado (RESEND_API_KEY ausente e SMTP sem host) — aprovação não enviada.")
         return
     email_service.send_aprovacao_email_async(email, razao_social, codigo)
 

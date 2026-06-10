@@ -61,6 +61,7 @@ def _send_email(to_email: str, subject: str, html: str) -> None:
     from_addr = f"{from_name} <{from_email}>"
 
     if RESEND_API_KEY:
+        print(f"[EMAIL] Enviando via Resend para {to_email} | assunto: {subject!r}")
         import httpx
         try:
             resp = httpx.post(
@@ -70,6 +71,7 @@ def _send_email(to_email: str, subject: str, html: str) -> None:
                 timeout=20,
             )
             resp.raise_for_status()
+            print(f"[EMAIL] Resend OK para {to_email} (HTTP {resp.status_code})")
         except httpx.HTTPStatusError as exc:
             raise ValueError(f"Resend recusou o email ({exc.response.status_code}): {exc.response.text}")
         except Exception as exc:
@@ -79,6 +81,8 @@ def _send_email(to_email: str, subject: str, html: str) -> None:
     # SMTP fallback
     if not cfg or not cfg.get("host") or not cfg.get("user"):
         raise ValueError("Configuração de email incompleta. Acesse Configurações > Email.")
+
+    print(f"[EMAIL] Enviando via SMTP {cfg['host']}:{cfg.get('port', 587)} para {to_email}")
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject

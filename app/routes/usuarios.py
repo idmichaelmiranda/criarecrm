@@ -160,9 +160,10 @@ def reenviar_senha(
         raise HTTPException(400, "Usuário ainda pendente de aprovação.")
 
     from app.services.email_service import get_config, send_boas_vindas_email_async
+    from app.config import RESEND_API_KEY
     cfg = get_config()
-    if not cfg or not cfg.get("host"):
-        raise HTTPException(400, "SMTP não configurado. Configure o email em Configurações > Email.")
+    if not RESEND_API_KEY and (not cfg or not cfg.get("host")):
+        raise HTTPException(400, "Nenhum provider de email configurado. Configure SMTP em Configurações > Email ou defina RESEND_API_KEY.")
 
     token = secrets.token_urlsafe(40)
     u.access_token = token
