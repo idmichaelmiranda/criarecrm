@@ -60,6 +60,20 @@ def notify_nova_instalacao(
     })
 
 
+def notify_atribuicao(codigo: str, cliente: str, responsavel: str) -> None:
+    _fire({
+        "embeds": [{
+            "title": "👤 Instalação atribuída",
+            "color": 0xF59E0B,
+            "fields": [
+                {"name": "Código", "value": codigo, "inline": True},
+                {"name": "Cliente", "value": cliente, "inline": True},
+                {"name": "Responsável", "value": responsavel, "inline": False},
+            ],
+        }]
+    })
+
+
 def notify_instalacao_concluida(
     codigo: str,
     cliente: str,

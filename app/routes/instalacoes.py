@@ -30,8 +30,11 @@ router = APIRouter(prefix="/instalacoes", tags=["instalacoes"])
 def _criar_notif_atribuicao(db: Session, inst: "Instalacao", usuario_id: int) -> None:
     """Cria notificação para o usuário recém-atribuído como responsável da instalação."""
     from app.models.notificacao import Notificacao
+    from app.services import discord_service
     cliente = db.get(Cliente, inst.cliente_id)
     cliente_nome = cliente.razao_social if cliente else f"Cliente #{inst.cliente_id}"
+    responsavel = db.get(Usuario, usuario_id)
+    responsavel_nome = responsavel.nome if responsavel else f"Usuário #{usuario_id}"
     db.add(Notificacao(
         usuario_id=usuario_id,
         tipo="instalacao",
@@ -40,6 +43,7 @@ def _criar_notif_atribuicao(db: Session, inst: "Instalacao", usuario_id: int) ->
         dados={"instalacao_id": inst.id, "codigo": inst.codigo},
         lida=False,
     ))
+    discord_service.notify_atribuicao(inst.codigo, cliente_nome, responsavel_nome)
 
 
 def _criar_notif_conclusao(db: Session, inst: "Instalacao", finalizado_por: "Usuario") -> None:
