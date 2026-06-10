@@ -230,6 +230,7 @@ export const usuariosApi = {
   reenviarSenha: (id) => api.post(`/usuarios/${id}/reenviar-senha`),
   pendentesCount: () => api.get("/usuarios/pendentes/count"),
   senhaDia: () => api.get("/usuarios/senha-dia"),
+  alterarSenha: (data) => api.post("/usuarios/me/alterar-senha", data),
 };
 
 // ── Grupos de Permissão ───────────────────────────────────────────────────────

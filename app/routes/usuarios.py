@@ -10,8 +10,8 @@ from sqlalchemy import select, func
 
 from app.database.connection import get_db
 from app.models.usuario import Usuario
-from app.schemas.usuario import UsuarioCreate, UsuarioUpdate, UsuarioResponse, AprovarRequest
-from app.services.auth_service import hash_password
+from app.schemas.usuario import UsuarioCreate, UsuarioUpdate, UsuarioResponse, AprovarRequest, AlterarSenhaRequest
+from app.services.auth_service import hash_password, verify_password
 from app.dependencies.auth import get_current_user, require_permission
 
 router = APIRouter(prefix="/usuarios", tags=["usuarios"])
@@ -224,6 +224,20 @@ def atualizar(
     db.commit()
     db.refresh(u)
     return u
+
+
+@router.post("/me/alterar-senha")
+def alterar_minha_senha(
+    data: AlterarSenhaRequest,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    if not verify_password(data.senha_atual, current_user.senha_hash):
+        raise HTTPException(400, "Senha atual incorreta.")
+    current_user.senha_hash = hash_password(data.senha_nova)
+    current_user.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    return {"ok": True}
 
 
 @router.delete("/{usuario_id}", status_code=204)

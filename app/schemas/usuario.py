@@ -90,3 +90,13 @@ class DefinirSenhaRequest(BaseModel):
     @classmethod
     def senha_minima(cls, v: str) -> str:
         return _check_password(v)
+
+
+class AlterarSenhaRequest(BaseModel):
+    senha_atual: str
+    senha_nova: str
+
+    @field_validator("senha_nova")
+    @classmethod
+    def senha_minima(cls, v: str) -> str:
+        return _check_password(v)
