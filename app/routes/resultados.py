@@ -666,6 +666,29 @@ def clientes_mapa(
     return result
 
 
+@router.get("/debug-mapa")
+def debug_mapa(db: Session = Depends(get_db)):
+    """Endpoint temporário para diagnosticar geocoding. Mostra cidade/UF lida do banco."""
+    desde_dt = datetime.combine(_desde(365), datetime.min.time())
+    rows = []
+    for inst in db.execute(
+        select(Instalacao).options(selectinload(Instalacao.cliente))
+        .where(Instalacao.created_at >= desde_dt)
+        .limit(20)
+    ).scalars():
+        c = inst.cliente
+        cidade = _get_cidade(c) if c else ""
+        uf = _get_estado(c) if c else ""
+        coords, real = _get_coords_cidade(cidade, uf)
+        rows.append({
+            "id": inst.id, "status": inst.status, "cliente": c.razao_social if c else None,
+            "cidade_lida": cidade, "uf_lida": uf,
+            "lat": coords[0], "lng": coords[1], "coordenada_real": real,
+            "endereco_raw": c.endereco if c else None,
+        })
+    return rows
+
+
 @router.get("/por-consultor")
 def por_consultor(
     periodo_dias: int = Query(365),
