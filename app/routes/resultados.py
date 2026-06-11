@@ -103,6 +103,77 @@ CIDADES_COORDS: dict[tuple[str, str], tuple[float, float]] = {
     ("muriae", "MG"): (-21.1311, -42.3672),
     ("lavras", "MG"): (-21.2458, -44.9997),
     ("coronel fabriciano", "MG"): (-19.5194, -42.6272),
+    ("nepomuceno", "MG"): (-21.2369, -45.2356),
+    ("areado", "MG"): (-21.3614, -46.1456),
+    ("alfenas", "MG"): (-21.4289, -45.9486),
+    ("tres pontas", "MG"): (-21.3658, -45.5125),
+    ("boa esperanca", "MG"): (-21.0906, -45.5631),
+    ("sao sebastiao do paraiso", "MG"): (-20.9175, -46.9908),
+    ("passos", "MG"): (-20.7197, -46.6097),
+    ("formiga", "MG"): (-20.4644, -45.4283),
+    ("araxa", "MG"): (-19.5944, -46.9403),
+    ("uba", "MG"): (-21.1158, -42.9422),
+    ("vicosa", "MG"): (-20.7561, -42.8822),
+    ("sao joao del rei", "MG"): (-21.1339, -44.2633),
+    ("conselheiro lafaiete", "MG"): (-20.6619, -43.7869),
+    ("ouro preto", "MG"): (-20.3854, -43.5035),
+    ("mariana", "MG"): (-20.3775, -43.4158),
+    ("itajuba", "MG"): (-22.4236, -45.4525),
+    ("itabirito", "MG"): (-20.2528, -43.8011),
+    ("congonhas", "MG"): (-20.5006, -43.8558),
+    ("carangola", "MG"): (-20.7325, -42.0222),
+    ("manhuacu", "MG"): (-20.2583, -42.0272),
+    ("cataguases", "MG"): (-21.3908, -42.6981),
+    ("leopoldina", "MG"): (-21.5294, -42.6433),
+    ("tres coracoes", "MG"): (-21.6889, -45.2544),
+    ("sao lourenco", "MG"): (-22.1131, -45.0572),
+    ("caxambu", "MG"): (-21.9750, -44.9311),
+    ("andradas", "MG"): (-22.0672, -46.5703),
+    ("monte siao", "MG"): (-22.6617, -46.5728),
+    ("itapeva", "MG"): (-22.6969, -46.6028),
+    ("extrema", "MG"): (-22.8594, -46.3208),
+    ("itamonte", "MG"): (-22.2831, -44.8678),
+    ("pirangucu", "MG"): (-22.4042, -45.5056),
+    ("cambuquira", "MG"): (-21.8528, -45.2911),
+    ("cristina", "MG"): (-22.2150, -45.2664),
+    ("carmo de minas", "MG"): (-22.1211, -45.1211),
+    ("dom vicoso", "MG"): (-22.3386, -45.2264),
+    ("olimpio noronha", "MG"): (-22.2378, -45.2678),
+    ("arantina", "MG"): (-21.9311, -44.2567),
+    ("baependi", "MG"): (-21.9628, -44.8914),
+    ("cruzilia", "MG"): (-21.8381, -44.7969),
+    ("ingai", "MG"): (-21.4008, -44.9253),
+    ("itumirim", "MG"): (-21.3139, -44.8753),
+    ("carrancas", "MG"): (-21.4897, -44.6397),
+    ("nazareno", "MG"): (-21.2139, -44.6139),
+    ("entre rios de minas", "MG"): (-20.6675, -43.9839),
+    ("queluzito", "MG"): (-20.7839, -44.0953),
+    ("lamim", "MG"): (-20.6631, -43.5528),
+    ("diogo de vasconcelos", "MG"): (-20.3975, -43.2878),
+    ("acaiaca", "MG"): (-20.3597, -43.1439),
+    ("ponte nova", "MG"): (-20.4156, -42.9083),
+    ("rio piracicaba", "MG"): (-19.9275, -43.1728),
+    ("santa barbara", "MG"): (-19.9658, -43.4086),
+    ("raposos", "MG"): (-19.9625, -43.8061),
+    ("nova lima", "MG"): (-19.9847, -43.8483),
+    ("sabara", "MG"): (-19.8869, -43.8114),
+    ("ribeirao das neves", "MG"): (-19.7672, -44.0869),
+    ("pedro leopoldo", "MG"): (-19.6153, -44.0428),
+    ("lagoa santa", "MG"): (-19.6294, -43.8919),
+    ("vespasiano", "MG"): (-19.6914, -43.9228),
+    ("esmeraldas", "MG"): (-19.7614, -44.3094),
+    ("brumadinho", "MG"): (-20.1428, -44.1983),
+    ("itauna", "MG"): (-20.0778, -44.5764),
+    ("pará de minas", "MG"): (-19.8608, -44.6097),
+    ("para de minas", "MG"): (-19.8608, -44.6097),
+    ("martinho campos", "MG"): (-19.3289, -45.2364),
+    ("joao pinheiro", "MG"): (-17.7436, -46.1728),
+    ("patos de minas", "MG"): (-18.5786, -46.5181),
+    ("presidente olegario", "MG"): (-18.4103, -46.4178),
+    ("lagoa formosa", "MG"): (-18.7769, -46.4064),
+    ("varjao de minas", "MG"): (-18.3769, -45.9589),
+    ("abaeté", "MG"): (-19.1558, -45.4453),
+    ("abaete", "MG"): (-19.1558, -45.4453),
     # RJ
     ("rio de janeiro", "RJ"): (-22.9068, -43.1729),
     ("sao goncalo", "RJ"): (-22.8269, -43.0539),
@@ -281,15 +352,50 @@ CIDADES_COORDS: dict[tuple[str, str], tuple[float, float]] = {
 }
 
 def _norm_cidade(s: str) -> str:
-    """Normaliza nome de cidade: remove acentos, lowercase, strip."""
+    """Remove acentos, lowercase, strip."""
     s = unicodedata.normalize("NFKD", s or "").encode("ascii", "ignore").decode("ascii")
     return s.lower().strip()
 
+# Cache em memória para lookups IBGE (evita repetir requisição para mesma cidade)
+_ibge_cache: dict[tuple[str, str], tuple[float, float] | None] = {}
+
+def _geocode_ibge(cidade: str, uf: str) -> tuple[float, float] | None:
+    """Busca coordenadas via Nominatim/OSM com cache em memória. Fire-and-forget friendly."""
+    import httpx as _httpx
+    key = (_norm_cidade(cidade), uf)
+    if key in _ibge_cache:
+        return _ibge_cache[key]
+    try:
+        resp = _httpx.get(
+            "https://nominatim.openstreetmap.org/search",
+            params={"q": f"{cidade}, {uf}, Brazil", "format": "json", "limit": 1},
+            headers={"User-Agent": "criarecrm-mapa/1.0"},
+            timeout=4,
+        )
+        data = resp.json()
+        if data:
+            coords: tuple[float, float] = (float(data[0]["lat"]), float(data[0]["lon"]))
+            _ibge_cache[key] = coords
+            return coords
+    except Exception:
+        pass
+    _ibge_cache[key] = None
+    return None
+
 def _get_coords_cidade(cidade: str, uf: str) -> tuple[tuple[float, float], bool]:
-    """Retorna (lat, lng), coordenada_real. Fallback: centróide do estado."""
+    """Retorna (lat, lng), coordenada_real.
+    1º: dict estático (fast path)
+    2º: Nominatim/OSM (fallback dinâmico, com cache)
+    3º: centróide do estado
+    """
+    if not cidade or not uf:
+        return ESTADO_CENTROIDES.get(uf, (-14.5, -51.5)), False
     key = (_norm_cidade(cidade), uf)
     if key in CIDADES_COORDS:
         return CIDADES_COORDS[key], True
+    coords = _geocode_ibge(cidade, uf)
+    if coords:
+        return coords, True
     return ESTADO_CENTROIDES.get(uf, (-14.5, -51.5)), False
 
 def _normalizar_tipo(t: str) -> str:
