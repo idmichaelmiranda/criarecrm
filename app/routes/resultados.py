@@ -475,9 +475,10 @@ def visao_geral(
     inst_concluidas = sum(1 for i in instalacoes  if i.status == "concluida")
     inst_pendentes  = sum(1 for i in instalacoes  if i.status in ("agendada", "em_execucao"))
 
-    total_fin  = len(implantacoes) + len(instalacoes)
-    finalizados = impl_concluidas + inst_concluidas
-    taxa = round(finalizados / total_fin * 100, 1) if total_fin > 0 else 0.0
+    # Denominador exclui canceladas — cancelado não representa trabalho a concluir
+    total_ativos = (impl_concluidas + impl_andamento + impl_pausadas) + (inst_concluidas + inst_pendentes)
+    finalizados  = impl_concluidas + inst_concluidas
+    taxa = round(finalizados / total_ativos * 100, 1) if total_ativos > 0 else 0.0
 
     hoje = date.today()
     ini_mes  = hoje.replace(day=1)
