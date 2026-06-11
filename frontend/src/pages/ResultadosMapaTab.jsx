@@ -28,10 +28,12 @@ const PERIODO_OPTS = [
 
 function createStatusIcon(status, coordReal) {
   const cor = STATUS_COR[status] || "#9ca3af";
-  const opacity = coordReal ? 1 : 0.55;
+  const border = coordReal
+    ? "2.5px solid rgba(255,255,255,0.85)"
+    : "2.5px dashed #f59e0b";
   return L.divIcon({
     className: "",
-    html: `<div style="width:14px;height:14px;border-radius:50%;background:${cor};border:2.5px solid rgba(255,255,255,0.85);box-shadow:0 2px 6px rgba(0,0,0,0.45);opacity:${opacity};"></div>`,
+    html: `<div style="width:14px;height:14px;border-radius:50%;background:${cor};border:${border};box-shadow:0 2px 6px rgba(0,0,0,0.45);"></div>`,
     iconSize: [14, 14],
     iconAnchor: [7, 7],
   });
@@ -78,6 +80,7 @@ export default function ResultadosMapaTab({ filtros, onFiltroChange, presentatio
 
   const pontosFiltrados = useMemo(() =>
     pontos
+      .filter(p => p.status !== "cancelada")
       .filter(p => filtroTipo   === "todos" || p.tipo   === filtroTipo)
       .filter(p => filtroStatus === "todos" || p.status === filtroStatus),
     [pontos, filtroTipo, filtroStatus]
@@ -278,7 +281,16 @@ export default function ResultadosMapaTab({ filtros, onFiltroChange, presentatio
                 </div>
               ))}
             </div>
-            <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Estados</p>
+            <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5 mt-1">Localização</p>
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full shrink-0" style={{ border: "2px solid rgba(255,255,255,0.85)", backgroundColor: "#3b82f6" }} />
+              <span className="text-gray-300">Coord. exata</span>
+            </div>
+            <div className="flex items-center gap-2 mt-1.5">
+              <span className="w-3 h-3 rounded-full shrink-0" style={{ border: "2px dashed #f59e0b", backgroundColor: "#3b82f6" }} />
+              <span className="text-yellow-400">Aprox. (estado)</span>
+            </div>
+            <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5 mt-2">Estados</p>
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded shrink-0 border border-orange-400" style={{ backgroundColor: "#f97316", opacity: 0.15 }} />
               <span className="text-gray-300">Com operações</span>
@@ -354,7 +366,7 @@ export default function ResultadosMapaTab({ filtros, onFiltroChange, presentatio
                       <p><span style={{ color: "#9ca3af" }}>Progresso: </span>{p.progresso ?? 0}%</p>
                       {!p.coordenada_real && (
                         <p style={{ fontSize: 10, color: "#f59e0b", marginTop: 4 }}>
-                          ⚠ Coordenada aproximada (centróide do estado)
+                          ⚠ Posição aproximada — cidade não mapeada, usando centróide do estado
                         </p>
                       )}
                       <a
