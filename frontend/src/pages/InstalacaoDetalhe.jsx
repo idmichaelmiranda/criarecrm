@@ -1304,7 +1304,21 @@ export default function InstalacaoDetalhe() {
             {inst.observacoes && (
               <div className="mt-3 pt-3 border-t border-gray-100">
                 <p className="text-xs text-gray-400 mb-1">Observações</p>
-                <p className="text-sm text-gray-600">{inst.observacoes}</p>
+                <p className="text-sm text-gray-600 whitespace-pre-line">{inst.observacoes}</p>
+              </div>
+            )}
+
+            {inst.observacao_conclusao && (
+              <div className="mt-3 pt-3 border-t border-green-100">
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <svg className="w-3.5 h-3.5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-xs font-semibold text-green-700">Observações de Conclusão</p>
+                </div>
+                <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                  <p className="text-sm text-green-900 whitespace-pre-line">{inst.observacao_conclusao}</p>
+                </div>
               </div>
             )}
           </div>

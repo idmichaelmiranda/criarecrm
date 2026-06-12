@@ -46,6 +46,8 @@ class Instalacao(Base):
 
     progresso: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
+    observacao_conclusao: Mapped[str] = mapped_column(Text, nullable=True)
+
     # Snapshot dos nomes de produtos no momento da criação — independente do template
     tipos_nomes_json: Mapped[str] = mapped_column(Text, nullable=True)
 

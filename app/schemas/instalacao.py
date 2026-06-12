@@ -230,6 +230,7 @@ class InstalacaoFullResponse(BaseModel):
     criado_por_id: int | None = None
     criado_por_nome: str | None = None
     observacoes: str | None = None
+    observacao_conclusao: str | None = None
     contato_nome: str | None = None
     contato_telefone: str | None = None
     data_agendada: date | None

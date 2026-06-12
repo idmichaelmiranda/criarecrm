@@ -303,6 +303,7 @@ def _migrate_postgres() -> None:
             created_at TIMESTAMP NOT NULL DEFAULT NOW()
         )""",
         "CREATE INDEX IF NOT EXISTS ix_notificacoes_usuario_id ON notificacoes (usuario_id)",
+        "ALTER TABLE instalacoes ADD COLUMN IF NOT EXISTS observacao_conclusao TEXT",
     ]
     with engine.connect() as conn:
         for ddl in new_cols:
@@ -314,6 +315,30 @@ def _migrate_postgres() -> None:
         # Corrige sub-itens criados com etapa_id incorreto (devem ter etapa_id=NULL)
         try:
             conn.execute(text("UPDATE checklist_itens SET etapa_id = NULL WHERE parent_id IS NOT NULL"))
+            conn.commit()
+        except Exception:
+            pass
+        # Migra texto de conclusão embutido em observacoes para campo dedicado
+        try:
+            conn.execute(text(r"""
+                UPDATE instalacoes SET
+                    observacao_conclusao = CASE
+                        WHEN observacoes LIKE '%' || E'\n' || '[Conclusão] %'
+                            THEN TRIM(SPLIT_PART(observacoes, E'\n[Conclusão] ', 2))
+                        WHEN observacoes LIKE '[Conclusão] %'
+                            THEN TRIM(SUBSTRING(observacoes FROM 13))
+                        ELSE NULL
+                    END,
+                    observacoes = CASE
+                        WHEN observacoes LIKE '%' || E'\n' || '[Conclusão] %'
+                            THEN NULLIF(TRIM(SPLIT_PART(observacoes, E'\n[Conclusão] ', 1)), '')
+                        WHEN observacoes LIKE '[Conclusão] %'
+                            THEN NULL
+                        ELSE observacoes
+                    END
+                WHERE observacoes LIKE '%[Conclus%] %'
+                  AND (observacao_conclusao IS NULL OR observacao_conclusao = '')
+            """))
             conn.commit()
         except Exception:
             pass

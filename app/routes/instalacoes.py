@@ -607,9 +607,7 @@ def finalizar(instalacao_id: int, data: FinalizarPayload, db: Session = Depends(
     inst.updated_at = now
 
     if data.observacao_final:
-        obs = (inst.observacoes or "").strip()
-        suffix = f"[Conclusão] {data.observacao_final}"
-        inst.observacoes = f"{obs}\n{suffix}".strip() if obs else suffix
+        inst.observacao_conclusao = data.observacao_final.strip()
 
     _criar_notif_conclusao(db, inst, current_user)
     db.commit()
