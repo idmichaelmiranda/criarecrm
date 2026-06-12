@@ -596,7 +596,8 @@ def equipe(
         entry["taxa_conclusao"] = round(entry["concluidas"] / entry["total"] * 100, 1) if entry["total"] else 0
         result.append(entry)
 
-    result.sort(key=lambda x: x["concluidas"], reverse=True)
+    # 1º critério: mais conclusões; 2º (empate): menor tempo médio
+    result.sort(key=lambda x: (-x["concluidas"], x["tempo_medio_min"] if x["tempo_medio_min"] > 0 else 999999))
     for i, r in enumerate(result):
         r["ranking"] = i + 1
 
