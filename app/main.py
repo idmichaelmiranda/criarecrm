@@ -318,27 +318,38 @@ def _migrate_postgres() -> None:
             conn.commit()
         except Exception:
             pass
-        # Migra texto de conclusão embutido em observacoes para campo dedicado
+        # Migra texto de conclusão embutido em observacoes para campo dedicado (Python, encoding-safe)
         try:
-            conn.execute(text(r"""
-                UPDATE instalacoes SET
-                    observacao_conclusao = CASE
-                        WHEN observacoes LIKE '%' || E'\n' || '[Conclusão] %'
-                            THEN TRIM(SPLIT_PART(observacoes, E'\n[Conclusão] ', 2))
-                        WHEN observacoes LIKE '[Conclusão] %'
-                            THEN TRIM(SUBSTRING(observacoes FROM 13))
-                        ELSE NULL
-                    END,
-                    observacoes = CASE
-                        WHEN observacoes LIKE '%' || E'\n' || '[Conclusão] %'
-                            THEN NULLIF(TRIM(SPLIT_PART(observacoes, E'\n[Conclusão] ', 1)), '')
-                        WHEN observacoes LIKE '[Conclusão] %'
-                            THEN NULL
-                        ELSE observacoes
-                    END
-                WHERE observacoes LIKE '%[Conclus%] %'
-                  AND (observacao_conclusao IS NULL OR observacao_conclusao = '')
-            """))
+            rows = conn.execute(text(
+                "SELECT id, observacoes FROM instalacoes "
+                "WHERE observacoes IS NOT NULL "
+                "  AND (observacao_conclusao IS NULL OR observacao_conclusao = '')"
+            )).fetchall()
+            marker = "[Conclusão] "
+            for row_id, obs in rows:
+                if not obs:
+                    continue
+                if "\n" + marker in obs:
+                    before, after = obs.split("\n" + marker, 1)
+                    conn.execute(text(
+                        "UPDATE instalacoes SET observacoes = :obs, observacao_conclusao = :conc WHERE id = :id"
+                    ), {"obs": before.strip() or None, "conc": after.strip(), "id": row_id})
+                elif obs.startswith(marker):
+                    conn.execute(text(
+                        "UPDATE instalacoes SET observacoes = NULL, observacao_conclusao = :conc WHERE id = :id"
+                    ), {"conc": obs[len(marker):].strip(), "id": row_id})
+            conn.commit()
+        except Exception as exc:
+            print(f"[MIGRATE] observacao_conclusao: {exc}")
+            pass
+        # Recupera dado de conclusão perdido na migração anterior defeituosa
+        try:
+            conn.execute(text(
+                "UPDATE instalacoes SET observacao_conclusao = :conc "
+                "WHERE codigo = 'IN-20260609-0004' "
+                "  AND (observacao_conclusao IS NULL OR observacao_conclusao = '') "
+                "  AND finalizado_em IS NOT NULL"
+            ), {"conc": 'Finalizado e testado. O ambiente "NAO FISCAL", esta todo destacado para nao haver confusao.'})
             conn.commit()
         except Exception:
             pass

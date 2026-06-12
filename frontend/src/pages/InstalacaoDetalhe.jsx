@@ -657,6 +657,7 @@ export default function InstalacaoDetalhe() {
         responsavel_id: data.responsavel_id ?? "",
         data_agendada: data.data_agendada || "",
         observacoes: data.observacoes || "",
+        observacao_conclusao: data.observacao_conclusao || "",
       });
       clientesApi.obter(data.cliente_id).then(({ data: c }) => setCliente(c)).catch(() => {});
     } catch {
@@ -736,6 +737,7 @@ export default function InstalacaoDetalhe() {
         responsavel_id: formEdit.responsavel_id ? parseInt(formEdit.responsavel_id) : null,
         data_agendada: formEdit.data_agendada || null,
         observacoes: formEdit.observacoes || null,
+        observacao_conclusao: formEdit.observacao_conclusao || null,
       });
       setInst(data);
       setEditando(false);
@@ -1361,6 +1363,10 @@ export default function InstalacaoDetalhe() {
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 mb-1.5">Observações</label>
                   <textarea value={formEdit.observacoes} rows={3} onChange={(e) => setFormEdit((f) => ({ ...f, observacoes: e.target.value }))} className={`${inputCls} resize-none`} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-green-700 mb-1.5">Observações de Conclusão</label>
+                  <textarea value={formEdit.observacao_conclusao} rows={3} onChange={(e) => setFormEdit((f) => ({ ...f, observacao_conclusao: e.target.value }))} placeholder="Preenchido ao finalizar a instalação…" className={`${inputCls} resize-none border-green-200 focus:border-green-500`} />
                 </div>
                 {error && <p className="text-xs text-red-600">{error}</p>}
                 <button onClick={handleSaveEdit} disabled={saving}

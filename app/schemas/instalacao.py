@@ -136,6 +136,7 @@ class InstalacaoUpdate(BaseModel):
     prioridade: PrioridadeType | None = None
     responsavel_id: int | None = None
     observacoes: str | None = None
+    observacao_conclusao: str | None = None
     data_agendada: date | None = None
     data_conclusao: date | None = None
     contato_nome: str | None = None
@@ -149,6 +150,7 @@ class InstalacaoEditar(BaseModel):
     prioridade: PrioridadeType | None = None
     responsavel_id: int | None = None
     observacoes: str | None = None
+    observacao_conclusao: str | None = None
     data_agendada: date | None = None
     contato_nome: str | None = None
     contato_telefone: str | None = None
