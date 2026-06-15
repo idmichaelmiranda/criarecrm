@@ -614,6 +614,7 @@ def produtos(
     instalacoes = db.execute(
         select(Instalacao).where(
             Instalacao.created_at >= datetime.combine(desde, datetime.min.time()),
+            Instalacao.status != "cancelada",
         )
     ).scalars().all()
 
