@@ -1237,6 +1237,73 @@ const REGIME_LABEL = {
   "simples_nacional": "Simples Nacional", "lucro_presumido": "Lucro Presumido", "lucro_real": "Lucro Real",
 };
 
+function RespPicker({ usuarios, selectedId, onSelect }) {
+  const [busca, setBusca] = useState("");
+  const inputRef = useRef(null);
+
+  useEffect(() => { inputRef.current?.focus(); }, []);
+
+  const filtrados = busca.trim()
+    ? usuarios.filter(u => u.nome.toLowerCase().includes(busca.toLowerCase()))
+    : usuarios;
+
+  return (
+    <div className="absolute left-0 top-7 z-50 bg-white rounded-xl shadow-2xl border border-gray-100 min-w-[240px] max-h-72 flex flex-col overflow-hidden">
+      {/* campo de busca */}
+      <div className="px-3 pt-2.5 pb-1.5 border-b border-gray-100">
+        <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-2.5 py-1.5">
+          <svg className="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z" />
+          </svg>
+          <input
+            ref={inputRef}
+            value={busca}
+            onChange={e => setBusca(e.target.value)}
+            placeholder="Buscar usuário…"
+            className="bg-transparent text-xs text-gray-700 placeholder-gray-400 outline-none w-full"
+          />
+          {busca && (
+            <button onClick={() => setBusca("")} className="text-gray-400 hover:text-gray-600">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* lista */}
+      <div className="overflow-y-auto py-1">
+        {!busca && (
+          <>
+            <button
+              onClick={() => onSelect(null)}
+              className="w-full text-left px-4 py-2.5 text-xs text-gray-500 hover:bg-gray-50 flex items-center gap-2 transition-colors">
+              <span className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </span>
+              Sem responsável
+            </button>
+            <div className="border-t border-gray-50 mx-3 mb-0.5" />
+          </>
+        )}
+        {filtrados.length === 0 && (
+          <p className="text-xs text-gray-400 text-center py-4">Nenhum usuário encontrado</p>
+        )}
+        {filtrados.map(u => (
+          <button key={u.id}
+            onClick={() => onSelect(u.id)}
+            className={`w-full text-left px-4 py-2.5 text-xs hover:bg-indigo-50 flex items-center gap-2 transition-colors ${selectedId === u.id ? "bg-indigo-50 text-indigo-700 font-semibold" : "text-gray-700"}`}>
+            <span className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[9px] font-bold shrink-0">
+              {u.nome.split(" ").slice(0,2).map(w => w[0]).join("").toUpperCase()}
+            </span>
+            <span className="flex-1 truncate">{u.nome}</span>
+            {selectedId === u.id && <span className="text-indigo-500 shrink-0">✓</span>}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Drawer({ sol: solProp, onClose, onTriar, onApproved, onRefused, onEdited }) {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -1391,28 +1458,11 @@ function Drawer({ sol: solProp, onClose, onTriar, onApproved, onRefused, onEdite
               </button>
 
               {showRespPicker && (
-                <div className="absolute left-0 top-7 z-50 bg-white rounded-xl shadow-2xl border border-gray-100 py-1 min-w-[220px] max-h-60 overflow-y-auto">
-                  <button
-                    onClick={() => handleAtribuir(null)}
-                    className="w-full text-left px-4 py-2.5 text-xs text-gray-500 hover:bg-gray-50 flex items-center gap-2 transition-colors">
-                    <span className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                    </span>
-                    Sem responsável
-                  </button>
-                  <div className="border-t border-gray-50 my-0.5" />
-                  {usuarios.map(u => (
-                    <button key={u.id}
-                      onClick={() => handleAtribuir(u.id)}
-                      className={`w-full text-left px-4 py-2.5 text-xs hover:bg-indigo-50 flex items-center gap-2 transition-colors ${sol.responsavel_triagem_id === u.id ? "bg-indigo-50 text-indigo-700 font-semibold" : "text-gray-700"}`}>
-                      <span className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[9px] font-bold shrink-0">
-                        {u.nome.split(" ").slice(0,2).map(w => w[0]).join("").toUpperCase()}
-                      </span>
-                      {u.nome}
-                      {sol.responsavel_triagem_id === u.id && <span className="ml-auto text-indigo-500">✓</span>}
-                    </button>
-                  ))}
-                </div>
+                <RespPicker
+                  usuarios={usuarios}
+                  selectedId={sol.responsavel_triagem_id}
+                  onSelect={handleAtribuir}
+                />
               )}
             </div>
           )}
