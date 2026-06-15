@@ -434,6 +434,11 @@ function AbaProdutos({ filtros }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // ABA 5 — REGIÕES
 // ═══════════════════════════════════════════════════════════════════════════════
+function TaxaBadge({ taxa }) {
+  const cor = taxa >= 80 ? "bg-green-100 text-green-700" : taxa >= 50 ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-600";
+  return <span className={`inline-block text-[11px] font-bold px-2 py-0.5 rounded-full ${cor}`}>{taxa}%</span>;
+}
+
 function AbaRegioes({ filtros }) {
   const [estados, setEstados] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -444,10 +449,10 @@ function AbaRegioes({ filtros }) {
       .then(r => setEstados(r.data.filter(e => e.estado && e.estado !== "N/A")))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [filtros.periodo]);
+  }, [filtros.periodo, filtros.estado]);
 
   const top10 = estados.slice(0, 10);
-  const maxClientes = Math.max(...estados.map(e => e.clientes), 1);
+  const maxTotal = Math.max(...estados.map(e => e.total ?? 0), 1);
 
   return (
     <div className="space-y-4">
@@ -466,7 +471,8 @@ function AbaRegioes({ filtros }) {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Implantações + Instalações por Estado (Top 10)" loading={loading}>
+        <ChartCard title="Volume x Conclusões por Estado (Top 10)" loading={loading}>
+          <p className="text-[10px] text-gray-400 -mt-2 mb-3">Excluindo cancelados · ordenado por total de operações</p>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={top10} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
@@ -474,8 +480,8 @@ function AbaRegioes({ filtros }) {
               <YAxis type="category" dataKey="estado" width={36} tick={{ fontSize: 11, fontWeight: 600 }} />
               <Tooltip content={<ChartTip />} />
               <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-              <Bar dataKey="implantacoes" name="Implantações" fill={C.indigo}  radius={[0,3,3,0]} />
-              <Bar dataKey="instalacoes"  name="Instalações"  fill={C.orange}  radius={[0,3,3,0]} />
+              <Bar dataKey="total"      name="Total (ativas)" fill={C.indigo} radius={[0,3,3,0]} opacity={0.4} />
+              <Bar dataKey="concluidas" name="Concluídas"     fill={C.green}  radius={[0,3,3,0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -483,8 +489,9 @@ function AbaRegioes({ filtros }) {
 
       {/* Tabela ranking */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-gray-100">
+        <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
           <p className="text-sm font-bold text-gray-700">Ranking completo por estado</p>
+          <p className="text-[11px] text-gray-400">Ordenado por total de operações · excl. cancelados</p>
         </div>
         {loading ? <Skeleton className="h-40 m-4" /> : (
           <div className="overflow-x-auto">
@@ -496,6 +503,7 @@ function AbaRegioes({ filtros }) {
                   <th className="text-right px-4 py-3">Implantações</th>
                   <th className="text-right px-4 py-3">Instalações</th>
                   <th className="text-right px-4 py-3">Concluídas</th>
+                  <th className="text-right px-4 py-3">Taxa</th>
                   <th className="px-5 py-3 w-40">Participação</th>
                 </tr>
               </thead>
@@ -511,15 +519,18 @@ function AbaRegioes({ filtros }) {
                     <td className="px-4 py-3 text-right font-semibold text-gray-700">{e.clientes}</td>
                     <td className="px-4 py-3 text-right text-indigo-600 font-medium">{e.implantacoes}</td>
                     <td className="px-4 py-3 text-right text-orange-500 font-medium">{e.instalacoes}</td>
-                    <td className="px-4 py-3 text-right text-green-600 font-medium">{e.concluidas}</td>
+                    <td className="px-4 py-3 text-right text-green-600 font-bold">{e.concluidas}</td>
+                    <td className="px-4 py-3 text-right">
+                      {e.total > 0 ? <TaxaBadge taxa={e.taxa_conclusao} /> : <span className="text-gray-300 text-xs">—</span>}
+                    </td>
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2">
                         <div className="flex-1 bg-gray-100 rounded-full h-1.5">
                           <div className="h-1.5 rounded-full bg-orange-500 transition-all"
-                            style={{ width: `${Math.round(e.clientes / maxClientes * 100)}%` }} />
+                            style={{ width: `${Math.round((e.total ?? 0) / maxTotal * 100)}%` }} />
                         </div>
                         <span className="text-[11px] text-gray-400 w-8 text-right">
-                          {Math.round(e.clientes / maxClientes * 100)}%
+                          {Math.round((e.total ?? 0) / maxTotal * 100)}%
                         </span>
                       </div>
                     </td>

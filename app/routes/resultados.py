@@ -685,13 +685,19 @@ def por_estado(
     implantacoes = db.execute(
         select(Implantacao)
         .options(selectinload(Implantacao.cliente))
-        .where(Implantacao.created_at >= datetime.combine(desde, datetime.min.time()))
+        .where(
+            Implantacao.created_at >= datetime.combine(desde, datetime.min.time()),
+            Implantacao.status != "cancelada",
+        )
     ).scalars().all()
 
     instalacoes = db.execute(
         select(Instalacao)
         .options(selectinload(Instalacao.cliente))
-        .where(Instalacao.created_at >= datetime.combine(desde, datetime.min.time()))
+        .where(
+            Instalacao.created_at >= datetime.combine(desde, datetime.min.time()),
+            Instalacao.status != "cancelada",
+        )
     ).scalars().all()
 
     por_uf: dict[str, dict] = {}
@@ -715,8 +721,16 @@ def por_estado(
         if uf not in por_uf:
             por_uf[uf] = {"estado": uf, "clientes": 0, "implantacoes": 0, "instalacoes": 0, "concluidas": 0}
         por_uf[uf]["instalacoes"] += 1
+        if i.status == "concluida":
+            por_uf[uf]["concluidas"] += 1
 
-    result = sorted(por_uf.values(), key=lambda x: x["clientes"], reverse=True)
+    for entry in por_uf.values():
+        total = entry["implantacoes"] + entry["instalacoes"]
+        entry["total"] = total
+        entry["taxa_conclusao"] = round(entry["concluidas"] / total * 100, 1) if total > 0 else 0.0
+
+    # Sort by total ops desc, then by clients as tiebreaker
+    result = sorted(por_uf.values(), key=lambda x: (-x["total"], -x["clientes"]))
     return result
 
 
