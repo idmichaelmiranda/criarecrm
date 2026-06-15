@@ -210,12 +210,17 @@ function AbaVisaoGeral({ filtros }) {
         <ChartCard title="Produtos Mais Implantados" loading={loading}>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
-              <Pie data={produtos} dataKey="total" nameKey="produto" cx="50%" cy="50%"
-                outerRadius={80} label={({ produto, percent }) => `${produto} ${(percent * 100).toFixed(0)}%`}
+              <Pie data={produtos} dataKey="total" nameKey="produto" cx="50%" cy="45%"
+                outerRadius={70} label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                 labelLine={false}>
                 {produtos.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
               </Pie>
-              <Tooltip content={<ChartTip />} />
+              <Tooltip formatter={(value, name) => [value, name]} />
+              <Legend
+                iconType="circle"
+                iconSize={8}
+                formatter={(value) => <span style={{ fontSize: 11 }}>{value}</span>}
+              />
             </PieChart>
           </ResponsiveContainer>
         </ChartCard>
