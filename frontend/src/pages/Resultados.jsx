@@ -117,7 +117,7 @@ function AbaVisaoGeral({ filtros }) {
     setLoading(true);
     Promise.all([
       resultadosApi.visaoGeral({ periodo_dias: filtros.periodo, estado: filtros.estado }),
-      resultadosApi.evolucao({ meses: 12 }),
+      resultadosApi.evolucao({ periodo_dias: filtros.periodo, estado: filtros.estado }),
       resultadosApi.porConsultor({ periodo_dias: filtros.periodo }),
       resultadosApi.produtos({ periodo_dias: filtros.periodo }),
     ])
@@ -176,30 +176,32 @@ function AbaVisaoGeral({ filtros }) {
 
       {/* Gráficos linha 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <ChartCard title="Evolução Mensal" loading={loading}>
-          <ResponsiveContainer width="100%" height={200}>
+        <ChartCard title="Novos por Mês" loading={loading}>
+          <p className="text-[10px] text-gray-400 -mt-2 mb-3">Registros criados no mês (excl. cancelados)</p>
+          <ResponsiveContainer width="100%" height={220}>
             <LineChart data={evolucao}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+              <YAxis tick={{ fontSize: 11 }} allowDecimals={false} width={28} />
               <Tooltip content={<ChartTip />} />
               <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-              <Line type="monotone" dataKey="implantacoes" name="Implantações" stroke={C.indigo} strokeWidth={2} dot={{ r: 3 }} />
-              <Line type="monotone" dataKey="instalacoes"  name="Instalações"  stroke={C.orange} strokeWidth={2} dot={{ r: 3 }} />
-              <Line type="monotone" dataKey="concluidas"   name="Concluídas"   stroke={C.green}  strokeWidth={2} dot={{ r: 3 }} strokeDasharray="4 2" />
+              <Line type="monotone" dataKey="implantacoes" name="Implantações" stroke={C.indigo} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+              <Line type="monotone" dataKey="instalacoes"  name="Instalações"  stroke={C.orange} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Implantações por Consultor" loading={loading}>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={consultor} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-              <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} />
-              <YAxis type="category" dataKey="consultor" width={90} tick={{ fontSize: 10 }} />
+        <ChartCard title="Concluídas por Mês" loading={loading}>
+          <p className="text-[10px] text-gray-400 -mt-2 mb-3">Pela data real de conclusão, separadas por tipo</p>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={evolucao}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 11 }} allowDecimals={false} width={28} />
               <Tooltip content={<ChartTip />} />
-              <Bar dataKey="total"      name="Total"      fill={C.indigo} radius={[0,3,3,0]} />
-              <Bar dataKey="concluidas" name="Concluídas" fill={C.green}  radius={[0,3,3,0]} />
+              <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
+              <Bar dataKey="impl_concluidas" name="Implantações" stackId="a" fill={C.indigo} />
+              <Bar dataKey="inst_concluidas" name="Instalações"  stackId="a" fill={C.teal} radius={[4,4,0,0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -225,14 +227,15 @@ function AbaVisaoGeral({ filtros }) {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Concluídas por Mês" loading={loading}>
+        <ChartCard title="Implantações por Consultor" loading={loading}>
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={evolucao}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+            <BarChart data={consultor} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+              <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} />
+              <YAxis type="category" dataKey="consultor" width={90} tick={{ fontSize: 10 }} />
               <Tooltip content={<ChartTip />} />
-              <Bar dataKey="concluidas" name="Concluídas" fill={C.green} radius={[4,4,0,0]} />
+              <Bar dataKey="total"      name="Total"      fill={C.indigo} radius={[0,3,3,0]} />
+              <Bar dataKey="concluidas" name="Concluídas" fill={C.green}  radius={[0,3,3,0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>

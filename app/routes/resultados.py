@@ -3,7 +3,7 @@ import unicodedata
 from datetime import date, datetime, timedelta
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session, selectinload
-from sqlalchemy import select
+from sqlalchemy import select, or_
 
 from app.database.connection import get_db
 from app.models.implantacao import Implantacao
@@ -513,38 +513,69 @@ def _mes_range(hoje: date, meses_atras: int) -> tuple[date, date]:
 
 @router.get("/evolucao-mensal")
 def evolucao_mensal(
-    meses: int = Query(12),
+    periodo_dias: int = Query(365),
+    estado: str = Query(""),
     db: Session = Depends(get_db),
 ):
     hoje = date.today()
+    # Mapeia período para quantidade de buckets mensais exibidos
+    meses = 3 if periodo_dias <= 90 else 6 if periodo_dias <= 180 else 12
 
-    # Carrega todos uma vez e filtra em Python — evita N queries
-    impl_all = db.execute(select(Implantacao)).scalars().all()
-    inst_all = db.execute(select(Instalacao)).scalars().all()
+    # Cutoff com margem extra para pegar conclusões de registros criados antes do período
+    cutoff = datetime.combine(hoje - timedelta(days=periodo_dias + 60), datetime.min.time())
+
+    # Carrega somente registros relevantes ao período; exclui cancelados
+    impl_all = db.execute(
+        select(Implantacao)
+        .options(selectinload(Implantacao.cliente))
+        .where(
+            Implantacao.status != "cancelada",
+            or_(
+                Implantacao.created_at >= cutoff,
+                Implantacao.data_conclusao >= cutoff.date(),
+            ),
+        )
+    ).scalars().all()
+
+    inst_all = db.execute(
+        select(Instalacao)
+        .options(selectinload(Instalacao.cliente))
+        .where(
+            Instalacao.status != "cancelada",
+            or_(
+                Instalacao.created_at >= cutoff,
+                Instalacao.data_conclusao >= cutoff.date(),
+            ),
+        )
+    ).scalars().all()
+
+    if estado:
+        uf = estado.upper()
+        impl_all = [x for x in impl_all if _get_estado(x.cliente) == uf]
+        inst_all = [x for x in inst_all if _get_estado(x.cliente) == uf]
 
     resultado = []
     for i in range(meses - 1, -1, -1):
         ref, prox = _mes_range(hoje, i)
 
-        # Criados neste mês
-        impl_mes = [x for x in impl_all if ref <= x.created_at.date() < prox]
-        inst_mes = [x for x in inst_all if ref <= x.created_at.date() < prox]
+        impl_criadas = sum(1 for x in impl_all if ref <= x.created_at.date() < prox)
+        inst_criadas = sum(1 for x in inst_all if ref <= x.created_at.date() < prox)
 
-        # Concluídos neste mês (pela data de conclusão real, não criação)
         impl_concl = sum(
             1 for x in impl_all
-            if x.data_conclusao and ref <= x.data_conclusao < prox
+            if x.data_conclusao and ref <= x.data_conclusao < prox and x.status == "concluida"
         )
         inst_concl = sum(
             1 for x in inst_all
-            if x.data_conclusao and ref <= x.data_conclusao < prox
+            if x.data_conclusao and ref <= x.data_conclusao < prox and x.status == "concluida"
         )
 
         resultado.append({
-            "mes":          _mes_label(ref),
-            "implantacoes": len(impl_mes),
-            "instalacoes":  len(inst_mes),
-            "concluidas":   impl_concl + inst_concl,
+            "mes":             _mes_label(ref),
+            "implantacoes":    impl_criadas,
+            "instalacoes":     inst_criadas,
+            "impl_concluidas": impl_concl,
+            "inst_concluidas": inst_concl,
         })
 
     return resultado
