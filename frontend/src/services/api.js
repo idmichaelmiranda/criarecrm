@@ -61,6 +61,7 @@ export const solicitacoesApi = {
   recusar:  (id, data) => api.post(`/solicitacoes/${id}/recusar`, data),
   cancelar: (id, data) => api.post(`/solicitacoes/${id}/cancelar`, data),
   reenviarEmail: (id) => api.post(`/solicitacoes/${id}/reenviar-email`),
+  atribuirResponsavel: (id, responsavel_id) => api.post(`/solicitacoes/${id}/atribuir`, { responsavel_id }),
   // Revisão pública pelo cliente
   obterRevisao: (token) => api.get(`/solicitacoes/revisao/${token}`),
   submitRevisao: (token, payload) => api.put(`/solicitacoes/revisao/${token}`, payload),

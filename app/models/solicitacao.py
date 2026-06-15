@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
-from sqlalchemy import String, Text, Integer, DateTime, JSON
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import String, Text, Integer, DateTime, JSON, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database.connection import Base
 
 
@@ -48,6 +48,10 @@ class Solicitacao(Base):
 
     # Histórico acumulado de recusas [{data, motivo, campos}]
     historico_recusas: Mapped[list] = mapped_column(JSON, nullable=True)
+
+    # Responsável pela triagem (usuário interno atribuído)
+    responsavel_triagem_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"), nullable=True)
+    responsavel_triagem: Mapped["Usuario"] = relationship("Usuario", foreign_keys=[responsavel_triagem_id])
 
     # Revisão pelo cliente (token de acesso público, expira em 7 dias)
     review_token: Mapped[str] = mapped_column(String(64), nullable=True, index=True)

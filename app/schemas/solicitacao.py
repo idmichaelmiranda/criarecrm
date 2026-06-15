@@ -68,6 +68,10 @@ class TriagemCancelar(BaseModel):
     motivo: str | None = None
 
 
+class AtribuirResponsavelPayload(BaseModel):
+    responsavel_id: int | None = None
+
+
 # ── Responses ────────────────────────────────────────────────────────────────
 
 class SolicitacaoListResponse(BaseModel):
@@ -86,8 +90,17 @@ class SolicitacaoListResponse(BaseModel):
     campos_correcao: list[str] | None
     historico_recusas: list | None
     created_at: datetime
+    responsavel_triagem_id: int | None = None
+    responsavel_triagem_nome: str | None = None
 
     model_config = {"from_attributes": True}
+
+    @classmethod
+    def model_validate(cls, obj, *args, **kwargs):
+        instance = super().model_validate(obj, *args, **kwargs)
+        if hasattr(obj, "responsavel_triagem") and obj.responsavel_triagem:
+            instance.responsavel_triagem_nome = obj.responsavel_triagem.nome
+        return instance
 
 
 class SolicitacaoResponse(SolicitacaoListResponse):

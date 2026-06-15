@@ -304,6 +304,7 @@ def _migrate_postgres() -> None:
         )""",
         "CREATE INDEX IF NOT EXISTS ix_notificacoes_usuario_id ON notificacoes (usuario_id)",
         "ALTER TABLE instalacoes ADD COLUMN IF NOT EXISTS observacao_conclusao TEXT",
+        "ALTER TABLE solicitacoes ADD COLUMN IF NOT EXISTS responsavel_triagem_id INTEGER REFERENCES usuarios(id)",
     ]
     with engine.connect() as conn:
         for ddl in new_cols:

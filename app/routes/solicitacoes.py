@@ -7,6 +7,7 @@ from app.database.connection import get_db
 from app.schemas.solicitacao import (
     SolicitacaoCreate, SolicitacaoListResponse, SolicitacaoResponse,
     SolicitacaoRevisaoPublic, TriagemAprovar, TriagemRecusar, TriagemCancelar,
+    AtribuirResponsavelPayload,
 )
 from app.schemas.implantacao import ImplantacaoListResponse
 from app.services import solicitacao_service, aprovacao_service
@@ -92,10 +93,20 @@ def atualizar(sol_id: int, data: SolicitacaoCreate, db: Session = Depends(get_db
     return solicitacao_service.atualizar(db, sol_id, data)
 
 
+@router.post("/{sol_id}/atribuir", response_model=SolicitacaoResponse)
+def atribuir_responsavel(
+    sol_id: int,
+    data: AtribuirResponsavelPayload,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_permission("triagem.view")),
+):
+    return solicitacao_service.atribuir_responsavel(db, sol_id, data.responsavel_id, current_user.nome)
+
+
 @router.post("/{sol_id}/aprovar", response_model=ImplantacaoListResponse)
-def aprovar(sol_id: int, data: TriagemAprovar, db: Session = Depends(get_db), _: Usuario = _auth):
+def aprovar(sol_id: int, data: TriagemAprovar, db: Session = Depends(get_db), current_user: Usuario = Depends(require_permission("triagem.view"))):
     try:
-        impl = aprovacao_service.aprovar(db, sol_id, data)
+        impl = aprovacao_service.aprovar(db, sol_id, data, aprovador_id=current_user.id)
     except HTTPException:
         raise
     except IntegrityError as exc:

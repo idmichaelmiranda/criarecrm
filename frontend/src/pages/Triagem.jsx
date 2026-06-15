@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import { Badge, PrioridadeBadge } from "../components/ui/Badge";
-import { solicitacoesApi, templatesApi, clientesApi } from "../services/api";
+import { solicitacoesApi, templatesApi, clientesApi, usuariosApi } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { BANCOS_BR } from "../data/bancos";
 import { fmtDate, fmtDateTime, parseUTC } from "../utils/dateUtils";
@@ -1237,15 +1237,44 @@ const REGIME_LABEL = {
   "simples_nacional": "Simples Nacional", "lucro_presumido": "Lucro Presumido", "lucro_real": "Lucro Real",
 };
 
-function Drawer({ sol, onClose, onTriar, onApproved, onRefused, onEdited }) {
+function Drawer({ sol: solProp, onClose, onTriar, onApproved, onRefused, onEdited }) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [sol, setSol]             = useState(solProp);
   const [modal, setModal]         = useState(null); // "aprovar" | "recusar" | "cancelar" | "editar"
   const [triando, setTriando]     = useState(false);
   const [tab, setTab]             = useState("dados");
   const [showPass, setShowPass]   = useState(false);
   const [reenviando, setReenviando] = useState(false);
   const [reenvioMsg, setReenvioMsg] = useState(null); // { ok: bool, text: str }
+  const [usuarios, setUsuarios]   = useState([]);
+  const [showRespPicker, setShowRespPicker] = useState(false);
+  const [atribuindo, setAtribuindo] = useState(false);
+
+  useEffect(() => { setSol(solProp); }, [solProp]);
+
+  useEffect(() => {
+    usuariosApi.listar().then(r => setUsuarios(r.data.filter(u => u.ativo !== false))).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!showRespPicker) return;
+    const handler = (e) => {
+      if (!e.target.closest("[data-resp-picker]")) setShowRespPicker(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showRespPicker]);
+
+  async function handleAtribuir(responsavel_id) {
+    setAtribuindo(true);
+    setShowRespPicker(false);
+    try {
+      const { data } = await solicitacoesApi.atribuirResponsavel(sol.id, responsavel_id);
+      setSol(data);
+    } catch {}
+    finally { setAtribuindo(false); }
+  }
 
   const canEdit = user?.grupo_nome?.toLowerCase().includes("administra");
 
@@ -1343,6 +1372,50 @@ function Drawer({ sol, onClose, onTriar, onApproved, onRefused, onEdited }) {
               </span>
             )}
           </div>
+
+          {/* ── Responsável da triagem ── */}
+          {!isTerminal && (
+            <div className="relative mt-3" data-resp-picker>
+              <button
+                onClick={() => setShowRespPicker(v => !v)}
+                disabled={atribuindo}
+                className="flex items-center gap-2 text-[11px] text-slate-300 hover:text-white transition-colors disabled:opacity-50">
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${sol.responsavel_triagem_id ? "bg-indigo-500 text-white" : "bg-slate-600 text-slate-300"}`}>
+                  {sol.responsavel_triagem_nome
+                    ? sol.responsavel_triagem_nome.split(" ").slice(0,2).map(w => w[0]).join("").toUpperCase()
+                    : <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                  }
+                </div>
+                <span>{atribuindo ? "Salvando…" : (sol.responsavel_triagem_nome ? `Responsável: ${sol.responsavel_triagem_nome}` : "Atribuir responsável")}</span>
+                <svg className="w-3 h-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+              </button>
+
+              {showRespPicker && (
+                <div className="absolute left-0 top-7 z-50 bg-white rounded-xl shadow-2xl border border-gray-100 py-1 min-w-[220px] max-h-60 overflow-y-auto">
+                  <button
+                    onClick={() => handleAtribuir(null)}
+                    className="w-full text-left px-4 py-2.5 text-xs text-gray-500 hover:bg-gray-50 flex items-center gap-2 transition-colors">
+                    <span className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </span>
+                    Sem responsável
+                  </button>
+                  <div className="border-t border-gray-50 my-0.5" />
+                  {usuarios.map(u => (
+                    <button key={u.id}
+                      onClick={() => handleAtribuir(u.id)}
+                      className={`w-full text-left px-4 py-2.5 text-xs hover:bg-indigo-50 flex items-center gap-2 transition-colors ${sol.responsavel_triagem_id === u.id ? "bg-indigo-50 text-indigo-700 font-semibold" : "text-gray-700"}`}>
+                      <span className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[9px] font-bold shrink-0">
+                        {u.nome.split(" ").slice(0,2).map(w => w[0]).join("").toUpperCase()}
+                      </span>
+                      {u.nome}
+                      {sol.responsavel_triagem_id === u.id && <span className="ml-auto text-indigo-500">✓</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* ── Barra de ações ── */}

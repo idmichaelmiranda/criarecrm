@@ -116,6 +116,49 @@ def iniciar_triagem(db: Session, solicitacao_id: int) -> Solicitacao:
     return sol
 
 
+def atribuir_responsavel(db: Session, solicitacao_id: int, responsavel_id: int | None, current_user_nome: str) -> Solicitacao:
+    from app.models.usuario import Usuario
+    from app.models.notificacao import Notificacao
+
+    sol = get_by_id(db, solicitacao_id)
+
+    anterior_id = sol.responsavel_triagem_id
+    sol.responsavel_triagem_id = responsavel_id
+    sol.updated_at = datetime.now()
+
+    if responsavel_id:
+        usuario = db.get(Usuario, responsavel_id)
+        nome_resp = usuario.nome if usuario else f"Usuário #{responsavel_id}"
+
+        timeline_service.log(
+            db, tipo="responsavel_atribuido", titulo="Responsável atribuído",
+            descricao=f"{current_user_nome} atribuiu a triagem a {nome_resp}.",
+            icone="user-check", cor="#6366f1",
+            solicitacao_id=sol.id,
+        )
+
+        if responsavel_id != anterior_id:
+            db.add(Notificacao(
+                usuario_id=responsavel_id,
+                tipo="triagem",
+                titulo="Triagem atribuída a você",
+                mensagem=f"Você foi atribuído como responsável pela triagem de {sol.razao_social}.",
+                dados={"solicitacao_id": sol.id},
+                lida=False,
+            ))
+    else:
+        timeline_service.log(
+            db, tipo="responsavel_removido", titulo="Responsável removido",
+            descricao=f"{current_user_nome} removeu o responsável da triagem.",
+            icone="user-x", cor="#6b7280",
+            solicitacao_id=sol.id,
+        )
+
+    db.commit()
+    db.refresh(sol)
+    return sol
+
+
 def recusar(db: Session, solicitacao_id: int, motivo: str, campos_correcao: list[str] | None = None, usuario: str | None = None) -> Solicitacao:
     sol = get_by_id(db, solicitacao_id)
     if sol.status not in ("nova", "em_triagem", "aguardando_correcao"):

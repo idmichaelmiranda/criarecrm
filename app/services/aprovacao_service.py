@@ -13,7 +13,7 @@ from app.schemas.solicitacao import TriagemAprovar
 from app.services import timeline_service
 
 
-def aprovar(db: Session, solicitacao_id: int, data: TriagemAprovar) -> Implantacao:
+def aprovar(db: Session, solicitacao_id: int, data: TriagemAprovar, aprovador_id: int | None = None) -> Implantacao:
     sol = db.get(Solicitacao, solicitacao_id)
     if not sol or sol.status not in ["nova", "em_triagem", "aguardando_correcao"]:
         raise HTTPException(400, "Solicitação inválida para aprovação")
@@ -126,6 +126,9 @@ def aprovar(db: Session, solicitacao_id: int, data: TriagemAprovar) -> Implantac
     # 6. Atualizar solicitação
     sol.status = "aprovada"
     sol.updated_at = datetime.now()
+    # Se nenhum responsável foi atribuído previamente, quem aprova assume
+    if not sol.responsavel_triagem_id and aprovador_id:
+        sol.responsavel_triagem_id = aprovador_id
 
     db.commit()
     db.refresh(implantacao)
