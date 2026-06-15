@@ -210,19 +210,30 @@ function AbaVisaoGeral({ filtros }) {
       {/* Gráficos linha 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <ChartCard title="Produtos Mais Implantados" loading={loading}>
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={240}>
             <PieChart>
-              <Pie data={produtos} dataKey="total" nameKey="produto" cx="50%" cy="45%"
-                outerRadius={70} label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
-                labelLine={false}>
+              <Pie
+                data={produtos} dataKey="total" nameKey="produto"
+                cx="50%" cy="44%" outerRadius={72}
+                label={({ cx, cy, midAngle, outerRadius, percent }) => {
+                  if (percent < 0.04) return null;
+                  const R = Math.PI / 180;
+                  const r = outerRadius + 24;
+                  const x = cx + r * Math.cos(-midAngle * R);
+                  const y = cy + r * Math.sin(-midAngle * R);
+                  return (
+                    <text x={x} y={y} fill="#374151" fontSize={11} fontWeight={700}
+                      textAnchor={x > cx ? "start" : "end"} dominantBaseline="central">
+                      {`${(percent * 100).toFixed(0)}%`}
+                    </text>
+                  );
+                }}
+                labelLine={{ stroke: "#d1d5db", strokeWidth: 1 }}>
                 {produtos.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
               </Pie>
               <Tooltip formatter={(value, name) => [value, name]} />
-              <Legend
-                iconType="circle"
-                iconSize={8}
-                formatter={(value) => <span style={{ fontSize: 11 }}>{value}</span>}
-              />
+              <Legend iconType="circle" iconSize={8}
+                formatter={(value) => <span style={{ fontSize: 11 }}>{value}</span>} />
             </PieChart>
           </ResponsiveContainer>
         </ChartCard>
