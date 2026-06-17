@@ -210,11 +210,12 @@ function AbaVisaoGeral({ filtros }) {
       {/* Gráficos linha 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <ChartCard title="Produtos Mais Implantados" loading={loading}>
-          <ResponsiveContainer width="100%" height={240}>
+          {/* height=270 + cy="47%" garante margem >= 32px no topo e na base para todos os labels */}
+          <ResponsiveContainer width="100%" height={270}>
             <PieChart>
               <Pie
                 data={produtos} dataKey="total" nameKey="produto"
-                cx="50%" cy="44%" outerRadius={72}
+                cx="50%" cy="47%" outerRadius={70}
                 label={({ cx, cy, midAngle, outerRadius, percent }) => {
                   if (percent < 0.04) return null;
                   const R = Math.PI / 180;
