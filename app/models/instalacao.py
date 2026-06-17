@@ -73,6 +73,10 @@ class Instalacao(Base):
         "InstalacaoPausa", back_populates="instalacao",
         order_by="InstalacaoPausa.iniciado_em", cascade="all, delete-orphan"
     )
+    responsaveis_list: Mapped[list["InstalacaoResponsavel"]] = relationship(
+        "InstalacaoResponsavel", back_populates="instalacao",
+        order_by="InstalacaoResponsavel.created_at", cascade="all, delete-orphan"
+    )
 
 
 class InstalacaoChecklist(Base):
@@ -142,3 +146,16 @@ class InstalacaoPausa(Base):
 
     instalacao: Mapped["Instalacao"] = relationship("Instalacao", back_populates="pausas")
     pausado_por: Mapped["Usuario"] = relationship("Usuario", foreign_keys=[pausado_por_id])
+
+
+class InstalacaoResponsavel(Base):
+    __tablename__ = "instalacao_responsaveis"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    instalacao_id: Mapped[int] = mapped_column(ForeignKey("instalacoes.id", ondelete="CASCADE"), nullable=False)
+    usuario_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id", ondelete="CASCADE"), nullable=False)
+    papel: Mapped[str] = mapped_column(String(20), nullable=False, default="colaborador")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    instalacao: Mapped["Instalacao"] = relationship("Instalacao", back_populates="responsaveis_list")
+    usuario: Mapped["Usuario"] = relationship("Usuario")

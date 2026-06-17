@@ -305,6 +305,15 @@ def _migrate_postgres() -> None:
         "CREATE INDEX IF NOT EXISTS ix_notificacoes_usuario_id ON notificacoes (usuario_id)",
         "ALTER TABLE instalacoes ADD COLUMN IF NOT EXISTS observacao_conclusao TEXT",
         "ALTER TABLE solicitacoes ADD COLUMN IF NOT EXISTS responsavel_triagem_id INTEGER REFERENCES usuarios(id)",
+        """CREATE TABLE IF NOT EXISTS instalacao_responsaveis (
+            id SERIAL PRIMARY KEY,
+            instalacao_id INTEGER NOT NULL REFERENCES instalacoes(id) ON DELETE CASCADE,
+            usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+            papel VARCHAR(20) NOT NULL DEFAULT 'colaborador',
+            created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+            UNIQUE(instalacao_id, usuario_id)
+        )""",
+        "CREATE INDEX IF NOT EXISTS ix_instalacao_responsaveis_instalacao_id ON instalacao_responsaveis (instalacao_id)",
     ]
     with engine.connect() as conn:
         for ddl in new_cols:

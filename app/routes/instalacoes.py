@@ -10,7 +10,7 @@ import json
 from app.database.connection import get_db
 from app.dependencies.auth import get_current_user
 import app.services.storage_service as storage
-from app.models.instalacao import Instalacao, InstalacaoChecklist, InstalacaoComentario, InstalacaoAnexo, InstalacaoPausa
+from app.models.instalacao import Instalacao, InstalacaoChecklist, InstalacaoComentario, InstalacaoAnexo, InstalacaoPausa, InstalacaoResponsavel
 from app.models.cliente import Cliente
 from app.models.usuario import Usuario
 from app.models.template import Template, TemplateEtapa, TemplateTarefa
@@ -18,7 +18,7 @@ from pydantic import BaseModel as PydanticBase
 
 from app.schemas.instalacao import (
     InstalacaoCreate, InstalacaoUpdate, InstalacaoEditar,
-    InstalacaoListResponse, InstalacaoFullResponse,
+    InstalacaoListResponse, InstalacaoFullResponse, ResponsavelMinimo,
     ChecklistItemCreate, ChecklistItemUpdate, ChecklistItemResponse, ChecklistItemToggleResponse,
     ComentarioCreate, ComentarioResponse,
     TipoInstalacaoInfo, AnexoResponse, PausaResponse,
@@ -71,6 +71,11 @@ def _criar_notif_conclusao(db: Session, inst: "Instalacao", finalizado_por: "Usu
             db.add(Notificacao(usuario_id=u.id, tipo="instalacao",
                                titulo=titulo, mensagem=mensagem, dados=dados, lida=False))
             notificados.add(u.id)
+    for r in getattr(inst, "responsaveis_list", []):
+        if r.usuario_id not in notificados:
+            db.add(Notificacao(usuario_id=r.usuario_id, tipo="instalacao",
+                               titulo=titulo, mensagem=mensagem, dados=dados, lida=False))
+            notificados.add(r.usuario_id)
 
 
 def _safe_storage_name(original: str) -> str:
@@ -105,6 +110,7 @@ def _load(instalacao_id: int, db: Session) -> Instalacao:
             selectinload(Instalacao.criado_por),
             selectinload(Instalacao.anexos),
             selectinload(Instalacao.pausas),
+            selectinload(Instalacao.responsaveis_list).selectinload(InstalacaoResponsavel.usuario),
         )
         .where(Instalacao.id == instalacao_id)
     ).scalar_one_or_none()
@@ -132,6 +138,27 @@ def _to_full_response(inst: Instalacao, db: Session | None = None) -> Instalacao
     if inst.responsavel and inst.responsavel.avatar_path:
         resp.responsavel_avatar_url = storage.avatar_url(inst.responsavel.avatar_path)
     resp.criado_por_nome = inst.criado_por.nome if inst.criado_por else None
+
+    # Build unified responsaveis list: principal first, then collaborators
+    responsaveis: list[ResponsavelMinimo] = []
+    if inst.responsavel_id and inst.responsavel:
+        u = inst.responsavel
+        responsaveis.append(ResponsavelMinimo(
+            id=u.id, nome=u.nome,
+            avatar_url=storage.avatar_url(u.avatar_path) if u.avatar_path else None,
+            papel="principal",
+        ))
+    for r in inst.responsaveis_list:
+        u = r.usuario
+        if u is None:
+            continue
+        responsaveis.append(ResponsavelMinimo(
+            id=u.id, nome=u.nome,
+            avatar_url=storage.avatar_url(u.avatar_path) if u.avatar_path else None,
+            papel="colaborador",
+        ))
+    resp.responsaveis = responsaveis
+
     if db:
         # For single-type installs use tipo; for multi-type use first tipo
         from app.schemas.instalacao import _parse_tipos
@@ -696,3 +723,79 @@ def download_anexo(instalacao_id: int, anexo_id: int, db: Session = Depends(get_
         media_type=anexo.content_type or "application/octet-stream",
         headers={"Content-Disposition": f'attachment; filename="{anexo.filename}"'},
     )
+
+
+# ── Responsáveis (multi) ───────────────────────────────────────────────────────
+
+class AdicionarResponsavelPayload(PydanticBase):
+    usuario_id: int
+
+
+@router.post("/{instalacao_id}/responsaveis", response_model=InstalacaoFullResponse)
+def adicionar_responsavel(
+    instalacao_id: int,
+    data: AdicionarResponsavelPayload,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    inst = db.get(Instalacao, instalacao_id)
+    if not inst:
+        raise HTTPException(404, "Instalação não encontrada")
+    usuario = db.get(Usuario, data.usuario_id)
+    if not usuario:
+        raise HTTPException(404, "Usuário não encontrado")
+    if inst.responsavel_id == data.usuario_id:
+        raise HTTPException(409, "Este usuário já é o responsável principal desta instalação")
+    existing = db.execute(
+        select(InstalacaoResponsavel).where(
+            InstalacaoResponsavel.instalacao_id == instalacao_id,
+            InstalacaoResponsavel.usuario_id == data.usuario_id,
+        )
+    ).scalar_one_or_none()
+    if existing:
+        raise HTTPException(409, "Usuário já é responsável desta instalação")
+
+    db.add(InstalacaoResponsavel(
+        instalacao_id=instalacao_id,
+        usuario_id=data.usuario_id,
+        papel="colaborador",
+    ))
+
+    from app.models.notificacao import Notificacao
+    cliente = db.get(Cliente, inst.cliente_id)
+    cliente_nome = cliente.razao_social if cliente else f"Cliente #{inst.cliente_id}"
+    db.add(Notificacao(
+        usuario_id=data.usuario_id,
+        tipo="instalacao",
+        titulo="Você foi adicionado como responsável",
+        mensagem=f"{inst.codigo} — {cliente_nome}",
+        dados={"instalacao_id": inst.id, "codigo": inst.codigo},
+        lida=False,
+    ))
+    inst.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    return _to_full_response(_load(instalacao_id, db), db)
+
+
+@router.delete("/{instalacao_id}/responsaveis/{usuario_id}", response_model=InstalacaoFullResponse)
+def remover_responsavel(
+    instalacao_id: int,
+    usuario_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    inst = db.get(Instalacao, instalacao_id)
+    if not inst:
+        raise HTTPException(404, "Instalação não encontrada")
+    rel = db.execute(
+        select(InstalacaoResponsavel).where(
+            InstalacaoResponsavel.instalacao_id == instalacao_id,
+            InstalacaoResponsavel.usuario_id == usuario_id,
+        )
+    ).scalar_one_or_none()
+    if not rel:
+        raise HTTPException(404, "Responsável não encontrado nesta instalação")
+    db.delete(rel)
+    inst.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    return _to_full_response(_load(instalacao_id, db), db)

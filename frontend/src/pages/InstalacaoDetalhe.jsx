@@ -637,6 +637,10 @@ export default function InstalacaoDetalhe() {
   const fileInputRef = useRef(null);
   const [editandoResp, setEditandoResp] = useState(false);
   const [savingResp, setSavingResp] = useState(false);
+  const [showAddResp, setShowAddResp] = useState(false);
+  const [addingResp, setAddingResp] = useState(false);
+  const [removingRespId, setRemovingRespId] = useState(null);
+  const [addRespBusca, setAddRespBusca] = useState("");
   const [showEditarModal, setShowEditarModal] = useState(false);
   const [editarError, setEditarError] = useState("");
   const [editarSaving, setEditarSaving] = useState(false);
@@ -683,6 +687,35 @@ export default function InstalacaoDetalhe() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [editDropdownOpen]);
+
+  useEffect(() => {
+    if (!showAddResp) return;
+    function handler(e) {
+      if (!e.target.closest("[data-add-resp-picker]")) setShowAddResp(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showAddResp]);
+
+  async function handleAdicionarResp(usuario_id) {
+    setAddingResp(true);
+    setShowAddResp(false);
+    setAddRespBusca("");
+    try {
+      const { data } = await instalacaosApi.adicionarResponsavel(id, { usuario_id });
+      setInst(data);
+    } catch {}
+    finally { setAddingResp(false); }
+  }
+
+  async function handleRemoverResp(usuario_id) {
+    setRemovingRespId(usuario_id);
+    try {
+      const { data } = await instalacaosApi.removerResponsavel(id, usuario_id);
+      setInst(data);
+    } catch {}
+    finally { setRemovingRespId(null); }
+  }
 
   const elapsed = useElapsed(
     inst?.iniciado_em,
@@ -1198,25 +1231,137 @@ export default function InstalacaoDetalhe() {
               )}
             </div>
 
-            {/* Responsável — card de perfil com seletor inline */}
+            {/* Responsáveis — lista com principal + colaboradores */}
             <div className="pt-3 border-t border-gray-100">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Responsável</p>
-                {!editandoResp && !inst.finalizado_em && (
-                  <button
-                    type="button"
-                    onClick={() => setEditandoResp(true)}
-                    className="p-1 rounded text-gray-300 hover:text-orange-500 hover:bg-orange-50 transition-colors"
-                    title="Alterar responsável"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                  </button>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Responsáveis</p>
+                {!inst.finalizado_em && (
+                  <div className="relative" data-add-resp-picker>
+                    <button
+                      type="button"
+                      onClick={() => { setShowAddResp((v) => !v); setAddRespBusca(""); }}
+                      disabled={addingResp}
+                      className="flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium text-orange-600 hover:bg-orange-50 border border-orange-200 hover:border-orange-300 transition-colors"
+                    >
+                      {addingResp ? (
+                        <div className="w-3 h-3 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" />
+                      ) : (
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                      )}
+                      Adicionar
+                    </button>
+                    {showAddResp && (
+                      <div className="absolute right-0 top-full mt-1 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-30 overflow-hidden">
+                        <div className="p-2 border-b border-gray-100">
+                          <input
+                            autoFocus
+                            type="text"
+                            placeholder="Buscar usuário..."
+                            value={addRespBusca}
+                            onChange={(e) => setAddRespBusca(e.target.value)}
+                            className="w-full text-xs px-2 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-400"
+                          />
+                        </div>
+                        <div className="max-h-44 overflow-y-auto py-1">
+                          {(() => {
+                            const jaAdicionados = new Set((inst.responsaveis || []).map((r) => r.id));
+                            const disponiveis = usuarios.filter((u) =>
+                              !jaAdicionados.has(u.id) &&
+                              (!addRespBusca || u.nome.toLowerCase().includes(addRespBusca.toLowerCase()))
+                            );
+                            return disponiveis.length === 0 ? (
+                              <p className="text-xs text-gray-400 text-center py-3">Nenhum usuário disponível</p>
+                            ) : disponiveis.map((u) => (
+                              <button
+                                key={u.id}
+                                type="button"
+                                onClick={() => handleAdicionarResp(u.id)}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-orange-50 transition-colors text-left"
+                              >
+                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 ${avatarColor(u.nome)}`}>
+                                  {initials(u.nome)}
+                                </div>
+                                <span className="text-sm text-gray-700 truncate">{u.nome}</span>
+                              </button>
+                            ));
+                          })()}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
 
-              {editandoResp ? (
+              {(inst.responsaveis || []).length > 0 ? (
+                <div className="space-y-1.5">
+                  {(inst.responsaveis || []).map((r) => (
+                    <div key={r.id} className="flex items-center gap-2.5 bg-gray-50 rounded-xl px-3 py-2 border border-gray-100 group">
+                      {r.avatar_url ? (
+                        <img src={r.avatar_url} alt={r.nome} className="w-8 h-8 rounded-full object-cover shrink-0" />
+                      ) : (
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 ${avatarColor(r.nome)}`}>
+                          {initials(r.nome)}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-gray-800 truncate leading-tight">{r.nome}</p>
+                        <span className={`inline-block text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full mt-0.5 ${r.papel === "principal" ? "bg-indigo-100 text-indigo-600" : "bg-gray-100 text-gray-500"}`}>
+                          {r.papel === "principal" ? "Principal" : "Colaborador"}
+                        </span>
+                      </div>
+                      {r.papel === "principal" && !inst.finalizado_em && (
+                        <button
+                          type="button"
+                          onClick={() => setEditandoResp(true)}
+                          className="p-1 rounded text-gray-300 hover:text-orange-500 hover:bg-orange-50 transition-colors opacity-0 group-hover:opacity-100"
+                          title="Alterar responsável principal"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                      )}
+                      {r.papel !== "principal" && !inst.finalizado_em && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoverResp(r.id)}
+                          disabled={removingRespId === r.id}
+                          className="p-1 rounded text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                          title="Remover colaborador"
+                        >
+                          {removingRespId === r.id ? (
+                            <div className="w-3.5 h-3.5 rounded-full border-2 border-red-400 border-t-transparent animate-spin" />
+                          ) : (
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  {editandoResp && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <select
+                        autoFocus
+                        defaultValue={inst.responsavel_id ?? ""}
+                        disabled={savingResp}
+                        onChange={(e) => handleSaveResp(e.target.value)}
+                        onBlur={() => !savingResp && setEditandoResp(false)}
+                        className="flex-1 text-sm border border-orange-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-400/20 bg-white"
+                      >
+                        <option value="">Sem responsável</option>
+                        {usuarios.map((u) => (
+                          <option key={u.id} value={u.id}>{u.nome}</option>
+                        ))}
+                      </select>
+                      {savingResp && <div className="w-4 h-4 rounded-full border-2 border-orange-400 border-t-transparent animate-spin shrink-0" />}
+                    </div>
+                  )}
+                </div>
+              ) : editandoResp ? (
                 <div className="flex items-center gap-2">
                   <select
                     autoFocus
@@ -1231,30 +1376,7 @@ export default function InstalacaoDetalhe() {
                       <option key={u.id} value={u.id}>{u.nome}</option>
                     ))}
                   </select>
-                  {savingResp && (
-                    <div className="w-4 h-4 rounded-full border-2 border-orange-400 border-t-transparent animate-spin shrink-0" />
-                  )}
-                </div>
-              ) : inst.responsavel_nome ? (
-                <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100">
-                  {responsavelUser?.avatar_url ? (
-                    <img
-                      src={responsavelUser.avatar_url}
-                      alt={inst.responsavel_nome}
-                      className="w-9 h-9 rounded-full object-cover shrink-0"
-                    />
-                  ) : (
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0 ${avatarColor(inst.responsavel_nome)}`}>
-                      {initials(inst.responsavel_nome)}
-                    </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-gray-800 truncate leading-tight">{inst.responsavel_nome}</p>
-                    {responsavelUser?.grupo_nome && (
-                      <p className="text-[10px] text-gray-400 truncate mt-0.5">{responsavelUser.grupo_nome}</p>
-                    )}
-                  </div>
-                  <div className="w-2 h-2 rounded-full bg-green-400 shrink-0" title="Ativo" />
+                  {savingResp && <div className="w-4 h-4 rounded-full border-2 border-orange-400 border-t-transparent animate-spin shrink-0" />}
                 </div>
               ) : (
                 <button

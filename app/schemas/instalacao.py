@@ -217,6 +217,15 @@ class InstalacaoListResponse(BaseModel):
         return data
 
 
+class ResponsavelMinimo(BaseModel):
+    id: int
+    nome: str
+    avatar_url: str | None = None
+    papel: str
+
+    model_config = {"from_attributes": True}
+
+
 class InstalacaoFullResponse(BaseModel):
     id: int
     codigo: str
@@ -255,6 +264,7 @@ class InstalacaoFullResponse(BaseModel):
     comentarios: list[ComentarioResponse] = []
     anexos: list[AnexoResponse] = []
     pausas: list[PausaResponse] = []
+    responsaveis: list[ResponsavelMinimo] = []
 
     model_config = {"from_attributes": True}
 
