@@ -7,7 +7,7 @@ from sqlalchemy import select, or_
 
 from app.database.connection import get_db
 from app.models.implantacao import Implantacao
-from app.models.instalacao import Instalacao
+from app.models.instalacao import Instalacao, InstalacaoResponsavel
 from app.models.cliente import Cliente
 from app.models.usuario import Usuario
 
@@ -587,38 +587,55 @@ def equipe(
     db: Session = Depends(get_db),
 ):
     desde = _desde(periodo_dias)
+    cutoff = datetime.combine(desde, datetime.min.time())
 
     instalacoes = db.execute(
         select(Instalacao)
-        .options(selectinload(Instalacao.responsavel))
-        .where(
-            Instalacao.created_at >= datetime.combine(desde, datetime.min.time()),
-            Instalacao.responsavel_id.isnot(None),
+        .options(
+            selectinload(Instalacao.responsavel),
+            selectinload(Instalacao.responsaveis_list),
         )
+        .where(Instalacao.created_at >= cutoff)
     ).scalars().all()
 
     usuarios = db.execute(select(Usuario).where(Usuario.ativo == True)).scalars().all()
     users_map = {u.id: u for u in usuarios}
 
+    def _init_entry(uid: int) -> dict:
+        u = users_map.get(uid)
+        return {
+            "id": uid,
+            "nome": u.nome if u else f"Usuário #{uid}",
+            "avatar_url": None,
+            "total": 0, "concluidas": 0, "em_execucao": 0,
+            "como_principal": 0, "como_colaborador": 0,
+            "_tempos": [],
+        }
+
     por_tecnico: dict[int, dict] = {}
     for inst in instalacoes:
-        uid = inst.responsavel_id
-        if uid not in por_tecnico:
-            nome = users_map.get(uid, inst.responsavel)
-            por_tecnico[uid] = {
-                "id": uid,
-                "nome": nome.nome if hasattr(nome, "nome") else str(nome),
-                "avatar_url": nome.avatar_url if hasattr(nome, "avatar_url") else None,
-                "total": 0, "concluidas": 0, "em_execucao": 0,
-                "tempo_medio_min": 0, "_tempos": [],
-            }
-        por_tecnico[uid]["total"] += 1
-        if inst.status == "concluida":
-            por_tecnico[uid]["concluidas"] += 1
-            if inst.duracao_minutos:
-                por_tecnico[uid]["_tempos"].append(inst.duracao_minutos)
-        elif inst.status == "em_execucao":
-            por_tecnico[uid]["em_execucao"] += 1
+        # Coleta todos os responsáveis: principal + colaboradores
+        atribuicoes: list[tuple[int, str]] = []
+        if inst.responsavel_id:
+            atribuicoes.append((inst.responsavel_id, "principal"))
+        for r in inst.responsaveis_list:
+            atribuicoes.append((r.usuario_id, "colaborador"))
+
+        for uid, papel in atribuicoes:
+            if uid not in por_tecnico:
+                por_tecnico[uid] = _init_entry(uid)
+            entry = por_tecnico[uid]
+            entry["total"] += 1
+            if papel == "principal":
+                entry["como_principal"] += 1
+            else:
+                entry["como_colaborador"] += 1
+            if inst.status == "concluida":
+                entry["concluidas"] += 1
+                if inst.duracao_minutos:
+                    entry["_tempos"].append(inst.duracao_minutos)
+            elif inst.status == "em_execucao":
+                entry["em_execucao"] += 1
 
     result = []
     for entry in por_tecnico.values():

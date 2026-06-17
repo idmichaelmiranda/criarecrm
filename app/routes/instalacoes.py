@@ -126,6 +126,7 @@ def _to_list_response(inst: Instalacao, cliente: Cliente | None) -> InstalacaoLi
     item.responsavel_nome = inst.responsavel.nome if inst.responsavel else None
     if inst.responsavel and inst.responsavel.avatar_path:
         item.responsavel_avatar_url = storage.avatar_url(inst.responsavel.avatar_path)
+    item.colaboradores_ids = [r.usuario_id for r in getattr(inst, "responsaveis_list", [])]
     # Recalcula progresso do checklist em tempo real — ignora valor defasado do banco
     total = len(inst.checklist)
     item.progresso = round(sum(1 for c in inst.checklist if c.status == "concluido") / total * 100) if total else 0
@@ -220,6 +221,7 @@ def listar(db: Session = Depends(get_db)):
         .options(
             selectinload(Instalacao.responsavel),
             selectinload(Instalacao.checklist),
+            selectinload(Instalacao.responsaveis_list),
         )
         .order_by(Instalacao.created_at.desc())
     ).scalars().all()
@@ -772,6 +774,11 @@ def adicionar_responsavel(
         dados={"instalacao_id": inst.id, "codigo": inst.codigo},
         lida=False,
     ))
+    db.add(InstalacaoComentario(
+        instalacao_id=instalacao_id,
+        usuario="Sistema",
+        conteudo=f"{current_user.nome} adicionou {usuario.nome} como colaborador.",
+    ))
     inst.updated_at = datetime.now(timezone.utc)
     db.commit()
     return _to_full_response(_load(instalacao_id, db), db)
@@ -795,7 +802,14 @@ def remover_responsavel(
     ).scalar_one_or_none()
     if not rel:
         raise HTTPException(404, "Responsável não encontrado nesta instalação")
+    usuario_removido = db.get(Usuario, usuario_id)
+    usuario_nome = usuario_removido.nome if usuario_removido else f"Usuário #{usuario_id}"
     db.delete(rel)
+    db.add(InstalacaoComentario(
+        instalacao_id=instalacao_id,
+        usuario="Sistema",
+        conteudo=f"{current_user.nome} removeu {usuario_nome} dos responsáveis.",
+    ))
     inst.updated_at = datetime.now(timezone.utc)
     db.commit()
     return _to_full_response(_load(instalacao_id, db), db)

@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session, selectinload, joinedload
-from sqlalchemy import select, func
+from sqlalchemy import select, func, exists
 
 from app.database.connection import get_db, IS_SQLITE
 from app.models.solicitacao import Solicitacao  # noqa: F401 — usado no outerjoin do timeline
@@ -9,7 +9,7 @@ from app.models.implantacao import Implantacao
 from app.models.checklist import ChecklistItem
 from app.models.cliente import Cliente
 from app.models.timeline import TimelineEvento
-from app.models.instalacao import Instalacao as InstalacaoModel
+from app.models.instalacao import Instalacao as InstalacaoModel, InstalacaoResponsavel
 from app.services import implantacao_service
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -158,10 +158,14 @@ def kpis(db: Session = Depends(get_db)):
         )
     ).scalar_one()
 
+    # "Sem responsável" = sem principal (responsavel_id) E sem nenhum colaborador na junction table
+    _tem_responsavel = exists().where(InstalacaoResponsavel.instalacao_id == InstalacaoModel.id)
+
     instalacoes_sem_responsavel = db.execute(
         select(func.count()).select_from(InstalacaoModel)
         .where(
             InstalacaoModel.responsavel_id.is_(None),
+            ~_tem_responsavel,
             InstalacaoModel.status.notin_(["concluida", "cancelada"]),
         )
     ).scalar_one()
@@ -171,6 +175,7 @@ def kpis(db: Session = Depends(get_db)):
         select(func.count()).select_from(InstalacaoModel)
         .where(
             InstalacaoModel.responsavel_id.is_(None),
+            ~_tem_responsavel,
             InstalacaoModel.status.notin_(["concluida", "cancelada"]),
             InstalacaoModel.data_agendada == today,
         )
@@ -181,6 +186,7 @@ def kpis(db: Session = Depends(get_db)):
         select(func.count()).select_from(InstalacaoModel)
         .where(
             InstalacaoModel.responsavel_id.is_(None),
+            ~_tem_responsavel,
             InstalacaoModel.status.notin_(["concluida", "cancelada"]),
             InstalacaoModel.data_agendada < today,
         )

@@ -195,6 +195,7 @@ class InstalacaoListResponse(BaseModel):
     responsavel_id: int | None = None
     responsavel_nome: str | None = None
     responsavel_avatar_url: str | None = None
+    colaboradores_ids: list[int] = []
     data_agendada: date | None
     data_conclusao: date | None
     progresso: int

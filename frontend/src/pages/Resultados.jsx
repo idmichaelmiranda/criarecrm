@@ -303,6 +303,18 @@ function AbaEquipe({ filtros }) {
                     </div>
                     <span className="text-[11px] text-gray-400">{m.taxa_conclusao}% conclusão</span>
                   </div>
+                  {(m.como_colaborador > 0) && (
+                    <div className="flex items-center gap-2 mt-1">
+                      {m.como_principal > 0 && (
+                        <span className="text-[10px] font-medium text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded-full">
+                          {m.como_principal} principal
+                        </span>
+                      )}
+                      <span className="text-[10px] font-medium text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded-full">
+                        {m.como_colaborador} colaborador
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div className="grid grid-cols-3 gap-3 shrink-0">
                   {[
