@@ -142,7 +142,7 @@ def atribuir_responsavel(db: Session, solicitacao_id: int, responsavel_id: int |
                 usuario_id=responsavel_id,
                 tipo="triagem",
                 titulo="Triagem atribuída a você",
-                mensagem=f"Você foi atribuído como responsável pela triagem de {sol.razao_social}.",
+                mensagem=f"{current_user_nome} atribuiu a triagem de {sol.razao_social} a você.",
                 dados={"solicitacao_id": sol.id},
                 lida=False,
             ))
