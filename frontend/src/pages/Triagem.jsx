@@ -2067,6 +2067,7 @@ export default function Triagem() {
                   <th className="px-5 py-3">Empresa</th>
                   <th className="px-4 py-3">CNPJ</th>
                   <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Responsável</th>
                   <th className="px-4 py-3">SLA</th>
                   <th className="px-4 py-3">Recebida</th>
                   <th className="px-3 py-3 w-8" />
@@ -2122,6 +2123,20 @@ export default function Triagem() {
                       {/* Status */}
                       <td className="px-4 py-4">
                         <Badge status={s.status} />
+                      </td>
+
+                      {/* Responsável */}
+                      <td className="px-4 py-4">
+                        {s.responsavel_triagem_nome ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-[9px] font-bold text-white shrink-0">
+                              {s.responsavel_triagem_nome.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase()}
+                            </div>
+                            <span className="text-xs text-gray-600 truncate max-w-[100px]">{s.responsavel_triagem_nome}</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-300">—</span>
+                        )}
                       </td>
 
                       {/* SLA — oculto para terminais */}
