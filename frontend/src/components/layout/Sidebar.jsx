@@ -539,7 +539,7 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
         .then(({ data }) => setNotifCount(data.count || 0))
         .catch(() => {});
     fetchCount();
-    const interval = setInterval(fetchCount, 20_000);
+    const interval = setInterval(fetchCount, 10_000);
     const onVisible = () => { if (document.visibilityState === "visible") fetchCount(); };
     document.addEventListener("visibilitychange", onVisible);
     return () => { clearInterval(interval); document.removeEventListener("visibilitychange", onVisible); };
@@ -570,11 +570,18 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
   }
 
   async function handleOpenNotifs() {
-    if (showNotifs) { setShowNotifs(false); return; }
+    if (showNotifs) {
+      // Fix #3: ao fechar, sincroniza badge com a lista local atualizada
+      setNotifCount(notifs.filter((n) => !n.lida).length);
+      setShowNotifs(false);
+      return;
+    }
     setNotifLoading(true);
     try {
       const { data } = await notificacoesApi.listar();
       setNotifs(data);
+      // Fix #2: sincroniza badge com a lista recém-carregada do servidor
+      setNotifCount(data.filter((n) => !n.lida).length);
     } catch {
       setNotifs([]);
     } finally {
@@ -584,15 +591,17 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
   }
 
   async function handleMarcarLida(id) {
-    try { await notificacoesApi.marcarLida(id); } catch {}
+    // Fix #1: optimistic update antes do await — UI responde imediatamente
     setNotifs((prev) => prev.map((n) => n.id === id ? { ...n, lida: true } : n));
     setNotifCount((c) => Math.max(0, c - 1));
+    try { await notificacoesApi.marcarLida(id); } catch {}
   }
 
   async function handleMarcarTodas() {
-    try { await notificacoesApi.marcarTodasLidas(); } catch {}
+    // Fix #5: optimistic update antes do await
     setNotifs((prev) => prev.map((n) => ({ ...n, lida: true })));
     setNotifCount(0);
+    try { await notificacoesApi.marcarTodasLidas(); } catch {}
   }
 
   const handleAvatarClick = () => { if (!uploading) fileInputRef.current?.click(); };
