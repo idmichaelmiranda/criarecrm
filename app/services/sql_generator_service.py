@@ -170,6 +170,18 @@ def gerar_sql(cliente: Cliente, db: Optional[Session] = None, ambiente: int = 1)
         ("`MATRIZ`",           "'S'"),
     ]
 
+    # ID_CIDADE: subquery resolve o ID correto na tabela cidades da base zerada
+    # usando cidade+estado do cadastro. Não existe um ID fixo válido para mapear.
+    _cidade = str(addr.get("cidade") or "").strip()
+    _uf     = str(addr.get("estado") or "").strip().upper()
+    if _cidade and _uf:
+        pairs.append((
+            "`ID_CIDADE`",
+            f"(SELECT `id_cidade` FROM `cidades`"
+            f" WHERE UPPER(TRIM(`cidade`)) = UPPER(TRIM({_esc(_cidade)}))"
+            f" AND `uf` = {_esc(_uf)} LIMIT 1)",
+        ))
+
     serie       = df.get("serie_nfe")
     csc         = df.get("csc")
     token       = df.get("token")
