@@ -546,6 +546,15 @@ def iniciar(instalacao_id: int, db: Session = Depends(get_db), current_user: Usu
     inst.status = "em_execucao"
     inst.updated_at = now
     db.commit()
+
+    from app.services import discord_service
+    _cli = db.get(Cliente, inst.cliente_id)
+    discord_service.notify_instalacao_iniciada(
+        inst.codigo,
+        _cli.razao_social if _cli else f"Cliente #{inst.cliente_id}",
+        current_user.nome,
+    )
+
     return _to_full_response(_load(instalacao_id, db), db)
 
 
@@ -570,6 +579,16 @@ def pausar(instalacao_id: int, data: PausarPayload, db: Session = Depends(get_db
         motivo=data.motivo,
     ))
     db.commit()
+
+    from app.services import discord_service
+    _cli = db.get(Cliente, inst.cliente_id)
+    discord_service.notify_instalacao_pausada(
+        inst.codigo,
+        _cli.razao_social if _cli else f"Cliente #{inst.cliente_id}",
+        current_user.nome,
+        motivo=data.motivo,
+    )
+
     return _to_full_response(_load(instalacao_id, db), db)
 
 
@@ -781,6 +800,15 @@ def adicionar_responsavel(
     ))
     inst.updated_at = datetime.now(timezone.utc)
     db.commit()
+
+    from app.services import discord_service
+    discord_service.notify_colaborador_adicionado(
+        inst.codigo,
+        cliente_nome,
+        usuario.nome,
+        current_user.nome,
+    )
+
     return _to_full_response(_load(instalacao_id, db), db)
 
 

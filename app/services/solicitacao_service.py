@@ -159,6 +159,16 @@ def atribuir_responsavel(db: Session, solicitacao_id: int, responsavel_id: int |
         )
 
     db.commit()
+
+    from app.services import discord_service
+    if responsavel_id:
+        discord_service.notify_triagem_atribuida(
+            empresa=sol.razao_social,
+            cnpj=sol.cnpj,
+            responsavel=nome_resp,
+            atribuido_por=current_user_nome,
+        )
+
     return db.execute(
         select(Solicitacao)
         .where(Solicitacao.id == solicitacao_id)
@@ -203,6 +213,14 @@ def recusar(db: Session, solicitacao_id: int, motivo: str, campos_correcao: list
     )
     db.commit()
     db.refresh(sol)
+
+    from app.services import discord_service
+    discord_service.notify_triagem_recusada(
+        empresa=sol.razao_social,
+        cnpj=sol.cnpj,
+        motivo=motivo,
+        recusado_por=usuario,
+    )
 
     _dispatch_revisao_email(sol.email, sol.razao_social, motivo, token)
     return sol

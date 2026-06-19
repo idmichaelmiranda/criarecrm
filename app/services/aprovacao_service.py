@@ -132,6 +132,19 @@ def aprovar(db: Session, solicitacao_id: int, data: TriagemAprovar, aprovador_id
 
     db.commit()
     db.refresh(implantacao)
+
+    from app.services import discord_service
+    from app.models.usuario import Usuario as _Usuario
+    _aprovador = db.get(_Usuario, aprovador_id) if aprovador_id else None
+    discord_service.notify_triagem_aprovada(
+        empresa=sol.razao_social,
+        cnpj=sol.cnpj,
+        codigo=codigo,
+        modulos=modulos,
+        consultor=data.consultor,
+        aprovado_por=_aprovador.nome if _aprovador else None,
+    )
+
     _dispatch_aprovacao_email(sol.email, sol.razao_social, codigo)
     return implantacao
 

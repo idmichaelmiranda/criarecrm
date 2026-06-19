@@ -1,6 +1,6 @@
-import json
 import os
 import threading
+from datetime import datetime, timezone
 
 import httpx
 
@@ -22,6 +22,12 @@ def _fire(payload: dict) -> None:
     threading.Thread(target=_send, args=(payload,), daemon=True).start()
 
 
+def _ts() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+# ── Triagem ───────────────────────────────────────────────────────────────────
+
 def notify_nova_triagem(razao_social: str, cnpj: str | None = None) -> None:
     fields = [{"name": "Empresa", "value": razao_social, "inline": True}]
     if cnpj:
@@ -31,9 +37,88 @@ def notify_nova_triagem(razao_social: str, cnpj: str | None = None) -> None:
             "title": "📥 Nova triagem recebida",
             "color": 0x6366F1,
             "fields": fields,
+            "timestamp": _ts(),
         }]
     })
 
+
+def notify_triagem_atribuida(
+    empresa: str,
+    cnpj: str | None,
+    responsavel: str,
+    atribuido_por: str,
+) -> None:
+    fields = [
+        {"name": "Empresa", "value": empresa, "inline": True},
+    ]
+    if cnpj:
+        fields.append({"name": "CNPJ", "value": cnpj, "inline": True})
+    fields += [
+        {"name": "Responsável", "value": responsavel, "inline": True},
+        {"name": "Atribuído por", "value": atribuido_por, "inline": True},
+    ]
+    _fire({
+        "embeds": [{
+            "title": "👤 Triagem atribuída",
+            "color": 0x6366F1,
+            "fields": fields,
+            "timestamp": _ts(),
+        }]
+    })
+
+
+def notify_triagem_aprovada(
+    empresa: str,
+    cnpj: str | None,
+    codigo: str,
+    modulos: str,
+    consultor: str | None,
+    aprovado_por: str | None,
+) -> None:
+    fields = [
+        {"name": "Empresa", "value": empresa, "inline": True},
+        {"name": "Código", "value": codigo, "inline": True},
+    ]
+    if cnpj:
+        fields.append({"name": "CNPJ", "value": cnpj, "inline": True})
+    fields.append({"name": "Módulos", "value": modulos, "inline": False})
+    if consultor:
+        fields.append({"name": "Consultor", "value": consultor, "inline": True})
+    if aprovado_por:
+        fields.append({"name": "Aprovado por", "value": aprovado_por, "inline": True})
+    _fire({
+        "embeds": [{
+            "title": "✅ Triagem aprovada",
+            "color": 0x10B981,
+            "fields": fields,
+            "timestamp": _ts(),
+        }]
+    })
+
+
+def notify_triagem_recusada(
+    empresa: str,
+    cnpj: str | None,
+    motivo: str,
+    recusado_por: str | None,
+) -> None:
+    fields = [{"name": "Empresa", "value": empresa, "inline": True}]
+    if cnpj:
+        fields.append({"name": "CNPJ", "value": cnpj, "inline": True})
+    fields.append({"name": "Motivo", "value": motivo, "inline": False})
+    if recusado_por:
+        fields.append({"name": "Recusado por", "value": recusado_por, "inline": True})
+    _fire({
+        "embeds": [{
+            "title": "❌ Triagem recusada",
+            "color": 0xEF4444,
+            "fields": fields,
+            "timestamp": _ts(),
+        }]
+    })
+
+
+# ── Instalações ───────────────────────────────────────────────────────────────
 
 def notify_nova_instalacao(
     codigo: str,
@@ -56,6 +141,7 @@ def notify_nova_instalacao(
             "title": "🔧 Nova instalação criada",
             "color": 0x3B82F6,
             "fields": fields,
+            "timestamp": _ts(),
         }]
     })
 
@@ -70,6 +156,70 @@ def notify_atribuicao(codigo: str, cliente: str, responsavel: str) -> None:
                 {"name": "Cliente", "value": cliente, "inline": True},
                 {"name": "Responsável", "value": responsavel, "inline": False},
             ],
+            "timestamp": _ts(),
+        }]
+    })
+
+
+def notify_colaborador_adicionado(
+    codigo: str,
+    cliente: str,
+    colaborador: str,
+    adicionado_por: str,
+) -> None:
+    _fire({
+        "embeds": [{
+            "title": "👥 Colaborador adicionado",
+            "color": 0x8B5CF6,
+            "fields": [
+                {"name": "Código", "value": codigo, "inline": True},
+                {"name": "Cliente", "value": cliente, "inline": True},
+                {"name": "Colaborador", "value": colaborador, "inline": True},
+                {"name": "Adicionado por", "value": adicionado_por, "inline": True},
+            ],
+            "timestamp": _ts(),
+        }]
+    })
+
+
+def notify_instalacao_iniciada(codigo: str, cliente: str, iniciado_por: str) -> None:
+    _fire({
+        "embeds": [{
+            "title": "▶️ Instalação iniciada",
+            "color": 0x3B82F6,
+            "fields": [
+                {"name": "Código", "value": codigo, "inline": True},
+                {"name": "Cliente", "value": cliente, "inline": True},
+                {"name": "Iniciado por", "value": iniciado_por, "inline": False},
+            ],
+            "timestamp": _ts(),
+        }]
+    })
+
+
+def notify_instalacao_pausada(
+    codigo: str,
+    cliente: str,
+    pausado_por: str,
+    motivo: str | None = None,
+    duracao_min: int | None = None,
+) -> None:
+    fields = [
+        {"name": "Código", "value": codigo, "inline": True},
+        {"name": "Cliente", "value": cliente, "inline": True},
+        {"name": "Pausado por", "value": pausado_por, "inline": False},
+    ]
+    if motivo:
+        fields.append({"name": "Motivo", "value": motivo, "inline": True})
+    if duracao_min is not None:
+        h, m = divmod(duracao_min, 60)
+        fields.append({"name": "Duração da pausa", "value": f"{h}h {m}min" if h else f"{m}min", "inline": True})
+    _fire({
+        "embeds": [{
+            "title": "⏸️ Instalação pausada",
+            "color": 0xF59E0B,
+            "fields": fields,
+            "timestamp": _ts(),
         }]
     })
 
@@ -93,5 +243,6 @@ def notify_instalacao_concluida(
                 {"name": "Finalizado por", "value": finalizado_por, "inline": True},
                 {"name": "Duração", "value": duracao_str, "inline": True},
             ],
+            "timestamp": _ts(),
         }]
     })
