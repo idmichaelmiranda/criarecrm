@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Literal
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, field_validator, model_validator
 import re
 
 PrioridadeType = Literal["baixa", "normal", "alta", "critica"]
@@ -95,12 +95,17 @@ class SolicitacaoListResponse(BaseModel):
 
     model_config = {"from_attributes": True}
 
+    @model_validator(mode="before")
     @classmethod
-    def model_validate(cls, obj, *args, **kwargs):
-        instance = super().model_validate(obj, *args, **kwargs)
-        if hasattr(obj, "responsavel_triagem") and obj.responsavel_triagem:
-            instance.responsavel_triagem_nome = obj.responsavel_triagem.nome
-        return instance
+    def _derive_responsavel_nome(cls, data):
+        if hasattr(data, "__dict__") and not isinstance(data, dict):
+            try:
+                rt = getattr(data, "responsavel_triagem", None)
+                if rt:
+                    data.__dict__["responsavel_triagem_nome"] = rt.nome
+            except Exception:
+                pass
+        return data
 
 
 class SolicitacaoResponse(SolicitacaoListResponse):

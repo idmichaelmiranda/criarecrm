@@ -1,7 +1,7 @@
 import secrets
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import select
 from fastapi import HTTPException, UploadFile
 
@@ -85,7 +85,11 @@ def atualizar(db: Session, solicitacao_id: int, data: SolicitacaoCreate) -> Soli
 
 
 def get_all(db: Session, status: str | None = None) -> list[Solicitacao]:
-    stmt = select(Solicitacao).order_by(Solicitacao.created_at.desc())
+    stmt = (
+        select(Solicitacao)
+        .options(selectinload(Solicitacao.responsavel_triagem))
+        .order_by(Solicitacao.created_at.desc())
+    )
     if status:
         statuses = status.split(",")
         stmt = stmt.where(Solicitacao.status.in_(statuses))
@@ -155,8 +159,11 @@ def atribuir_responsavel(db: Session, solicitacao_id: int, responsavel_id: int |
         )
 
     db.commit()
-    db.refresh(sol)
-    return sol
+    return db.execute(
+        select(Solicitacao)
+        .where(Solicitacao.id == solicitacao_id)
+        .options(selectinload(Solicitacao.responsavel_triagem))
+    ).scalar_one()
 
 
 def recusar(db: Session, solicitacao_id: int, motivo: str, campos_correcao: list[str] | None = None, usuario: str | None = None) -> Solicitacao:
