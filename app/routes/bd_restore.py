@@ -41,7 +41,10 @@ _SESSION_TTL = timedelta(hours=2)
 _EMPRESAS_DIRECT_FIELDS = [
     "NOME", "ENDERECO", "CIDADE", "ESTADO", "CEP", "FONE",
     "CGC", "INSCRICAO", "BAIRRO", "RAZAO", "CONTATO",
-    "REGIME", "CONDICAOST", "ID_CIDADE", "CRT", "NUMERO",
+    "REGIME", "CONDICAOST", "CRT", "NUMERO",
+    # ID_CIDADE não entra aqui — o valor Firebird é PK interna do PAF e não
+    # corresponde aos IDs da tabela cidades da base zerada MySQL.
+    # Resolvido via subquery por nome+UF no bloco de geração (ver gerar endpoint).
     "MENSAGEM_EMAIL_NFCE", "HOSTSMTP", "PORTASMTP",
     "USUARIOSMTP", "SENHASMTP", "EMAIL", "ASSUNTOEMAIL",
     "SMTPSEGURO", "EMAILCONTADOR", "CPFCONTADOR", "CNPJCONTADOR",
@@ -939,6 +942,19 @@ async def gerar(
         val = emp.get(field)
         if val is not None and _decode_str(val).strip():
             emp_pairs.append((f"`{field}`", _esc(val)))
+
+    # ID_CIDADE: subquery resolve o ID correto na tabela cidades da base zerada
+    # usando CIDADE+ESTADO do Firebird. O ID do PAF-Firebird é PK interna e não
+    # corresponde ao MySQL — mapear direto causaria FK inválida ou cidade errada.
+    _cidade_nome = _decode_str(emp.get("CIDADE") or "").strip()
+    _estado_uf   = _decode_str(emp.get("ESTADO") or "").strip()
+    if _cidade_nome and _estado_uf:
+        emp_pairs.append((
+            "`ID_CIDADE`",
+            f"(SELECT `id_cidade` FROM `cidades`"
+            f" WHERE UPPER(TRIM(`cidade`)) = UPPER(TRIM({_esc(_cidade_nome)}))"
+            f" AND `uf` = {_esc(_estado_uf.upper())} LIMIT 1)",
+        ))
 
     # ── Campos de CERTIFICADO_DIGITAL com renomeação (exceto NUMERO_SERIE) ──────
     for fb_col, mysql_col in _CERT_FIELD_MAP.items():
