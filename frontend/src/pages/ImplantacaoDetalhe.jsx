@@ -373,7 +373,7 @@ function SubItemRow({ sub, implId, onRefresh, onOptimisticToggle }) {
   const [editValue, setEditValue]       = useState(sub.titulo);
   const [localDone, setLocalDone]       = useState(sub.status === "concluido");
 
-  useEffect(() => { setLocalDone(sub.status === "concluido"); }, [sub.status]);
+  useEffect(() => { if (!toggling) setLocalDone(sub.status === "concluido"); }, [sub.status, toggling]);
 
   const isDone = localDone;
 
@@ -386,6 +386,7 @@ function SubItemRow({ sub, implId, onRefresh, onOptimisticToggle }) {
     setToggling(true);
     try {
       await implantacoesApi.atualizarChecklist(sub.id, { status: newStatus });
+      onRefresh?.();
     } catch {
       setLocalDone(isDone);
       onOptimisticToggle?.(sub.id, sub.status);
@@ -487,8 +488,8 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
   const [localStatus, setLocalStatus]       = useState(item.status);
   const [showArchivedSubs, setShowArchivedSubs] = useState(false);
 
-  // Sync local status when parent data refreshes
-  useEffect(() => { setLocalStatus(item.status); }, [item.status]);
+  // Sync local status when parent data refreshes, but not while a toggle is in-flight
+  useEffect(() => { if (!toggling) setLocalStatus(item.status); }, [item.status, toggling]);
 
   const isCustom  = item.template_tarefa_id == null;
   const isNA      = localStatus === "nao_aplicavel";
@@ -538,6 +539,7 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
     setToggling(true);
     try {
       await implantacoesApi.atualizarChecklist(item.id, { status: newStatus });
+      onRefresh?.();
     } catch {
       setLocalStatus(item.status);
       onOptimisticToggle?.(item.id, item.status);
