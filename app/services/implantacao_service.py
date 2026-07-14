@@ -12,7 +12,7 @@ from app.services import timeline_service
 
 
 def _notificar_conclusao_implantacao(db: Session, impl: "Implantacao", excluir_usuario_id: int | None = None) -> None:
-    """Notifica responsável da implantação + todos com notif_conclusao=True quando concluída."""
+    """Notifica todos com notif_conclusao=True quando a implantação é concluída."""
     from app.models.notificacao import Notificacao
     from app.models.usuario import Usuario
     from app.models.cliente import Cliente
@@ -24,11 +24,6 @@ def _notificar_conclusao_implantacao(db: Session, impl: "Implantacao", excluir_u
     notificados: set[int] = set()
     if excluir_usuario_id:
         notificados.add(excluir_usuario_id)
-
-    if impl.responsavel_id and impl.responsavel_id not in notificados:
-        db.add(Notificacao(usuario_id=impl.responsavel_id, tipo="implantacao",
-                           titulo=titulo, mensagem=mensagem, dados=dados, lida=False))
-        notificados.add(impl.responsavel_id)
 
     usuarios_flag = db.execute(
         select(Usuario).where(Usuario.notif_conclusao == True, Usuario.ativo == True)  # noqa: E712
