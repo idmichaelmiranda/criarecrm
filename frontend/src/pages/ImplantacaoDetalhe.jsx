@@ -371,23 +371,23 @@ function SubItemRow({ sub, implId, onRefresh, onOptimisticToggle }) {
   const [toggling, setToggling]         = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [editValue, setEditValue]       = useState(sub.titulo);
-  const [localDone, setLocalDone]       = useState(sub.status === "concluido");
+  const [overrideDone, setOverrideDone] = useState(null);
 
-  useEffect(() => { if (!toggling) setLocalDone(sub.status === "concluido"); }, [sub.status, toggling]);
-
-  const isDone = localDone;
+  // Display uses override while toggle is in-flight; falls back to prop once cleared
+  const isDone = overrideDone !== null ? overrideDone : (sub.status === "concluido");
 
   async function handleToggle() {
     if (toggling) return;
     const newDone = !isDone;
     const newStatus = newDone ? "concluido" : "pendente";
-    setLocalDone(newDone);
+    setOverrideDone(newDone);
     onOptimisticToggle?.(sub.id, newStatus);
     setToggling(true);
     try {
       await implantacoesApi.atualizarChecklist(sub.id, { status: newStatus });
+      setOverrideDone(null);
     } catch {
-      setLocalDone(isDone);
+      setOverrideDone(null);
       onOptimisticToggle?.(sub.id, sub.status);
     }
     finally { setToggling(false); }
@@ -484,15 +484,14 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
   const [showAddSub, setShowAddSub]         = useState(false);
   const [editingTitle, setEditingTitle]     = useState(false);
   const [editTitleValue, setEditTitleValue] = useState(item.titulo);
-  const [localStatus, setLocalStatus]       = useState(item.status);
+  const [overrideStatus, setOverrideStatus] = useState(null);
   const [showArchivedSubs, setShowArchivedSubs] = useState(false);
 
-  // Sync local status when parent data refreshes, but not while a toggle is in-flight
-  useEffect(() => { if (!toggling) setLocalStatus(item.status); }, [item.status, toggling]);
-
+  // Display uses override while toggle is in-flight; falls back to prop once cleared
+  const displayStatus = overrideStatus ?? item.status;
   const isCustom  = item.template_tarefa_id == null;
-  const isNA      = localStatus === "nao_aplicavel";
-  const isDone    = localStatus === "concluido";
+  const isNA      = displayStatus === "nao_aplicavel";
+  const isDone    = displayStatus === "concluido";
   const initials  = getInitials(item.responsavel);
   const days      = item.data_prazo ? daysDiff(item.data_prazo) : null;
   const allSubitens    = item.subitens || [];
@@ -533,13 +532,14 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
   async function handleToggle() {
     if (isNA || toggling) return;
     const newStatus = isDone ? "pendente" : "concluido";
-    setLocalStatus(newStatus);
+    setOverrideStatus(newStatus);
     onOptimisticToggle?.(item.id, newStatus);
     setToggling(true);
     try {
       await implantacoesApi.atualizarChecklist(item.id, { status: newStatus });
+      setOverrideStatus(null);
     } catch {
-      setLocalStatus(item.status);
+      setOverrideStatus(null);
       onOptimisticToggle?.(item.id, item.status);
     }
     finally { setToggling(false); }
@@ -547,12 +547,13 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
 
   async function handleToggleNA() {
     const newStatus = isNA ? "pendente" : "nao_aplicavel";
-    setLocalStatus(newStatus);
+    setOverrideStatus(newStatus);
     onOptimisticToggle?.(item.id, newStatus);
     try {
       await implantacoesApi.atualizarChecklist(item.id, { status: newStatus });
+      setOverrideStatus(null);
     } catch {
-      setLocalStatus(item.status);
+      setOverrideStatus(null);
       onOptimisticToggle?.(item.id, item.status);
     }
   }
