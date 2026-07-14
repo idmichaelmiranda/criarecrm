@@ -386,7 +386,6 @@ function SubItemRow({ sub, implId, onRefresh, onOptimisticToggle }) {
     setToggling(true);
     try {
       await implantacoesApi.atualizarChecklist(sub.id, { status: newStatus });
-      onRefresh?.();
     } catch {
       setLocalDone(isDone);
       onOptimisticToggle?.(sub.id, sub.status);
@@ -539,7 +538,6 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
     setToggling(true);
     try {
       await implantacoesApi.atualizarChecklist(item.id, { status: newStatus });
-      onRefresh?.();
     } catch {
       setLocalStatus(item.status);
       onOptimisticToggle?.(item.id, item.status);
