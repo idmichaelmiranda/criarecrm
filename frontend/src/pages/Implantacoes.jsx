@@ -150,12 +150,17 @@ function ContextBanner({ filterSla, filterHighlight, count, onClear }) {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const STATUS_TABS = [
-  { key: "",             label: "Todas"        },
+const TABS = [
   { key: "em_andamento", label: "Em Andamento" },
-  { key: "pausada",      label: "Pausadas"     },
-  { key: "concluida",    label: "Concluídas"   },
-  { key: "cancelada",    label: "Canceladas"   },
+  { key: "todas",        label: "Todas"        },
+];
+
+const STATUS_SUBFILTERS = [
+  { key: "",             label: "Todos os status" },
+  { key: "em_andamento", label: "Em Andamento"    },
+  { key: "pausada",      label: "Pausadas"        },
+  { key: "concluida",    label: "Concluídas"      },
+  { key: "cancelada",    label: "Canceladas"      },
 ];
 
 const SLA_FILTERS = [
@@ -183,6 +188,7 @@ export default function Implantacoes() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch]  = useState("");
 
+  const activeTab        = searchParams.get("tab")        || "em_andamento";
   const filterStatus     = searchParams.get("status")     || "";
   const filterSla        = searchParams.get("sla_status") || "";
   const filterPrioridade = searchParams.get("prioridade") || "";
@@ -191,6 +197,13 @@ export default function Implantacoes() {
   function setParam(key, value) {
     const p = new URLSearchParams(searchParams);
     if (value) p.set(key, value); else p.delete(key);
+    setSearchParams(p, { replace: true });
+  }
+
+  function setTab(tab) {
+    const p = new URLSearchParams(searchParams);
+    p.set("tab", tab);
+    if (tab === "em_andamento") p.delete("status");
     setSearchParams(p, { replace: true });
   }
 
@@ -213,11 +226,12 @@ export default function Implantacoes() {
 
   // ── Tab counts ─────────────────────────────────────────────────────────────
   const tabCount = (key) =>
-    key === "" ? items.length : items.filter((i) => i.status === key).length;
+    key === "todas" ? items.length : items.filter((i) => i.status === key).length;
 
   // ── Client-side filtering ──────────────────────────────────────────────────
   const filtered = items.filter((i) => {
-    if (filterStatus     && i.status      !== filterStatus)     return false;
+    if (activeTab === "em_andamento" && i.status !== "em_andamento") return false;
+    if (activeTab === "todas" && filterStatus && i.status !== filterStatus) return false;
     if (filterSla        && i.sla_status  !== filterSla)        return false;
     if (filterPrioridade && i.prioridade  !== filterPrioridade) return false;
     if (search) {
@@ -232,7 +246,7 @@ export default function Implantacoes() {
     return true;
   });
 
-  const hasActiveFilters = filterStatus || filterSla || filterPrioridade;
+  const hasActiveFilters = (activeTab === "todas" && filterStatus) || filterSla || filterPrioridade;
 
   // When arriving from dashboard "Tarefas Vencidas", sort overdue items first
   const displayList = filterHighlight === "tarefas"
@@ -277,7 +291,7 @@ export default function Implantacoes() {
           label="Em Andamento"
           value={kpiEmAndamento}
           accent="orange"
-          onClick={() => setParam("status", filterStatus === "em_andamento" ? "" : "em_andamento")}
+          onClick={() => setTab("em_andamento")}
         />
         <KpiCard
           label="SLA Vencido"
@@ -296,7 +310,16 @@ export default function Implantacoes() {
           label="Concluídas"
           value={kpiConcluidas}
           accent="green"
-          onClick={() => setParam("status", filterStatus === "concluida" ? "" : "concluida")}
+          onClick={() => {
+            const p = new URLSearchParams(searchParams);
+            if (activeTab === "todas" && filterStatus === "concluida") {
+              p.delete("status");
+            } else {
+              p.set("tab", "todas");
+              p.set("status", "concluida");
+            }
+            setSearchParams(p, { replace: true });
+          }}
         />
       </div>
 
@@ -304,21 +327,21 @@ export default function Implantacoes() {
       <div className="space-y-3 mb-5">
         {/* Status tabs */}
         <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
-          {STATUS_TABS.map((t) => {
+          {TABS.map((t) => {
             const cnt = tabCount(t.key);
             return (
               <button
                 key={t.key}
-                onClick={() => setParam("status", t.key)}
+                onClick={() => setTab(t.key)}
                 className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-                  filterStatus === t.key
+                  activeTab === t.key
                     ? "bg-white text-gray-900 shadow-sm"
                     : "text-gray-500 hover:text-gray-700"
                 }`}
               >
                 {t.label}
                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
-                  filterStatus === t.key
+                  activeTab === t.key
                     ? "bg-orange-100 text-orange-600"
                     : "bg-gray-200 text-gray-500"
                 }`}>
@@ -331,6 +354,19 @@ export default function Implantacoes() {
 
         {/* Secondary filters */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* Status sub-filter — só visível na aba Todas */}
+          {activeTab === "todas" && (
+            <select
+              value={filterStatus}
+              onChange={(e) => setParam("status", e.target.value)}
+              className={`text-sm border rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 transition ${
+                filterStatus ? "border-orange-400 text-orange-700 bg-orange-50" : "border-gray-200 text-gray-600 bg-white"
+              }`}
+            >
+              {STATUS_SUBFILTERS.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}
+            </select>
+          )}
+
           <select
             value={filterSla}
             onChange={(e) => setParam("sla_status", e.target.value)}
@@ -366,7 +402,7 @@ export default function Implantacoes() {
 
           {(hasActiveFilters || search) && (
             <button
-              onClick={() => { setSearchParams({}); setSearch(""); }}
+              onClick={() => { setSearchParams({ tab: activeTab }); setSearch(""); }}
               className="text-xs font-medium text-gray-400 hover:text-red-500 transition-colors px-2 py-1.5 rounded-lg hover:bg-red-50"
             >
               Limpar ✕
