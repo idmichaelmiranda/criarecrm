@@ -1804,6 +1804,7 @@ export default function ImplantacaoDetalhe() {
   const [activeTab, setActiveTab] = useState("checklist");
   const [showEdit, setShowEdit] = useState(false);
   const [showResponsavelModal, setShowResponsavelModal] = useState(false);
+  const [goLiveLoading, setGoLiveLoading] = useState(false);
   const [somentePendentes, setSomentePendentes] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showAddEtapa, setShowAddEtapa] = useState(false);
@@ -1939,6 +1940,37 @@ export default function ImplantacaoDetalhe() {
                   </svg>
                   Conversão de dados
                 </span>
+              )}
+              {/* Go Live badge / botão */}
+              {impl.data_go_live ? (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
+                  🚀 Go Live: {fmtDate(impl.data_go_live)}
+                  <button
+                    onClick={async () => {
+                      if (!confirm("Remover o registro de Go Live?")) return;
+                      setGoLiveLoading(true);
+                      try { await implantacoesApi.removerGoLive(impl.id); load(); } catch { } finally { setGoLiveLoading(false); }
+                    }}
+                    disabled={goLiveLoading}
+                    className="ml-0.5 text-green-500 hover:text-red-500 transition-colors leading-none"
+                    title="Remover Go Live"
+                  >
+                    ✕
+                  </button>
+                </span>
+              ) : (
+                impl.status !== "cancelada" && (
+                  <button
+                    onClick={async () => {
+                      setGoLiveLoading(true);
+                      try { await implantacoesApi.registrarGoLive(impl.id); load(); } catch { } finally { setGoLiveLoading(false); }
+                    }}
+                    disabled={goLiveLoading}
+                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border border-dashed border-green-300 text-green-600 hover:bg-green-50 transition-colors disabled:opacity-50"
+                  >
+                    {goLiveLoading ? "…" : "🚀 Registrar Go Live"}
+                  </button>
+                )
               )}
             </div>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">

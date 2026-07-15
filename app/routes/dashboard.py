@@ -115,14 +115,13 @@ def kpis(db: Session = Depends(get_db)):
         )
     ).scalar_one()
 
-    # ── Go Lives (reais: data_conclusao nesta semana) ─────────────────────────
+    # ── Go Lives (campo data_go_live registrado nesta semana) ────────────────
     go_lives_rows = db.execute(
         select(Implantacao)
         .options(joinedload(Implantacao.cliente))
         .where(
-            Implantacao.data_conclusao >= week_start,
-            Implantacao.data_conclusao <= today,
-            Implantacao.status == "concluida",
+            Implantacao.data_go_live >= week_start,
+            Implantacao.data_go_live <= today,
         )
     ).scalars().unique().all()
     go_lives_semana = len(go_lives_rows)
@@ -131,7 +130,7 @@ def kpis(db: Session = Depends(get_db)):
             "id": impl.id,
             "nome": impl.nome,
             "cliente_nome": impl.cliente.razao_social if impl.cliente else "—",
-            "data_conclusao": impl.data_conclusao.isoformat(),
+            "data_go_live": impl.data_go_live.isoformat(),
         }
         for impl in go_lives_rows
     ]

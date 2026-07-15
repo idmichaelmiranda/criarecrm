@@ -25,6 +25,7 @@ class Implantacao(Base):
     data_inicio: Mapped[date] = mapped_column(Date, nullable=True)
     data_prevista: Mapped[date] = mapped_column(Date, nullable=True)
     data_conclusao: Mapped[date] = mapped_column(Date, nullable=True)
+    data_go_live: Mapped[date] = mapped_column(Date, nullable=True)
 
     progresso: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 

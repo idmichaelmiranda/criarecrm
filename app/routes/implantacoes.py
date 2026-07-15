@@ -1,5 +1,7 @@
 from datetime import date
+from typing import Optional
 from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database.connection import get_db
@@ -79,6 +81,55 @@ def obter(impl_id: int, db: Session = Depends(get_db)):
 @router.patch("/{impl_id}", response_model=ImplantacaoFullResponse)
 def atualizar(impl_id: int, data: ImplantacaoUpdate, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
     implantacao_service.atualizar(db, impl_id, data, usuario=current_user.nome, usuario_id=current_user.id)
+    return _build_full_response(implantacao_service.get_by_id(db, impl_id))
+
+
+class GoLivePayload(BaseModel):
+    data_go_live: Optional[date] = None  # None = usa hoje
+
+
+@router.post("/{impl_id}/go-live", response_model=ImplantacaoFullResponse)
+def registrar_go_live(
+    impl_id: int,
+    payload: GoLivePayload = GoLivePayload(),
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    from app.models.implantacao import Implantacao as ImplModel
+    impl = db.get(ImplModel, impl_id)
+    if not impl:
+        from fastapi import HTTPException
+        raise HTTPException(404, "Implantação não encontrada")
+    impl.data_go_live = payload.data_go_live or date.today()
+    db.commit()
+    from app.services import timeline_service
+    timeline_service.log(
+        db,
+        tipo="go_live",
+        titulo="🚀 Go Live registrado",
+        descricao=f"Sistema entrou em produção em {impl.data_go_live.strftime('%d/%m/%Y')}",
+        usuario=current_user.nome,
+        icone="rocket",
+        cor="#10b981",
+        implantacao_id=impl_id,
+    )
+    db.commit()
+    return _build_full_response(implantacao_service.get_by_id(db, impl_id))
+
+
+@router.delete("/{impl_id}/go-live", response_model=ImplantacaoFullResponse)
+def remover_go_live(
+    impl_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    from app.models.implantacao import Implantacao as ImplModel
+    impl = db.get(ImplModel, impl_id)
+    if not impl:
+        from fastapi import HTTPException
+        raise HTTPException(404, "Implantação não encontrada")
+    impl.data_go_live = None
+    db.commit()
     return _build_full_response(implantacao_service.get_by_id(db, impl_id))
 
 

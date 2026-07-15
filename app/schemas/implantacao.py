@@ -143,6 +143,7 @@ class ImplantacaoListResponse(BaseModel):
     sla_status: str
     data_inicio: date | None
     data_prevista: date | None
+    data_go_live: date | None = None
     created_at: datetime
     conversao_dados: bool = False
 
@@ -186,6 +187,7 @@ class ImplantacaoFullResponse(BaseModel):
     data_inicio: date | None
     data_prevista: date | None
     data_conclusao: date | None
+    data_go_live: date | None = None
     created_at: datetime
     updated_at: datetime
     conversao_dados: bool = False

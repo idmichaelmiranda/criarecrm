@@ -90,6 +90,8 @@ export const implantacoesApi = {
   deletarEtapa: (implId, etapaId) => api.delete(`/implantacoes/${implId}/etapas/${etapaId}`),
   reordenarEtapas: (implId, ordens) => api.post(`/implantacoes/${implId}/etapas/reordenar`, { ordens }),
   reordenarChecklist: (implId, ordens) => api.post(`/implantacoes/${implId}/checklist/reordenar`, { ordens }),
+  registrarGoLive: (implId, data_go_live = null) => api.post(`/implantacoes/${implId}/go-live`, data_go_live ? { data_go_live } : {}),
+  removerGoLive: (implId) => api.delete(`/implantacoes/${implId}/go-live`),
 };
 
 // ── Clientes ─────────────────────────────────────────────────────────────────
