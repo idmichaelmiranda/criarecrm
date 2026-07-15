@@ -11,6 +11,7 @@ class Implantacao(Base):
     cliente_id: Mapped[int] = mapped_column(ForeignKey("clientes.id"), nullable=False)
     template_id: Mapped[int] = mapped_column(ForeignKey("templates.id"), nullable=True)
     solicitacao_id: Mapped[int] = mapped_column(ForeignKey("solicitacoes.id"), nullable=True)
+    responsavel_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"), nullable=True)
 
     codigo: Mapped[str] = mapped_column(String(20), unique=True, nullable=False, index=True)
     nome: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -43,6 +44,7 @@ class Implantacao(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     cliente: Mapped["Cliente"] = relationship("Cliente", back_populates="implantacoes")
+    responsavel: Mapped["Usuario | None"] = relationship("Usuario", foreign_keys="[Implantacao.responsavel_id]")
     etapas: Mapped[list["ImplantacaoEtapa"]] = relationship(
         "ImplantacaoEtapa", back_populates="implantacao",
         order_by="ImplantacaoEtapa.ordem", cascade="all, delete-orphan"

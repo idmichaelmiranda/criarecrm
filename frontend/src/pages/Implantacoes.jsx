@@ -28,6 +28,21 @@ const SLA_PILL = {
   ok:      "text-green-700 bg-green-50 border-green-100",
 };
 
+function UserAvatar({ nome, avatarUrl, size = "md" }) {
+  const dim = size === "sm" ? "w-6 h-6 text-[9px]" : "w-7 h-7 text-[10px]";
+  const initials = nome
+    ? nome.split(" ").filter(Boolean).map((n) => n[0]).slice(0, 2).join("").toUpperCase()
+    : "?";
+  if (avatarUrl) {
+    return <img src={avatarUrl} alt={nome} className={`${dim} rounded-full object-cover shrink-0`} />;
+  }
+  return (
+    <div className={`${dim} rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold shrink-0`}>
+      {initials}
+    </div>
+  );
+}
+
 // ── Subcomponents ─────────────────────────────────────────────────────────────
 
 function KpiCard({ label, value, sub, accent, onClick }) {
@@ -385,7 +400,7 @@ export default function Implantacoes() {
                   <th className="px-6 py-3">Cliente</th>
                   <th className="px-6 py-3">Status</th>
                   <th className="px-6 py-3 min-w-[150px]">Progresso</th>
-                  <th className="px-6 py-3">Consultor</th>
+                  <th className="px-6 py-3">Responsável</th>
                   <th className="px-6 py-3">SLA</th>
                   <th className="px-2 py-3 w-8"></th>
                 </tr>
@@ -469,9 +484,16 @@ export default function Implantacoes() {
                         <ProgressBar value={impl.progresso} status={impl.status} />
                       </td>
 
-                      {/* Consultor */}
-                      <td className="px-6 py-4 text-gray-600 text-sm whitespace-nowrap">
-                        {impl.consultor || <span className="text-gray-300">—</span>}
+                      {/* Responsável */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {impl.responsavel_nome ? (
+                          <div className="flex items-center gap-2">
+                            <UserAvatar nome={impl.responsavel_nome} avatarUrl={impl.responsavel_avatar_url} />
+                            <span className="text-sm text-gray-700">{impl.responsavel_nome}</span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-300">—</span>
+                        )}
                       </td>
 
                       {/* SLA */}

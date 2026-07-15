@@ -1619,24 +1619,104 @@ function ClienteTab({ clienteId }) {
   );
 }
 
+// ── Responsável Avatar ───────────────────────────────────────────────────────
+
+function ResponsavelAvatar({ nome, avatarUrl }) {
+  const initials = nome
+    ? nome.split(" ").filter(Boolean).map((n) => n[0]).slice(0, 2).join("").toUpperCase()
+    : "?";
+  if (avatarUrl) {
+    return <img src={avatarUrl} alt={nome} className="w-6 h-6 rounded-full object-cover shrink-0" />;
+  }
+  return (
+    <div className="w-6 h-6 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-[9px] font-bold shrink-0">
+      {initials}
+    </div>
+  );
+}
+
+
+// ── Responsável Modal ────────────────────────────────────────────────────────
+
+function ResponsavelModal({ implId, currentResponsavelId, onClose, onSaved }) {
+  const [usuarios, setUsuarios] = useState([]);
+  const [selectedId, setSelectedId] = useState(currentResponsavelId ?? "");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    usuariosApi.listar().then(({ data }) => {
+      setUsuarios(data.filter((u) => u.ativo));
+    }).catch(() => {});
+  }, []);
+
+  async function handleSave() {
+    if (!selectedId) return;
+    setSaving(true);
+    try {
+      await implantacoesApi.atualizar(implId, { responsavel_id: Number(selectedId) });
+      onSaved();
+    } catch { } finally { setSaving(false); }
+  }
+
+  const inputCls = "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 transition";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xs">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h3 className="font-semibold text-gray-900">Definir Responsável</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-lg">✕</button>
+        </div>
+        <div className="px-6 py-5 space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Usuário</label>
+            <select value={selectedId} onChange={(e) => setSelectedId(e.target.value)} className={inputCls}>
+              <option value="">Selecione um usuário…</option>
+              {usuarios.map((u) => (
+                <option key={u.id} value={u.id}>{u.nome}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex gap-3 pt-1">
+            <button onClick={onClose} className="flex-1 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors">Cancelar</button>
+            <button onClick={handleSave} disabled={saving || !selectedId} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50 transition-colors">
+              {saving ? "Salvando..." : "Confirmar"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 // ── Edit Panel ────────────────────────────────────────────────────────────────
 
 function EditPanel({ impl, onClose, onSaved }) {
   const [form, setForm] = useState({
-    status:       impl.status,
-    consultor:    impl.consultor || "",
-    prioridade:   impl.prioridade,
-    observacoes:  impl.observacoes || "",
+    status:        impl.status,
+    consultor:     impl.consultor || "",
+    prioridade:    impl.prioridade,
+    observacoes:   impl.observacoes || "",
     data_prevista: impl.data_prevista || "",
+    responsavel_id: impl.responsavel_id ?? "",
   });
+  const [usuarios, setUsuarios] = useState([]);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    usuariosApi.listar().then(({ data }) => setUsuarios(data.filter((u) => u.ativo))).catch(() => {});
+  }, []);
 
   const inputCls = "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 transition";
 
   async function handleSave() {
     setSaving(true);
     try {
-      await implantacoesApi.atualizar(impl.id, form);
+      const payload = { ...form };
+      if (payload.responsavel_id === "") delete payload.responsavel_id;
+      else payload.responsavel_id = Number(payload.responsavel_id);
+      await implantacoesApi.atualizar(impl.id, payload);
       onSaved();
     } catch { } finally { setSaving(false); }
   }
@@ -1656,6 +1736,15 @@ function EditPanel({ impl, onClose, onSaved }) {
               <option value="pausada">Pausada</option>
               <option value="concluida">Concluída</option>
               <option value="cancelada">Cancelada</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Responsável</label>
+            <select value={form.responsavel_id} onChange={(e) => setForm((f) => ({ ...f, responsavel_id: e.target.value }))} className={inputCls}>
+              <option value="">Sem responsável</option>
+              {usuarios.map((u) => (
+                <option key={u.id} value={u.id}>{u.nome}</option>
+              ))}
             </select>
           </div>
           <div>
@@ -1714,6 +1803,7 @@ export default function ImplantacaoDetalhe() {
   const [error, setError]       = useState(null);
   const [activeTab, setActiveTab] = useState("checklist");
   const [showEdit, setShowEdit] = useState(false);
+  const [showResponsavelModal, setShowResponsavelModal] = useState(false);
   const [somentePendentes, setSomentePendentes] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showAddEtapa, setShowAddEtapa] = useState(false);
@@ -1851,13 +1941,41 @@ export default function ImplantacaoDetalhe() {
                 </span>
               )}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {impl.consultor ? `Consultor: ${impl.consultor}` : "Sem consultor"}
-              {" · "}
-              <span className={slaColor}>SLA: {fmtDate(impl.sla_limite)}</span>
-              {" · "}
-              Início: {fmtDate(impl.data_inicio)}
-            </p>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
+              {/* Responsável */}
+              {impl.responsavel_id ? (
+                <div className="flex items-center gap-1.5">
+                  <ResponsavelAvatar nome={impl.responsavel_nome} avatarUrl={impl.responsavel_avatar_url} />
+                  <span className="text-xs text-gray-600 font-medium">{impl.responsavel_nome}</span>
+                  <button
+                    onClick={() => setShowResponsavelModal(true)}
+                    className="text-[10px] text-orange-500 hover:text-orange-700 font-semibold px-1.5 py-0.5 rounded hover:bg-orange-50 transition-colors"
+                  >
+                    Trocar
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowResponsavelModal(true)}
+                  className="flex items-center gap-1 text-xs text-gray-400 hover:text-orange-500 transition-colors"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Sem responsável
+                </button>
+              )}
+              <span className="text-gray-200 text-xs">·</span>
+              {impl.consultor && (
+                <>
+                  <span className="text-xs text-gray-500">Consultor: {impl.consultor}</span>
+                  <span className="text-gray-200 text-xs">·</span>
+                </>
+              )}
+              <span className={`text-xs ${slaColor}`}>SLA: {fmtDate(impl.sla_limite)}</span>
+              <span className="text-gray-200 text-xs">·</span>
+              <span className="text-xs text-gray-500">Início: {fmtDate(impl.data_inicio)}</span>
+            </div>
           </div>
           <button
             onClick={() => setShowEdit(true)}
@@ -2071,6 +2189,15 @@ export default function ImplantacaoDetalhe() {
           impl={impl}
           onClose={() => setShowEdit(false)}
           onSaved={() => { setShowEdit(false); load(); }}
+        />
+      )}
+
+      {showResponsavelModal && (
+        <ResponsavelModal
+          implId={impl.id}
+          currentResponsavelId={impl.responsavel_id}
+          onClose={() => setShowResponsavelModal(false)}
+          onSaved={() => { setShowResponsavelModal(false); load(); }}
         />
       )}
     </Layout>

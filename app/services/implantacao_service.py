@@ -97,7 +97,10 @@ def get_all(
 ) -> list[Implantacao]:
     stmt = (
         select(Implantacao)
-        .options(selectinload(Implantacao.checklist))
+        .options(
+            selectinload(Implantacao.checklist),
+            selectinload(Implantacao.responsavel),
+        )
         .order_by(Implantacao.created_at.desc())
     )
     if status:
@@ -117,6 +120,7 @@ def get_by_id(db: Session, impl_id: int) -> Implantacao:
         select(Implantacao)
         .options(
             selectinload(Implantacao.cliente),
+            selectinload(Implantacao.responsavel),
             selectinload(Implantacao.etapas).selectinload(ImplantacaoEtapa.itens).selectinload(ChecklistItem.template_tarefa),
             selectinload(Implantacao.etapas).selectinload(ImplantacaoEtapa.itens).selectinload(ChecklistItem.subitens),
             selectinload(Implantacao.checklist),

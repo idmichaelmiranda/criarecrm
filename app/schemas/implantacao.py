@@ -153,6 +153,11 @@ class ImplantacaoListResponse(BaseModel):
 
     tarefas_vencidas: int = 0
 
+    # Responsável (usuário do sistema)
+    responsavel_id: int | None = None
+    responsavel_nome: str | None = None
+    responsavel_avatar_url: str | None = None
+
     model_config = {"from_attributes": True}
 
 
@@ -162,6 +167,7 @@ class ImplantacaoUpdate(BaseModel):
     observacoes: str | None = None
     prioridade: str | None = None
     data_prevista: date | None = None
+    responsavel_id: int | None = None
 
 
 class ImplantacaoFullResponse(BaseModel):
@@ -190,5 +196,10 @@ class ImplantacaoFullResponse(BaseModel):
     checklist: list[ChecklistItemFlatResponse] = []
     timeline: list[TimelineResponse] = []
     comentarios: list[ComentarioResponse] = []
+
+    # Responsável (usuário do sistema)
+    responsavel_id: int | None = None
+    responsavel_nome: str | None = None
+    responsavel_avatar_url: str | None = None
 
     model_config = {"from_attributes": True}

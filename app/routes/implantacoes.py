@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.database.connection import get_db
 from app.dependencies.auth import get_current_user
 from app.models.usuario import Usuario
+from app.models.implantacao import Implantacao
 from app.schemas.implantacao import (
     ImplantacaoListResponse, ImplantacaoFullResponse, ImplantacaoUpdate,
     ChecklistItemResponse, ChecklistItemUpdate, ChecklistItemCreate, ChecklistReorder,
@@ -12,8 +13,17 @@ from app.schemas.implantacao import (
     ComentarioCreate, ComentarioResponse,
 )
 from app.services import implantacao_service
+import app.services.storage_service as storage
 
 router = APIRouter(prefix="/implantacoes", tags=["implantacoes"])
+
+
+def _build_full_response(impl: Implantacao) -> ImplantacaoFullResponse:
+    resp = ImplantacaoFullResponse.model_validate(impl)
+    resp.responsavel_nome = impl.responsavel.nome if impl.responsavel else None
+    if impl.responsavel and impl.responsavel.avatar_path:
+        resp.responsavel_avatar_url = storage.avatar_url(impl.responsavel.avatar_path)
+    return resp
 
 
 @router.get("/", response_model=list[ImplantacaoListResponse])
@@ -49,6 +59,9 @@ def listar(
         data.cliente_cnpj = impl.cliente.cnpj if impl.cliente else None
         data.progresso = live_progresso
         data.tarefas_vencidas = vencidas
+        data.responsavel_nome = impl.responsavel.nome if impl.responsavel else None
+        if impl.responsavel and impl.responsavel.avatar_path:
+            data.responsavel_avatar_url = storage.avatar_url(impl.responsavel.avatar_path)
         result.append(data)
     return result
 
@@ -60,13 +73,13 @@ def stats(db: Session = Depends(get_db)):
 
 @router.get("/{impl_id}", response_model=ImplantacaoFullResponse)
 def obter(impl_id: int, db: Session = Depends(get_db)):
-    return implantacao_service.get_by_id(db, impl_id)
+    return _build_full_response(implantacao_service.get_by_id(db, impl_id))
 
 
 @router.patch("/{impl_id}", response_model=ImplantacaoFullResponse)
 def atualizar(impl_id: int, data: ImplantacaoUpdate, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
     implantacao_service.atualizar(db, impl_id, data, usuario=current_user.nome, usuario_id=current_user.id)
-    return implantacao_service.get_by_id(db, impl_id)
+    return _build_full_response(implantacao_service.get_by_id(db, impl_id))
 
 
 @router.post("/{impl_id}/comentarios", response_model=ComentarioResponse)
