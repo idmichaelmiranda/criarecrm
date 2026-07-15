@@ -661,12 +661,16 @@ def finalizar(instalacao_id: int, data: FinalizarPayload, db: Session = Depends(
     db.commit()
 
     from app.services import discord_service
+    import json as _json
     _cli = db.get(Cliente, inst.cliente_id)
+    _nomes = list(_json.loads(inst.tipos_nomes_json).values()) if inst.tipos_nomes_json else []
+    _produto_str = ", ".join(_nomes) if _nomes else None
     discord_service.notify_instalacao_concluida(
         inst.codigo,
         _cli.razao_social if _cli else f"Cliente #{inst.cliente_id}",
         current_user.nome,
         inst.duracao_minutos or 0,
+        produto=_produto_str,
     )
 
     return _to_full_response(_load(instalacao_id, db), db)

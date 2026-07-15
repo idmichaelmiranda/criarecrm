@@ -229,20 +229,24 @@ def notify_instalacao_concluida(
     cliente: str,
     finalizado_por: str,
     duracao_min: int,
+    produto: str | None = None,
 ) -> None:
     horas = duracao_min // 60
     mins = duracao_min % 60
     duracao_str = f"{horas}h {mins}min" if horas else f"{mins}min"
+    fields = [
+        {"name": "Código",        "value": codigo,        "inline": True},
+        {"name": "Cliente",       "value": cliente,       "inline": True},
+        {"name": "Finalizado por","value": finalizado_por,"inline": True},
+        {"name": "Duração",       "value": duracao_str,   "inline": True},
+    ]
+    if produto:
+        fields.append({"name": "Produto", "value": produto, "inline": False})
     _fire({
         "embeds": [{
             "title": "✅ Instalação concluída",
             "color": 0x10B981,
-            "fields": [
-                {"name": "Código", "value": codigo, "inline": True},
-                {"name": "Cliente", "value": cliente, "inline": True},
-                {"name": "Finalizado por", "value": finalizado_por, "inline": True},
-                {"name": "Duração", "value": duracao_str, "inline": True},
-            ],
+            "fields": fields,
             "timestamp": _ts(),
         }]
     })
