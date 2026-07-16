@@ -11,6 +11,7 @@ from app.models.cliente import Cliente
 from app.models.timeline import TimelineEvento
 from app.models.instalacao import Instalacao as InstalacaoModel, InstalacaoResponsavel
 from app.services import implantacao_service
+import app.services.storage_service as _storage
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -250,6 +251,7 @@ def kpis(db: Session = Depends(get_db)):
             selectinload(Implantacao.etapas),
             selectinload(Implantacao.checklist),
             joinedload(Implantacao.cliente),
+            selectinload(Implantacao.responsavel),
         )
         .order_by(Implantacao.sla_limite.asc().nulls_last(), Implantacao.created_at.asc())
     ).scalars().unique().all()
@@ -291,6 +293,11 @@ def kpis(db: Session = Depends(get_db)):
             "dias_na_etapa": dias_na_etapa,
             "prioridade": impl.prioridade,
             "consultor": impl.consultor,
+            "responsavel_nome": impl.responsavel.nome if impl.responsavel else None,
+            "responsavel_avatar_url": (
+                _storage.avatar_url(impl.responsavel.avatar_path)
+                if impl.responsavel and impl.responsavel.avatar_path else None
+            ),
         }
 
         # Distribui no bucket da etapa PRIMÁRIA em_andamento (menor ordem) — cada impl aparece 1× só

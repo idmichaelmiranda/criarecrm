@@ -514,7 +514,7 @@ function FilaOperacional({ fila, filaTotal, stageFilter, stageColorMap = {} }) {
           <table className="w-full min-w-[780px]">
             <thead>
               <tr className="border-b border-gray-50 bg-gray-50/60">
-                {["Empresa", "Etapa", "Gargalo", "SLA", "Progresso", "Consultor", "Prioridade", ""].map((h) => (
+                {["Empresa", "Etapa", "Gargalo", "SLA", "Progresso", "Responsável", "Prioridade", ""].map((h) => (
                   <th key={h} className="text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-4 py-2.5">{h}</th>
                 ))}
               </tr>
@@ -553,12 +553,15 @@ function FilaOperacional({ fila, filaTotal, stageFilter, stageColorMap = {} }) {
                     <ProgressBar value={item.progresso} />
                   </td>
                   <td className="px-4 py-3">
-                    {item.consultor ? (
+                    {item.responsavel_nome ? (
                       <div className="flex items-center gap-1.5">
-                        <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center text-[10px] font-bold text-orange-600 shrink-0">
-                          {initials(item.consultor)}
+                        <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center text-[10px] font-bold text-orange-600 shrink-0 overflow-hidden">
+                          {item.responsavel_avatar_url
+                            ? <img src={item.responsavel_avatar_url} alt={item.responsavel_nome} className="w-full h-full object-cover" />
+                            : initials(item.responsavel_nome)
+                          }
                         </div>
-                        <span className="text-xs text-gray-600 truncate max-w-[80px]">{item.consultor}</span>
+                        <span className="text-xs text-gray-600 truncate max-w-[80px]">{item.responsavel_nome}</span>
                       </div>
                     ) : (
                       <span className="text-xs text-gray-300 italic">Não atribuído</span>
