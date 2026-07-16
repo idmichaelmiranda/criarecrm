@@ -937,11 +937,23 @@ async def gerar(
     codigo_n = 1
 
     # ── UPDATE empresas ────────────────────────────────────────────────────────
+    def _fmt_cnpj(val) -> str | None:
+        """Normaliza CNPJ para XX.XXX.XXX/XXXX-XX independente do formato de entrada."""
+        if not val:
+            return None
+        digits = "".join(c for c in _decode_str(val) if c.isdigit())
+        if len(digits) != 14:
+            return _decode_str(val).strip() or None
+        return f"{digits[:2]}.{digits[2:5]}.{digits[5:8]}/{digits[8:12]}-{digits[12:]}"
+
+    _CNPJ_FIELDS = {"CGC", "CNPJCONTADOR"}
+
     emp_pairs: list[tuple[str, str]] = []
     for field in _EMPRESAS_DIRECT_FIELDS:
         val = emp.get(field)
         if val is not None and _decode_str(val).strip():
-            emp_pairs.append((f"`{field}`", _esc(val)))
+            formatted = _fmt_cnpj(val) if field in _CNPJ_FIELDS else None
+            emp_pairs.append((f"`{field}`", _esc(formatted if formatted is not None else val)))
 
     # ID_CIDADE: subquery resolve o ID correto na tabela cidades da base zerada
     # usando CIDADE+ESTADO do Firebird. O ID do PAF-Firebird é PK interna e não

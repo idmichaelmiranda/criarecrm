@@ -21,6 +21,17 @@ def _esc(val, max_len: int | None = None) -> str:
     return "'" + s.replace("\\", "\\\\").replace("'", "\\'") + "'"
 
 
+def _fmt_cnpj(val: str | None) -> str | None:
+    """Garante que o CNPJ esteja no formato XX.XXX.XXX/XXXX-XX.
+    Aceita entrada com ou sem formatação; retorna None se não tiver 14 dígitos."""
+    if not val:
+        return None
+    digits = "".join(c for c in str(val) if c.isdigit())
+    if len(digits) != 14:
+        return val  # retorna original se não reconhecer como CNPJ válido
+    return f"{digits[:2]}.{digits[2:5]}.{digits[5:8]}/{digits[8:12]}-{digits[12:]}"
+
+
 def _num(val, default: int = 0) -> int:
     try:
         return int(str(val).strip())
@@ -135,7 +146,7 @@ def gerar_sql(cliente: Cliente, db: Optional[Session] = None, ambiente: int = 1)
         ("`SIMPLES_MINAS`",    "'N'"),
         ("`NOME`",             _esc(cliente.nome_fantasia or cliente.razao_social or "", 60)),
         ("`RAZAO`",            _esc(cliente.razao_social or "", 60)),
-        ("`CGC`",              _esc(cliente.cnpj or "", 18)),
+        ("`CGC`",              _esc(_fmt_cnpj(cliente.cnpj) or cliente.cnpj or "", 18)),
         ("`INSCRICAO`",        _esc(cliente.ie or "", 15)),
         ("`FONE`",             _esc(fone, 14)),
         ("`EMAIL`",            _esc(cliente.email, 100)),
@@ -159,7 +170,7 @@ def gerar_sql(cliente: Cliente, db: Optional[Session] = None, ambiente: int = 1)
         ("`NOMECONTADOR`",     _esc(ct.get("nome_contador"), 50)),
         ("`CPFCONTADOR`",      _esc(ct.get("cpf"), 14)),
         ("`CRC`",              _esc(ct.get("crc"), 20)),
-        ("`CNPJCONTADOR`",     _esc(ct.get("cnpj"), 18)),
+        ("`CNPJCONTADOR`",     _esc(_fmt_cnpj(ct.get("cnpj")) or ct.get("cnpj"), 18)),
         ("`CEPCONTADOR`",      _esc(ct.get("cep"), 10)),
         ("`ENDERECOCONTADOR`", _esc(ct.get("endereco"), 50)),
         ("`NUMEROCONTADOR`",   str(_num(ct.get("numero")))),
