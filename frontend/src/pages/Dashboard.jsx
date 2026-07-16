@@ -330,17 +330,18 @@ function PipelineMiniCard({ item }) {
 function PipelineBoard({ pipeline, selectedStage, onSelectStage, fullscreen = false }) {
   const colW = fullscreen ? "w-56" : "w-44";
   const minH = fullscreen ? "min-h-[calc(100vh-140px)]" : "min-h-[120px]";
+  // Oculta colunas sem cards — pipeline mostra só onde há trabalho ativo
+  const activePipeline = pipeline.filter((s) => s.count > 0);
   return (
     <div className="overflow-x-auto">
       <div className="flex gap-0 min-w-max">
-        {pipeline.map((stage) => {
+        {activePipeline.map((stage) => {
           const sc = stageStyle(stage.cor);
           const isSelected = selectedStage === stage.nome;
           return (
             <div
               key={stage.nome}
               className={`flex-none ${colW} border-r border-gray-100 last:border-r-0 transition-all
-                ${stage.count === 0 ? "opacity-40" : ""}
                 ${isSelected ? "ring-2 ring-inset ring-orange-300" : ""}`}
             >
               <div

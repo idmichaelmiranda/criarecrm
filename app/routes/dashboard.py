@@ -293,16 +293,14 @@ def kpis(db: Session = Depends(get_db)):
             "consultor": impl.consultor,
         }
 
-        # Distribui nos buckets das etapas em_andamento (pode aparecer em múltiplas colunas)
-        active_stage_names = [e.nome for e in impl.etapas if e.status == "em_andamento"]
-        if not active_stage_names:
-            active_stage_names = [etapa_nome] if etapa_nome else []
+        # Distribui no bucket da etapa PRIMÁRIA em_andamento (menor ordem) — cada impl aparece 1× só
+        em_andamento_stages = [e.nome for e in impl.etapas if e.status == "em_andamento"]
+        primary_stage = em_andamento_stages[0] if em_andamento_stages else etapa_nome
 
-        for stage_name in active_stage_names:
-            if stage_name in pipeline:
-                pipeline[stage_name]["count"] += 1
-                if len(pipeline[stage_name]["items"]) < 4:
-                    pipeline[stage_name]["items"].append(item)
+        if primary_stage and primary_stage in pipeline:
+            pipeline[primary_stage]["count"] += 1
+            if len(pipeline[primary_stage]["items"]) < 4:
+                pipeline[primary_stage]["items"].append(item)
 
         fila.append(item)
 
