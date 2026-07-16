@@ -96,11 +96,16 @@ def aprovar(db: Session, solicitacao_id: int, data: TriagemAprovar, aprovador_id
 
     # 4. Gerar etapas + checklist a partir dos templates selecionados
     from app.models.template import TemplateEtapa as _TE
-    templates = db.execute(
+    templates_raw = db.execute(
         select(Template)
         .options(selectinload(Template.etapas).selectinload(_TE.tarefas))
         .where(Template.id.in_(data.template_ids))
     ).scalars().all()
+
+    # Reordena para respeitar a sequência selecionada pelo usuário no modal
+    # (WHERE id IN não garante ordem — banco retorna por id crescente)
+    _id_order = {tid: i for i, tid in enumerate(data.template_ids)}
+    templates = sorted(templates_raw, key=lambda t: _id_order.get(t.id, 9999))
 
     if templates:
         _gerar_pipeline_merged(db, implantacao, templates)
