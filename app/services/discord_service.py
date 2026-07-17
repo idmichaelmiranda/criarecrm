@@ -224,6 +224,30 @@ def notify_instalacao_pausada(
     })
 
 
+def notify_implantacao_concluida(
+    codigo: str,
+    cliente: str,
+    consultor: str | None = None,
+    data_conclusao: str | None = None,
+) -> None:
+    fields = [
+        {"name": "Código",  "value": codigo,  "inline": True},
+        {"name": "Cliente", "value": cliente, "inline": True},
+    ]
+    if consultor:
+        fields.append({"name": "Consultor", "value": consultor, "inline": True})
+    if data_conclusao:
+        fields.append({"name": "Concluída em", "value": data_conclusao, "inline": True})
+    _fire({
+        "embeds": [{
+            "title": "🎉 Implantação concluída",
+            "color": 0x10B981,
+            "fields": fields,
+            "timestamp": _ts(),
+        }]
+    })
+
+
 def notify_instalacao_concluida(
     codigo: str,
     cliente: str,

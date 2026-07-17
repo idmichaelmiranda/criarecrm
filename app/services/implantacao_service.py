@@ -35,6 +35,20 @@ def _notificar_conclusao_implantacao(db: Session, impl: "Implantacao", excluir_u
             notificados.add(u.id)
 
 
+def _discord_implantacao_concluida(db: Session, impl: "Implantacao") -> None:
+    from app.services import discord_service
+    from app.models.cliente import Cliente as _Cliente
+    cliente = db.get(_Cliente, impl.cliente_id)
+    cliente_nome = cliente.razao_social if cliente else f"Cliente #{impl.cliente_id}"
+    data_str = impl.data_conclusao.strftime("%d/%m/%Y") if impl.data_conclusao else None
+    discord_service.notify_implantacao_concluida(
+        codigo=impl.codigo or str(impl.id),
+        cliente=cliente_nome,
+        consultor=impl.consultor or None,
+        data_conclusao=data_str,
+    )
+
+
 def _notificar_atribuicao_tarefa(db: Session, item: ChecklistItem, usuario_id: int) -> None:
     from app.models.notificacao import Notificacao
     from app.models.implantacao import Implantacao
@@ -158,6 +172,7 @@ def atualizar(db: Session, impl_id: int, data: ImplantacaoUpdate, usuario: str =
             impl.progresso = 100
             _atualizar_sla_status(impl)
             _notificar_conclusao_implantacao(db, impl, excluir_usuario_id=usuario_id)
+            _discord_implantacao_concluida(db, impl)
         timeline_service.log(
             db,
             tipo="status_alterado",
@@ -624,6 +639,7 @@ def _sincronizar_etapas(db: Session, implantacao_id: int, usuario: str = "Sistem
             descricao="Todas as etapas e tarefas foram concluídas com sucesso.",
             usuario=usuario, icone="trophy", cor="#f59e0b", implantacao_id=impl.id)
         _notificar_conclusao_implantacao(db, impl, excluir_usuario_id=usuario_id)
+        _discord_implantacao_concluida(db, impl)
     elif not all_done and impl.status == "concluida":
         impl.status = "em_andamento"
         impl.data_conclusao = None
@@ -685,6 +701,8 @@ def _verificar_conclusao_etapa(db: Session, etapa_id: int) -> None:
                     cor="#f59e0b",
                     implantacao_id=impl.id,
                 )
+                _notificar_conclusao_implantacao(db, impl)
+                _discord_implantacao_concluida(db, impl)
 
 
 def _atualizar_sla_status(impl: Implantacao) -> None:
