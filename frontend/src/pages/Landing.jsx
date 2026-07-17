@@ -40,6 +40,7 @@ function CriareLogoHero() {
           maxWidth: 420,
           height: "auto",
           objectFit: "contain",
+          mixBlendMode: "multiply",
           filter: "drop-shadow(0 20px 48px rgba(30,45,78,0.16))",
         }}
       />
