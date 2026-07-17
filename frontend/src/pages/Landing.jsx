@@ -27,165 +27,28 @@ function SuccessToast({ onClose }) {
   );
 }
 
-// ── Dashboard Mockup (hero direito) ───────────────────────────────────────────
+// ── Criare Logo Hero (hero direito) ───────────────────────────────────────────
 
-function DashboardMockup() {
-  const kpis = [
-    { label: "Vendas hoje",    value: "R$ 62.540", delta: "+12,5%" },
-    { label: "Pedidos",        value: "152",        delta: "+8,1%"  },
-    { label: "Ticket médio",   value: "R$ 412,30",  delta: "+5,3%"  },
-    { label: "Clientes ativos",value: "1.289",      delta: "+3,7%"  },
-  ];
-
-  const navPaths = [
-    "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
-    "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
-    "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
-    "M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z",
-    "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z",
-  ];
-
+function CriareLogoHero() {
   return (
-    <div className="relative flex items-center justify-center h-full select-none">
-      {/* Decorative blobs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-4 right-0 w-80 h-80 rounded-full"
-          style={{ background: "rgba(59,130,246,0.07)", filter: "blur(56px)" }} />
-        <div className="absolute bottom-0 left-0 w-60 h-60 rounded-full"
-          style={{ background: "rgba(99,102,241,0.06)", filter: "blur(44px)" }} />
-        <div className="absolute top-1/3 right-1/4 w-48 h-48 rounded-full"
-          style={{ background: "rgba(16,185,129,0.05)", filter: "blur(36px)" }} />
-      </div>
-
-      {/* Desktop card */}
-      <div className="relative z-10" style={{
-        width: 400,
-        borderRadius: 16,
-        overflow: "hidden",
-        boxShadow: "0 24px 64px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06)",
-        border: "1px solid rgba(0,0,0,0.07)",
-        background: "white",
-      }}>
-        {/* Window chrome */}
-        <div style={{ height: 30, background: "#1e293b", display: "flex", alignItems: "center", padding: "0 12px", gap: 6 }}>
-          {["#ef4444","#f59e0b","#22c55e"].map((c) => (
-            <div key={c} style={{ width: 8, height: 8, borderRadius: "50%", background: c, opacity: 0.85 }} />
-          ))}
-        </div>
-
-        <div style={{ display: "flex" }}>
-          {/* Sidebar */}
-          <div style={{ width: 52, background: "#1e293b", padding: "14px 10px", display: "flex", flexDirection: "column", gap: 5, minHeight: 360 }}>
-            <div style={{ width: 30, height: 30, borderRadius: 8, overflow: "hidden", marginBottom: 10, border: "1px solid rgba(245,99,22,0.45)" }}>
-              <img src="/logo.jpg" alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            </div>
-            {navPaths.map((d, i) => (
-              <div key={i} style={{
-                width: 32, height: 32, borderRadius: 8,
-                background: i === 0 ? "rgba(245,99,22,0.22)" : "transparent",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <svg style={{ width: 14, height: 14, color: i === 0 ? "#F56316" : "rgba(148,163,184,0.55)" }}
-                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}
-                  strokeLinecap="round" strokeLinejoin="round">
-                  <path d={d} />
-                </svg>
-              </div>
-            ))}
-          </div>
-
-          {/* Content */}
-          <div style={{ flex: 1, background: "#f8fafc", padding: "14px 13px" }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: "#1e293b", margin: "0 0 12px" }}>Visão Geral</p>
-
-            {/* KPIs */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 10 }}>
-              {kpis.map((k) => (
-                <div key={k.label} style={{ background: "white", borderRadius: 8, padding: "8px 10px", border: "1px solid #f1f5f9" }}>
-                  <p style={{ fontSize: 7.5, color: "#94a3b8", margin: "0 0 2px", textTransform: "uppercase", letterSpacing: "0.04em" }}>{k.label}</p>
-                  <p style={{ fontSize: 12, fontWeight: 700, color: "#1e293b", margin: "0 0 1px" }}>{k.value}</p>
-                  <p style={{ fontSize: 8, color: "#10b981", margin: 0, fontWeight: 600 }}>{k.delta} vs ontem</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Chart */}
-            <div style={{ background: "white", borderRadius: 8, padding: "10px 12px", border: "1px solid #f1f5f9", marginBottom: 8 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                <p style={{ fontSize: 9, fontWeight: 600, color: "#64748b", margin: 0 }}>Evolução de vendas</p>
-                <p style={{ fontSize: 7.5, color: "#94a3b8", margin: 0 }}>Últimos 7 dias</p>
-              </div>
-              <svg viewBox="0 0 220 46" style={{ width: "100%", height: 46, display: "block" }}>
-                <defs>
-                  <linearGradient id="lndChartGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.15} />
-                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <polygon
-                  points="0,38 28,32 55,35 82,20 110,28 137,14 165,22 193,9 220,17 220,46 0,46"
-                  fill="url(#lndChartGrad)"
-                />
-                <polyline
-                  points="0,38 28,32 55,35 82,20 110,28 137,14 165,22 193,9 220,17"
-                  fill="none" stroke="#3b82f6" strokeWidth={1.8}
-                  strokeLinejoin="round" strokeLinecap="round"
-                />
-                {["S","T","Q","Q","S","S","D"].map((d, i) => (
-                  <text key={i} x={i * 34 + 4} y={44} style={{ fontSize: 6.5, fill: "#94a3b8", fontFamily: "system-ui,sans-serif" }}>{d}</text>
-                ))}
-              </svg>
-            </div>
-
-            {/* Activity */}
-            <div style={{ background: "white", borderRadius: 8, padding: "7px 10px", border: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                <div style={{ width: 24, height: 24, borderRadius: 6, background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11 }}>🧾</div>
-                <div>
-                  <p style={{ fontSize: 9, fontWeight: 600, color: "#1e293b", margin: 0 }}>Pedido #1524</p>
-                  <p style={{ fontSize: 7.5, color: "#94a3b8", margin: 0 }}>R$ 1.250,00</p>
-                </div>
-              </div>
-              <span style={{ fontSize: 7.5, background: "#dcfce7", color: "#16a34a", padding: "2px 7px", borderRadius: 4, fontWeight: 600 }}>Concluído</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile overlay */}
-      <div className="absolute z-20" style={{
-        right: 0,
-        bottom: 20,
-        width: 126,
-        borderRadius: 18,
-        overflow: "hidden",
-        boxShadow: "0 20px 52px rgba(0,0,0,0.18), 0 4px 14px rgba(0,0,0,0.12)",
-        border: "3.5px solid #1e293b",
-        background: "#1e293b",
-      }}>
-        <div style={{ height: 18, background: "#1e293b", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ width: 30, height: 3.5, borderRadius: 2, background: "rgba(255,255,255,0.18)" }} />
-        </div>
-        <div style={{ background: "white", margin: "0 3px 3px", borderRadius: 12, padding: "9px 9px 10px" }}>
-          <p style={{ fontSize: 7.5, fontWeight: 700, color: "#1e293b", margin: "0 0 7px" }}>Resumo do dia</p>
-          {[
-            { label: "Vendas",   value: "R$ 62.540", delta: "+12,9%" },
-            { label: "Pedidos",  value: "152",        delta: "+8,1%"  },
-            { label: "Clientes", value: "1.289",      delta: "+3,7%"  },
-          ].map((item) => (
-            <div key={item.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
-              <p style={{ fontSize: 7, color: "#64748b", margin: 0 }}>{item.label}</p>
-              <div style={{ textAlign: "right" }}>
-                <p style={{ fontSize: 7.5, fontWeight: 700, color: "#1e293b", margin: 0 }}>{item.value}</p>
-                <p style={{ fontSize: 6.5, color: "#10b981", margin: 0, fontWeight: 600 }}>{item.delta}</p>
-              </div>
-            </div>
-          ))}
-          <div style={{ marginTop: 7, padding: "4px 0", background: "#F56316", borderRadius: 7, textAlign: "center" }}>
-            <p style={{ fontSize: 7.5, fontWeight: 600, color: "white", margin: 0 }}>Ver relatórios</p>
-          </div>
-        </div>
-      </div>
+    <div className="relative flex items-center justify-center h-full w-full select-none">
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ background: "radial-gradient(ellipse 80% 80% at 50% 50%, rgba(30,45,78,0.06) 0%, transparent 70%)" }} />
+      <svg
+        viewBox="0 0 210 200"
+        style={{
+          width: "100%",
+          maxWidth: 400,
+          height: "auto",
+          filter: "drop-shadow(0 24px 56px rgba(30,45,78,0.20)) drop-shadow(0 6px 16px rgba(30,45,78,0.10))",
+        }}
+      >
+        <path
+          d="M 155,22 L 48,22 Q 14,22 14,56 L 14,144 Q 14,178 48,178 L 155,178 L 155,154 L 54,154 Q 38,154 38,140 L 38,60 Q 38,46 54,46 L 155,46 Z"
+          fill="#1e2d4e"
+        />
+        <rect x="157" y="83" width="28" height="34" rx="5" fill="#F56316" />
+      </svg>
     </div>
   );
 }
@@ -492,9 +355,9 @@ export default function Landing() {
               </div>
             </div>
 
-            {/* Right: dashboard mockup */}
-            <div className="relative h-[260px] sm:h-[360px] lg:h-[400px]">
-              <DashboardMockup />
+            {/* Right: Criare logo */}
+            <div className="relative h-[280px] sm:h-[380px] lg:h-[420px]">
+              <CriareLogoHero />
             </div>
           </div>
 
