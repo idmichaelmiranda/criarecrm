@@ -188,9 +188,10 @@ def gerar_sql(cliente: Cliente, db: Optional[Session] = None, ambiente: int = 1)
     if _cidade and _uf:
         pairs.append((
             "`ID_CIDADE`",
-            f"(SELECT `id_cidade` FROM `cidades`"
-            f" WHERE UPPER(TRIM(`cidade`)) = UPPER(TRIM({_esc(_cidade)}))"
-            f" AND `uf` = {_esc(_uf)} LIMIT 1)",
+            f"(SELECT `ID_CIDADE` FROM `cidades`"
+            f" WHERE CONVERT(TRIM(`NOME`) USING utf8) COLLATE utf8_general_ci"
+            f"     = CONVERT(TRIM({_esc(_cidade)}) USING utf8) COLLATE utf8_general_ci"
+            f" AND `UF` = {_esc(_uf)} LIMIT 1)",
         ))
 
     serie       = df.get("serie_nfe")
