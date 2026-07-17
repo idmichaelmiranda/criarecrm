@@ -423,13 +423,13 @@ export default function Landing() {
         <div className="absolute bottom-0 left-0 w-[500px] h-[400px] pointer-events-none"
           style={{ background: "radial-gradient(ellipse at 20% 90%, rgba(99,102,241,0.05) 0%, transparent 60%)" }} />
 
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-16 sm:pt-24 pb-12 sm:pb-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-10 sm:pt-16 pb-4 sm:pb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
 
             {/* Left */}
             <div>
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-7"
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-5"
                 style={{ background: "#fff7ed", border: "1px solid #fed7aa" }}>
                 <svg className="w-3.5 h-3.5 text-orange-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -438,19 +438,19 @@ export default function Landing() {
               </div>
 
               {/* Headline */}
-              <h1 className="text-4xl sm:text-5xl font-black leading-[1.1] tracking-tight mb-5 text-gray-900">
+              <h1 className="text-4xl sm:text-5xl font-black leading-[1.1] tracking-tight mb-4 text-gray-900">
                 Seu ERP completo<br />
                 para uma gestão<br />
                 <span style={{ color: "#F56316" }}>mais segura e ágil</span>
               </h1>
 
-              <p className="text-base text-gray-500 leading-relaxed mb-8 max-w-md">
+              <p className="text-base text-gray-500 leading-relaxed mb-5 max-w-md">
                 O ERP Criare foi desenvolvido para simplificar sua operação,
                 reduzir riscos e dar visibilidade total do seu negócio.
               </p>
 
               {/* Trust badges — 2×2 grid */}
-              <div className="grid grid-cols-2 gap-3 mb-9 max-w-sm">
+              <div className="grid grid-cols-2 gap-2.5 mb-6 max-w-sm">
                 {[
                   {
                     icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />,
@@ -505,7 +505,7 @@ export default function Landing() {
             </div>
 
             {/* Right: dashboard mockup */}
-            <div className="relative h-[320px] sm:h-[420px] lg:h-[520px]">
+            <div className="relative h-[280px] sm:h-[380px] lg:h-[460px]">
               <DashboardMockup />
             </div>
           </div>
