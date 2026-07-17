@@ -449,33 +449,22 @@ export default function Landing() {
                 reduzir riscos e dar visibilidade total do seu negócio.
               </p>
 
-              {/* Módulos — 3×2 grid */}
-              <div className="grid grid-cols-3 gap-2 mb-6">
+              {/* Trust badges — 2×2 */}
+              <div className="grid grid-cols-2 gap-2.5 mb-6 max-w-sm">
                 {[
-                  { color: "#F56316", label: "Gestão de Vendas",      path: "M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" },
-                  { color: "#0ea5e9", label: "Estoque Inteligente",    path: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" },
-                  { color: "#10b981", label: "Financeiro Integrado",   path: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" },
-                  { color: "#7c3aed", label: "Fiscal e Tributário",    path: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" },
-                  { color: "#f59e0b", label: "Relatórios e BI",        path: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
-                  { color: "#e11d48", label: "Segurança e Permissões", path: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
-                ].map((m) => (
-                  <button
-                    key={m.label}
-                    onClick={() => document.getElementById("o-que-fazemos")?.scrollIntoView({ behavior: "smooth" })}
-                    className="flex items-center gap-2 px-2.5 py-2.5 rounded-xl text-left"
-                    style={{ background: "#f8fafc", border: "1px solid #e2e8f0", cursor: "pointer" }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "#fff7ed"; e.currentTarget.style.borderColor = "#fed7aa"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "#f8fafc"; e.currentTarget.style.borderColor = "#e2e8f0"; }}
-                  >
-                    <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
-                      style={{ background: `${m.color}1a` }}>
-                      <svg className="w-3 h-3" style={{ color: m.color }} fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-                        <path d={m.path} />
+                  { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />,             label: "Implantação em 4 etapas" },
+                  { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />, label: "Suporte pós go-live" },
+                  { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />, label: "Ambiente seguro" },
+                  { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />,               label: "Retorno rápido e mensurável" },
+                ].map((s) => (
+                  <div key={s.label} className="flex items-center gap-2.5 p-3 rounded-xl bg-gray-50 border border-gray-100">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#fff7ed" }}>
+                      <svg className="w-3.5 h-3.5" style={{ color: "#F56316" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        {s.icon}
                       </svg>
                     </div>
-                    <span className="text-[11px] font-semibold text-gray-700 leading-tight">{m.label}</span>
-                  </button>
+                    <span className="text-xs font-medium text-gray-600 leading-snug">{s.label}</span>
+                  </div>
                 ))}
               </div>
 
@@ -512,10 +501,57 @@ export default function Landing() {
         </div>
       </section>
 
+      <SectionDivider nextId="o-que-fazemos" />
+
+      {/* ── O que fazemos ── */}
+      <section id="o-que-fazemos" style={{ background: "#f8fafc" }} className="py-16 sm:py-24">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <p className="text-xs font-bold text-orange-500 uppercase tracking-widest mb-3">O que configuramos</p>
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 mb-4">
+              Tudo que sua operação precisa, em um só lugar
+            </h2>
+            <p className="text-gray-500 text-base max-w-lg mx-auto">
+              Do fiscal ao treinamento — configuramos, testamos e entregamos tudo funcionando.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[
+              { color: "#F56316", iconPath: "M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z", title: "Gestão de Vendas",       bullets: ["PDV integrado e ágil", "Pedidos, orçamentos e NF-e", "Comissão de vendedores"] },
+              { color: "#0ea5e9", iconPath: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",                                                                                                                                        title: "Estoque Inteligente",   bullets: ["Inventário em tempo real", "Reposição automática por mínimo", "Rastreio por lote e validade"] },
+              { color: "#10b981", iconPath: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",                         title: "Financeiro Integrado",  bullets: ["Fluxo de caixa em tempo real", "Contas a pagar e receber", "Conciliação bancária automática"] },
+              { color: "#7c3aed", iconPath: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",                                                                                  title: "Fiscal e Tributário",   bullets: ["Emissão de NF-e, NFC-e e CT-e", "Cálculo automático de impostos", "Obrigações acessórias (SPED, EFD)"] },
+              { color: "#f59e0b", iconPath: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z", title: "Relatórios e BI",       bullets: ["Dashboards de vendas e estoque", "Indicadores de performance (KPIs)", "Exportação para Excel e PDF"] },
+              { color: "#e11d48", iconPath: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",          title: "Segurança e Permissões",bullets: ["Perfis de acesso por usuário", "Log de auditoria completo", "Backup automático e criptografado"] },
+            ].map((f) => (
+              <div key={f.title} className="bg-white rounded-2xl p-6 hover:shadow-md transition-all duration-200 cursor-default group" style={{ border: "1px solid #e2e8f0" }}>
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 transition-transform duration-200 group-hover:scale-110" style={{ background: `${f.color}18` }}>
+                  <svg className="w-5 h-5" style={{ color: f.color }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                    <path d={f.iconPath} />
+                  </svg>
+                </div>
+                <h3 className="text-sm font-bold text-gray-900 mb-3 leading-snug">{f.title}</h3>
+                <ul className="space-y-1.5">
+                  {f.bullets.map((b) => (
+                    <li key={b} className="flex items-start gap-2">
+                      <svg className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: f.color }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-xs text-gray-500 leading-relaxed">{b}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <SectionDivider nextId="como-funciona" />
 
       {/* ── Como funciona ── */}
-      <section id="como-funciona" style={{ background: "#f8fafc" }}>
+      <section id="como-funciona" style={{ background: "#ffffff" }}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-24">
           <div className="text-center mb-16">
             <p className="text-xs font-bold text-orange-500 uppercase tracking-widest mb-3">Como funciona</p>
@@ -586,111 +622,6 @@ export default function Landing() {
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-      </section>
-
-      <SectionDivider nextId="o-que-fazemos" />
-
-      {/* ── O que fazemos ── */}
-      <section id="o-que-fazemos" style={{ background: "#f8fafc" }} className="py-24">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-14">
-            <p className="text-xs font-bold text-orange-500 uppercase tracking-widest mb-3">O que configuramos</p>
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 mb-4">
-              Tudo que sua operação precisa, em um só lugar
-            </h2>
-            <p className="text-gray-500 text-base max-w-lg mx-auto">
-              Do fiscal ao treinamento — configuramos, testamos e entregamos tudo funcionando.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {[
-              {
-                color: "#F56316",
-                iconPath: "M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z",
-                title: "Gestão de Vendas",
-                bullets: ["PDV integrado e ágil", "Pedidos, orçamentos e NF-e", "Comissão de vendedores"],
-              },
-              {
-                color: "#0ea5e9",
-                iconPath: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
-                title: "Estoque Inteligente",
-                bullets: ["Inventário em tempo real", "Reposição automática por mínimo", "Rastreio por lote e validade"],
-              },
-              {
-                color: "#10b981",
-                iconPath: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
-                title: "Financeiro Integrado",
-                bullets: ["Fluxo de caixa em tempo real", "Contas a pagar e receber", "Conciliação bancária automática"],
-              },
-              {
-                color: "#7c3aed",
-                iconPath: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
-                title: "Fiscal e Tributário",
-                bullets: ["Emissão de NF-e, NFC-e e CT-e", "Cálculo automático de impostos", "Obrigações acessórias (SPED, EFD)"],
-              },
-              {
-                color: "#f59e0b",
-                iconPath: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
-                title: "Relatórios e BI",
-                bullets: ["Dashboards de vendas e estoque", "Indicadores de performance (KPIs)", "Exportação para Excel e PDF"],
-              },
-              {
-                color: "#e11d48",
-                iconPath: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
-                title: "Segurança e Permissões",
-                bullets: ["Perfis de acesso por usuário", "Log de auditoria completo", "Backup automático e criptografado"],
-              },
-            ].map((f) => (
-              <div
-                key={f.title}
-                className="bg-white rounded-2xl p-6 hover:shadow-md transition-all duration-200 cursor-default group"
-                style={{ border: "1px solid #e2e8f0" }}
-              >
-                {/* Icon */}
-                <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center mb-5 transition-transform duration-200 group-hover:scale-110"
-                  style={{ background: `${f.color}18` }}
-                >
-                  <svg className="w-5 h-5" style={{ color: f.color }} fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-                    <path d={f.iconPath} />
-                  </svg>
-                </div>
-
-                {/* Title */}
-                <h3 className="text-sm font-bold text-gray-900 mb-3 leading-snug">{f.title}</h3>
-
-                {/* Bullets */}
-                <ul className="space-y-1.5">
-                  {f.bullets.map((b) => (
-                    <li key={b} className="flex items-start gap-2">
-                      <svg className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: f.color }}
-                        fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span className="text-xs text-gray-500 leading-relaxed">{b}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          {/* CTA */}
-          <div className="text-center mt-12">
-            <button
-              onClick={() => document.getElementById("cta")?.scrollIntoView({ behavior: "smooth" })}
-              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-white text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
-              style={{ background: "linear-gradient(135deg, #F56316, #d94f0d)", boxShadow: "0 4px 18px rgba(245,99,22,0.28)" }}
-            >
-              Solicitar implantação completa
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </button>
           </div>
         </div>
       </section>
