@@ -260,7 +260,7 @@ export default function Landing() {
         <div className="absolute bottom-0 left-0 w-[500px] h-[400px] pointer-events-none"
           style={{ background: "radial-gradient(ellipse at 20% 90%, rgba(99,102,241,0.05) 0%, transparent 60%)" }} />
 
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-4 sm:pb-6">
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-5 sm:pt-8 pb-3 sm:pb-4">
           {/* ── Hero centralizado ── */}
           <div className="flex flex-col items-center text-center max-w-3xl mx-auto pb-2">
 
@@ -268,16 +268,16 @@ export default function Landing() {
             <img
               src="/logo3dhero.png"
               alt="Criare ERP"
-              className="mb-5"
+              className="mb-3"
               style={{
-                width: 172,
+                width: 130,
                 height: "auto",
-                filter: "drop-shadow(0 16px 40px rgba(30,45,78,0.22)) drop-shadow(0 4px 12px rgba(30,45,78,0.10))",
+                filter: "drop-shadow(0 12px 32px rgba(30,45,78,0.22)) drop-shadow(0 3px 10px rgba(30,45,78,0.10))",
               }}
             />
 
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-5"
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-3"
               style={{ background: "#fff7ed", border: "1px solid #fed7aa" }}>
               <svg className="w-3.5 h-3.5 text-orange-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -286,19 +286,19 @@ export default function Landing() {
             </div>
 
             {/* Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-[3.4rem] font-black leading-[1.08] tracking-tight mb-4 text-gray-900">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black leading-[1.1] tracking-tight mb-3 text-gray-900">
               Seu ERP completo para uma gestão<br />
               <span style={{ color: "#F56316" }}>mais segura e ágil</span>
             </h1>
 
             {/* Subtítulo */}
-            <p className="text-base sm:text-lg text-gray-500 leading-relaxed mb-7 max-w-xl">
+            <p className="text-sm sm:text-base text-gray-500 leading-relaxed mb-4 max-w-xl">
               O ERP Criare foi desenvolvido para simplificar sua operação,
               reduzir riscos e dar visibilidade total do seu negócio.
             </p>
 
             {/* Trust badges — 4 em linha */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-7 w-full max-w-2xl">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5 w-full max-w-2xl">
               {[
                 { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />,             label: "Implantação em 4 etapas" },
                 { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />, label: "Suporte pós go-live" },
@@ -341,7 +341,7 @@ export default function Landing() {
           </div>
 
           {/* ── 6 módulos — dentro do hero, abaixo dos CTAs ── */}
-          <div id="o-que-fazemos" className="mt-5 pt-5" style={{ borderTop: "1px solid #f1f5f9" }}>
+          <div id="o-que-fazemos" className="mt-4 pt-4" style={{ borderTop: "1px solid #f1f5f9" }}>
             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">O que configuramos</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               {[
