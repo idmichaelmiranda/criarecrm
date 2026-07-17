@@ -177,8 +177,9 @@ def gerar_sql(cliente: Cliente, db: Optional[Session] = None, ambiente: int = 1)
         ("`BAIRROCONTADOR`",   _esc(ct.get("bairro"), 40)),
         ("`TELEFONECONTADOR`", _esc(fone_contador, 18)),
         ("`EMAILCONTADOR`",    _esc(ct.get("email"), 100)),
-        ("`ATIVO`",            "'S'"),
-        ("`MATRIZ`",           "'S'"),
+        ("`ATIVO`",               "'S'"),
+        ("`MATRIZ`",              "'S'"),
+        ("`CAMINHOCERTIFICADO`",  _esc(r"C:\Program Files (x86)\Criare\suporte\certificado.pfx")),
     ]
 
     # ID_CIDADE: subquery resolve o ID correto na tabela cidades da base zerada
