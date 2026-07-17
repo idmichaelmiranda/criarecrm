@@ -74,6 +74,11 @@ def aprovar(db: Session, solicitacao_id: int, data: TriagemAprovar, aprovador_id
     data_inicio = date.today()
     sla_limite = data_inicio + timedelta(days=data.sla_dias)
 
+    # Responsável: quem foi atribuído à triagem, ou quem aprovou se ninguém foi
+    if not sol.responsavel_triagem_id and aprovador_id:
+        sol.responsavel_triagem_id = aprovador_id
+    responsavel_implantacao = sol.responsavel_triagem_id or aprovador_id
+
     implantacao = Implantacao(
         cliente_id=cliente.id,
         template_id=data.template_ids[0],
@@ -90,6 +95,7 @@ def aprovar(db: Session, solicitacao_id: int, data: TriagemAprovar, aprovador_id
         prioridade=data.prioridade,
         certificado_path=sol.certificado_path,
         conversao_dados=data.conversao_dados,
+        responsavel_id=responsavel_implantacao,
     )
     db.add(implantacao)
     db.flush()
@@ -131,9 +137,6 @@ def aprovar(db: Session, solicitacao_id: int, data: TriagemAprovar, aprovador_id
     # 6. Atualizar solicitação
     sol.status = "aprovada"
     sol.updated_at = datetime.now()
-    # Se nenhum responsável foi atribuído previamente, quem aprova assume
-    if not sol.responsavel_triagem_id and aprovador_id:
-        sol.responsavel_triagem_id = aprovador_id
 
     db.commit()
     db.refresh(implantacao)
