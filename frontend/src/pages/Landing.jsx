@@ -509,6 +509,67 @@ export default function Landing() {
               <DashboardMockup />
             </div>
           </div>
+
+          {/* ── Strip de módulos ── */}
+          <div className="mt-12 pt-10" style={{ borderTop: "1px solid #f1f5f9" }}>
+            <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-widest text-center mb-6">
+              Módulos incluídos na implantação
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              {[
+                {
+                  color: "#F56316",
+                  path: "M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z",
+                  label: "Gestão de Vendas",
+                },
+                {
+                  color: "#0ea5e9",
+                  path: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
+                  label: "Estoque Inteligente",
+                },
+                {
+                  color: "#10b981",
+                  path: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
+                  label: "Financeiro Integrado",
+                },
+                {
+                  color: "#7c3aed",
+                  path: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
+                  label: "Fiscal e Tributário",
+                },
+                {
+                  color: "#f59e0b",
+                  path: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
+                  label: "Relatórios e BI",
+                },
+                {
+                  color: "#e11d48",
+                  path: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
+                  label: "Segurança e Permissões",
+                },
+              ].map((m) => (
+                <button
+                  key={m.label}
+                  onClick={() => document.getElementById("o-que-fazemos")?.scrollIntoView({ behavior: "smooth" })}
+                  className="flex items-center gap-2.5 px-3.5 py-3 rounded-xl transition-all duration-150 text-left group cursor-pointer"
+                  style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = `${m.color}0d`; e.currentTarget.style.borderColor = `${m.color}40`; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "#f8fafc"; e.currentTarget.style.borderColor = "#e2e8f0"; }}
+                >
+                  <div
+                    className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                    style={{ background: `${m.color}18` }}
+                  >
+                    <svg className="w-3.5 h-3.5" style={{ color: m.color }} fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                      <path d={m.path} />
+                    </svg>
+                  </div>
+                  <span className="text-xs font-semibold text-gray-700 leading-snug">{m.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
