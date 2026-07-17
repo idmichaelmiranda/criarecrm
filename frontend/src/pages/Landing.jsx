@@ -32,23 +32,17 @@ function SuccessToast({ onClose }) {
 function CriareLogoHero() {
   return (
     <div className="relative flex items-center justify-center h-full w-full select-none">
-      <div className="absolute inset-0 pointer-events-none"
-        style={{ background: "radial-gradient(ellipse 80% 80% at 50% 50%, rgba(30,45,78,0.06) 0%, transparent 70%)" }} />
-      <svg
-        viewBox="0 0 210 200"
+      <img
+        src="/logo3dhero.png"
+        alt="Criare ERP"
         style={{
           width: "100%",
-          maxWidth: 400,
+          maxWidth: 420,
           height: "auto",
-          filter: "drop-shadow(0 24px 56px rgba(30,45,78,0.20)) drop-shadow(0 6px 16px rgba(30,45,78,0.10))",
+          objectFit: "contain",
+          filter: "drop-shadow(0 20px 48px rgba(30,45,78,0.16))",
         }}
-      >
-        <path
-          d="M 155,22 L 48,22 Q 14,22 14,56 L 14,144 Q 14,178 48,178 L 155,178 L 155,154 L 54,154 Q 38,154 38,140 L 38,60 Q 38,46 54,46 L 155,46 Z"
-          fill="#1e2d4e"
-        />
-        <rect x="157" y="83" width="28" height="34" rx="5" fill="#F56316" />
-      </svg>
+      />
     </div>
   );
 }
