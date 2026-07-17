@@ -27,26 +27,6 @@ function SuccessToast({ onClose }) {
   );
 }
 
-// ── Criare Logo Hero (hero direito) ───────────────────────────────────────────
-
-function CriareLogoHero() {
-  return (
-    <div className="relative flex items-center justify-center h-full w-full select-none">
-      <img
-        src="/logo3dhero.png"
-        alt="Criare ERP"
-        style={{
-          width: "100%",
-          maxWidth: 420,
-          height: "auto",
-          objectFit: "contain",
-          filter: "drop-shadow(0 24px 52px rgba(30,45,78,0.18)) drop-shadow(0 6px 18px rgba(30,45,78,0.10))",
-        }}
-      />
-    </div>
-  );
-}
-
 // ── Section Divider ───────────────────────────────────────────────────────────
 
 function SectionDivider({ nextId, toTop = false }) {
@@ -281,77 +261,82 @@ export default function Landing() {
           style={{ background: "radial-gradient(ellipse at 20% 90%, rgba(99,102,241,0.05) 0%, transparent 60%)" }} />
 
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-4 sm:pb-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12 items-start">
+          {/* ── Hero centralizado ── */}
+          <div className="flex flex-col items-center text-center max-w-3xl mx-auto pb-2">
 
-            {/* Left */}
-            <div>
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-4"
-                style={{ background: "#fff7ed", border: "1px solid #fed7aa" }}>
-                <svg className="w-3.5 h-3.5 text-orange-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <span className="text-xs font-semibold text-orange-600 tracking-wide">ERP especializado para o varejo</span>
-              </div>
+            {/* Logo centralizada */}
+            <img
+              src="/logo3dhero.png"
+              alt="Criare ERP"
+              className="mb-5"
+              style={{
+                width: 172,
+                height: "auto",
+                filter: "drop-shadow(0 16px 40px rgba(30,45,78,0.22)) drop-shadow(0 4px 12px rgba(30,45,78,0.10))",
+              }}
+            />
 
-              {/* Headline */}
-              <h1 className="text-4xl sm:text-5xl font-black leading-[1.1] tracking-tight mb-3 text-gray-900">
-                Seu ERP completo<br />
-                para uma gestão<br />
-                <span style={{ color: "#F56316" }}>mais segura e ágil</span>
-              </h1>
-
-              <p className="text-base text-gray-500 leading-relaxed mb-4 max-w-md">
-                O ERP Criare foi desenvolvido para simplificar sua operação,
-                reduzir riscos e dar visibilidade total do seu negócio.
-              </p>
-
-              {/* Trust badges — 2×2 */}
-              <div className="grid grid-cols-2 gap-2 mb-5 max-w-sm">
-                {[
-                  { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />,             label: "Implantação em 4 etapas" },
-                  { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />, label: "Suporte pós go-live" },
-                  { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />, label: "Ambiente seguro" },
-                  { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />,               label: "Retorno rápido e mensurável" },
-                ].map((s) => (
-                  <div key={s.label} className="flex items-center gap-2 p-2.5 rounded-xl bg-gray-50 border border-gray-100">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#fff7ed" }}>
-                      <svg className="w-3.5 h-3.5" style={{ color: "#F56316" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        {s.icon}
-                      </svg>
-                    </div>
-                    <span className="text-xs font-medium text-gray-600 leading-snug">{s.label}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* CTAs */}
-              <div className="flex flex-wrap items-center gap-4">
-                <button
-                  onClick={() => navigate("/solicitar")}
-                  className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl font-bold text-white text-base transition-all hover:scale-[1.02] active:scale-[0.98]"
-                  style={{ background: "linear-gradient(135deg, #F56316, #d94f0d)", boxShadow: "0 8px 28px rgba(245,99,22,0.32)" }}
-                >
-                  Solicitar Implantação
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => document.getElementById("como-funciona")?.scrollIntoView({ behavior: "smooth" })}
-                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors"
-                >
-                  Falar com um especialista
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-5"
+              style={{ background: "#fff7ed", border: "1px solid #fed7aa" }}>
+              <svg className="w-3.5 h-3.5 text-orange-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span className="text-xs font-semibold text-orange-600 tracking-wide">ERP especializado para o varejo</span>
             </div>
 
-            {/* Right: Criare logo */}
-            <div className="relative h-[280px] sm:h-[380px] lg:h-[420px]">
-              <CriareLogoHero />
+            {/* Headline */}
+            <h1 className="text-4xl sm:text-5xl lg:text-[3.4rem] font-black leading-[1.08] tracking-tight mb-4 text-gray-900">
+              Seu ERP completo para uma gestão<br />
+              <span style={{ color: "#F56316" }}>mais segura e ágil</span>
+            </h1>
+
+            {/* Subtítulo */}
+            <p className="text-base sm:text-lg text-gray-500 leading-relaxed mb-7 max-w-xl">
+              O ERP Criare foi desenvolvido para simplificar sua operação,
+              reduzir riscos e dar visibilidade total do seu negócio.
+            </p>
+
+            {/* Trust badges — 4 em linha */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-7 w-full max-w-2xl">
+              {[
+                { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />,             label: "Implantação em 4 etapas" },
+                { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />, label: "Suporte pós go-live" },
+                { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />, label: "Ambiente seguro" },
+                { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />,               label: "Retorno rápido e mensurável" },
+              ].map((s) => (
+                <div key={s.label} className="flex items-center gap-2 p-2.5 rounded-xl bg-gray-50 border border-gray-100">
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#fff7ed" }}>
+                    <svg className="w-3.5 h-3.5" style={{ color: "#F56316" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      {s.icon}
+                    </svg>
+                  </div>
+                  <span className="text-xs font-medium text-gray-600 leading-snug text-left">{s.label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* CTAs */}
+            <div className="flex flex-wrap justify-center items-center gap-4">
+              <button
+                onClick={() => navigate("/solicitar")}
+                className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl font-bold text-white text-base transition-all hover:scale-[1.02] active:scale-[0.98]"
+                style={{ background: "linear-gradient(135deg, #F56316, #d94f0d)", boxShadow: "0 8px 28px rgba(245,99,22,0.32)" }}
+              >
+                Solicitar Implantação
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </button>
+              <button
+                onClick={() => document.getElementById("como-funciona")?.scrollIntoView({ behavior: "smooth" })}
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors"
+              >
+                Falar com um especialista
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
           </div>
 
