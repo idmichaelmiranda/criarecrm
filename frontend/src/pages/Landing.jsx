@@ -228,8 +228,8 @@ export default function Landing() {
         }}>
         <div className="relative max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0 border border-gray-100 shadow-sm">
-              <img src="/logo.jpg" alt="CriareTI" className="w-full h-full object-cover" />
+            <div className="w-9 h-9 shrink-0 flex items-center justify-center">
+              <img src="/logo3dhero.png" alt="CriareTI" className="w-full h-full object-contain" style={{ filter: "drop-shadow(0 2px 6px rgba(30,45,78,0.15))" }} />
             </div>
             <span className="font-bold text-base tracking-tight text-gray-900">Criare TI</span>
           </div>
@@ -511,8 +511,8 @@ export default function Landing() {
             style={{ background: "radial-gradient(ellipse at 50% 0%, rgba(245,99,22,0.1) 0%, transparent 65%)" }} />
 
           <div className="relative flex justify-center mb-6">
-            <div className="w-16 h-16 rounded-2xl overflow-hidden border border-orange-200 shadow-md">
-              <img src="/logo.jpg" alt="CriareTI" className="w-full h-full object-cover" />
+            <div className="w-16 h-16 flex items-center justify-center">
+              <img src="/logo3dhero.png" alt="CriareTI" className="w-full h-full object-contain" style={{ filter: "drop-shadow(0 4px 14px rgba(30,45,78,0.18))" }} />
             </div>
           </div>
 
@@ -550,8 +550,8 @@ export default function Landing() {
       {/* ── Footer ── */}
       <footer style={{ borderTop: "1px solid #f1f5f9" }}>
         <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col items-center gap-3">
-          <div className="w-7 h-7 rounded-lg overflow-hidden opacity-50 border border-gray-100">
-            <img src="/logo.jpg" alt="CriareTI" className="w-full h-full object-cover" />
+          <div className="w-7 h-7 opacity-40">
+            <img src="/logo3dhero.png" alt="CriareTI" className="w-full h-full object-contain" />
           </div>
           <p className="text-sm text-gray-400">
             © {new Date().getFullYear()} Criare TI. Todos os direitos reservados.
