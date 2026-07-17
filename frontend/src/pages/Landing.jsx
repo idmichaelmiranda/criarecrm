@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import HeroLogo from "../components/HeroLogo/HeroLogo";
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
 
@@ -265,8 +264,17 @@ export default function Landing() {
           {/* ── Hero centralizado ── */}
           <div className="flex flex-col items-center text-center max-w-3xl mx-auto pb-2">
 
-            {/* Logo 3D centralizada */}
-            <HeroLogo className="mb-3" />
+            {/* Logo centralizada */}
+            <img
+              src="/logo3dhero.png"
+              alt="Criare ERP"
+              className="mb-3"
+              style={{
+                width: 130,
+                height: "auto",
+                filter: "drop-shadow(0 12px 32px rgba(30,45,78,0.22)) drop-shadow(0 3px 10px rgba(30,45,78,0.10))",
+              }}
+            />
 
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-3"
