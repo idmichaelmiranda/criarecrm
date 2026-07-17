@@ -423,13 +423,13 @@ export default function Landing() {
         <div className="absolute bottom-0 left-0 w-[500px] h-[400px] pointer-events-none"
           style={{ background: "radial-gradient(ellipse at 20% 90%, rgba(99,102,241,0.05) 0%, transparent 60%)" }} />
 
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-10 sm:pt-16 pb-4 sm:pb-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-4 sm:pb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12 items-start">
 
             {/* Left */}
             <div>
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-5"
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-4"
                 style={{ background: "#fff7ed", border: "1px solid #fed7aa" }}>
                 <svg className="w-3.5 h-3.5 text-orange-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -438,26 +438,26 @@ export default function Landing() {
               </div>
 
               {/* Headline */}
-              <h1 className="text-4xl sm:text-5xl font-black leading-[1.1] tracking-tight mb-4 text-gray-900">
+              <h1 className="text-4xl sm:text-5xl font-black leading-[1.1] tracking-tight mb-3 text-gray-900">
                 Seu ERP completo<br />
                 para uma gestão<br />
                 <span style={{ color: "#F56316" }}>mais segura e ágil</span>
               </h1>
 
-              <p className="text-base text-gray-500 leading-relaxed mb-5 max-w-md">
+              <p className="text-base text-gray-500 leading-relaxed mb-4 max-w-md">
                 O ERP Criare foi desenvolvido para simplificar sua operação,
                 reduzir riscos e dar visibilidade total do seu negócio.
               </p>
 
               {/* Trust badges — 2×2 */}
-              <div className="grid grid-cols-2 gap-2.5 mb-6 max-w-sm">
+              <div className="grid grid-cols-2 gap-2 mb-5 max-w-sm">
                 {[
                   { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />,             label: "Implantação em 4 etapas" },
                   { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />, label: "Suporte pós go-live" },
                   { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />, label: "Ambiente seguro" },
                   { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />,               label: "Retorno rápido e mensurável" },
                 ].map((s) => (
-                  <div key={s.label} className="flex items-center gap-2.5 p-3 rounded-xl bg-gray-50 border border-gray-100">
+                  <div key={s.label} className="flex items-center gap-2 p-2.5 rounded-xl bg-gray-50 border border-gray-100">
                     <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#fff7ed" }}>
                       <svg className="w-3.5 h-3.5" style={{ color: "#F56316" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         {s.icon}
@@ -493,14 +493,14 @@ export default function Landing() {
             </div>
 
             {/* Right: dashboard mockup */}
-            <div className="relative h-[280px] sm:h-[380px] lg:h-[440px]">
+            <div className="relative h-[260px] sm:h-[360px] lg:h-[400px]">
               <DashboardMockup />
             </div>
           </div>
 
           {/* ── 6 módulos — dentro do hero, abaixo dos CTAs ── */}
-          <div id="o-que-fazemos" className="mt-10 pt-8" style={{ borderTop: "1px solid #f1f5f9" }}>
-            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-5">O que configuramos</p>
+          <div id="o-que-fazemos" className="mt-5 pt-5" style={{ borderTop: "1px solid #f1f5f9" }}>
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">O que configuramos</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               {[
                 { color: "#F56316", iconPath: "M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z", title: "Gestão de Vendas",       bullets: ["PDV integrado e ágil", "Pedidos, orçamentos e NF-e", "Comissão de vendedores"] },
