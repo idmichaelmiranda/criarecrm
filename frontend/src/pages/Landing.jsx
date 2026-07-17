@@ -228,7 +228,7 @@ export default function Landing() {
         }}>
         <div className="relative max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 shrink-0 flex items-center justify-center">
+            <div className="w-12 h-12 shrink-0 flex items-center justify-center">
               <img src="/logo3dhero.png" alt="CriareTI" className="w-full h-full object-contain" style={{ filter: "drop-shadow(0 2px 6px rgba(30,45,78,0.15))" }} />
             </div>
             <span className="font-bold text-base tracking-tight text-gray-900">Criare TI</span>
@@ -511,7 +511,7 @@ export default function Landing() {
             style={{ background: "radial-gradient(ellipse at 50% 0%, rgba(245,99,22,0.1) 0%, transparent 65%)" }} />
 
           <div className="relative flex justify-center mb-6">
-            <div className="w-16 h-16 flex items-center justify-center">
+            <div className="w-24 h-24 flex items-center justify-center">
               <img src="/logo3dhero.png" alt="CriareTI" className="w-full h-full object-contain" style={{ filter: "drop-shadow(0 4px 14px rgba(30,45,78,0.18))" }} />
             </div>
           </div>
