@@ -279,6 +279,8 @@ def _migrate_postgres() -> None:
         "ALTER TABLE instalacoes ADD COLUMN IF NOT EXISTS pausado_em TIMESTAMP",
         "ALTER TABLE instalacoes ADD COLUMN IF NOT EXISTS tempo_pausado_segundos INTEGER NOT NULL DEFAULT 0",
         "ALTER TABLE instalacoes ADD COLUMN IF NOT EXISTS duracao_segundos INTEGER",
+        "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS chave_api_hash VARCHAR(100)",
+        "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS chave_api_criada_em TIMESTAMP",
         """CREATE TABLE IF NOT EXISTS instalacao_pausas (
             id SERIAL PRIMARY KEY,
             instalacao_id INTEGER NOT NULL REFERENCES instalacoes(id) ON DELETE CASCADE,
