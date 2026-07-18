@@ -30,23 +30,26 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ background: "#0D1117" }}>
+    <div className="min-h-screen flex" style={{ background: "#F8F9FC" }}>
 
       {/* ── Painel esquerdo (branding) ── */}
       <div
-        className="hidden lg:flex flex-col w-[500px] shrink-0 relative overflow-hidden"
-        style={{ background: "#111827" }}
+        className="hidden lg:flex flex-col w-[460px] shrink-0 relative overflow-hidden"
+        style={{
+          background: "linear-gradient(155deg, #fff7ed 0%, #ffffff 55%)",
+          borderRight: "1px solid #f1f5f9",
+        }}
       >
         {/* Fundo decorativo */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full opacity-[0.07]"
+          <div className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full opacity-[0.12]"
             style={{ background: "radial-gradient(circle, #F56316, transparent 70%)" }} />
-          <div className="absolute -bottom-40 -right-20 w-[400px] h-[400px] rounded-full opacity-[0.05]"
+          <div className="absolute -bottom-40 -right-20 w-[400px] h-[400px] rounded-full opacity-[0.07]"
             style={{ background: "radial-gradient(circle, #F56316, transparent 70%)" }} />
           {/* Grade sutil */}
-          <div className="absolute inset-0 opacity-[0.03]"
+          <div className="absolute inset-0 opacity-[0.025]"
             style={{
-              backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)",
+              backgroundImage: "linear-gradient(#1a1a2e 1px, transparent 1px), linear-gradient(90deg, #1a1a2e 1px, transparent 1px)",
               backgroundSize: "40px 40px",
             }} />
         </div>
@@ -54,34 +57,37 @@ export default function Login() {
         {/* Conteúdo do painel */}
         <div className="relative flex flex-col h-full px-12 py-12">
 
-          {/* Logo centralizada — elemento hero */}
+          {/* Logo + branding */}
           <div className="flex-1 flex flex-col items-center justify-center text-center">
-            {/* Anel + logo */}
-            <div className="relative mb-8">
-              {/* Anel externo pulsante */}
-              <div className="absolute inset-0 -m-3 rounded-3xl opacity-20 animate-pulse"
-                style={{ background: "linear-gradient(135deg, #F56316, #d94f0d)", filter: "blur(12px)" }} />
-              {/* Container da logo */}
-              <div className="relative w-28 h-28 rounded-3xl overflow-hidden shadow-2xl"
-                style={{ boxShadow: "0 0 0 1px rgba(245,99,22,0.25), 0 20px 60px rgba(245,99,22,0.18)" }}>
-                <img src="/logo.jpg" alt="CriareTI" className="w-full h-full object-cover" />
-              </div>
+            {/* Logo sem container clip — transparência da PNG respira */}
+            <div className="relative mb-6">
+              <div className="absolute inset-0 -m-4 rounded-3xl opacity-10 animate-pulse"
+                style={{ background: "linear-gradient(135deg, #F56316, #d94f0d)", filter: "blur(16px)" }} />
+              <img
+                src="/logo3dhero.png"
+                alt="CriareTI"
+                style={{
+                  width: 112,
+                  height: "auto",
+                  filter: "drop-shadow(0 8px 24px rgba(245,99,22,0.22)) drop-shadow(0 2px 8px rgba(30,45,78,0.12))",
+                }}
+              />
             </div>
 
             {/* Nome da empresa */}
-            <h1 className="text-4xl font-extrabold text-white tracking-tight mb-2">CriareTI</h1>
-            <p className="text-base text-slate-400 font-medium mb-12">Plataforma de Implantação</p>
+            <h1 className="text-4xl font-extrabold tracking-tight mb-1.5" style={{ color: "#111827" }}>CriareTI</h1>
+            <p className="text-base font-medium mb-12" style={{ color: "#9CA3AF" }}>Plataforma de Implantação</p>
 
             {/* Headline */}
-            <p className="text-xl font-semibold text-white leading-snug mb-3 max-w-xs">
+            <p className="text-xl font-semibold leading-snug mb-3 max-w-xs" style={{ color: "#1F2937" }}>
               Gerencie implantações com eficiência e controle.
             </p>
-            <p className="text-sm text-slate-500 leading-relaxed max-w-xs">
+            <p className="text-sm leading-relaxed max-w-xs" style={{ color: "#9CA3AF" }}>
               Triagem, gestão de clientes, controle de etapas e muito mais — tudo em um único painel operacional.
             </p>
 
             {/* Divisor */}
-            <div className="w-12 h-px my-10" style={{ background: "rgba(245,99,22,0.35)" }} />
+            <div className="w-12 h-px my-10" style={{ background: "rgba(245,99,22,0.3)" }} />
 
             {/* Features */}
             <div className="space-y-4 w-full max-w-xs text-left">
@@ -92,14 +98,14 @@ export default function Login() {
               ].map(([title, desc]) => (
                 <div key={title} className="flex items-start gap-3">
                   <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
-                    style={{ background: "rgba(245,99,22,0.12)", border: "1px solid rgba(245,99,22,0.2)" }}>
-                    <svg className="w-3 h-3 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    style={{ background: "rgba(245,99,22,0.10)", border: "1px solid rgba(245,99,22,0.22)" }}>
+                    <svg className="w-3 h-3" style={{ color: "#F56316" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-slate-200">{title}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">{desc}</p>
+                    <p className="text-sm font-semibold" style={{ color: "#374151" }}>{title}</p>
+                    <p className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>{desc}</p>
                   </div>
                 </div>
               ))}
@@ -107,33 +113,38 @@ export default function Login() {
           </div>
 
           {/* Rodapé */}
-          <p className="text-xs text-slate-700 text-center">
+          <p className="text-xs text-center" style={{ color: "#D1D5DB" }}>
             © {new Date().getFullYear()} CriareTI. Todos os direitos reservados.
           </p>
         </div>
       </div>
 
       {/* ── Painel direito (formulário) ── */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12">
+      <div className="flex-1 flex items-center justify-center px-6 py-12" style={{ background: "#ffffff" }}>
         <div className="w-full max-w-sm">
 
           {/* Logo mobile */}
           <div className="flex items-center gap-3 mb-10 lg:hidden">
-            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg shrink-0"
-              style={{ boxShadow: "0 0 0 1px rgba(245,99,22,0.2)" }}>
-              <img src="/logo.jpg" alt="CriareTI" className="w-full h-full object-cover" />
-            </div>
-            <p className="text-white font-bold text-lg">CriareTI</p>
+            <img
+              src="/logo3dhero.png"
+              alt="CriareTI"
+              style={{
+                width: 40,
+                height: "auto",
+                filter: "drop-shadow(0 2px 6px rgba(30,45,78,0.15))",
+              }}
+            />
+            <p className="font-bold text-lg" style={{ color: "#111827" }}>CriareTI</p>
           </div>
 
-          <h1 className="text-2xl font-bold text-white mb-1">Entrar na plataforma</h1>
-          <p className="text-sm text-slate-500 mb-8">Acesse com suas credenciais corporativas</p>
+          <h1 className="text-2xl font-bold mb-1" style={{ color: "#111827" }}>Entrar na plataforma</h1>
+          <p className="text-sm mb-8" style={{ color: "#6B7280" }}>Acesse com suas credenciais corporativas</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
 
             {/* Email */}
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">
+              <label className="block text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "#6B7280" }}>
                 E-mail
               </label>
               <input
@@ -142,16 +153,20 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seu@email.com"
-                className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-slate-600 outline-none transition-all"
-                style={{ background: "#161B2E", border: `1px solid ${error ? "#ef4444" : "#2A3356"}` }}
+                className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
+                style={{
+                  background: "#F8F9FC",
+                  border: `1px solid ${error ? "#ef4444" : "#E5E7EB"}`,
+                  color: "#111827",
+                }}
                 onFocus={(e) => e.target.style.borderColor = error ? "#ef4444" : "#F56316"}
-                onBlur={(e)  => e.target.style.borderColor = error ? "#ef4444" : "#2A3356"}
+                onBlur={(e)  => e.target.style.borderColor = error ? "#ef4444" : "#E5E7EB"}
               />
             </div>
 
             {/* Senha */}
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">
+              <label className="block text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "#6B7280" }}>
                 Senha
               </label>
               <div className="relative">
@@ -161,15 +176,22 @@ export default function Login() {
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 pr-11 rounded-xl text-sm text-white placeholder-slate-600 outline-none transition-all"
-                  style={{ background: "#161B2E", border: `1px solid ${error ? "#ef4444" : "#2A3356"}` }}
+                  className="w-full px-4 py-3 pr-11 rounded-xl text-sm outline-none transition-all"
+                  style={{
+                    background: "#F8F9FC",
+                    border: `1px solid ${error ? "#ef4444" : "#E5E7EB"}`,
+                    color: "#111827",
+                  }}
                   onFocus={(e) => e.target.style.borderColor = error ? "#ef4444" : "#F56316"}
-                  onBlur={(e)  => e.target.style.borderColor = error ? "#ef4444" : "#2A3356"}
+                  onBlur={(e)  => e.target.style.borderColor = error ? "#ef4444" : "#E5E7EB"}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPass((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+                  style={{ color: "#9CA3AF" }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = "#6B7280"}
+                  onMouseLeave={(e) => e.currentTarget.style.color = "#9CA3AF"}
                 >
                   {showPass ? (
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -187,14 +209,14 @@ export default function Login() {
 
             {/* Erro */}
             {error && (
-              <div className="flex items-start gap-3 px-4 py-3 rounded-xl text-sm text-red-400"
-                style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}>
+              <div className="flex items-start gap-3 px-4 py-3 rounded-xl text-sm"
+                style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)", color: "#DC2626" }}>
                 <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span className="flex-1 leading-snug">{error}</span>
                 <button type="button" onClick={() => setError("")}
-                  className="shrink-0 text-red-400/60 hover:text-red-400 transition-colors mt-0.5">
+                  className="shrink-0 transition-opacity opacity-50 hover:opacity-100 mt-0.5">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -207,7 +229,7 @@ export default function Login() {
               type="submit"
               disabled={loading}
               className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed mt-2"
-              style={{ background: "linear-gradient(135deg, #F56316, #d94f0d)" }}
+              style={{ background: "linear-gradient(135deg, #F56316, #d94f0d)", boxShadow: "0 4px 16px rgba(245,99,22,0.25)" }}
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -220,10 +242,14 @@ export default function Login() {
 
           <div className="mt-8 flex flex-col items-center gap-2">
             <Link to="/registro"
-              className="text-sm text-orange-400 hover:text-orange-300 transition-colors font-medium">
+              className="text-sm font-medium transition-colors"
+              style={{ color: "#F56316" }}
+              onMouseEnter={(e) => e.currentTarget.style.color = "#d94f0d"}
+              onMouseLeave={(e) => e.currentTarget.style.color = "#F56316"}
+            >
               Primeiro acesso? Solicite seu cadastro
             </Link>
-            <p className="text-xs text-slate-700">
+            <p className="text-xs" style={{ color: "#D1D5DB" }}>
               Problemas para acessar? Contate o administrador.
             </p>
           </div>
