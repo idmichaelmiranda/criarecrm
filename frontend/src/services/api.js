@@ -102,6 +102,7 @@ export const clientesApi = {
   buscarPorEmail: (email) => api.get("/clientes/buscar-email", { params: { email } }),
   atualizar: (id, data) => api.patch(`/clientes/${id}`, data),
   gerarBase: (id, ambiente) => api.get(`/clientes/${id}/gerar-base`, { params: { ambiente }, responseType: "blob" }),
+  gerarChaveApi: (id) => api.post(`/clientes/${id}/gerar-chave-api`),
   infoCertificado: (id) => api.get(`/clientes/${id}/certificado/info`),
   baixarCertificado: (id) => api.get(`/clientes/${id}/certificado`, { responseType: "blob" }),
 };

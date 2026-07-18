@@ -838,6 +838,9 @@ export default function ClienteDetalhe() {
   const [gerandoBase, setGerandoBase]       = useState(false);
   const [baseErro, setBaseErro]             = useState(null);
   const [modalAmbiente, setModalAmbiente]   = useState(false);
+  const [gerandoChave, setGerandoChave]     = useState(false);
+  const [chaveGerada, setChaveGerada]       = useState(null);
+  const [chaveErro, setChaveErro]           = useState(null);
   const [implantacoes, setImplantacoes]     = useState([]);
   const [implLoading, setImplLoading]       = useState(true);
 
@@ -905,6 +908,16 @@ export default function ClienteDetalhe() {
       })
       .catch((err) => setBaseErro(err.message || "Erro ao gerar base"))
       .finally(() => setGerandoBase(false));
+  }
+
+  function handleGerarChaveApi() {
+    if (chaveGerada && !confirm("Gerar uma nova chave invalida a anterior. Continuar?")) return;
+    setChaveErro(null);
+    setGerandoChave(true);
+    clientesApi.gerarChaveApi(id)
+      .then(({ data }) => setChaveGerada(data.chave_api))
+      .catch((err) => setChaveErro(err.message || "Erro ao gerar chave de API"))
+      .finally(() => setGerandoChave(false));
   }
 
   if (loading) return (
@@ -1014,11 +1027,23 @@ export default function ClienteDetalhe() {
                   ) : <IconDatabase />}
                   {gerandoBase ? "Gerando…" : "Gerar Base"}
                 </button>
+                <button onClick={handleGerarChaveApi} disabled={gerandoChave}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-xs font-medium text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-transparent hover:border-indigo-100">
+                  {gerandoChave ? (
+                    <span className="w-3.5 h-3.5 rounded-full border-2 border-gray-300 border-t-indigo-400 animate-spin" />
+                  ) : (
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                    </svg>
+                  )}
+                  {gerandoChave ? "Gerando…" : "Chave API"}
+                </button>
               </div>
             )}
 
             {saveError && <p className="text-xs text-red-500 max-w-[240px] text-right">{saveError}</p>}
             {baseErro  && <p className="text-xs text-red-500 max-w-[200px] text-right">{baseErro}</p>}
+            {chaveErro && <p className="text-xs text-red-500 max-w-[200px] text-right">{chaveErro}</p>}
           </div>
         </div>
       </div>
@@ -1118,6 +1143,43 @@ export default function ClienteDetalhe() {
                 className="w-full py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-100 transition-colors"
               >
                 Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal: chave de API gerada ── */}
+      {chaveGerada && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="px-6 pt-6 pb-2">
+              <h3 className="text-base font-semibold text-gray-900">Chave de API gerada</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                Copie e configure no instalador de{" "}
+                <span className="font-medium text-gray-700">{cliente.razao_social}</span>.
+                Esta chave não será exibida novamente.
+              </p>
+            </div>
+
+            <div className="px-6 py-4">
+              <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5">
+                <code className="text-xs font-mono text-gray-700 break-all flex-1">{chaveGerada}</code>
+                <button
+                  onClick={() => navigator.clipboard.writeText(chaveGerada)}
+                  className="shrink-0 text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                >
+                  Copiar
+                </button>
+              </div>
+            </div>
+
+            <div className="px-6 pb-5">
+              <button
+                onClick={() => setChaveGerada(null)}
+                className="w-full py-2 rounded-xl text-sm text-white bg-gray-900 hover:bg-gray-800 transition-colors"
+              >
+                Fechar
               </button>
             </div>
           </div>

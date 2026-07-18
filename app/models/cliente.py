@@ -30,6 +30,9 @@ class Cliente(Base):
     ativo: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     origem: Mapped[str] = mapped_column(String(20), default="triagem", server_default="triagem", nullable=False)
 
+    chave_api_hash: Mapped[str] = mapped_column(String(100), nullable=True)
+    chave_api_criada_em: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+
     implantacoes: Mapped[list["Implantacao"]] = relationship(
         "Implantacao", back_populates="cliente"
     )

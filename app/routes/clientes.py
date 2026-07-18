@@ -1,3 +1,4 @@
+import secrets
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -10,9 +11,10 @@ from sqlalchemy.orm.attributes import flag_modified
 from app.database.connection import get_db
 from app.schemas.cliente import ClienteListResponse, ClienteResponse, ClienteUpdate
 from app.models.cliente import Cliente
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import get_current_user, require_permission
 from app.models.usuario import Usuario
 from app.services import sql_generator_service
+from app.services.auth_service import hash_password
 
 router = APIRouter(prefix="/clientes", tags=["clientes"])
 
@@ -101,6 +103,26 @@ def gerar_base(
         media_type="application/octet-stream",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@router.post("/{cliente_id}/gerar-chave-api")
+def gerar_chave_api(
+    cliente_id: int,
+    db: Session = Depends(get_db),
+    _: Usuario = Depends(require_permission("clientes.edit")),
+):
+    """Gera uma nova chave de API para o instalador deste cliente. A chave só é exibida
+    nesta resposta (apenas o hash é persistido) — gerar novamente invalida a anterior."""
+    c = db.get(Cliente, cliente_id)
+    if not c:
+        raise HTTPException(404, "Cliente não encontrado")
+
+    chave = secrets.token_urlsafe(32)
+    c.chave_api_hash = hash_password(chave)
+    c.chave_api_criada_em = datetime.now(timezone.utc)
+    db.commit()
+
+    return {"chave_api": chave}
 
 
 def _get_cert_storage_path(cliente: Cliente, db: Session):

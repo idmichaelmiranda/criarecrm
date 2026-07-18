@@ -31,6 +31,7 @@ from app.routes.bd_restore import router as bd_restore_router
 from app.routes.instalacoes import router as instalacoes_router
 from app.routes.notificacoes import router as notificacoes_router
 from app.routes.resultados import router as resultados_router
+from app.routes.instalador import router as instalador_router
 from app.dependencies.auth import get_current_user
 
 @asynccontextmanager
@@ -211,6 +212,8 @@ def _migrate_sqlite():
         "ALTER TABLE instalacoes ADD COLUMN pausado_em DATETIME",
         "ALTER TABLE instalacoes ADD COLUMN tempo_pausado_segundos INTEGER NOT NULL DEFAULT 0",
         "ALTER TABLE instalacoes ADD COLUMN duracao_segundos INTEGER",
+        "ALTER TABLE clientes ADD COLUMN chave_api_hash VARCHAR(100)",
+        "ALTER TABLE clientes ADD COLUMN chave_api_criada_em DATETIME",
         """CREATE TABLE instalacao_pausas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             instalacao_id INTEGER NOT NULL REFERENCES instalacoes(id) ON DELETE CASCADE,
@@ -409,6 +412,9 @@ app.include_router(bd_restore_router,    prefix="/api/v1", dependencies=_auth_de
 app.include_router(instalacoes_router,   prefix="/api/v1", dependencies=_auth_dep)
 app.include_router(notificacoes_router,  prefix="/api/v1", dependencies=_auth_dep)
 app.include_router(resultados_router,    prefix="/api/v1", dependencies=_auth_dep)
+
+# ── Rotas do instalador (autenticação própria via X-Api-Key, sem JWT) ─────────
+app.include_router(instalador_router,    prefix="/api")
 
 
 @app.api_route("/api/v1/health", methods=["GET", "HEAD"])
