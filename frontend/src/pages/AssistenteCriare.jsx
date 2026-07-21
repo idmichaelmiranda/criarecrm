@@ -16,8 +16,9 @@ function StatusBadge({ status }) {
     aprovada: "bg-green-50 text-green-700 border-green-200",
     recusada: "bg-red-50 text-red-700 border-red-200",
     expirada: "bg-gray-100 text-gray-500 border-gray-200",
+    cancelada: "bg-gray-100 text-gray-500 border-gray-200",
   };
-  const label = { pendente: "Pendente", aprovada: "Aprovada", recusada: "Recusada", expirada: "Expirada" };
+  const label = { pendente: "Pendente", aprovada: "Aprovada", recusada: "Recusada", expirada: "Expirada", cancelada: "Cancelada pelo técnico" };
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${map[status] || map.expirada}`}>
       {status === "pendente" && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />}
@@ -40,7 +41,7 @@ function SolicitacaoRow({ sol, onAprovar, onRecusar, acting }) {
         criada {timeAgoFromUTC(sol.criadoEm)}
       </div>
       <div className="w-36 shrink-0 hidden md:block text-xs text-gray-500">
-        {isPendente ? `expira ${timeAgoFromUTC(sol.expiraEm)}` : fmtDateTime(sol.aprovadoEm || sol.recusadoEm || sol.expiraEm)}
+        {isPendente ? `expira ${timeAgoFromUTC(sol.expiraEm)}` : fmtDateTime(sol.aprovadoEm || sol.recusadoEm || sol.canceladoEm || sol.expiraEm)}
       </div>
       <div className="w-24 shrink-0">
         <StatusBadge status={sol.status} />

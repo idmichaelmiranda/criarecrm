@@ -8,7 +8,7 @@ from app.database.connection import Base
 
 class SolicitacaoInstalador(Base):
     """Pedido de instalação criado pelo Assistente Criare (CriareInstaller) a partir do
-    CNPJ digitado pelo técnico em campo. Fluxo: pendente -> aprovada/recusada/expirada.
+    CNPJ digitado pelo técnico em campo. Fluxo: pendente -> aprovada/recusada/expirada/cancelada.
     Não confundir com Solicitacao (triagem de cliente novo) nem com Instalacao
     (checklist de instalação já em execução) — conceitos diferentes."""
 
@@ -26,6 +26,7 @@ class SolicitacaoInstalador(Base):
     expira_em: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     aprovado_em: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     recusado_em: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    cancelado_em: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     api_key: Mapped[str | None] = mapped_column(String(64), nullable=True)
     nome_cliente_snapshot: Mapped[str | None] = mapped_column(String(200), nullable=True)

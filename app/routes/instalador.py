@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 from app.database.connection import get_db
 from app.dependencies.instalador_auth import get_cliente_autenticado
 from app.models.cliente import Cliente
-from app.models.solicitacao_instalador import SolicitacaoInstalador
 from app.services import sql_generator_service
 from app.services.api_key_service import buscar_cliente_por_cnpj
 from app.services import solicitacao_instalador_service as sol_service
@@ -52,19 +51,21 @@ def solicitar_instalacao(cnpj: str, db: Session = Depends(get_db)):
 
 @router_solicitacoes.get("/{solicitacao_id}")
 def status_solicitacao(solicitacao_id: str, db: Session = Depends(get_db)):
-    import uuid as _uuid
-    try:
-        sid = _uuid.UUID(solicitacao_id)
-    except ValueError:
-        raise HTTPException(404, "Solicitação não encontrada")
-
-    sol = db.get(SolicitacaoInstalador, sid)
-    if not sol:
-        raise HTTPException(404, "Solicitação não encontrada")
-
+    sol = sol_service.obter_ou_404(solicitacao_id, db)
     status = sol_service.status_efetivo(sol, db)
     return {
         "status": status,
         "apiKey": sol.api_key if status == "aprovada" else None,
         "nome": sol.nome_cliente_snapshot if status == "aprovada" else None,
     }
+
+
+@router_solicitacoes.post("/{solicitacao_id}/cancelar")
+def cancelar_solicitacao(solicitacao_id: str, db: Session = Depends(get_db)):
+    """Sem autenticação — chamado pelo instalador quando o técnico desiste enquanto
+    a solicitação ainda está pendente. Se já não estiver mais pendente (aprovada,
+    recusada ou expirada), é um no-op silencioso: nunca sobrescreve uma decisão já
+    tomada. Isso é o que faz a solicitação sumir do painel de pendentes."""
+    sol = sol_service.obter_ou_404(solicitacao_id, db)
+    sol_service.cancelar(sol, db)
+    return {"ok": True}

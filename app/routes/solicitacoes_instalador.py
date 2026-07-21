@@ -1,5 +1,3 @@
-import uuid
-
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -9,17 +7,6 @@ from app.models.solicitacao_instalador import SolicitacaoInstalador
 from app.services import solicitacao_instalador_service as sol_service
 
 router = APIRouter(prefix="/solicitacoes-instalador", tags=["solicitacoes-instalador"])
-
-
-def _obter(solicitacao_id: str, db: Session) -> SolicitacaoInstalador:
-    try:
-        sid = uuid.UUID(solicitacao_id)
-    except ValueError:
-        raise HTTPException(404, "Solicitação não encontrada")
-    sol = db.get(SolicitacaoInstalador, sid)
-    if not sol:
-        raise HTTPException(404, "Solicitação não encontrada")
-    return sol
 
 
 def _serializar(sol: SolicitacaoInstalador, db: Session) -> dict:
@@ -34,12 +21,13 @@ def _serializar(sol: SolicitacaoInstalador, db: Session) -> dict:
         "expiraEm": sol_service.formatar_iso(sol.expira_em),
         "aprovadoEm": sol_service.formatar_iso(sol.aprovado_em) if sol.aprovado_em else None,
         "recusadoEm": sol_service.formatar_iso(sol.recusado_em) if sol.recusado_em else None,
+        "canceladoEm": sol_service.formatar_iso(sol.cancelado_em) if sol.cancelado_em else None,
     }
 
 
 @router.get("/")
 def listar(
-    status: str | None = Query(None, description="pendente | aprovada | recusada | expirada"),
+    status: str | None = Query(None, description="pendente | aprovada | recusada | expirada | cancelada"),
     cliente_id: int | None = Query(None),
     db: Session = Depends(get_db),
 ):
@@ -56,7 +44,7 @@ def listar(
 
 @router.post("/{solicitacao_id}/aprovar")
 def aprovar(solicitacao_id: str, db: Session = Depends(get_db)):
-    sol = _obter(solicitacao_id, db)
+    sol = sol_service.obter_ou_404(solicitacao_id, db)
     if sol_service.status_efetivo(sol, db) != "pendente":
         raise HTTPException(400, f"Solicitação não está mais pendente (status atual: {sol.status})")
 
@@ -70,7 +58,7 @@ def aprovar(solicitacao_id: str, db: Session = Depends(get_db)):
 
 @router.post("/{solicitacao_id}/recusar")
 def recusar(solicitacao_id: str, db: Session = Depends(get_db)):
-    sol = _obter(solicitacao_id, db)
+    sol = sol_service.obter_ou_404(solicitacao_id, db)
     if sol_service.status_efetivo(sol, db) != "pendente":
         raise HTTPException(400, f"Solicitação não está mais pendente (status atual: {sol.status})")
 

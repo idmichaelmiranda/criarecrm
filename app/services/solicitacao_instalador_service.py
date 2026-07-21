@@ -1,5 +1,7 @@
+import uuid
 from datetime import datetime, timedelta, timezone
 
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -11,6 +13,17 @@ EXPIRA_HORAS = 1
 
 def formatar_iso(dt: datetime) -> str:
     return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def obter_ou_404(solicitacao_id: str, db: Session) -> SolicitacaoInstalador:
+    try:
+        sid = uuid.UUID(solicitacao_id)
+    except ValueError:
+        raise HTTPException(404, "Solicitação não encontrada")
+    sol = db.get(SolicitacaoInstalador, sid)
+    if not sol:
+        raise HTTPException(404, "Solicitação não encontrada")
+    return sol
 
 
 def status_efetivo(sol: SolicitacaoInstalador, db: Session) -> str:
@@ -69,4 +82,15 @@ def aprovar(sol: SolicitacaoInstalador, db: Session) -> None:
 def recusar(sol: SolicitacaoInstalador, db: Session) -> None:
     sol.status = "recusada"
     sol.recusado_em = datetime.now(timezone.utc)
+    db.commit()
+
+
+def cancelar(sol: SolicitacaoInstalador, db: Session) -> None:
+    """Chamado pelo próprio instalador quando o técnico desiste. Só tem efeito se a
+    solicitação ainda estiver pendente — nunca sobrescreve um status terminal já
+    decidido (aprovada/recusada/expirada), pra não revogar uma chave já concedida."""
+    if status_efetivo(sol, db) != "pendente":
+        return
+    sol.status = "cancelada"
+    sol.cancelado_em = datetime.now(timezone.utc)
     db.commit()
