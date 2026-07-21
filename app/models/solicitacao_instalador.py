@@ -28,7 +28,12 @@ class SolicitacaoInstalador(Base):
     recusado_em: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     cancelado_em: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
+    aprovado_por_id: Mapped[int | None] = mapped_column(ForeignKey("usuarios.id"), nullable=True)
+    recusado_por_id: Mapped[int | None] = mapped_column(ForeignKey("usuarios.id"), nullable=True)
+
     api_key: Mapped[str | None] = mapped_column(String(64), nullable=True)
     nome_cliente_snapshot: Mapped[str | None] = mapped_column(String(200), nullable=True)
 
     cliente: Mapped["Cliente | None"] = relationship("Cliente")
+    aprovado_por: Mapped["Usuario | None"] = relationship("Usuario", foreign_keys=[aprovado_por_id])
+    recusado_por: Mapped["Usuario | None"] = relationship("Usuario", foreign_keys=[recusado_por_id])

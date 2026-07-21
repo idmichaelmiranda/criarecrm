@@ -66,7 +66,7 @@ def criar_ou_reaproveitar(cnpj: str, db: Session) -> SolicitacaoInstalador:
     return sol
 
 
-def aprovar(sol: SolicitacaoInstalador, db: Session) -> None:
+def aprovar(sol: SolicitacaoInstalador, db: Session, usuario_id: int) -> None:
     cliente = sol.cliente
     if cliente is None:
         raise ValueError("Solicitação sem cliente vinculado — cadastre o cliente antes de aprovar.")
@@ -76,12 +76,14 @@ def aprovar(sol: SolicitacaoInstalador, db: Session) -> None:
     sol.nome_cliente_snapshot = cliente.razao_social
     sol.status = "aprovada"
     sol.aprovado_em = now
+    sol.aprovado_por_id = usuario_id
     db.commit()
 
 
-def recusar(sol: SolicitacaoInstalador, db: Session) -> None:
+def recusar(sol: SolicitacaoInstalador, db: Session, usuario_id: int) -> None:
     sol.status = "recusada"
     sol.recusado_em = datetime.now(timezone.utc)
+    sol.recusado_por_id = usuario_id
     db.commit()
 
 

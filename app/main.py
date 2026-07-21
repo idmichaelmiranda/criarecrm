@@ -217,6 +217,8 @@ def _migrate_sqlite():
         "ALTER TABLE clientes ADD COLUMN chave_api_criada_em DATETIME",
         "ALTER TABLE usuarios ADD COLUMN pode_aprovar_instalador BOOLEAN NOT NULL DEFAULT 0",
         "ALTER TABLE solicitacoes_instalador ADD COLUMN cancelado_em DATETIME",
+        "ALTER TABLE solicitacoes_instalador ADD COLUMN aprovado_por_id INTEGER REFERENCES usuarios(id)",
+        "ALTER TABLE solicitacoes_instalador ADD COLUMN recusado_por_id INTEGER REFERENCES usuarios(id)",
         """CREATE TABLE instalacao_pausas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             instalacao_id INTEGER NOT NULL REFERENCES instalacoes(id) ON DELETE CASCADE,
@@ -286,6 +288,8 @@ def _migrate_postgres() -> None:
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS chave_api_criada_em TIMESTAMP",
         "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS pode_aprovar_instalador BOOLEAN NOT NULL DEFAULT FALSE",
         "ALTER TABLE solicitacoes_instalador ADD COLUMN IF NOT EXISTS cancelado_em TIMESTAMP",
+        "ALTER TABLE solicitacoes_instalador ADD COLUMN IF NOT EXISTS aprovado_por_id INTEGER REFERENCES usuarios(id)",
+        "ALTER TABLE solicitacoes_instalador ADD COLUMN IF NOT EXISTS recusado_por_id INTEGER REFERENCES usuarios(id)",
         """CREATE TABLE IF NOT EXISTS instalacao_pausas (
             id SERIAL PRIMARY KEY,
             instalacao_id INTEGER NOT NULL REFERENCES instalacoes(id) ON DELETE CASCADE,

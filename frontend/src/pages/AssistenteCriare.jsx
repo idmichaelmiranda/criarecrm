@@ -1,73 +1,78 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import { solicitacoesInstaladorApi } from "../services/api";
 import { fmtDateTime, timeAgoFromUTC, parseUTC } from "../utils/dateUtils";
 
 const POLL_MS = 5000;
+const PAGE_SIZE = 20;
+
+const STATUS_HISTORICO = [
+  { value: "", label: "Todos" },
+  { value: "aprovada", label: "Aprovada" },
+  { value: "recusada", label: "Recusada" },
+  { value: "expirada", label: "Expirada" },
+  { value: "cancelada", label: "Cancelada" },
+];
 
 function formatCnpj(digits) {
   if (!digits || digits.length !== 14) return digits || "—";
   return digits.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
 }
 
-function StatusBadge({ status }) {
-  const map = {
-    pendente: "bg-amber-50 text-amber-700 border-amber-200",
-    aprovada: "bg-green-50 text-green-700 border-green-200",
-    recusada: "bg-red-50 text-red-700 border-red-200",
-    expirada: "bg-gray-100 text-gray-500 border-gray-200",
-    cancelada: "bg-gray-100 text-gray-500 border-gray-200",
-  };
-  const label = { pendente: "Pendente", aprovada: "Aprovada", recusada: "Recusada", expirada: "Expirada", cancelada: "Cancelada pelo técnico" };
+function Avatar({ nome, avatarUrl }) {
+  if (avatarUrl) {
+    return <img src={avatarUrl} alt={nome} className="w-6 h-6 rounded-full object-cover shrink-0" />;
+  }
+  const initials = (nome || "?").split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+  const colors = [
+    "bg-violet-100 text-violet-600",
+    "bg-blue-100 text-blue-600",
+    "bg-teal-100 text-teal-600",
+    "bg-orange-100 text-orange-600",
+    "bg-pink-100 text-pink-600",
+  ];
+  const color = colors[(nome || "").charCodeAt(0) % colors.length];
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${map[status] || map.expirada}`}>
-      {status === "pendente" && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />}
-      {label[status] || status}
-    </span>
-  );
-}
-
-function SolicitacaoRow({ sol, onAprovar, onRecusar, acting }) {
-  const isPendente = sol.status === "pendente";
-  return (
-    <div className="flex items-center gap-4 px-6 py-4 border-b border-gray-50 last:border-0 hover:bg-gray-50/60 transition-colors">
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-gray-900 truncate">
-          {sol.clienteNome || <span className="text-gray-400 italic font-normal">CNPJ novo, sem cadastro</span>}
-        </p>
-        <p className="text-xs text-gray-400 mt-0.5 font-mono">{formatCnpj(sol.cnpj)}</p>
-      </div>
-      <div className="w-32 shrink-0 hidden sm:block text-xs text-gray-500">
-        criada {timeAgoFromUTC(sol.criadoEm)}
-      </div>
-      <div className="w-36 shrink-0 hidden md:block text-xs text-gray-500">
-        {isPendente ? `expira ${timeAgoFromUTC(sol.expiraEm)}` : fmtDateTime(sol.aprovadoEm || sol.recusadoEm || sol.canceladoEm || sol.expiraEm)}
-      </div>
-      <div className="w-24 shrink-0">
-        <StatusBadge status={sol.status} />
-      </div>
-      <div className="flex items-center gap-2 shrink-0 w-52 justify-end">
-        {isPendente && (
-          <>
-            <button onClick={() => onRecusar(sol)} disabled={acting}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 transition-colors disabled:opacity-50">
-              Recusar
-            </button>
-            <button onClick={() => onAprovar(sol)} disabled={acting}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-green-600 hover:bg-green-700 transition-colors disabled:opacity-50 shadow-sm">
-              Aprovar
-            </button>
-          </>
-        )}
-      </div>
+    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${color}`}>
+      {initials}
     </div>
   );
 }
 
+const STATUS_STYLE = {
+  pendente: { badge: "bg-amber-50 text-amber-700 border-amber-200", accent: "bg-amber-400" },
+  aprovada: { badge: "bg-green-50 text-green-700 border-green-200", accent: "bg-green-500" },
+  recusada: { badge: "bg-red-50 text-red-700 border-red-200", accent: "bg-red-500" },
+  expirada: { badge: "bg-gray-100 text-gray-500 border-gray-200", accent: "bg-gray-300" },
+  cancelada: { badge: "bg-gray-100 text-gray-500 border-gray-200", accent: "bg-gray-300" },
+};
+const STATUS_LABEL = {
+  pendente: "Pendente",
+  aprovada: "Aprovada",
+  recusada: "Recusada",
+  expirada: "Expirada",
+  cancelada: "Cancelada pelo instalador",
+};
+
+function StatusBadge({ status }) {
+  const style = STATUS_STYLE[status] || STATUS_STYLE.expirada;
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border whitespace-nowrap ${style.badge}`}>
+      {status === "pendente" && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0" />}
+      {STATUS_LABEL[status] || status}
+    </span>
+  );
+}
+
 export default function AssistenteCriare() {
+  const navigate = useNavigate();
   const [solicitacoes, setSolicitacoes] = useState([]);
   const [loading, setLoading]           = useState(true);
   const [tab, setTab]                   = useState("pendentes");
+  const [search, setSearch]             = useState("");
+  const [statusFiltro, setStatusFiltro] = useState("");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [actingId, setActingId]         = useState(null);
   const [toast, setToast]               = useState(null);
   const timerRef = useRef(null);
@@ -90,6 +95,18 @@ export default function AssistenteCriare() {
     return () => clearInterval(timerRef.current);
   }, [load]);
 
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [tab, search, statusFiltro]);
+
+  function tratarErro(err, acaoLabel) {
+    const msg = err.message || "";
+    if (msg.includes("não está mais pendente")) {
+      setToast({ type: "info", text: "Essa solicitação já foi respondida por outra pessoa — a lista foi atualizada." });
+      load(true);
+    } else {
+      setToast({ type: "error", text: msg || `Erro ao ${acaoLabel}.` });
+    }
+  }
+
   async function handleAprovar(sol) {
     setActingId(sol.id);
     try {
@@ -97,7 +114,7 @@ export default function AssistenteCriare() {
       setToast({ type: "success", text: `Instalação aprovada para ${sol.clienteNome || formatCnpj(sol.cnpj)}.` });
       await load(true);
     } catch (err) {
-      setToast({ type: "error", text: err.message || "Erro ao aprovar." });
+      tratarErro(err, "aprovar");
     } finally {
       setActingId(null);
       setTimeout(() => setToast(null), 5000);
@@ -111,7 +128,7 @@ export default function AssistenteCriare() {
       setToast({ type: "info", text: `Solicitação de ${sol.clienteNome || formatCnpj(sol.cnpj)} recusada.` });
       await load(true);
     } catch (err) {
-      setToast({ type: "error", text: err.message || "Erro ao recusar." });
+      tratarErro(err, "recusar");
     } finally {
       setActingId(null);
       setTimeout(() => setToast(null), 5000);
@@ -121,11 +138,23 @@ export default function AssistenteCriare() {
   const pendentes = solicitacoes.filter((s) => s.status === "pendente")
     .sort((a, b) => parseUTC(a.expiraEm) - parseUTC(b.expiraEm));
   const historico = solicitacoes.filter((s) => s.status !== "pendente");
-  const lista = tab === "pendentes" ? pendentes : historico;
+
+  let lista = tab === "pendentes" ? pendentes : historico;
+  if (tab === "historico" && statusFiltro) lista = lista.filter((s) => s.status === statusFiltro);
+  if (search.trim()) {
+    const q = search.trim().toLowerCase();
+    const qDigits = q.replace(/\D/g, "");
+    lista = lista.filter((s) =>
+      (s.clienteNome || "").toLowerCase().includes(q) ||
+      (qDigits && s.cnpj.includes(qDigits))
+    );
+  }
+
+  const visivel = lista.slice(0, visibleCount);
 
   return (
     <Layout>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Assistente Criare</h1>
           <p className="text-sm text-gray-500 mt-0.5">Aprovação de instalações solicitadas pelo instalador do ERP</p>
@@ -138,49 +167,178 @@ export default function AssistenteCriare() {
         )}
       </div>
 
-      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-4 w-fit">
-        <button onClick={() => setTab("pendentes")}
-          className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${tab === "pendentes" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
-          Pendentes
-          {pendentes.length > 0 && (
-            <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-amber-500 text-white text-[10px] font-bold">
-              {pendentes.length}
-            </span>
+      {/* Toolbar */}
+      <div className="flex items-center gap-3 mb-4 flex-wrap">
+        <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+          <button onClick={() => setTab("pendentes")}
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${tab === "pendentes" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+            Pendentes
+            {pendentes.length > 0 && (
+              <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-amber-500 text-white text-[10px] font-bold">
+                {pendentes.length}
+              </span>
+            )}
+          </button>
+          <button onClick={() => setTab("historico")}
+            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${tab === "historico" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+            Histórico
+          </button>
+        </div>
+
+        <div className="relative flex-1 max-w-xs">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome ou CNPJ..."
+            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 bg-white shadow-sm" />
+          {search && (
+            <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
           )}
-        </button>
-        <button onClick={() => setTab("historico")}
-          className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${tab === "historico" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
-          Histórico
-        </button>
+        </div>
+
+        {tab === "historico" && (
+          <select value={statusFiltro} onChange={(e) => setStatusFiltro(e.target.value)}
+            className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400">
+            {STATUS_HISTORICO.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </select>
+        )}
+
+        <span className="text-xs text-gray-400 ml-auto">
+          {lista.length} solicitaç{lista.length !== 1 ? "ões" : "ão"}
+        </span>
       </div>
 
+      {/* Tabela */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="w-6 h-6 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" />
           </div>
-        ) : lista.length === 0 ? (
+        ) : visivel.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center mb-3">
               <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
               </svg>
             </div>
             <p className="text-sm font-semibold text-gray-700">
-              {tab === "pendentes" ? "Nenhuma solicitação pendente" : "Nenhum histórico ainda"}
+              {search || statusFiltro
+                ? "Nenhuma solicitação encontrada para esse filtro"
+                : tab === "pendentes" ? "Nenhuma solicitação pendente" : "Nenhum histórico ainda"}
             </p>
           </div>
         ) : (
-          <div>
-            {lista.map((sol) => (
-              <SolicitacaoRow key={sol.id} sol={sol} onAprovar={handleAprovar} onRecusar={handleRecusar} acting={actingId === sol.id} />
-            ))}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[760px]">
+              <thead>
+                <tr className="border-b-2 border-gray-100 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                  <th className="p-0 w-1" />
+                  <th className="text-left px-5 py-3">Cliente</th>
+                  <th className="text-left px-4 py-3 hidden sm:table-cell">Criada em</th>
+                  <th className="text-left px-4 py-3 hidden sm:table-cell">
+                    {tab === "pendentes" ? "Expira em" : "Decisão em"}
+                  </th>
+                  <th className="text-left px-4 py-3 hidden md:table-cell">Responsável</th>
+                  <th className="text-left px-4 py-3">Status</th>
+                  <th className="px-4 py-3 w-52" />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {visivel.map((sol, idx) => {
+                  const isPendente = sol.status === "pendente";
+                  const isRepeat = idx > 0 && visivel[idx - 1].cnpj === sol.cnpj;
+                  const style = STATUS_STYLE[sol.status] || STATUS_STYLE.expirada;
+                  const decisaoEm = sol.aprovadoEm || sol.recusadoEm || sol.canceladoEm || null;
+                  return (
+                    <tr key={sol.id} className="hover:bg-gray-50/60 transition-colors group">
+                      <td className={`p-0 ${style.accent}`} style={{ width: "4px", minWidth: "4px" }} />
+                      <td className="px-5 py-4">
+                        {isRepeat ? (
+                          <div className="flex items-center gap-1.5 text-gray-400">
+                            <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
+                            <span className="text-xs italic">mesmo cliente</span>
+                          </div>
+                        ) : (
+                          <>
+                            {sol.clienteId ? (
+                              <button
+                                onClick={() => navigate(`/admin/clientes/${sol.clienteId}`)}
+                                className="text-sm font-semibold text-gray-900 hover:text-orange-600 hover:underline text-left truncate block"
+                              >
+                                {sol.clienteNome}
+                              </button>
+                            ) : (
+                              <p className="text-sm font-semibold text-gray-400 italic truncate">CNPJ novo, sem cadastro</p>
+                            )}
+                            <p className="text-xs text-gray-400 mt-0.5 font-mono">{formatCnpj(sol.cnpj)}</p>
+                          </>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 hidden sm:table-cell text-xs text-gray-500 whitespace-nowrap" title={fmtDateTime(sol.criadoEm)}>
+                        {timeAgoFromUTC(sol.criadoEm)}
+                      </td>
+                      <td className="px-4 py-4 hidden sm:table-cell text-xs text-gray-500 whitespace-nowrap">
+                        {isPendente ? (
+                          <span title={fmtDateTime(sol.expiraEm)}>expira {timeAgoFromUTC(sol.expiraEm)}</span>
+                        ) : decisaoEm ? (
+                          <span title={timeAgoFromUTC(decisaoEm)}>{fmtDateTime(decisaoEm)}</span>
+                        ) : (
+                          <span>{fmtDateTime(sol.expiraEm)}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 hidden md:table-cell">
+                        {sol.responsavelNome ? (
+                          <div className="flex items-center gap-2">
+                            <Avatar nome={sol.responsavelNome} avatarUrl={sol.responsavelAvatarUrl} />
+                            <span className="text-sm text-gray-600 truncate max-w-[120px]">{sol.responsavelNome}</span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-300 text-sm">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        <StatusBadge status={sol.status} />
+                      </td>
+                      <td className="px-4 py-4">
+                        {isPendente && (
+                          <div className="flex items-center gap-2 justify-end">
+                            <button onClick={() => handleRecusar(sol)} disabled={actingId === sol.id}
+                              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 transition-colors disabled:opacity-50">
+                              Recusar
+                            </button>
+                            <button onClick={() => handleAprovar(sol)} disabled={actingId === sol.id}
+                              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-green-600 hover:bg-green-700 transition-colors disabled:opacity-50 shadow-sm">
+                              {actingId === sol.id ? "Aguarde…" : "Aprovar"}
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {visivel.length < lista.length && (
+          <div className="flex justify-center py-4 border-t border-gray-100">
+            <button onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+              className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 border border-gray-200 transition-colors">
+              Carregar mais ({lista.length - visivel.length} restantes)
+            </button>
           </div>
         )}
       </div>
 
       {toast && (
-        <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl text-sm font-medium border ${
+        <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl text-sm font-medium border max-w-sm ${
           toast.type === "success" ? "bg-white border-green-200 text-green-800"
           : toast.type === "error" ? "bg-white border-red-200 text-red-800"
           : "bg-white border-gray-200 text-gray-700"
