@@ -25,6 +25,7 @@ class UsuarioCreate(BaseModel):
     grupo_id: Optional[int] = None
     ativo: bool = True
     notif_conclusao: bool = False
+    pode_aprovar_instalador: bool = False
 
     @field_validator("senha")
     @classmethod
@@ -39,6 +40,7 @@ class UsuarioUpdate(BaseModel):
     grupo_id: Optional[int] = None
     ativo: Optional[bool] = None
     notif_conclusao: Optional[bool] = None
+    pode_aprovar_instalador: Optional[bool] = None
 
     @field_validator("senha")
     @classmethod
@@ -56,6 +58,7 @@ class UsuarioResponse(BaseModel):
     ativo: bool
     pendente: bool = False
     notif_conclusao: bool = False
+    pode_aprovar_instalador: bool = False
     avatar_url: Optional[str] = None
     created_at: datetime
     updated_at: datetime

@@ -24,13 +24,19 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 def _usuario_data(user: Usuario) -> UsuarioTokenData:
+    permissoes = list(user.grupo.permissoes) if user.grupo else []
+    if user.pode_aprovar_instalador:
+        # Autorização própria por usuário (não por grupo) — ver require_aprovador_instalador.
+        # Injetada aqui só para o frontend decidir o que exibir; a checagem real de acesso
+        # continua sendo feita no backend contra a coluna, não contra essa lista.
+        permissoes.append("instalador.aprovar")
     return UsuarioTokenData(
         id=user.id,
         nome=user.nome,
         email=user.email,
         grupo_id=user.grupo_id,
         grupo_nome=user.grupo.nome if user.grupo else None,
-        permissoes=user.grupo.permissoes if user.grupo else [],
+        permissoes=permissoes,
         ativo=user.ativo,
         avatar_url=storage.avatar_url(user.avatar_path),
     )

@@ -21,6 +21,7 @@ import GruposPermissao from "./pages/GruposPermissao";
 import BdRestore from "./pages/BdRestore";
 import Instalacoes from "./pages/Instalacoes";
 import InstalacaoDetalhe from "./pages/InstalacaoDetalhe";
+import AssistenteCriare from "./pages/AssistenteCriare";
 import Registro from "./pages/Registro";
 import DefinirSenha from "./pages/DefinirSenha";
 
@@ -83,6 +84,9 @@ export default function App() {
           } />
           <Route path="/instalacoes/:id" element={
             <PrivateRoute permission="instalacoes.view"><InstalacaoDetalhe /></PrivateRoute>
+          } />
+          <Route path="/assistente-criare" element={
+            <PrivateRoute permission="instalador.aprovar"><AssistenteCriare /></PrivateRoute>
           } />
 
           <Route path="*" element={<Navigate to="/" replace />} />

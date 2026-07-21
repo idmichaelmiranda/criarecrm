@@ -64,13 +64,13 @@ function GroupBadge({ nome }) {
 }
 
 // ── Modal Editar/Criar ────────────────────────────────────────────────────────
-const EMPTY_FORM = { nome: "", email: "", senha: "", grupo_id: "", ativo: true, notif_conclusao: false };
+const EMPTY_FORM = { nome: "", email: "", senha: "", grupo_id: "", ativo: true, notif_conclusao: false, pode_aprovar_instalador: false };
 
 function EditModal({ titulo, grupos, inicial, onSave, onClose, loading, hasPermission }) {
   const isEdit = !!inicial?.id;
   const [form, setForm] = useState(
     isEdit
-      ? { nome: inicial.nome, email: inicial.email, senha: "", grupo_id: inicial.grupo_id ?? "", ativo: inicial.ativo, notif_conclusao: inicial.notif_conclusao ?? false }
+      ? { nome: inicial.nome, email: inicial.email, senha: "", grupo_id: inicial.grupo_id ?? "", ativo: inicial.ativo, notif_conclusao: inicial.notif_conclusao ?? false, pode_aprovar_instalador: inicial.pode_aprovar_instalador ?? false }
       : { ...EMPTY_FORM }
   );
   const [error, setError] = useState("");
@@ -83,7 +83,7 @@ function EditModal({ titulo, grupos, inicial, onSave, onClose, loading, hasPermi
     if (!form.nome.trim() || !form.email.trim()) { setError("Nome e e-mail são obrigatórios."); return; }
     if (!isEdit && !form.senha.trim()) { setError("Senha é obrigatória para novo usuário."); return; }
     if (!form.grupo_id) { setError("Selecione um grupo."); return; }
-    const payload = { nome: form.nome.trim(), email: form.email.trim(), grupo_id: Number(form.grupo_id), ativo: form.ativo, notif_conclusao: form.notif_conclusao };
+    const payload = { nome: form.nome.trim(), email: form.email.trim(), grupo_id: Number(form.grupo_id), ativo: form.ativo, notif_conclusao: form.notif_conclusao, pode_aprovar_instalador: form.pode_aprovar_instalador };
     if (form.senha.trim()) payload.senha = form.senha.trim();
     try { await onSave(payload); } catch (err) { setError(err.message); }
   }
@@ -167,6 +167,26 @@ function EditModal({ titulo, grupos, inicial, onSave, onClose, loading, hasPermi
                 className={`relative w-10 h-5 rounded-full transition-colors shrink-0 focus:outline-none ${form.notif_conclusao ? "bg-orange-500" : "bg-gray-300"} ${!canEdit ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
               >
                 <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${form.notif_conclusao ? "translate-x-5" : "translate-x-0.5"}`} />
+              </button>
+            </div>
+            <div className="col-span-2 flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">
+                  <svg className="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-700 leading-none">Aprovar instalações via Assistente Criare</p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">Permite aprovar/recusar solicitações do instalador do ERP, independente do grupo</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => canEdit && set("pode_aprovar_instalador", !form.pode_aprovar_instalador)}
+                className={`relative w-10 h-5 rounded-full transition-colors shrink-0 focus:outline-none ${form.pode_aprovar_instalador ? "bg-indigo-500" : "bg-gray-300"} ${!canEdit ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+              >
+                <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${form.pode_aprovar_instalador ? "translate-x-5" : "translate-x-0.5"}`} />
               </button>
             </div>
           </div>

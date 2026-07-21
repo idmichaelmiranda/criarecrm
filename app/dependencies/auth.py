@@ -48,3 +48,14 @@ def require_permission(permission: str):
             )
         return current_user
     return checker
+
+
+def require_aprovador_instalador(current_user: Usuario = Depends(get_current_user)) -> Usuario:
+    """Autorização própria por usuário (não por grupo) para aprovar/recusar
+    solicitações de instalação vindas do Assistente Criare."""
+    if not current_user.pode_aprovar_instalador:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Sem permissão para aprovar instalações via Assistente Criare",
+        )
+    return current_user

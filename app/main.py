@@ -16,7 +16,7 @@ from app.models import (  # noqa: F401 — registra todos os modelos no metadata
     Implantacao, ImplantacaoEtapa, ChecklistItem, TimelineEvento, Comentario,
     GrupoPermissao, Usuario,
     Instalacao, InstalacaoChecklist, InstalacaoComentario, InstalacaoAnexo, InstalacaoPausa,
-    Notificacao,
+    Notificacao, SolicitacaoInstalador,
 )
 from app.routes.solicitacoes import router as solicitacoes_router
 from app.routes.implantacoes import router as implantacoes_router
@@ -31,8 +31,9 @@ from app.routes.bd_restore import router as bd_restore_router
 from app.routes.instalacoes import router as instalacoes_router
 from app.routes.notificacoes import router as notificacoes_router
 from app.routes.resultados import router as resultados_router
-from app.routes.instalador import router as instalador_router
-from app.dependencies.auth import get_current_user
+from app.routes.instalador import router as instalador_router, router_solicitacoes as instalador_solicitacoes_router
+from app.routes.solicitacoes_instalador import router as solicitacoes_instalador_router
+from app.dependencies.auth import get_current_user, require_aprovador_instalador
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -214,6 +215,7 @@ def _migrate_sqlite():
         "ALTER TABLE instalacoes ADD COLUMN duracao_segundos INTEGER",
         "ALTER TABLE clientes ADD COLUMN chave_api_hash VARCHAR(100)",
         "ALTER TABLE clientes ADD COLUMN chave_api_criada_em DATETIME",
+        "ALTER TABLE usuarios ADD COLUMN pode_aprovar_instalador BOOLEAN NOT NULL DEFAULT 0",
         """CREATE TABLE instalacao_pausas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             instalacao_id INTEGER NOT NULL REFERENCES instalacoes(id) ON DELETE CASCADE,
@@ -281,6 +283,7 @@ def _migrate_postgres() -> None:
         "ALTER TABLE instalacoes ADD COLUMN IF NOT EXISTS duracao_segundos INTEGER",
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS chave_api_hash VARCHAR(100)",
         "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS chave_api_criada_em TIMESTAMP",
+        "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS pode_aprovar_instalador BOOLEAN NOT NULL DEFAULT FALSE",
         """CREATE TABLE IF NOT EXISTS instalacao_pausas (
             id SERIAL PRIMARY KEY,
             instalacao_id INTEGER NOT NULL REFERENCES instalacoes(id) ON DELETE CASCADE,
@@ -416,7 +419,11 @@ app.include_router(notificacoes_router,  prefix="/api/v1", dependencies=_auth_de
 app.include_router(resultados_router,    prefix="/api/v1", dependencies=_auth_dep)
 
 # ── Rotas do instalador (autenticação própria via X-Api-Key, sem JWT) ─────────
-app.include_router(instalador_router,    prefix="/api")
+app.include_router(instalador_router,              prefix="/api")
+# ── Rotas públicas do fluxo de solicitação de instalação (sem auth — ver instalador.py) ──
+app.include_router(instalador_solicitacoes_router,  prefix="/api")
+# ── Painel de aprovação (JWT + autorização própria por usuário) ──────────────
+app.include_router(solicitacoes_instalador_router,  prefix="/api/v1", dependencies=[Depends(require_aprovador_instalador)])
 
 
 @app.api_route("/api/v1/health", methods=["GET", "HEAD"])

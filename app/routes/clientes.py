@@ -1,4 +1,3 @@
-import secrets
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -14,7 +13,7 @@ from app.models.cliente import Cliente
 from app.dependencies.auth import get_current_user, require_permission
 from app.models.usuario import Usuario
 from app.services import sql_generator_service
-from app.services.auth_service import hash_password
+from app.services.api_key_service import emitir_chave_api
 
 router = APIRouter(prefix="/clientes", tags=["clientes"])
 
@@ -117,9 +116,7 @@ def gerar_chave_api(
     if not c:
         raise HTTPException(404, "Cliente não encontrado")
 
-    chave = secrets.token_urlsafe(32)
-    c.chave_api_hash = hash_password(chave)
-    c.chave_api_criada_em = datetime.now(timezone.utc)
+    chave = emitir_chave_api(c, datetime.now(timezone.utc))
     db.commit()
 
     return {"chave_api": chave}

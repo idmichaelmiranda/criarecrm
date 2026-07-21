@@ -103,6 +103,7 @@ def criar(
         grupo_id=data.grupo_id,
         ativo=data.ativo,
         notif_conclusao=data.notif_conclusao,
+        pode_aprovar_instalador=data.pode_aprovar_instalador,
     )
     db.add(u)
     db.commit()
@@ -194,7 +195,7 @@ def atualizar(
     is_self = current_user.id == usuario_id
 
     # Campos que exigem permissão administrativa — não podem ser auto-editados
-    campos_admin = [data.nome, data.email, data.senha, data.grupo_id, data.ativo]
+    campos_admin = [data.nome, data.email, data.senha, data.grupo_id, data.ativo, data.pode_aprovar_instalador]
     editando_campos_admin = any(v is not None for v in campos_admin)
 
     if editando_campos_admin and not tem_permissao_edit:
@@ -220,6 +221,8 @@ def atualizar(
         u.ativo = data.ativo
     if data.notif_conclusao is not None:
         u.notif_conclusao = data.notif_conclusao
+    if data.pode_aprovar_instalador is not None:
+        u.pode_aprovar_instalador = data.pode_aprovar_instalador
 
     u.updated_at = datetime.now(timezone.utc)
     db.commit()

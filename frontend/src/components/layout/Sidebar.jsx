@@ -1,7 +1,7 @@
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { solicitacoesApi, usuariosApi, authApi, instalacaosApi, notificacoesApi } from "../../services/api";
+import { solicitacoesApi, usuariosApi, authApi, instalacaosApi, notificacoesApi, solicitacoesInstaladorApi } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 import { timeAgoFromUTC } from "../../utils/dateUtils";
 
@@ -176,6 +176,10 @@ const MENU = {
       to: "/admin/clientes", label: "Clientes", permission: "clientes.view",
       d: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
     },
+    {
+      to: "/assistente-criare", label: "Assistente Criare", permission: "instalador.aprovar", assistenteBadge: true,
+      d: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
+    },
   ],
   CONFIGURACAO: [
     {
@@ -205,11 +209,12 @@ const MENU = {
 
 // ── Nav Item ──────────────────────────────────────────────────────────────────
 
-function NavItem({ item, badge = 0, pendenteBadge = 0, installsBadge = 0, collapsed = false }) {
+function NavItem({ item, badge = 0, pendenteBadge = 0, installsBadge = 0, assistenteBadge = 0, collapsed = false }) {
   const hasBadge =
     (item.badge && badge > 0) ||
     (item.installsBadge && installsBadge > 0) ||
-    (item.pendenteBadge && pendenteBadge > 0);
+    (item.pendenteBadge && pendenteBadge > 0) ||
+    (item.assistenteBadge && assistenteBadge > 0);
 
   return (
     <NavLink
@@ -246,6 +251,11 @@ function NavItem({ item, badge = 0, pendenteBadge = 0, installsBadge = 0, collap
           {pendenteBadge > 99 ? "99+" : pendenteBadge}
         </span>
       )}
+      {!collapsed && item.assistenteBadge && assistenteBadge > 0 && (
+        <span className="min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-amber-500 text-white text-[11px] font-bold leading-none animate-pulse">
+          {assistenteBadge > 99 ? "99+" : assistenteBadge}
+        </span>
+      )}
       {!collapsed && item.beta && (
         <span className="h-4 px-1.5 flex items-center justify-center rounded text-[9px] font-bold leading-none text-violet-300 bg-violet-500/20 border border-violet-500/30 uppercase tracking-wide">
           Beta
@@ -255,7 +265,7 @@ function NavItem({ item, badge = 0, pendenteBadge = 0, installsBadge = 0, collap
   );
 }
 
-function NavGroup({ title, items, badge, pendenteBadge, installsBadge, hasPermission, collapsed = false }) {
+function NavGroup({ title, items, badge, pendenteBadge, installsBadge, assistenteBadge, hasPermission, collapsed = false }) {
   const visible = items.filter((i) => hasPermission(i.permission));
   if (visible.length === 0) return null;
   return (
@@ -271,6 +281,7 @@ function NavGroup({ title, items, badge, pendenteBadge, installsBadge, hasPermis
           badge={badge}
           pendenteBadge={pendenteBadge}
           installsBadge={installsBadge}
+          assistenteBadge={assistenteBadge}
           collapsed={collapsed}
         />
       ))}
@@ -473,6 +484,7 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
   const [triageCount, setTriageCount]       = useState(0);
   const [pendentesCount, setPendentesCount] = useState(0);
   const [semRespCount, setSemRespCount]     = useState(0);
+  const [assistenteCount, setAssistenteCount] = useState(0);
   const [notifCount, setNotifCount]         = useState(0);
   const [notifs, setNotifs]                 = useState([]);
   const [showNotifs, setShowNotifs]         = useState(false);
@@ -528,6 +540,20 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
         .catch(() => {});
     fetch();
     const interval = setInterval(fetch, 20_000);
+    const onVisible = () => { if (document.visibilityState === "visible") fetch(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { clearInterval(interval); document.removeEventListener("visibilitychange", onVisible); };
+  }, [hasPermission]);
+
+  useEffect(() => {
+    if (!hasPermission("instalador.aprovar")) return;
+    const fetch = () =>
+      solicitacoesInstaladorApi.listar({ status: "pendente" })
+        .then(({ data }) => setAssistenteCount(data.length || 0))
+        .catch(() => {});
+    fetch();
+    // Poll mais rápido: técnico costuma estar esperando na linha.
+    const interval = setInterval(fetch, 10_000);
     const onVisible = () => { if (document.visibilityState === "visible") fetch(); };
     document.addEventListener("visibilitychange", onVisible);
     return () => { clearInterval(interval); document.removeEventListener("visibilitychange", onVisible); };
@@ -751,7 +777,7 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
 
       {/* ── Nav ── */}
       <nav className={`flex-1 py-3 overflow-y-auto space-y-0.5 ${collapsed ? "px-0" : "px-3"}`}>
-        <NavGroup title="Operacional"   items={MENU.OPERACIONAL}   badge={triageCount}   pendenteBadge={0}              installsBadge={semRespCount} hasPermission={hasPermission} collapsed={collapsed} />
+        <NavGroup title="Operacional"   items={MENU.OPERACIONAL}   badge={triageCount}   pendenteBadge={0}              installsBadge={semRespCount} assistenteBadge={assistenteCount} hasPermission={hasPermission} collapsed={collapsed} />
         <NavGroup title="Configuração"  items={MENU.CONFIGURACAO}  badge={0}             pendenteBadge={0}              installsBadge={0}            hasPermission={hasPermission} collapsed={collapsed} />
         <NavGroup title="Administração" items={MENU.ADMINISTRACAO} badge={0}             pendenteBadge={pendentesCount} installsBadge={0}            hasPermission={hasPermission} collapsed={collapsed} />
       </nav>

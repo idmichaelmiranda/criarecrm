@@ -6,8 +6,9 @@ import { Badge } from "../components/ui/Badge";
 import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
 import { Checkbox } from "../components/ui/Checkbox";
-import { clientesApi, implantacoesApi } from "../services/api";
-import { fmtDate } from "../utils/dateUtils";
+import { clientesApi, implantacoesApi, solicitacoesInstaladorApi } from "../services/api";
+import { fmtDate, timeAgoFromUTC } from "../utils/dateUtils";
+import { useAuth } from "../contexts/AuthContext";
 import { useCep } from "../hooks/useCep";
 import { maskPhone, maskCnpj, maskCpf } from "../hooks/useCnpj";
 import { BANCOS_BR } from "../data/bancos";
@@ -828,6 +829,7 @@ function ImplantacaoBadge({ implantacoes, loading, onClick }) {
 export default function ClienteDetalhe() {
   const { id }   = useParams();
   const navigate = useNavigate();
+  const { hasPermission } = useAuth();
   const [activeTab, setActiveTab] = useState("cadastro");
   const [cliente, setCliente]     = useState(null);
   const [loading, setLoading]     = useState(true);
@@ -843,6 +845,8 @@ export default function ClienteDetalhe() {
   const [chaveErro, setChaveErro]           = useState(null);
   const [implantacoes, setImplantacoes]     = useState([]);
   const [implLoading, setImplLoading]       = useState(true);
+  const [solicitacoesInstalador, setSolicitacoesInstalador] = useState([]);
+  const [acatandoSolicitacao, setAcatandoSolicitacao]       = useState(null);
 
   const { register: r, handleSubmit, reset, setValue: sv, watch,
     formState: { errors: fe } } = useForm();
@@ -860,6 +864,41 @@ export default function ClienteDetalhe() {
       .catch(() => {})
       .finally(() => setImplLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (!hasPermission("instalador.aprovar")) return;
+    const fetchSolicitacoes = () =>
+      solicitacoesInstaladorApi.listar({ cliente_id: id, status: "pendente" })
+        .then(({ data }) => setSolicitacoesInstalador(data))
+        .catch(() => {});
+    fetchSolicitacoes();
+    const interval = setInterval(fetchSolicitacoes, 10_000);
+    return () => clearInterval(interval);
+  }, [id, hasPermission]);
+
+  async function handleAprovarSolicitacao(solId) {
+    setAcatandoSolicitacao(solId);
+    try {
+      await solicitacoesInstaladorApi.aprovar(solId);
+      setSolicitacoesInstalador((prev) => prev.filter((s) => s.id !== solId));
+    } catch (err) {
+      setBaseErro(err.message || "Erro ao aprovar solicitação");
+    } finally {
+      setAcatandoSolicitacao(null);
+    }
+  }
+
+  async function handleRecusarSolicitacao(solId) {
+    setAcatandoSolicitacao(solId);
+    try {
+      await solicitacoesInstaladorApi.recusar(solId);
+      setSolicitacoesInstalador((prev) => prev.filter((s) => s.id !== solId));
+    } catch (err) {
+      setBaseErro(err.message || "Erro ao recusar solicitação");
+    } finally {
+      setAcatandoSolicitacao(null);
+    }
+  }
 
   function startEdit() {
     reset(buildFormDefaults(cliente));
@@ -960,6 +999,41 @@ export default function ClienteDetalhe() {
           </span>
         )}
       </div>
+
+      {/* Solicitação(ões) de instalação pendentes via Assistente Criare */}
+      {solicitacoesInstalador.length > 0 && (
+        <div className="mb-5 space-y-2">
+          {solicitacoesInstalador.map((sol) => (
+            <div key={sol.id} className="flex flex-wrap items-center gap-3 px-5 py-3.5 rounded-2xl bg-amber-50 border border-amber-200">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
+              <div className="flex-1 min-w-[220px]">
+                <p className="text-sm font-semibold text-amber-800">
+                  Instalação solicitada pelo Assistente Criare — CNPJ {sol.cnpj}
+                </p>
+                <p className="text-xs text-amber-600 mt-0.5">
+                  criada {timeAgoFromUTC(sol.criadoEm)} · expira {timeAgoFromUTC(sol.expiraEm)}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => handleRecusarSolicitacao(sol.id)}
+                  disabled={acatandoSolicitacao === sol.id}
+                  className="px-3.5 py-2 rounded-lg text-xs font-semibold text-red-600 bg-white hover:bg-red-50 border border-red-200 transition-colors disabled:opacity-50"
+                >
+                  Recusar
+                </button>
+                <button
+                  onClick={() => handleAprovarSolicitacao(sol.id)}
+                  disabled={acatandoSolicitacao === sol.id}
+                  className="px-3.5 py-2 rounded-lg text-xs font-semibold text-white bg-green-600 hover:bg-green-700 transition-colors disabled:opacity-50 shadow-sm"
+                >
+                  {acatandoSolicitacao === sol.id ? "Aguarde…" : "Aprovar"}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Header card */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-5">

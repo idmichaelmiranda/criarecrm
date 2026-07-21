@@ -10,6 +10,7 @@ from app.models.grupo_permissao import GrupoPermissao
 from app.models.usuario import Usuario
 from app.models.instalacao import Instalacao, InstalacaoChecklist, InstalacaoComentario, InstalacaoAnexo, InstalacaoPausa
 from app.models.notificacao import Notificacao
+from app.models.solicitacao_instalador import SolicitacaoInstalador
 
 __all__ = [
     "Solicitacao",
@@ -24,4 +25,5 @@ __all__ = [
     "Usuario",
     "Instalacao", "InstalacaoChecklist", "InstalacaoComentario", "InstalacaoAnexo", "InstalacaoPausa",
     "Notificacao",
+    "SolicitacaoInstalador",
 ]

@@ -107,6 +107,13 @@ export const clientesApi = {
   baixarCertificado: (id) => api.get(`/clientes/${id}/certificado`, { responseType: "blob" }),
 };
 
+// ── Assistente Criare (solicitações de instalação) ─────────────────────────────
+export const solicitacoesInstaladorApi = {
+  listar: (params) => api.get("/solicitacoes-instalador/", { params }),
+  aprovar: (id) => api.post(`/solicitacoes-instalador/${id}/aprovar`),
+  recusar: (id) => api.post(`/solicitacoes-instalador/${id}/recusar`),
+};
+
 // ── Templates ─────────────────────────────────────────────────────────────────
 export const templatesApi = {
   listar: (params) => api.get("/templates/", { params }),
