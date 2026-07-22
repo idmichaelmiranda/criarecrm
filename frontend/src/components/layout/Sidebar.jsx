@@ -693,6 +693,8 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
                 </span>
               </button>
 
+              <LanguageSwitcher theme="dark" usePortal iconOnly />
+
               <button
                 onClick={handleOpenNotifs}
                 title={t("notif.title")}
@@ -714,70 +716,76 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
               </button>
             </div>
           ) : (
-            /* Modo expandido: layout original */
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleAvatarClick}
-                title={t("user.changePhoto")}
-                disabled={uploading}
-                className="relative w-10 h-10 rounded-full shrink-0 group focus:outline-none"
-              >
-                {user.avatar_url ? (
-                  <img src={user.avatar_url} alt={user.nome} className="w-10 h-10 rounded-full object-cover" />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
-                    <span className="text-orange-400 text-sm font-bold">{user.nome.charAt(0).toUpperCase()}</span>
-                  </div>
-                )}
-                <span className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  {uploading ? (
-                    <svg className="w-4 h-4 text-white animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                    </svg>
+            /* Modo expandido: identidade (linha 1) + barra de acoes (linha 2) */
+            <div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleAvatarClick}
+                  title={t("user.changePhoto")}
+                  disabled={uploading}
+                  className="relative w-10 h-10 rounded-full shrink-0 group focus:outline-none"
+                >
+                  {user.avatar_url ? (
+                    <img src={user.avatar_url} alt={user.nome} className="w-10 h-10 rounded-full object-cover" />
                   ) : (
-                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
+                    <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
+                      <span className="text-orange-400 text-sm font-bold">{user.nome.charAt(0).toUpperCase()}</span>
+                    </div>
                   )}
-                </span>
-              </button>
+                  <span className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    {uploading ? (
+                      <svg className="w-4 h-4 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    )}
+                  </span>
+                </button>
 
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-slate-300 truncate">{user.nome}</p>
-                <p className="text-[10px] text-slate-600 truncate">{user.grupo_nome || t("user.noGroup")}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-slate-300 truncate">{user.nome}</p>
+                  <p className="text-[11px] text-slate-600 truncate">{user.grupo_nome || t("user.noGroup")}</p>
+                </div>
               </div>
 
-              <button
-                onClick={() => setShowAlterarSenha(true)}
-                title={t("alterarSenha.title")}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/8 transition-all shrink-0"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-2 mt-3">
+                <button
+                  onClick={() => setShowAlterarSenha(true)}
+                  title={t("alterarSenha.title")}
+                  className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/8 transition-all shrink-0"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                  </svg>
+                </button>
 
-              <button
-                onClick={handleOpenNotifs}
-                title={t("notif.title")}
-                className={`relative w-9 h-9 flex items-center justify-center rounded-lg transition-all shrink-0 ${
-                  showNotifs ? "text-orange-400 bg-orange-500/20" : notifCount > 0 ? "text-slate-300 bg-white/8 hover:bg-white/12" : "text-slate-500 hover:text-slate-300 hover:bg-white/8"
-                }`}
-              >
-                {notifLoading
-                  ? <span className="w-5 h-5 rounded-full border-2 border-slate-400 border-t-transparent animate-spin" />
-                  : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                    </svg>
-                }
-                {!notifLoading && notifCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold leading-none animate-pulse shadow-sm">
-                    {notifCount > 9 ? "9+" : notifCount}
-                  </span>
-                )}
-              </button>
+                <LanguageSwitcher theme="dark" usePortal iconOnly className="shrink-0" />
+
+                <button
+                  onClick={handleOpenNotifs}
+                  title={t("notif.title")}
+                  className={`relative w-9 h-9 flex items-center justify-center rounded-lg transition-all shrink-0 ${
+                    showNotifs ? "text-orange-400 bg-orange-500/20" : notifCount > 0 ? "text-slate-300 bg-white/8 hover:bg-white/12" : "text-slate-500 hover:text-slate-300 hover:bg-white/8"
+                  }`}
+                >
+                  {notifLoading
+                    ? <span className="w-5 h-5 rounded-full border-2 border-slate-400 border-t-transparent animate-spin" />
+                    : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                      </svg>
+                  }
+                  {!notifLoading && notifCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold leading-none animate-pulse shadow-sm">
+                      {notifCount > 9 ? "9+" : notifCount}
+                    </span>
+                  )}
+                </button>
+              </div>
             </div>
           )
         )}
@@ -851,7 +859,6 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
             <div className="w-9 h-9 rounded-xl overflow-hidden ring-1 ring-white/10 shadow-lg shrink-0">
               <img src="/logo.jpg" alt={t("brand.logoAlt")} className="w-full h-full object-cover" />
             </div>
-            <LanguageSwitcher theme="dark" usePortal iconOnly />
             <button
               onClick={handleLogout}
               title={t("logout")}
@@ -878,7 +885,6 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
                 </div>
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                <LanguageSwitcher theme="dark" usePortal iconOnly />
                 {hasPermission("configuracoes.view") && (
                   <button
                     onClick={() => navigate("/admin/configuracoes")}

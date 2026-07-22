@@ -78,7 +78,7 @@ export function LanguageSwitcher({ theme = "light", usePortal = false, iconOnly 
   const current = LANGUAGES.find((l) => l.code === i18n.language) || LANGUAGES[0];
 
   const btnClasses = theme === "dark"
-    ? "flex items-center justify-center gap-1 rounded-md text-slate-600 hover:text-slate-300 hover:bg-white/8 transition-all"
+    ? "flex items-center justify-center gap-1 rounded-lg text-slate-300 bg-white/8 hover:bg-white/12 transition-all"
     : "flex items-center gap-1 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors";
 
   const menu = (
@@ -117,7 +117,7 @@ export function LanguageSwitcher({ theme = "light", usePortal = false, iconOnly 
         type="button"
         onClick={toggleOpen}
         title={t("language.label")}
-        className={`${btnClasses} ${iconOnly ? "w-7 h-7" : "px-2.5 py-1.5 text-xs font-semibold"}`}
+        className={`${btnClasses} ${iconOnly ? "w-8 h-8" : "px-2.5 py-1.5 text-xs font-semibold"}`}
       >
         <FlagIcon code={current.code} className="shrink-0 rounded-[1px] ring-1 ring-black/10" />
         {!iconOnly && <span>{current.short}</span>}
