@@ -1,0 +1,168 @@
+{
+  "units": {
+    "hour": "h",
+    "minute": "min",
+    "second": "s"
+  },
+  "modalFinalizar": {
+    "title": "Complete Installation",
+    "elapsedLabel": "Total elapsed time",
+    "obsLabel": "Final remarks (optional)",
+    "obsPlaceholder": "E.g.: Register tested, card reader activated. Still pending a call to Digimaq...",
+    "back": "Back",
+    "finishing": "Finishing…",
+    "confirm": "Confirm Completion"
+  },
+  "modalPausar": {
+    "title": "Pause timer",
+    "elapsedLabel": "Elapsed time so far",
+    "reasonLabel": "Pause reason",
+    "optional": "(optional)",
+    "otherPlaceholder": "Describe the reason…",
+    "cancel": "Cancel",
+    "pausing": "Pausing…",
+    "pause": "Pause",
+    "reasons": {
+      "intervalo": "Break",
+      "aguardando_cliente": "Waiting for client",
+      "problema_tecnico": "Technical issue",
+      "deslocamento": "Travel time",
+      "outro": "Other"
+    }
+  },
+  "checklist": {
+    "title": "Checklist",
+    "finalized": "Finished",
+    "empty": "No items in the checklist.",
+    "addPlaceholder": "Add item to the checklist…",
+    "add": "+ Add",
+    "optional": "(optional)",
+    "noteView": "View/edit note",
+    "noteAdd": "Add note",
+    "notePlaceholder": "Add a remark about this item…",
+    "noteSaving": "Saving…",
+    "noteSave": "Save note",
+    "noteClear": "Clear",
+    "noteCancel": "Cancel"
+  },
+  "comments": {
+    "title": "Comments",
+    "empty": "No comments yet.",
+    "placeholder": "Write a comment…",
+    "send": "Send"
+  },
+  "editModal": {
+    "title": "Edit Installation",
+    "produtos": "Products",
+    "produtosWarning": "Changing the products will regenerate the checklist. Items already checked will be lost.",
+    "quantidade": "Quantity",
+    "prioridade": "Priority",
+    "responsavel": "Owner",
+    "dataAgendada": "Scheduled Date",
+    "contatoLocal": "On-site contact",
+    "contatoNomePlaceholder": "Contact name",
+    "telefone": "Phone",
+    "telefonePlaceholder": "(00) 00000-0000",
+    "observacoes": "Notes",
+    "observacoesPlaceholder": "Additional notes…",
+    "cancel": "Cancel",
+    "saving": "Saving…",
+    "save": "Save changes",
+    "errorDefault": "Error saving changes."
+  },
+  "priorityOptions": {
+    "normal": "Normal",
+    "alta": "High",
+    "urgente": "Urgent"
+  },
+  "semResponsavel": "No owner assigned",
+  "notFound": "Installation not found.",
+  "attachments": {
+    "title": "Attachments",
+    "upload": "Attach file",
+    "uploading": "Uploading…",
+    "empty": "No files attached.",
+    "download": "Download",
+    "remove": "Remove",
+    "uploadError": "Error uploading file.",
+    "confirmDelete": "Remove \"{{filename}}\"?"
+  },
+  "breadcrumb": "Installations",
+  "edit": {
+    "button": "Edit",
+    "cancelButton": "Cancel editing",
+    "dropdown": {
+      "config": { "title": "Configuration", "subtitle": "Type, date, owner" },
+      "fields": { "titleClose": "Close editing", "titleOpen": "Edit fields", "subtitle": "Status, notes" }
+    }
+  },
+  "tipos": {
+    "pdv": "Additional POS",
+    "coletor": "Mobile Scanner",
+    "forca_vendas": "Sales Force",
+    "impressora": "Printer",
+    "outro": "Other"
+  },
+  "card": {
+    "popGeralTitle": "View general SOP for this installation type",
+    "popGeral": "General SOP",
+    "units_one": "{{count}} unit",
+    "units_other": "{{count}} units",
+    "progress": "Progress",
+    "itemsCompleted": "{{done}} of {{total}} items completed"
+  },
+  "status": {
+    "agendada": "Scheduled",
+    "em_execucao": "In Progress",
+    "concluida": "Completed",
+    "cancelada": "Cancelled"
+  },
+  "priorityBadge": {
+    "urgent": "Urgent",
+    "high": "High priority"
+  },
+  "timer": {
+    "start": "Start Installation",
+    "paused": "Paused",
+    "inProgress": "In progress",
+    "resume": "Resume timer",
+    "pause": "Pause timer",
+    "finishDisabledPaused": "Resume the timer before finishing",
+    "finishDisabledPending": "Complete all checklist items first",
+    "finishTitle": "Finish installation",
+    "finish": "Finish Installation",
+    "finishWithCount": "Finish ({{done}}/{{total}} items)",
+    "effectiveTime": "Effective time"
+  },
+  "responsaveis": {
+    "title": "Owners",
+    "add": "Add",
+    "searchPlaceholder": "Search user...",
+    "noneAvailable": "No user available",
+    "principal": "Main",
+    "colaborador": "Collaborator",
+    "changeMainTitle": "Change main owner",
+    "removeTitle": "Remove collaborator",
+    "assignPrompt": "Assign an owner…"
+  },
+  "createdBy": "Created by",
+  "dates": {
+    "createdAt": "Created at",
+    "scheduledFor": "Scheduled for",
+    "completedAt": "Completed at"
+  },
+  "observacoes": "Notes",
+  "observacaoConclusao": "Completion Notes",
+  "editInline": {
+    "title": "Edit installation",
+    "status": "Status",
+    "priority": "Priority",
+    "responsavel": "Owner",
+    "dataAgendada": "Scheduled Date",
+    "observacoes": "Notes",
+    "observacaoConclusao": "Completion Notes",
+    "observacaoConclusaoPlaceholder": "Filled in when the installation is completed…",
+    "saving": "Saving…",
+    "save": "Save changes"
+  }
+}

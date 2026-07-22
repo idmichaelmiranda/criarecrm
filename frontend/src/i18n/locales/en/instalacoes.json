@@ -1,0 +1,126 @@
+{
+  "semResponsavel": "No owner assigned",
+  "tipos": {
+    "pdv": "Additional POS",
+    "coletor": "Mobile Scanner",
+    "forca_vendas": "Sales Force",
+    "impressora": "Printer",
+    "outro": "Other"
+  },
+  "status": {
+    "agendada": "Scheduled",
+    "em_execucao": "In Progress",
+    "concluida": "Completed",
+    "cancelada": "Cancelled"
+  },
+  "priorityOptions": {
+    "normal": "Normal",
+    "alta": "High",
+    "urgente": "Urgent"
+  },
+  "tabs": {
+    "ativas": "Active",
+    "historico": "History"
+  },
+  "legend": {
+    "title": "Legend:",
+    "atrasada": "Overdue"
+  },
+  "dateRelative": {
+    "overdue_one": "{{count}}d overdue",
+    "overdue_other": "{{count}}d overdue",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "daysShort": "{{count}}d"
+  },
+  "header": {
+    "title": "Installations",
+    "subtitle": "Additional POS terminals, scanners, sales force devices and more",
+    "newButton": "New Installation"
+  },
+  "kpi": {
+    "agendadas": "Scheduled",
+    "emExecucao": "In Progress",
+    "concluidas": "Completed",
+    "atrasadas": "Overdue"
+  },
+  "filters": {
+    "searchPlaceholder": "Search client or code…",
+    "allTypes": "All types",
+    "period": "Period",
+    "periodPopover": {
+      "title": "Filter by period",
+      "toggleAgendamento": "Scheduled",
+      "toggleConclusao": "Completed",
+      "presets": {
+        "hoje": "Today",
+        "semana": "This week",
+        "mes": "This month",
+        "mesPassado": "Last month"
+      },
+      "custom": "Custom",
+      "from": "From",
+      "to": "To",
+      "clear": "Clear period filter"
+    },
+    "meusInstalacoes": "My installations"
+  },
+  "periodChip": {
+    "range": ": {{start}} → {{end}}",
+    "from": ": from {{start}}",
+    "to": ": until {{end}}"
+  },
+  "resultsFound_one": "{{count}} installation found",
+  "resultsFound_other": "{{count}} installations found",
+  "table": {
+    "empty": "No installations found.",
+    "headers": {
+      "cliente": "Client",
+      "tipo": "Type",
+      "status": "Status",
+      "progresso": "Progress",
+      "responsavel": "Owner",
+      "agendado": "Scheduled",
+      "concluido": "Completed"
+    },
+    "overdueBadge": "OVERDUE",
+    "priorityUrgent": "URGENT",
+    "priorityHigh": "HIGH"
+  },
+  "modal": {
+    "title": "New Installation",
+    "subtitle": "Fill in the details and select the products",
+    "clienteSection": "Client",
+    "trocar": "Change",
+    "cnpjPlaceholder": "Enter the client's Tax ID…",
+    "buscar": "Search",
+    "selecionar": "Select",
+    "cnpjHint": "Enter the Tax ID and click Search to look it up in the ERP.",
+    "cnpjNotFound": "Tax ID not found or client inactive in the ERP.",
+    "erpError": "Error querying the ERP.",
+    "errorSelectCliente": "Select a client.",
+    "errorSelectTipo": "Select at least one product type.",
+    "contatoSection": "On-site Contact",
+    "nome": "Name",
+    "quemVaiReceber": "Who will receive it",
+    "telefone": "Phone",
+    "telefonePlaceholder": "(00) 00000-0000",
+    "agendamentoSection": "Scheduling",
+    "dataAgendada": "Scheduled Date",
+    "prioridade": "Priority",
+    "responsavelExecucao": "Owner for execution",
+    "observacoesSection": "Notes",
+    "observacoesPlaceholder": "Additional details about the installation…",
+    "produtosSection": "Products",
+    "unitsBadge": "{{count}} un.",
+    "loadingProdutos": "Loading products…",
+    "noProdutosAtivos": "No active products. Configure them in Settings.",
+    "summary_one": "{{totalQty}} un. · {{count}} type",
+    "summary_other": "{{totalQty}} un. · {{count}} types",
+    "checklistsPerProduct": " · checklists per product",
+    "cancelar": "Cancel",
+    "criando": "Creating…",
+    "criarInstalacao": "Create Installation",
+    "criarInstalacaoComQty": "Create Installation ({{count}} un.)"
+  }
+}

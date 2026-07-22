@@ -1,0 +1,86 @@
+{
+  "header": {
+    "title": "Usuários",
+    "subtitle": "Gerencie os acessos à plataforma",
+    "newUser": "Novo Usuário"
+  },
+  "stats": {
+    "total": "Total",
+    "active": "Ativos",
+    "inactive": "Inativos",
+    "pending": "Pendentes"
+  },
+  "errors": {
+    "loadFailed": "Erro ao carregar usuários.",
+    "nameEmailRequired": "Nome e e-mail são obrigatórios.",
+    "passwordRequired": "Senha é obrigatória para novo usuário.",
+    "selectGroup": "Selecione um grupo.",
+    "selectPermissionGroup": "Selecione um grupo de permissão."
+  },
+  "tabs": {
+    "active": "Ativos",
+    "pending": "Pendentes"
+  },
+  "search": {
+    "placeholder": "Buscar por nome ou e-mail..."
+  },
+  "count_one": "{{count}} usuário",
+  "count_other": "{{count}} usuários",
+  "list": {
+    "headers": {
+      "user": "Usuário",
+      "email": "E-mail",
+      "group": "Grupo",
+      "status": "Status"
+    },
+    "emptySearch": "Nenhum usuário encontrado para \"{{search}}\"",
+    "emptyPending": "Nenhum cadastro pendente",
+    "emptyActive": "Nenhum usuário cadastrado",
+    "tryOtherTerms": "Tente outros termos.",
+    "clickNewUser": "Clique em Novo Usuário para começar."
+  },
+  "status": {
+    "pending": "Pendente",
+    "active": "Ativo",
+    "inactive": "Inativo"
+  },
+  "row": {
+    "approve": "Aprovar",
+    "resendPassword": "Reenviar e-mail de senha"
+  },
+  "editModal": {
+    "titleEdit": "Editar Usuário",
+    "titleNew": "Novo Usuário",
+    "fullName": "Nome completo",
+    "email": "E-mail",
+    "emailPlaceholder": "usuario@empresa.com",
+    "password": "Senha",
+    "resetPasswordHint": "Para redefinir a senha deste usuário, use o botão de reenviar e-mail na lista.",
+    "group": "Grupo",
+    "selectGroupPlaceholder": "Selecione...",
+    "status": "Status",
+    "notifTitle": "Notificações de conclusão",
+    "notifDesc": "Alertas ao concluir implantações e instalações",
+    "approveInstallerTitle": "Aprovar instalações via Assistente Criare",
+    "approveInstallerDesc": "Permite aprovar/recusar solicitações do instalador do ERP, independente do grupo",
+    "cancel": "Cancelar",
+    "saving": "Salvando...",
+    "save": "Salvar"
+  },
+  "approveModal": {
+    "title": "Aprovar cadastro",
+    "groupLabel": "Grupo de permissão",
+    "selectGroupPlaceholder": "Selecione o grupo",
+    "emailNotice": "Um e-mail será enviado automaticamente ao usuário com o link para definir sua senha.",
+    "cancel": "Cancelar",
+    "approving": "Aprovando...",
+    "approve": "Aprovar Acesso"
+  },
+  "deleteConfirm": {
+    "title": "Excluir usuário?",
+    "messageBefore": "Tem certeza que deseja excluir ",
+    "messageAfter": "? Esta ação não pode ser desfeita.",
+    "cancel": "Cancelar",
+    "confirm": "Excluir"
+  }
+}

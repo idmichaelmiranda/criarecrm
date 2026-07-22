@@ -1,0 +1,260 @@
+{
+  "tabs": {
+    "cadastro": "Cadastro",
+    "contabilidade": "Contabilidade",
+    "operacional": "Operacional",
+    "fiscal": "Fiscal / NF-e",
+    "implantacoes": "Implantações"
+  },
+  "paymentFields": {
+    "dinheiro": "Dinheiro",
+    "cheque": "Cheque",
+    "cartao_pos": "Cartão-POS",
+    "pagamento_prazo": "Prazo",
+    "pix": "PIX",
+    "cartao_tef": "Cartão-TEF"
+  },
+  "regimeOptions": {
+    "1": "Simples Nacional",
+    "2": "Lucro Presumido",
+    "3": "Lucro Real"
+  },
+  "crtOptions": {
+    "1": "1 - Simples Nacional",
+    "2": "2 - Simples Nacional - Excesso de sublimite de receita bruta",
+    "3": "3 - Regime Normal"
+  },
+  "stOptions": {
+    "1": "Informante Substituto",
+    "2": "Informante Substituído"
+  },
+  "contaOptions": {
+    "corrente": "Conta Corrente",
+    "poupanca": "Conta Poupança",
+    "pagamento": "Conta Pagamento"
+  },
+  "cepBuscando": "Buscando...",
+  "validation": {
+    "obrigatorio": "Obrigatório",
+    "emailInvalido": "E-mail inválido",
+    "campoObrigatorio": "{{campo}} obrigatório"
+  },
+  "cadastro": {
+    "view": {
+      "razaoSocial": "Razão Social",
+      "nomeFantasia": "Nome Fantasia",
+      "cnpj": "CNPJ",
+      "ie": "Insc. Estadual",
+      "email": "E-mail",
+      "responsavel": "Responsável",
+      "telefoneFixo": "Telefone Fixo",
+      "celular": "Celular",
+      "endereco": "Endereço",
+      "cep": "CEP",
+      "enderecoField": "Endereço",
+      "numero": "Número",
+      "bairro": "Bairro",
+      "cidade": "Cidade",
+      "estado": "Estado",
+      "enderecoVazio": "Endereço não informado."
+    },
+    "edit": {
+      "razaoSocial": "Razão Social *",
+      "nomeFantasia": "Nome Fantasia",
+      "cnpj": "CNPJ",
+      "ie": "Insc. Estadual",
+      "email": "E-mail *",
+      "responsavel": "Responsável",
+      "telefoneFixo": "Telefone Fixo",
+      "telefoneFixoPlaceholder": "(00) 0000-0000",
+      "celular": "Celular *",
+      "celularPlaceholder": "(00) 00000-0000",
+      "endereco": "Endereço",
+      "cep": "CEP",
+      "numero": "Número",
+      "enderecoField": "Endereço",
+      "bairro": "Bairro",
+      "cidade": "Cidade",
+      "estadoUf": "Estado (UF)"
+    }
+  },
+  "contabilidade": {
+    "view": {
+      "vazio": "Contabilidade não informada.",
+      "nomeContador": "Nome do Contador",
+      "cpf": "CPF",
+      "crc": "CRC",
+      "cnpj": "CNPJ",
+      "email": "E-mail",
+      "telefoneFixo": "Telefone Fixo",
+      "celular": "Celular",
+      "enderecoContador": "Endereço do Contador",
+      "cep": "CEP",
+      "endereco": "Endereço",
+      "numero": "Número",
+      "bairro": "Bairro",
+      "cidade": "Cidade",
+      "estado": "Estado"
+    },
+    "edit": {
+      "nomeContador": "Nome do Contador *",
+      "cpf": "CPF",
+      "cpfPlaceholder": "000.000.000-00",
+      "crc": "CRC",
+      "crcPlaceholder": "CRC-MG 123456",
+      "cnpjEscritorio": "CNPJ do Escritório",
+      "cnpjEscritorioPlaceholder": "00.000.000/0001-00",
+      "email": "E-mail",
+      "telefoneFixo": "Telefone Fixo",
+      "telefoneFixoPlaceholder": "(00) 0000-0000",
+      "celular": "Celular",
+      "celularPlaceholder": "(00) 00000-0000",
+      "enderecoContador": "Endereço do Contador",
+      "cep": "CEP",
+      "numero": "Número",
+      "endereco": "Endereço",
+      "bairro": "Bairro",
+      "cidade": "Cidade",
+      "estadoUf": "Estado (UF)"
+    }
+  },
+  "operacional": {
+    "view": {
+      "dadosBancarios": "Dados Bancários",
+      "codBanco": "Cód. Banco",
+      "banco": "Banco",
+      "cnpjBanco": "CNPJ do Banco",
+      "tipoConta": "Tipo de Conta",
+      "agencia": "Agência",
+      "conta": "Conta",
+      "dadosBancariosVazio": "Dados bancários não informados.",
+      "formasPagamento": "Formas de Pagamento",
+      "formasPagamentoVazio": "Formas de pagamento não informadas.",
+      "integradoraTef": "Integradora TEF"
+    },
+    "edit": {
+      "tipoConta": "Tipo de Conta",
+      "agencia": "Agência",
+      "agenciaPlaceholder": "1234",
+      "dvPlaceholder": "DV",
+      "conta": "Conta",
+      "contaPlaceholder": "12345",
+      "formasPagamento": "Formas de Pagamento",
+      "formasAceitas": "Formas aceitas",
+      "integradoraTef": "Integradora TEF",
+      "integradoraTefPlaceholder": "Ex: Sitef, Tef Dedicado, PayGo..."
+    },
+    "bankSelector": {
+      "label": "Banco",
+      "placeholder": "Buscar por nome ou código — ex: Bradesco ou 237",
+      "trocar": "Trocar",
+      "nenhumEncontrado": "Nenhum banco encontrado para \"{{query}}\""
+    }
+  },
+  "fiscal": {
+    "view": {
+      "regimeTributarioTitulo": "Regime Tributário",
+      "crt": "CRT",
+      "regimeTributario": "Regime Tributário",
+      "condicaoSt": "Condição ST",
+      "aliqSimples": "Alíq. Simples Nacional",
+      "receitaBruta": "Receita Bruta",
+      "regimeVazio": "Regime fiscal não informado.",
+      "nfe": "NF-e",
+      "serieNfe": "Série NF-e",
+      "ultimaNfeEmitida": "Última NF-e Emitida",
+      "nfce": "NFC-e",
+      "csc": "CSC",
+      "token": "Token",
+      "ultimaSerieNfce": "Última Série NFC-e",
+      "certificadoDigital": "Certificado Digital",
+      "arquivo": "Arquivo",
+      "verificando": "Verificando…",
+      "baixando": "Baixando…",
+      "baixar": "Baixar",
+      "senha": "Senha",
+      "dadosFiscaisVazio": "Dados fiscais não informados."
+    },
+    "edit": {
+      "regimeTributario": "Regime Tributário",
+      "crtSelectLabel": "CRT — Código de Regime Tributário",
+      "regime": "Regime",
+      "condicaoSt": "Condição ST",
+      "aliqSimples": "Alíq. Simples Nacional (%)",
+      "aliqSimplesPlaceholder": "Ex: 4,00",
+      "receitaBruta": "Receita Bruta (R$)",
+      "receitaBrutaPlaceholder": "Ex: 360000,00",
+      "nfe": "NF-e",
+      "serieNfe": "Série NF-e",
+      "serieNfePlaceholder": "Ex: 1",
+      "ultimaNfeEmitida": "Última NF-e Emitida",
+      "ultimaNfeEmitidaPlaceholder": "Ex: 000001",
+      "nfce": "NFC-e",
+      "csc": "CSC",
+      "cscPlaceholder": "Código de segurança",
+      "token": "Token",
+      "tokenPlaceholder": "Token da SEFAZ",
+      "ultimaSerieNfce": "Última Série NFC-e",
+      "ultimaSerieNfcePlaceholder": "Ex: 001",
+      "certificadoDigital": "Certificado Digital",
+      "senhaCertificado": "Senha do Certificado",
+      "senhaCertificadoPlaceholder": "Senha do .pfx / .p12"
+    }
+  },
+  "implantacoes": {
+    "vazio": "Nenhuma implantação encontrada para este cliente.",
+    "consultor": "Consultor: {{nome}}",
+    "sla": "SLA: {{data}}",
+    "abrir": "Abrir →"
+  },
+  "implantacaoBadge": {
+    "ativas_one": "{{count}} implantação ativa",
+    "ativas_other": "{{count}} implantações ativas",
+    "total_one": "{{count}} implantação",
+    "total_other": "{{count}} implantações"
+  },
+  "header": {
+    "breadcrumbClientes": "Clientes",
+    "editando": "Editando",
+    "cadastroEm": "Cadastro: {{data}}",
+    "cancelar": "Cancelar",
+    "salvar": "Salvar",
+    "salvando": "Salvando…",
+    "editar": "Editar",
+    "gerarBase": "Gerar Base",
+    "gerando": "Gerando…",
+    "chaveApi": "Chave API"
+  },
+  "requestBanner": {
+    "titulo": "Instalação solicitada pelo Assistente Criare — CNPJ {{cnpj}}",
+    "tempo": "criada {{criada}} · expira {{expira}}",
+    "recusar": "Recusar",
+    "aprovar": "Aprovar",
+    "aguarde": "Aguarde…"
+  },
+  "errors": {
+    "voltarClientes": "← Voltar para Clientes",
+    "aprovarSolicitacao": "Erro ao aprovar solicitação",
+    "recusarSolicitacao": "Erro ao recusar solicitação",
+    "salvar": "Erro ao salvar",
+    "gerarBase": "Erro ao gerar base",
+    "gerarChaveApi": "Erro ao gerar chave de API"
+  },
+  "confirm": {
+    "novaChave": "Gerar uma nova chave invalida a anterior. Continuar?"
+  },
+  "modalAmbiente": {
+    "titulo": "Gerar Base de Dados",
+    "subtitulo": "Selecione o ambiente para geração da base de",
+    "producao": "Produção",
+    "homologacao": "Homologação",
+    "cancelar": "Cancelar"
+  },
+  "modalChave": {
+    "titulo": "Chave de API gerada",
+    "subtitulo": "Copie e configure no instalador de",
+    "aviso": "Esta chave não será exibida novamente.",
+    "copiar": "Copiar",
+    "fechar": "Fechar"
+  }
+}

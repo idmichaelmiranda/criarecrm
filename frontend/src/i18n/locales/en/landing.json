@@ -1,0 +1,72 @@
+{
+  "toast": {
+    "title": "Request sent!",
+    "desc": "Our team will get in touch soon."
+  },
+  "scrollNav": {
+    "backToTop": "Back to top",
+    "nextSection": "Next section"
+  },
+  "header": {
+    "brand": "Criare TI",
+    "logoAlt": "CriareTI",
+    "navComoFunciona": "How it works",
+    "navOQueFazemos": "What we do",
+    "cta": "Request Implementation"
+  },
+  "hero": {
+    "logoAlt": "Criare ERP",
+    "badge": "ERP specialized for retail",
+    "headline1": "Your complete ERP for",
+    "headlineHighlight": "safer, more agile management",
+    "subtitle": "Criare ERP was built to simplify your operation, reduce risk, and give you full visibility into your business.",
+    "cta": "Request Implementation",
+    "ctaSecondary": "Talk to a specialist",
+    "trust": {
+      "steps": "4-step implementation",
+      "support": "Post go-live support",
+      "secure": "Secure environment",
+      "roi": "Fast, measurable ROI"
+    }
+  },
+  "modules": {
+    "sectionLabel": "What we set up",
+    "vendas": { "title": "Sales Management", "b1": "Fast, integrated POS", "b2": "Orders, quotes and e-invoices", "b3": "Salesperson commissions" },
+    "estoque": { "title": "Smart Inventory", "b1": "Real-time inventory", "b2": "Automatic minimum-stock reordering", "b3": "Batch and expiration tracking" },
+    "financeiro": { "title": "Integrated Finance", "b1": "Real-time cash flow", "b2": "Accounts payable and receivable", "b3": "Automatic bank reconciliation" },
+    "fiscal": { "title": "Tax and Compliance", "b1": "Electronic invoice issuance", "b2": "Automatic tax calculation", "b3": "Regulatory filings" },
+    "relatorios": { "title": "Reports and BI", "b1": "Sales and inventory dashboards", "b2": "Performance indicators (KPIs)", "b3": "Export to Excel and PDF" },
+    "seguranca": { "title": "Security and Permissions", "b1": "Per-user access profiles", "b2": "Full audit log", "b3": "Automatic encrypted backups" }
+  },
+  "comoFunciona": {
+    "eyebrow": "How it works",
+    "title": "Four steps to go live",
+    "subtitle": "A simple, guided process — from first contact to go-live, with support at every step.",
+    "step1": { "title": "Fill out the form", "desc": "Provide your company data, tax regime and fiscal settings in a guided form — it takes less than 10 minutes.", "time": "~10 min" },
+    "step2": { "title": "Our team reviews it", "desc": "Specialists review every detail and prepare a system environment tailored to your business.", "time": "1–2 business days" },
+    "step3": { "title": "Implementation and testing", "desc": "We install and configure the whole system, running tests and validations in a staging environment before go-live.", "time": "3–5 business days" },
+    "step4": { "title": "System in production", "desc": "Go-live with full support, team training, and dedicated assistance during the first days of operation.", "time": "Go Live! 🚀" }
+  },
+  "trust": {
+    "eyebrow": "Secure and reliable",
+    "title1": "Your data handled with",
+    "title2": "complete confidentiality.",
+    "desc": "All information submitted through the form is kept strictly confidential and used solely to set up your management system.",
+    "cta": "Get started now",
+    "lgpd": { "title": "LGPD Compliant", "desc": "Data protected under Brazil's General Data Protection Law" },
+    "conexao": { "title": "Secure connection", "desc": "SSL/TLS encrypted transmission throughout the form" },
+    "equipe": { "title": "Certified team", "desc": "Specialists with retail ERP experience" },
+    "suporte": { "title": "Dedicated support", "desc": "Direct channel with the team throughout implementation" }
+  },
+  "cta": {
+    "logoAlt": "CriareTI",
+    "title": "Ready to get started?",
+    "subtitle": "Fill out the form in a few minutes and our team will reach out to begin your system implementation.",
+    "button": "Request Implementation",
+    "responseTime": "Response within 2 business days"
+  },
+  "footer": {
+    "logoAlt": "CriareTI",
+    "copyright": "© {{year}} Criare TI. All rights reserved."
+  }
+}

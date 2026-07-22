@@ -1,0 +1,63 @@
+{
+  "title": "Clientes",
+  "subtitleLoading": "Cargando…",
+  "subtitle_one": "{{count}} cliente registrado",
+  "subtitle_other": "{{count}} clientes registrados",
+  "novaSolicitacao": "Nueva Solicitud",
+  "loading": "Cargando clientes...",
+  "search": {
+    "placeholder": "Buscar por nombre, RFC/NIF o correo…",
+    "resultCount_one": "{{count}} resultado para \"{{term}}\"",
+    "resultCount_other": "{{count}} resultados para \"{{term}}\""
+  },
+  "stats": {
+    "total": "Total",
+    "ativos": "Activos",
+    "inativos": "Inactivos",
+    "simplesNacional": "Simples Nacional",
+    "lucroPresReal": "Renta Presunta/Real",
+    "lucroPresRealSub": "{{presumido}} presunta · {{real}} real"
+  },
+  "error": {
+    "retry": "Intentar de nuevo"
+  },
+  "tabs": {
+    "todos": "Todos",
+    "ativos": "Activos",
+    "inativos": "Inactivos"
+  },
+  "empty": {
+    "searchTitle": "No se encontraron resultados",
+    "defaultTitle": "Ningún cliente en esta categoría",
+    "searchDescription": "Prueba con otro término de búsqueda.",
+    "defaultDescription": "Los clientes se crean automáticamente al aprobar una solicitud."
+  },
+  "table": {
+    "empresa": "Empresa",
+    "cnpj": "RFC/NIF",
+    "cidadeUf": "Ciudad / Estado",
+    "regime": "Régimen",
+    "status": "Estado",
+    "atualizado": "Actualizado",
+    "ativo": "Activo",
+    "inativo": "Inactivo",
+    "copiarCnpj": "Copiar RFC/NIF",
+    "verDetalhes": "Ver detalles"
+  },
+  "footer": {
+    "mostrando": "Mostrando",
+    "de": "de",
+    "clientes": "clientes",
+    "filtro": "· filtro:",
+    "limpar": "(limpiar)",
+    "busca": "· búsqueda:",
+    "legendSimples": "{{count}} Simples Nacional",
+    "legendPresumido": "{{count}} Presunta",
+    "legendReal": "{{count}} Real"
+  },
+  "regimeOptions": {
+    "1": "Simples Nacional",
+    "2": "Renta Presunta",
+    "3": "Renta Real"
+  }
+}

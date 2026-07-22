@@ -1,0 +1,27 @@
+{
+  "status": {
+    "nova": "Nueva",
+    "em_triagem": "En Triaje",
+    "aprovada": "Aprobada",
+    "recusada": "Rechazada",
+    "aguardando_correcao": "Esperando Corrección",
+    "cancelada": "Cancelada",
+    "em_andamento": "En Curso",
+    "pausada": "Pausada",
+    "concluida": "Finalizada",
+    "pendente": "Pendiente",
+    "concluido": "Finalizado",
+    "bloqueada": "Bloqueada",
+    "bloqueado": "Bloqueado",
+    "nao_aplicavel": "N/A",
+    "no_prazo": "En Plazo",
+    "atrasada": "Vencida",
+    "critico": "Crítico"
+  },
+  "prioridade": {
+    "baixa": "Baja",
+    "normal": "Normal",
+    "alta": "Alta",
+    "critica": "Crítica"
+  }
+}

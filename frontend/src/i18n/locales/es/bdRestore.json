@@ -1,0 +1,173 @@
+{
+  "page": {
+    "title": "BD Restore",
+    "subtitle": "Migración de base de datos al estándar del sistema — importa tablas y genera el script SQL listo para cargar."
+  },
+  "tabs": {
+    "firebird": {
+      "label": "SIA PDV PAF",
+      "sublabel": ".fdb · .gdb · .ib",
+      "steps": ["Cargar Firebird", "Analizar tablas", "Generar Base SQL"]
+    },
+    "excel": {
+      "label": "Hoja de Excel",
+      "sublabel": ".xlsx · .xls",
+      "steps": ["Cargar Hoja", "Mapear columnas", "Generar Base SQL"],
+      "desc": "Importe productos, clientes y configuraciones directamente desde hojas de Excel preformateadas. Ideal para bases que no utilizan Firebird."
+    },
+    "sql": {
+      "label": "BDsia SQL",
+      "sublabel": "Comparativo PAF",
+      "steps": ["Cargar bdsia.sql", "Comparar con PAF", "Generar Base combinada"],
+      "desc": "Carga el bdsia.sql, realiza un comparativo estructural con la base PAF importada y genera una base combinada lista para cargar."
+    },
+    "comingSoon": "Próximamente"
+  },
+  "step": {
+    "lockedHint": "Disponible después de la etapa anterior"
+  },
+  "tabela": {
+    "records": "{{count}} reg.",
+    "waiting": "esperando…",
+    "uniqueRecords": "{{count}} registros únicos",
+    "tooltip": {
+      "title": "¿Por qué dos números?",
+      "rowsPrefix": "filas",
+      "rowsExplanation": "en la tabla — cada producto puede tener más de un código de barras, generando múltiples filas.",
+      "uniquePrefix": "registros únicos",
+      "uniqueExplanation": "al agrupar por ID — este es el número real de artículos del cliente."
+    },
+    "items": {
+      "empresas": { "label": "Empresas", "desc": "Razón social, CNPJ, dirección, régimen tributario" },
+      "produto": { "label": "Producto", "desc": "Código, descripción, NCM, precios, unidades" },
+      "clientes": { "label": "Clientes", "desc": "Registro de clientes, direcciones, contactos" },
+      "perfilclientes": { "label": "Perfil de Clientes", "desc": "Perfiles y categorías de clientes" },
+      "admcartao": { "label": "Adm. de Tarjeta", "desc": "Administradoras de tarjetas de crédito y débito" },
+      "aliquotas": { "label": "Alícuotas", "desc": "Tabla de alícuotas fiscales y tributación" },
+      "certificado_digital": { "label": "Certificado Digital", "desc": "Archivo .pfx / .p12 y configuraciones de firma" },
+      "formaspagamento": { "label": "Formas de Pago", "desc": "Medios de pago aceptados y configuraciones" }
+    }
+  },
+  "firebird": {
+    "step1": {
+      "title": "Base de Origen — Firebird",
+      "subtitle": "Seleccione el archivo .fdb o .gdb de la base que desea migrar",
+      "dropHere": "Suelte el archivo aquí",
+      "dragOrClick": "Arrastre el archivo o haga clic para seleccionar",
+      "supportedFormats": "Admite .fdb · .gdb · .ib",
+      "fileTypeLabel": "Base de datos Firebird",
+      "analyzing": "Analizando base…",
+      "reanalyze": "Reanalizar Base",
+      "analyzeButton": "Analizar Base Firebird"
+    },
+    "step2": {
+      "title": "Tablas Encontradas",
+      "subtitle": "Resumen de los datos leídos de la base Firebird — serán mapeados a la base estándar",
+      "orphanedTitle_one": "{{count}} ID_PERFIL sin correspondencia en PERFILCLIENTES",
+      "orphanedTitle_other": "{{count}} ID_PERFIL sin correspondencia en PERFILCLIENTES",
+      "orphanedDetailPrefix": "IDs encontrados en CLIENTES pero ausentes en PERFILCLIENTES:",
+      "orphanedDetailSuffix": "En el script generado, estos clientes tendrán",
+      "orphanedNullNote": "ID_PERFIL = NULL",
+      "orphanedNullReason": "para evitar la violación de clave foránea.",
+      "clientesFailure": "Fallo al leer datos de CLIENTES — el SQL se generará sin clientes. Verifique los registros del servidor.",
+      "successMessage": "Base analizada con éxito. Continúe para generar el script SQL."
+    },
+    "step3": {
+      "title": "Generar Base de Datos",
+      "subtitle": "Combina los datos migrados con base_zerada.sql y genera el script final",
+      "production": "Producción",
+      "productionDesc": "Entorno en vivo",
+      "homolog": "Homologación",
+      "homologDesc": "Entorno de pruebas",
+      "generating": "Generando script SQL…",
+      "successTitle": "¡Script generado con éxito!",
+      "successSubtitle": "La descarga se inició automáticamente.",
+      "generateAgain": "Generar nuevamente"
+    },
+    "errors": {
+      "invalidFormat": "Formato inválido. Seleccione un archivo .fdb, .gdb o .ib",
+      "analyzeFailed": "Error al analizar el archivo",
+      "sessionExpired": "Sesión expirada. Repita el Paso 2 (Analizar) antes de generar.",
+      "generateFailed": "Error al generar la base de datos"
+    }
+  },
+  "comingSoon": {
+    "stepDescs": {
+      "excel": [
+        "Suba la hoja .xlsx con los datos del cliente",
+        "El sistema detecta las columnas y las mapea a los campos del sistema",
+        "Elija Producción u Homologación y descargue el script .sql"
+      ],
+      "sql": [
+        "Suba el archivo bdsia.sql generado por el sistema anterior",
+        "El análisis automático identifica diferencias y conflictos con el PAF",
+        "Script combinado generado con resolución de conflictos aplicada"
+      ]
+    },
+    "inDevelopment": "En desarrollo",
+    "bannerTitle": {
+      "excel": "Importación vía Hoja de Excel",
+      "sql": "Comparativo BDsia SQL"
+    },
+    "bannerFooter": "Esta funcionalidad está prevista para una próxima versión."
+  },
+  "sidebar": {
+    "firebird": {
+      "title": "Qué se migra",
+      "items": [
+        ["Empresas", "CNPJ, dirección, régimen fiscal y datos registrales"],
+        ["Producto", "Código, descripción, NCM, precios y unidades"],
+        ["Clientes", "Registro, direcciones y contactos"],
+        ["Perfil de Clientes", "Perfiles y categorías de clientes"],
+        ["Adm. de Tarjeta", "Administradoras de crédito y débito"],
+        ["Alícuotas", "Tabla de alícuotas fiscales y tributación"],
+        ["Certificado Digital", "Archivo .pfx / .p12 y configuraciones de NF-e"],
+        ["Formas de Pago", "Medios de pago aceptados y configuraciones"]
+      ],
+      "howTitle": "Cómo funciona",
+      "how": [
+        ["1", "Cargue el .fdb de la base Firebird del cliente"],
+        ["2", "El sistema lee las tablas y mapea los registros"],
+        ["3", "base_zerada.sql se usa como estructura estándar"],
+        ["4", "Los datos migrados se insertan vía UPDATE/INSERT"],
+        ["5", "El script .sql final se genera para descarga"]
+      ]
+    },
+    "excel": {
+      "title": "Columnas esperadas",
+      "items": [
+        ["Productos", "Código, descripción, NCM, precio, unidad, stock"],
+        ["Clientes", "Nombre, CPF/CNPJ, dirección, teléfono, email"],
+        ["Proveedores", "Razón social, CNPJ, contacto"],
+        ["Financiero", "Cuentas por pagar/cobrar y categorías"]
+      ],
+      "howTitle": "Cómo preparar",
+      "how": [
+        ["1", "Descargue la plantilla .xlsx disponible en la documentación"],
+        ["2", "Complete con los datos del cliente en las pestañas correctas"],
+        ["3", "Suba la hoja en esta pantalla"],
+        ["4", "Mapee las columnas y confirme el mapeo"],
+        ["5", "Genere y descargue el script SQL final"]
+      ]
+    },
+    "sql": {
+      "title": "Qué se compara",
+      "items": [
+        ["Estructura", "Tablas y columnas presentes en bdsia.sql"],
+        ["Datos", "Registros en conflicto con la base PAF"],
+        ["Resolución", "Fusión automática con prioridad configurable"],
+        ["Diferencias", "Informe de divergencias antes de generar"]
+      ],
+      "howTitle": "Cómo funciona",
+      "how": [
+        ["1", "Cargue el bdsia.sql generado por el sistema anterior"],
+        ["2", "Cargue la base PAF importada previamente"],
+        ["3", "El sistema compara la estructura e identifica conflictos"],
+        ["4", "Visualice y resuelva conflictos manualmente si es necesario"],
+        ["5", "Genere el script combinado para descarga"]
+      ]
+    },
+    "warningTitle": "Atención",
+    "warningText": "El script generado reemplaza los datos de la empresa de destino. Realice una copia de seguridad antes de ejecutar en un entorno de producción."
+  }
+}

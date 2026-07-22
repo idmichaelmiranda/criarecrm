@@ -1,0 +1,48 @@
+{
+  "page": {
+    "title": "Templates",
+    "subtitle": "Pipelines e checklists reutilizáveis para implantação e instalação.",
+    "newTemplate": "Novo Template"
+  },
+  "tabs": {
+    "implantacao": "Implantação",
+    "instalacao": "Instalação"
+  },
+  "search": {
+    "placeholder": "Buscar template...",
+    "count_one": "{{count}} template",
+    "count_other": "{{count}} templates",
+    "forQuery": " para \"{{query}}\""
+  },
+  "empty": {
+    "noneFound": "Nenhum template encontrado para \"{{query}}\"",
+    "noneRegistered": "Nenhum template cadastrado",
+    "tryOtherTerms": "Tente outros termos.",
+    "createFirst": "Crie o primeiro template para começar.",
+    "createButton": "Criar template"
+  },
+  "card": {
+    "inactive": "Inativo",
+    "installation": "Instalação",
+    "stages_one": "{{count}} etapa",
+    "stages_other": "{{count}} etapas",
+    "slaDays": "{{count}}d SLA",
+    "tasks_one": "{{count}} tarefa",
+    "tasks_other": "{{count}} tarefas",
+    "popGeral": "POP Geral",
+    "viewPopGeral": "Ver POP Geral",
+    "errorOpenPop": "Erro ao abrir POP.",
+    "noStages": "Nenhuma etapa cadastrada.",
+    "days": "{{count}}d",
+    "items_one": "{{count}} item",
+    "items_other": "{{count}} itens",
+    "errorLoadingDetails": "Erro ao carregar detalhes.",
+    "confirmDelete": "Excluir \"{{nome}}\"? Não é possível desfazer."
+  },
+  "actions": {
+    "edit": "Editar",
+    "delete": "Excluir",
+    "deleting": "Excluindo...",
+    "manageInSettings": "Gerenciar em Configurações"
+  }
+}

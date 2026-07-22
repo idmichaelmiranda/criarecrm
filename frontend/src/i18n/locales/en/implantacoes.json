@@ -1,0 +1,84 @@
+{
+  "prio": {
+    "baixa": "Low",
+    "alta": "High",
+    "critica": "Critical"
+  },
+  "slaRelativo": {
+    "overdue": "Overdue {{count}}d",
+    "dueToday": "Due today",
+    "tomorrow": "Tomorrow",
+    "daysLeft_one": "{{count}} day",
+    "daysLeft_other": "{{count}} days"
+  },
+  "common": {
+    "clear": "Clear ✕",
+    "close": "Close ✕"
+  },
+  "contextBanner": {
+    "overdueTitle_one": "{{count}} implementation with overdue SLA",
+    "overdueTitle_other": "{{count}} implementations with overdue SLA",
+    "overdueDesc": "Review the deadlines, update the status, or negotiate a new date with the client — immediate action needed.",
+    "criticalTitle_one": "{{count}} implementation at SLA risk",
+    "criticalTitle_other": "{{count}} implementations at SLA risk",
+    "criticalDesc": "Less than 3 days to the due date — prioritize these implementations today.",
+    "tasksTitle": "Overdue tasks detected",
+    "tasksDesc": "Implementations with the most critical SLA were listed first. Open each one to identify which tasks are overdue and assign owners."
+  },
+  "tabs": {
+    "emAndamento": "In Progress",
+    "todas": "All"
+  },
+  "statusSubfilters": {
+    "all": "All statuses",
+    "emAndamento": "In Progress",
+    "pausada": "Paused",
+    "concluida": "Completed",
+    "cancelada": "Cancelled"
+  },
+  "slaFilters": {
+    "any": "Any SLA",
+    "atrasada": "🔴 Overdue",
+    "critico": "🟡 Critical",
+    "ok": "🟢 On Track"
+  },
+  "prioridadeFilters": {
+    "any": "Any Priority",
+    "critica": "Critical",
+    "alta": "High",
+    "normal": "Normal",
+    "baixa": "Low"
+  },
+  "page": {
+    "title": "Implementations",
+    "subtitleFiltered": "{{filtered}} of {{total}} implementations",
+    "subtitleTotal_one": "{{count}} implementation",
+    "subtitleTotal_other": "{{count}} implementations",
+    "kpi": {
+      "inProgress": "In Progress",
+      "slaOverdue": "SLA Overdue",
+      "requiresAttention": "requires attention",
+      "onSchedule": "all on schedule",
+      "withConversion": "With Conversion",
+      "ofData": "of data",
+      "completed": "Completed"
+    },
+    "searchPlaceholder": "Search company, code...",
+    "clearFilters": "Clear ✕",
+    "headers": {
+      "client": "Client",
+      "status": "Status",
+      "progress": "Progress",
+      "responsible": "Owner",
+      "sla": "SLA"
+    },
+    "emptyTitle": "No implementations found",
+    "emptyFiltered": "Try adjusting the filters.",
+    "emptyDefault": "Implementations are created when a request is approved in Triage.",
+    "slaOverdueBadge": "SLA OVERDUE",
+    "slaCriticalBadge": "⚠ AT RISK",
+    "overdueTasksBadge_one": "{{count}} overdue task",
+    "overdueTasksBadge_other": "{{count}} overdue tasks",
+    "dataConversionBadge": "Data conversion"
+  }
+}

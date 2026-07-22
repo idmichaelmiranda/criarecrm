@@ -1,0 +1,160 @@
+{
+  "greeting": { "night": "Boa noite", "morning": "Bom dia", "afternoon": "Boa tarde" },
+  "header": {
+    "subtitleLoading": "Carregando dados operacionais…",
+    "subtitleLoaded": "Central Operacional · {{refresh}}",
+    "refreshing": "Atualizando",
+    "refresh": "Atualizar",
+    "newTriage": "Nova Triagem"
+  },
+  "time": {
+    "now": "agora",
+    "minutesAgo": "{{count}}min",
+    "hoursAgo": "{{count}}h",
+    "daysAgo": "{{count}}d",
+    "refreshedNow": "atualizado agora",
+    "refreshedInstant": "atualizado há instantes",
+    "refreshedMinutesAgo": "atualizado há {{count}}min",
+    "refreshedHoursAgo": "atualizado há {{count}}h",
+    "today": "Hoje",
+    "yesterday": "Ontem"
+  },
+  "kpi": {
+    "activeImplantacoes": "Implantações Ativas",
+    "newThisWeek_one": "+{{count}} nova esta sem.",
+    "newThisWeek_other": "+{{count}} novas esta sem.",
+    "slaOverdue": "SLA Vencido",
+    "immediateAction": "Ação imediata",
+    "overdueThisWeek_one": "+{{count}} venceu esta sem.",
+    "overdueThisWeek_other": "+{{count}} venceram esta sem.",
+    "slaCritical": "SLA Crítico",
+    "lessThan3Days": "< 3 dias",
+    "goLivesWeek": "Go Lives esta semana",
+    "viewDetails": "Ver detalhes →",
+    "completionRate": "Taxa de Conclusão",
+    "completedCount_one": "{{count}} concluída",
+    "completedCount_other": "{{count}} concluídas",
+    "thisWeek_one": "+{{count}} esta sem.",
+    "thisWeek_other": "+{{count}} esta sem.",
+    "pendingTriage": "Triagem Pendente",
+    "newPlusAnalyzing": "Novas + em análise",
+    "overdueTasks": "Tarefas Vencidas",
+    "expiredDeadline": "Prazo expirado",
+    "installationsNoResp": "Instalações S/ Resp.",
+    "awaitingAssignment": "Aguardando direcionamento",
+    "overdue_one": "{{count}} vencida",
+    "overdue_other": "{{count}} vencidas",
+    "todayCount": "{{count}} hoje",
+    "future_one": "{{count}} futura",
+    "future_other": "{{count}} futuras"
+  },
+  "alert": {
+    "overdue_one": "{{count}} implantação com SLA vencido",
+    "overdue_other": "{{count}} implantações com SLA vencido",
+    "immediateActionNeeded": "Ação imediata necessária",
+    "criticalRisk": "{{count}} em risco de SLA",
+    "lessThan3Days": "Menos de 3 dias para vencimento",
+    "tasksOverdue_one": "{{count}} tarefa com prazo vencido",
+    "tasksOverdue_other": "{{count}} tarefas com prazo vencido",
+    "inActiveImplantacoes": "Em implantações ativas",
+    "pendingTriage_one": "{{count}} solicitação aguardando triagem",
+    "pendingTriage_other": "{{count}} solicitações aguardando triagem",
+    "inQueue": "Na fila de entrada",
+    "installationsOverdue_one": "{{count}} instalação vencida sem responsável",
+    "installationsOverdue_other": "{{count}} instalações vencidas sem responsável",
+    "installationsToday_one": "{{count}} instalação HOJE sem responsável",
+    "installationsToday_other": "{{count}} instalações HOJE sem responsável",
+    "installationsTotal_one": "{{count}} instalação sem responsável",
+    "installationsTotal_other": "{{count}} instalações sem responsável",
+    "waiting": "Aguardando direcionamento",
+    "viewMore": "Ver →"
+  },
+  "pipeline": {
+    "title": "Pipeline Operacional",
+    "subtitle_one": "{{count}} implantação ativa",
+    "subtitle_other": "{{count}} implantações ativas",
+    "filtering": "· Filtrando: {{stage}}",
+    "clear": "✕ Limpar",
+    "viewAll": "Ver todas →",
+    "close": "Fechar",
+    "expand": "Expandir tela inteira",
+    "more": "+{{count}} mais",
+    "empty": "vazio"
+  },
+  "fila": {
+    "title": "Fila Operacional",
+    "filteredSubtitle": "{{count}} em \"{{stage}}\" — clique na etapa para limpar filtro",
+    "topSubtitle": "Top {{count}}",
+    "ofTotal": " de {{total}}",
+    "sortedBy": " · ordenado por urgência · SLA · Prioridade",
+    "emptyInStage": "Nenhuma implantação em \"{{stage}}\"",
+    "headers": {
+      "company": "Empresa",
+      "stage": "Etapa",
+      "bottleneck": "Gargalo",
+      "sla": "SLA",
+      "progress": "Progresso",
+      "responsible": "Responsável",
+      "priority": "Prioridade"
+    },
+    "unassigned": "Não atribuído",
+    "daysInStage": "{{count}}d"
+  },
+  "sla": {
+    "ok": "No Prazo",
+    "critico": "Crítico",
+    "atrasada": "Atrasado",
+    "em_risco": "Em Risco",
+    "overdueDays": "{{count}}d vencido",
+    "dueToday": "Vence hoje",
+    "daysLeft": "{{count}}d restantes"
+  },
+  "prio": { "critica": "Crítica", "alta": "Alta", "normal": "Normal", "baixa": "Baixa" },
+  "timeline": {
+    "title": "Timeline Operacional",
+    "subtitle": "Últimos 30 eventos · filtre por tipo",
+    "filters": { "all": "Todos", "stages": "Etapas", "tasks": "Tarefas", "goLives": "Go Lives", "comments": "Comentários" },
+    "empty": "Nenhum evento encontrado.",
+    "by": "por {{name}}"
+  },
+  "chart": {
+    "title": "Conclusões por Mês",
+    "subtitle": "Últimos 6 meses",
+    "legendImplantacoes": "Implantações",
+    "legendInstalacoes": "Instalações",
+    "tooltipInstalacoes": "{{label}} — Instalações: {{count}}",
+    "tooltipImplantacoes": "{{label}} — Implantações: {{count}}"
+  },
+  "workload": {
+    "title": "Carga por Consultor",
+    "subtitle_one": "{{count}} consultor",
+    "subtitle_other": "{{count}} consultores",
+    "implCount": "{{count}} impl.",
+    "avgProgress": "{{pct}}% progresso médio",
+    "overdueCount_one": "{{count}} atrasada",
+    "overdueCount_other": "{{count}} atrasadas"
+  },
+  "funnel": {
+    "title": "Funil & SLA",
+    "labels": {
+      "requests": "Solicitações",
+      "approved": "Aprovadas",
+      "rejected": "Recusadas",
+      "inProgress": "Em Andamento",
+      "completed": "Concluídas"
+    },
+    "rejectionRate": "{{pct}}% de recusa",
+    "slaHealth_one": "Saúde SLA · {{count}} ativa",
+    "slaHealth_other": "Saúde SLA · {{count}} ativas",
+    "noneActive": "Nenhuma implantação ativa"
+  },
+  "goLives": {
+    "title": "Go Lives esta semana 🚀",
+    "subtitle_one": "{{count}} implantação concluída",
+    "subtitle_other": "{{count}} implantações concluídas"
+  },
+  "empty": {
+    "title": "Nenhuma implantação ativa",
+    "subtitle": "Aprove uma solicitação para iniciar"
+  }
+}

@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "../components/LanguageSwitcher";
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
 
 function SuccessToast({ onClose }) {
+  const { t } = useTranslation("landing");
   useEffect(() => { const t = setTimeout(onClose, 7000); return () => clearTimeout(t); }, [onClose]);
   return (
     <div className="fixed bottom-8 right-8 z-50 max-w-sm bg-white rounded-2xl p-5 shadow-2xl border border-gray-100">
@@ -14,8 +17,8 @@ function SuccessToast({ onClose }) {
           </svg>
         </div>
         <div>
-          <p className="text-sm font-semibold text-gray-900">Solicitação enviada!</p>
-          <p className="text-xs text-gray-500 mt-1">Nossa equipe entrará em contato em breve.</p>
+          <p className="text-sm font-semibold text-gray-900">{t("toast.title")}</p>
+          <p className="text-xs text-gray-500 mt-1">{t("toast.desc")}</p>
         </div>
         <button onClick={onClose} className="text-gray-300 hover:text-gray-500 ml-2">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -30,6 +33,8 @@ function SuccessToast({ onClose }) {
 // ── Section Divider ───────────────────────────────────────────────────────────
 
 function SectionDivider({ nextId, toTop = false }) {
+  const { t } = useTranslation("landing");
+
   function handleClick() {
     if (toTop) window.scrollTo({ top: 0, behavior: "smooth" });
     else document.getElementById(nextId)?.scrollIntoView({ behavior: "smooth" });
@@ -46,7 +51,7 @@ function SectionDivider({ nextId, toTop = false }) {
         className="cs-btn relative z-10 flex flex-col items-center"
         style={{ background: "none", border: "none", padding: 0, cursor: "pointer", gap: 0 }}
         onClick={handleClick}
-        aria-label={toTop ? "Voltar ao topo" : "Próxima seção"}
+        aria-label={toTop ? t("scrollNav.backToTop") : t("scrollNav.nextSection")}
       >
         {toTop ? (
           <>
@@ -95,6 +100,7 @@ const SCROLL_SECTIONS = [
 ];
 
 function FloatingScrollNav() {
+  const { t } = useTranslation("landing");
   const [activeIdx, setActiveIdx] = useState(0);
   const [hidden,    setHidden]    = useState(false);
 
@@ -145,7 +151,7 @@ function FloatingScrollNav() {
       <button
         className="cs-btn flex flex-col items-center gap-0"
         style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}
-        aria-label={isLast ? "Voltar ao topo" : "Próxima seção"}
+        aria-label={isLast ? t("scrollNav.backToTop") : t("scrollNav.nextSection")}
         onClick={handleClick}
       >
         {isLast ? (
@@ -187,6 +193,7 @@ function FloatingScrollNav() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Landing() {
+  const { t } = useTranslation("landing");
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showToast, setShowToast] = useState(searchParams.get("enviado") === "1");
@@ -198,6 +205,61 @@ export default function Landing() {
     window.addEventListener("scroll", fn);
     return () => window.removeEventListener("scroll", fn);
   }, []);
+
+  const TRUST_BADGES = [
+    { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />,             label: t("hero.trust.steps") },
+    { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />, label: t("hero.trust.support") },
+    { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />, label: t("hero.trust.secure") },
+    { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />,               label: t("hero.trust.roi") },
+  ];
+
+  const MODULES = [
+    { color: "#F56316", iconPath: "M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z", key: "vendas" },
+    { color: "#0ea5e9", iconPath: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",                                                                                                                                        key: "estoque" },
+    { color: "#10b981", iconPath: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",                         key: "financeiro" },
+    { color: "#7c3aed", iconPath: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",                                                                                  key: "fiscal" },
+    { color: "#f59e0b", iconPath: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z", key: "relatorios" },
+    { color: "#e11d48", iconPath: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",          key: "seguranca" },
+  ].map((m) => ({
+    ...m,
+    title: t(`modules.${m.key}.title`),
+    bullets: [t(`modules.${m.key}.b1`), t(`modules.${m.key}.b2`), t(`modules.${m.key}.b3`)],
+  }));
+
+  const STEPS = [
+    {
+      n: "01",
+      icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />,
+      key: "step1",
+    },
+    {
+      n: "02",
+      icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />,
+      key: "step2",
+    },
+    {
+      n: "03",
+      icon: <><path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.28c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></>,
+      key: "step3",
+    },
+    {
+      n: "04",
+      icon: <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />,
+      key: "step4",
+    },
+  ].map((s) => ({
+    ...s,
+    title: t(`comoFunciona.${s.key}.title`),
+    desc: t(`comoFunciona.${s.key}.desc`),
+    time: t(`comoFunciona.${s.key}.time`),
+  }));
+
+  const TRUST_CARDS = [
+    { icon: "🔒", key: "lgpd" },
+    { icon: "🛡️", key: "conexao" },
+    { icon: "👥", key: "equipe" },
+    { icon: "📞", key: "suporte" },
+  ].map((c) => ({ ...c, title: t(`trust.${c.key}.title`), desc: t(`trust.${c.key}.desc`) }));
 
   return (
     <div className="min-h-screen antialiased" style={{ background: "#ffffff", fontFamily: "'Inter', system-ui, sans-serif", color: "#1e293b" }}>
@@ -229,26 +291,29 @@ export default function Landing() {
         <div className="relative max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 shrink-0 flex items-center justify-center">
-              <img src="/logo3dhero.png" alt="CriareTI" className="w-full h-full object-contain" style={{ filter: "drop-shadow(0 2px 6px rgba(30,45,78,0.15))" }} />
+              <img src="/logo3dhero.png" alt={t("header.logoAlt")} className="w-full h-full object-contain" style={{ filter: "drop-shadow(0 2px 6px rgba(30,45,78,0.15))" }} />
             </div>
-            <span className="font-bold text-base tracking-tight text-gray-900">Criare TI</span>
+            <span className="font-bold text-base tracking-tight text-gray-900">{t("header.brand")}</span>
           </div>
 
           <nav className="hidden md:flex items-center gap-7 absolute left-1/2 -translate-x-1/2">
-            <a href="#como-funciona" className="text-sm text-gray-500 hover:text-gray-900 transition-colors font-medium">Como funciona</a>
-            <a href="#o-que-fazemos" className="text-sm text-gray-500 hover:text-gray-900 transition-colors font-medium">O que fazemos</a>
+            <a href="#como-funciona" className="text-sm text-gray-500 hover:text-gray-900 transition-colors font-medium">{t("header.navComoFunciona")}</a>
+            <a href="#o-que-fazemos" className="text-sm text-gray-500 hover:text-gray-900 transition-colors font-medium">{t("header.navOQueFazemos")}</a>
           </nav>
 
-          <button
-            onClick={() => navigate("/solicitar")}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98]"
-            style={{ background: "linear-gradient(135deg, #F56316, #d94f0d)", boxShadow: "0 2px 12px rgba(245,99,22,0.28)" }}
-          >
-            Solicitar Implantação
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-3">
+            <LanguageSwitcher />
+            <button
+              onClick={() => navigate("/solicitar")}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98]"
+              style={{ background: "linear-gradient(135deg, #F56316, #d94f0d)", boxShadow: "0 2px 12px rgba(245,99,22,0.28)" }}
+            >
+              {t("header.cta")}
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -267,7 +332,7 @@ export default function Landing() {
             {/* Logo centralizada */}
             <img
               src="/logo3dhero.png"
-              alt="Criare ERP"
+              alt={t("hero.logoAlt")}
               className="mb-3"
               style={{
                 width: 130,
@@ -282,29 +347,23 @@ export default function Landing() {
               <svg className="w-3.5 h-3.5 text-orange-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
-              <span className="text-xs font-semibold text-orange-600 tracking-wide">ERP especializado para o varejo</span>
+              <span className="text-xs font-semibold text-orange-600 tracking-wide">{t("hero.badge")}</span>
             </div>
 
             {/* Headline */}
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black leading-[1.1] tracking-tight mb-3 text-gray-900">
-              Seu ERP completo para uma gestão<br />
-              <span style={{ color: "#F56316" }}>mais segura e ágil</span>
+              {t("hero.headline1")}<br />
+              <span style={{ color: "#F56316" }}>{t("hero.headlineHighlight")}</span>
             </h1>
 
             {/* Subtítulo */}
             <p className="text-sm sm:text-base text-gray-500 leading-relaxed mb-4 max-w-xl">
-              O ERP Criare foi desenvolvido para simplificar sua operação,
-              reduzir riscos e dar visibilidade total do seu negócio.
+              {t("hero.subtitle")}
             </p>
 
             {/* Trust badges — 4 em linha */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5 w-full max-w-2xl">
-              {[
-                { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />,             label: "Implantação em 4 etapas" },
-                { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />, label: "Suporte pós go-live" },
-                { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />, label: "Ambiente seguro" },
-                { icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />,               label: "Retorno rápido e mensurável" },
-              ].map((s) => (
+              {TRUST_BADGES.map((s) => (
                 <div key={s.label} className="flex items-center gap-2 p-2.5 rounded-xl bg-gray-50 border border-gray-100">
                   <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#fff7ed" }}>
                     <svg className="w-3.5 h-3.5" style={{ color: "#F56316" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -323,7 +382,7 @@ export default function Landing() {
                 className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl font-bold text-white text-base transition-all hover:scale-[1.02] active:scale-[0.98]"
                 style={{ background: "linear-gradient(135deg, #F56316, #d94f0d)", boxShadow: "0 8px 28px rgba(245,99,22,0.32)" }}
               >
-                Solicitar Implantação
+                {t("hero.cta")}
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
@@ -332,7 +391,7 @@ export default function Landing() {
                 onClick={() => document.getElementById("como-funciona")?.scrollIntoView({ behavior: "smooth" })}
                 className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors"
               >
-                Falar com um especialista
+                {t("hero.ctaSecondary")}
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
@@ -342,17 +401,10 @@ export default function Landing() {
 
           {/* ── 6 módulos — dentro do hero, abaixo dos CTAs ── */}
           <div id="o-que-fazemos" className="mt-4 pt-4" style={{ borderTop: "1px solid #f1f5f9" }}>
-            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">O que configuramos</p>
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">{t("modules.sectionLabel")}</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-              {[
-                { color: "#F56316", iconPath: "M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z", title: "Gestão de Vendas",       bullets: ["PDV integrado e ágil", "Pedidos, orçamentos e NF-e", "Comissão de vendedores"] },
-                { color: "#0ea5e9", iconPath: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",                                                                                                                                        title: "Estoque Inteligente",   bullets: ["Inventário em tempo real", "Reposição automática por mínimo", "Rastreio por lote e validade"] },
-                { color: "#10b981", iconPath: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",                         title: "Financeiro Integrado",  bullets: ["Fluxo de caixa em tempo real", "Contas a pagar e receber", "Conciliação bancária automática"] },
-                { color: "#7c3aed", iconPath: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",                                                                                  title: "Fiscal e Tributário",   bullets: ["Emissão de NF-e, NFC-e e CT-e", "Cálculo automático de impostos", "Obrigações acessórias (SPED, EFD)"] },
-                { color: "#f59e0b", iconPath: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z", title: "Relatórios e BI",       bullets: ["Dashboards de vendas e estoque", "Indicadores de performance (KPIs)", "Exportação para Excel e PDF"] },
-                { color: "#e11d48", iconPath: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",          title: "Segurança e Permissões",bullets: ["Perfis de acesso por usuário", "Log de auditoria completo", "Backup automático e criptografado"] },
-              ].map((f) => (
-                <div key={f.title} className="bg-white rounded-xl p-4 hover:shadow-sm transition-all duration-200 group" style={{ border: "1px solid #e2e8f0" }}>
+              {MODULES.map((f) => (
+                <div key={f.key} className="bg-white rounded-xl p-4 hover:shadow-sm transition-all duration-200 group" style={{ border: "1px solid #e2e8f0" }}>
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-200" style={{ background: `${f.color}18` }}>
                     <svg className="w-4 h-4" style={{ color: f.color }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
                       <path d={f.iconPath} />
@@ -382,12 +434,12 @@ export default function Landing() {
       <section id="como-funciona" style={{ background: "#ffffff" }}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-24">
           <div className="text-center mb-16">
-            <p className="text-xs font-bold text-orange-500 uppercase tracking-widest mb-3">Como funciona</p>
+            <p className="text-xs font-bold text-orange-500 uppercase tracking-widest mb-3">{t("comoFunciona.eyebrow")}</p>
             <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 mb-4">
-              Quatro etapas até o sistema no ar
+              {t("comoFunciona.title")}
             </h2>
             <p className="text-gray-500 text-base max-w-lg mx-auto">
-              Um processo simples e guiado — do primeiro contato ao go-live, com suporte em cada etapa.
+              {t("comoFunciona.subtitle")}
             </p>
           </div>
 
@@ -396,36 +448,7 @@ export default function Landing() {
               style={{ background: "linear-gradient(90deg, rgba(245,99,22,0.25) 0%, rgba(245,99,22,0.1) 50%, rgba(245,99,22,0.25) 100%)" }} />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
-              {[
-                {
-                  n: "01",
-                  icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />,
-                  title: "Preencha o formulário",
-                  desc: "Informe os dados da empresa, regime tributário e configurações fiscais em um formulário guiado — leva menos de 10 minutos.",
-                  time: "~10 min",
-                },
-                {
-                  n: "02",
-                  icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />,
-                  title: "Nossa equipe analisa",
-                  desc: "Especialistas revisam cada informação e preparam o ambiente do sistema personalizado para o seu negócio.",
-                  time: "1–2 dias úteis",
-                },
-                {
-                  n: "03",
-                  icon: <><path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.28c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></>,
-                  title: "Implantação e homologação",
-                  desc: "Instalamos e configuramos todo o sistema, executamos testes e validações em ambiente de homologação antes do go-live.",
-                  time: "3–5 dias úteis",
-                },
-                {
-                  n: "04",
-                  icon: <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />,
-                  title: "Sistema em produção",
-                  desc: "Go-live com acompanhamento total, treinamento da equipe e suporte dedicado nos primeiros dias de operação.",
-                  time: "Go Live! 🚀",
-                },
-              ].map((step) => (
+              {STEPS.map((step) => (
                 <div key={step.n} className="flex flex-col items-center text-center">
                   <div className="relative mb-6 shrink-0">
                     <div className="w-16 h-16 rounded-2xl flex items-center justify-center relative z-10 bg-white border border-gray-200 shadow-sm">
@@ -462,20 +485,19 @@ export default function Landing() {
           <div className="rounded-3xl px-5 py-8 sm:px-10 sm:py-12 bg-white border border-gray-200 shadow-sm">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
               <div>
-                <p className="text-xs font-bold text-orange-500 uppercase tracking-widest mb-4">Seguro e confiável</p>
+                <p className="text-xs font-bold text-orange-500 uppercase tracking-widest mb-4">{t("trust.eyebrow")}</p>
                 <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight mb-4">
-                  Seus dados tratados com<br />total confidencialidade.
+                  {t("trust.title1")}<br />{t("trust.title2")}
                 </h2>
                 <p className="text-gray-500 text-sm leading-relaxed mb-6">
-                  Todas as informações enviadas no formulário são tratadas com sigilo absoluto, usadas exclusivamente
-                  para a configuração do seu sistema de gestão.
+                  {t("trust.desc")}
                 </p>
                 <button
                   onClick={() => navigate("/solicitar")}
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98]"
                   style={{ background: "linear-gradient(135deg, #F56316, #d94f0d)" }}
                 >
-                  Começar agora
+                  {t("trust.cta")}
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
@@ -483,16 +505,11 @@ export default function Landing() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {[
-                  { icon: "🔒", title: "LGPD Compliant",     desc: "Dados protegidos conforme a Lei Geral de Proteção de Dados" },
-                  { icon: "🛡️", title: "Conexão segura",     desc: "Transmissão criptografada SSL/TLS em todo o formulário"       },
-                  { icon: "👥", title: "Equipe certificada", desc: "Especialistas com experiência em ERP de varejo"               },
-                  { icon: "📞", title: "Suporte dedicado",   desc: "Canal direto com a equipe durante toda a implantação"          },
-                ].map((t) => (
-                  <div key={t.title} className="p-4 rounded-xl bg-gray-50 border border-gray-100">
-                    <span className="text-xl block mb-2">{t.icon}</span>
-                    <p className="text-xs font-bold text-gray-800 mb-1">{t.title}</p>
-                    <p className="text-[11px] text-gray-500 leading-relaxed">{t.desc}</p>
+                {TRUST_CARDS.map((t2) => (
+                  <div key={t2.key} className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+                    <span className="text-xl block mb-2">{t2.icon}</span>
+                    <p className="text-xs font-bold text-gray-800 mb-1">{t2.title}</p>
+                    <p className="text-[11px] text-gray-500 leading-relaxed">{t2.desc}</p>
                   </div>
                 ))}
               </div>
@@ -512,16 +529,16 @@ export default function Landing() {
 
           <div className="relative flex justify-center mb-6">
             <div className="w-24 h-24 flex items-center justify-center">
-              <img src="/logo3dhero.png" alt="CriareTI" className="w-full h-full object-contain" style={{ filter: "drop-shadow(0 4px 14px rgba(30,45,78,0.18))" }} />
+              <img src="/logo3dhero.png" alt={t("cta.logoAlt")} className="w-full h-full object-contain" style={{ filter: "drop-shadow(0 4px 14px rgba(30,45,78,0.18))" }} />
             </div>
           </div>
 
           <div className="relative">
             <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 mb-3">
-              Pronto para começar?
+              {t("cta.title")}
             </h2>
             <p className="text-gray-500 text-base mb-8 max-w-md mx-auto leading-relaxed">
-              Preencha o formulário em poucos minutos e nossa equipe entra em contato para iniciar a implantação do seu sistema.
+              {t("cta.subtitle")}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <button
@@ -529,7 +546,7 @@ export default function Landing() {
                 className="inline-flex items-center gap-2.5 px-9 py-4 rounded-xl font-bold text-white text-base transition-all hover:scale-[1.02] active:scale-[0.98]"
                 style={{ background: "linear-gradient(135deg, #F56316, #d94f0d)", boxShadow: "0 8px 32px rgba(245,99,22,0.35)" }}
               >
-                Solicitar Implantação
+                {t("cta.button")}
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
@@ -538,7 +555,7 @@ export default function Landing() {
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Retorno em até 2 dias úteis
+                {t("cta.responseTime")}
               </p>
             </div>
           </div>
@@ -551,10 +568,10 @@ export default function Landing() {
       <footer style={{ borderTop: "1px solid #f1f5f9" }}>
         <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col items-center gap-3">
           <div className="w-7 h-7 opacity-40">
-            <img src="/logo3dhero.png" alt="CriareTI" className="w-full h-full object-contain" />
+            <img src="/logo3dhero.png" alt={t("footer.logoAlt")} className="w-full h-full object-contain" />
           </div>
           <p className="text-sm text-gray-400">
-            © {new Date().getFullYear()} Criare TI. Todos os direitos reservados.
+            {t("footer.copyright", { year: new Date().getFullYear() })}
           </p>
         </div>
       </footer>

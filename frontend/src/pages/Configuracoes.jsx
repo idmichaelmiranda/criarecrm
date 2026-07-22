@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Layout } from "../components/layout/Layout";
 import { configuracoesApi, instalacaosApi, templatesApi } from "../services/api";
 import { fmtDateTime } from "../utils/dateUtils";
@@ -104,6 +105,7 @@ const INP = "input-field text-sm w-full";
 // ── Base Zerada ───────────────────────────────────────────────────────────────
 
 function BaseZeradaSection() {
+  const { t } = useTranslation("configuracoes");
   const [info, setInfo]           = useState(null);
   const [loadingInfo, setLoadingInfo] = useState(true);
   const [dragOver, setDragOver]   = useState(false);
@@ -133,7 +135,7 @@ function BaseZeradaSection() {
   function pickFile(file) {
     setSuccess(null); setError(null);
     if (!file.name.toLowerCase().endsWith(".sql")) {
-      setError("Selecione um arquivo .sql"); return;
+      setError(t("base.errors.selectSql")); return;
     }
     setSelected(file);
   }
@@ -145,7 +147,7 @@ function BaseZeradaSection() {
       const { data } = await configuracoesApi.uploadBase(selected, versao);
       setSuccess(data); setSelected(null); setVersao(""); fetchInfo();
     } catch (err) {
-      setError(err.message || "Erro ao enviar arquivo");
+      setError(err.message || t("base.errors.uploadFailed"));
     } finally {
       setUploading(false);
     }
@@ -155,34 +157,34 @@ function BaseZeradaSection() {
     <div>
       <SectionHeader
         icon={<IconDatabase />}
-        title="Base Zerada do Sistema"
-        subtitle="Arquivo SQL executado na instalação de cada cliente. Mantenha sempre atualizado com a última versão liberada."
+        title={t("base.title")}
+        subtitle={t("base.subtitle")}
       />
 
       {/* Arquivo atual */}
       <div className="mb-6">
-        <FieldGroup label="Arquivo atual" />
+        <FieldGroup label={t("base.currentFile")} />
         {loadingInfo ? (
           <div className="flex items-center gap-2 text-sm text-gray-400">
             <span className="w-3.5 h-3.5 rounded-full border-2 border-gray-300 border-t-transparent animate-spin" />
-            Carregando…
+            {t("common.loading")}
           </div>
         ) : info?.exists ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100">
-            <InfoField label="Arquivo"             value="base_zerada.sql" mono />
-            <InfoField label="Tamanho"             value={formatBytes(info.size)} />
-            <InfoField label="Última atualização"  value={formatDate(info.updated_at)} />
-            <InfoField label="Versão SIA"          value={info.versao ? `v${info.versao}` : null} highlight={!!info.versao} />
+            <InfoField label={t("base.fileLabel")}    value="base_zerada.sql" mono />
+            <InfoField label={t("base.sizeLabel")}    value={formatBytes(info.size)} />
+            <InfoField label={t("base.updatedLabel")} value={formatDate(info.updated_at)} />
+            <InfoField label={t("base.versionLabel")} value={info.versao ? `v${info.versao}` : null} highlight={!!info.versao} />
           </div>
         ) : (
-          <Alert type="warning">Nenhum arquivo encontrado. Faça o upload abaixo.</Alert>
+          <Alert type="warning">{t("base.noFile")}</Alert>
         )}
       </div>
 
       <div className="h-px bg-gray-100 mb-6" />
 
       {/* Upload */}
-      <FieldGroup label={info?.exists ? "Substituir arquivo" : "Enviar arquivo"} />
+      <FieldGroup label={info?.exists ? t("base.replaceFile") : t("base.sendFile")} />
 
       <div
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -213,31 +215,31 @@ function BaseZeradaSection() {
             </div>
             <button onClick={(e) => { e.stopPropagation(); setSelected(null); }}
               className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1 rounded hover:bg-gray-100 transition-colors shrink-0">
-              Trocar
+              {t("base.change")}
             </button>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-10 px-6 text-center">
             <span className="text-gray-300 mb-3"><IconUpload /></span>
             <p className="text-sm font-medium text-gray-600">
-              Arraste o arquivo aqui ou{" "}
-              <span className="text-indigo-600 font-semibold">clique para selecionar</span>
+              {t("base.dropzone.dragText")}{" "}
+              <span className="text-indigo-600 font-semibold">{t("base.dropzone.clickText")}</span>
             </p>
-            <p className="text-xs text-gray-400 mt-1">Somente arquivos .sql</p>
+            <p className="text-xs text-gray-400 mt-1">{t("base.dropzone.onlySql")}</p>
           </div>
         )}
       </div>
 
       {selected && !success && (
         <div className="mt-4">
-          <label className={LBL}>Versão SIA</label>
+          <label className={LBL}>{t("base.versionFieldLabel")}</label>
           <div className="flex items-center gap-3">
             <div className="relative max-w-[240px]">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 font-medium select-none pointer-events-none">v</span>
               <input type="text" value={versao} onChange={(e) => setVersao(e.target.value)}
-                placeholder="Ex: 117, 118.2, 2.5.1" className="input-field pl-7 text-sm w-full" />
+                placeholder={t("base.versionPlaceholder")} className="input-field pl-7 text-sm w-full" />
             </div>
-            <p className="text-xs text-gray-400">Informe a versão para controle</p>
+            <p className="text-xs text-gray-400">{t("base.versionHelp")}</p>
           </div>
         </div>
       )}
@@ -246,7 +248,7 @@ function BaseZeradaSection() {
         {error   && <Alert type="error">{error}</Alert>}
         {success && (
           <Alert type="success">
-            <span><span className="font-semibold">base_zerada.sql</span> atualizado com sucesso — {formatBytes(success.size)} em {formatDate(success.updated_at)}{success.versao && <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">v{success.versao}</span>}</span>
+            <span><span className="font-semibold">base_zerada.sql</span> {t("base.uploadSuccess", { size: formatBytes(success.size), date: formatDate(success.updated_at) })}{success.versao && <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">v{success.versao}</span>}</span>
           </Alert>
         )}
       </div>
@@ -259,7 +261,7 @@ function BaseZeradaSection() {
               ? <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
               : <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
             }
-            {uploading ? "Enviando…" : "Enviar novo arquivo"}
+            {uploading ? t("base.sending") : t("base.sendNewFile")}
           </button>
         </div>
       )}
@@ -270,6 +272,7 @@ function BaseZeradaSection() {
 // ── Email SMTP ────────────────────────────────────────────────────────────────
 
 function EmailSection() {
+  const { t } = useTranslation("configuracoes");
   const BLANK = { host: "", port: 587, user: "", password: "", from_email: "", from_name: "CriareCRM", use_tls: true, frontend_url: "" };
   const [form, setForm]     = useState(BLANK);
   const [loading, setLoading] = useState(true);
@@ -296,9 +299,9 @@ function EmailSection() {
     setSaving(true); setSuccess(""); setError("");
     try {
       await configuracoesApi.saveEmail(form);
-      setSuccess("Configuração salva com sucesso.");
+      setSuccess(t("email.saveSuccess"));
     } catch (err) {
-      setError(err.message || "Erro ao salvar.");
+      setError(err.message || t("email.saveError"));
     } finally {
       setSaving(false);
     }
@@ -310,7 +313,7 @@ function EmailSection() {
       const { data } = await configuracoesApi.testarEmail({ ...form, test_email: testEmail || undefined });
       setSuccess(data.message);
     } catch (err) {
-      setError(err.message || "Falha no envio do email de teste.");
+      setError(err.message || t("email.testError"));
     } finally {
       setTesting(false);
     }
@@ -320,29 +323,29 @@ function EmailSection() {
     <div>
       <SectionHeader
         icon={<IconEmail />}
-        title="Configuração de Email (SMTP)"
-        subtitle="Necessário para enviar o link de revisão ao cliente quando uma triagem for recusada."
+        title={t("email.title")}
+        subtitle={t("email.subtitle")}
       />
 
       {loading ? (
         <div className="flex items-center gap-2 text-sm text-gray-400">
           <span className="w-3.5 h-3.5 rounded-full border-2 border-gray-300 border-t-transparent animate-spin" />
-          Carregando…
+          {t("common.loading")}
         </div>
       ) : (
         <form onSubmit={handleSave} className="space-y-6">
 
           {/* Servidor SMTP */}
           <div>
-            <FieldGroup label="Servidor SMTP" />
+            <FieldGroup label={t("email.smtpServer")} />
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-2">
-                <label className={LBL}>Host</label>
+                <label className={LBL}>{t("email.hostLabel")}</label>
                 <input className={INP} placeholder="smtp.gmail.com"
                   value={form.host} onChange={(e) => set("host", e.target.value)} />
               </div>
               <div>
-                <label className={LBL}>Porta</label>
+                <label className={LBL}>{t("email.portLabel")}</label>
                 <input className={INP} type="number" placeholder="587"
                   value={form.port} onChange={(e) => set("port", Number(e.target.value))} />
               </div>
@@ -352,7 +355,7 @@ function EmailSection() {
                 onChange={(e) => set("use_tls", e.target.checked)}
                 className="w-4 h-4 rounded text-indigo-600 cursor-pointer" />
               <label htmlFor="use_tls" className="text-sm text-gray-600 cursor-pointer select-none">
-                Usar TLS (STARTTLS na porta 587) — desmarque para SSL na porta 465
+                {t("email.tlsCheckbox")}
               </label>
             </div>
           </div>
@@ -361,15 +364,15 @@ function EmailSection() {
 
           {/* Autenticação */}
           <div>
-            <FieldGroup label="Autenticação" />
+            <FieldGroup label={t("email.authentication")} />
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className={LBL}>Usuário (email de login)</label>
+                <label className={LBL}>{t("email.userLabel")}</label>
                 <input className={INP} placeholder="usuario@gmail.com"
                   value={form.user} onChange={(e) => set("user", e.target.value)} />
               </div>
               <div>
-                <label className={LBL}>Senha / App Password</label>
+                <label className={LBL}>{t("email.passwordLabel")}</label>
                 <input className={INP} type="password" placeholder="••••••••"
                   value={form.password} onChange={(e) => set("password", e.target.value)} />
               </div>
@@ -380,24 +383,24 @@ function EmailSection() {
 
           {/* Remetente */}
           <div>
-            <FieldGroup label="Remetente e URL do sistema" />
+            <FieldGroup label={t("email.senderSection")} />
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className={LBL}>Nome do remetente</label>
+                <label className={LBL}>{t("email.senderNameLabel")}</label>
                 <input className={INP} placeholder="CriareCRM"
                   value={form.from_name} onChange={(e) => set("from_name", e.target.value)} />
               </div>
               <div>
-                <label className={LBL}>Email do remetente</label>
+                <label className={LBL}>{t("email.senderEmailLabel")}</label>
                 <input className={INP} type="email" placeholder="noreply@suaempresa.com"
                   value={form.from_email} onChange={(e) => set("from_email", e.target.value)} />
               </div>
               <div className="col-span-2">
-                <label className={LBL}>URL pública do sistema</label>
+                <label className={LBL}>{t("email.publicUrlLabel")}</label>
                 <input className={INP} placeholder="https://crm.suaempresa.com"
                   value={form.frontend_url} onChange={(e) => set("frontend_url", e.target.value)} />
                 <p className="text-[11px] text-gray-400 mt-1.5">
-                  Link enviado ao cliente:{" "}
+                  {t("email.linkSentToClient")}{" "}
                   <span className="font-mono text-gray-500">
                     {form.frontend_url || "http://localhost:5173"}/revisao/TOKEN
                   </span>
@@ -416,16 +419,16 @@ function EmailSection() {
             <button type="submit" disabled={saving}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60 transition-colors">
               {saving && <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />}
-              {saving ? "Salvando…" : "Salvar configuração"}
+              {saving ? t("email.saving") : t("email.save")}
             </button>
 
             <div className="flex items-center gap-2 flex-1 min-w-[240px]">
               <input className="input-field text-sm flex-1" type="email"
-                placeholder="Email para teste"
+                placeholder={t("email.testEmailPlaceholder")}
                 value={testEmail} onChange={(e) => setTestEmail(e.target.value)} />
               <button type="button" onClick={handleTestar} disabled={testing || !form.host}
                 className="px-4 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors whitespace-nowrap">
-                {testing ? "Enviando…" : "Enviar teste"}
+                {testing ? t("email.sendingTest") : t("email.sendTest")}
               </button>
             </div>
           </div>
@@ -453,6 +456,7 @@ function toSlug(nome) {
 }
 
 function ProdutosInstalacaoSection() {
+  const { t } = useTranslation("configuracoes");
   const [produtos, setProdutos]   = useState([]);
   const [todosTemplates, setTodosTemplates] = useState([]); // templates de instalação para o dropdown
   const [loading, setLoading]     = useState(true);
@@ -474,9 +478,9 @@ function ProdutosInstalacaoSection() {
         templatesApi.listar(),
       ]);
       setProdutos(prods);
-      setTodosTemplates(tmpl.filter((t) => t.tipo?.startsWith("instalacao_")));
+      setTodosTemplates(tmpl.filter((tp) => tp.tipo?.startsWith("instalacao_")));
     } catch {
-      setError("Não foi possível carregar os produtos.");
+      setError(t("produtos.errors.loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -491,7 +495,7 @@ function ProdutosInstalacaoSection() {
       await templatesApi.atualizar(p.id, { ativo: !p.ativo });
       setProdutos((prev) => prev.map((x) => x.id === p.id ? { ...x, ativo: !x.ativo } : x));
     } catch (err) {
-      setError(err.message || "Erro ao atualizar.");
+      setError(err.message || t("produtos.errors.toggleFailed"));
     } finally {
       setSavingId(null);
     }
@@ -513,7 +517,7 @@ function ProdutosInstalacaoSection() {
         if (full.etapas.length > 0) {
           await templatesApi.atualizarEtapa(full.etapas[0].id, { cor });
         } else {
-          await templatesApi.adicionarEtapa(p.id, { nome: "Principal", ordem: 1, sla_dias: 7, cor });
+          await templatesApi.adicionarEtapa(p.id, { nome: t("produtos.defaultStagePrincipal"), ordem: 1, sla_dias: 7, cor });
         }
       }
       if (templateId !== p.checklist_template_id) {
@@ -524,32 +528,27 @@ function ProdutosInstalacaoSection() {
       ));
       setEdits((e) => { const c = { ...e }; delete c[p.id]; return c; });
     } catch (err) {
-      setError(err.message || "Erro ao salvar.");
+      setError(err.message || t("produtos.errors.saveFailed"));
     } finally {
       setSavingId(null);
     }
   }
 
   async function deletar(p) {
-    if (!confirm(`Remover "${p.nome}"? Esta ação não pode ser desfeita.`)) return;
+    if (!confirm(t("produtos.confirmDelete", { nome: p.nome }))) return;
     setDeletingId(p.id);
     setError("");
     try {
       await templatesApi.deletar(p.id);
       setProdutos((prev) => prev.filter((x) => x.id !== p.id));
     } catch (err) {
-      setError(err.message || "Erro ao remover.");
+      setError(err.message || t("produtos.errors.deleteFailed"));
     } finally {
       setDeletingId(null);
     }
   }
 
-  const TAREFAS_PADRAO = [
-    "Levantamento de requisitos",
-    "Instalação e configuração",
-    "Testes e validação",
-    "Aprovação do cliente",
-  ];
+  const TAREFAS_PADRAO = t("produtos.defaultTasks", { returnObjects: true });
 
   async function handleCreate(e) {
     e.preventDefault();
@@ -560,7 +559,7 @@ function ProdutosInstalacaoSection() {
       const tipo = `instalacao_${toSlug(newNome.trim())}`;
       const { data: created } = await templatesApi.criar({ nome: newNome.trim(), nome_produto: newNome.trim(), tipo, ativo: true });
       const { data: etapa } = await templatesApi.adicionarEtapa(created.id, {
-        nome: "Checklist de Instalação", ordem: 1, sla_dias: 7, cor: newCor,
+        nome: t("produtos.defaultStageChecklist"), ordem: 1, sla_dias: 7, cor: newCor,
       });
       for (let i = 0; i < TAREFAS_PADRAO.length; i++) {
         await templatesApi.adicionarTarefa(etapa.id, {
@@ -569,10 +568,10 @@ function ProdutosInstalacaoSection() {
       }
       setNewNome(""); setNewCor("#6366f1"); setCreating(false);
       await load();
-      setSuccess(`Produto "${created.nome}" criado com sucesso com ${TAREFAS_PADRAO.length} tarefas padrão.`);
+      setSuccess(t("produtos.createSuccess", { nome: created.nome, count: TAREFAS_PADRAO.length }));
       setTimeout(() => setSuccess(""), 4000);
     } catch (err) {
-      setError(err.message || "Erro ao criar produto.");
+      setError(err.message || t("produtos.errors.createFailed"));
     } finally {
       setSaving(false);
     }
@@ -582,8 +581,8 @@ function ProdutosInstalacaoSection() {
     <div>
       <SectionHeader
         icon={<IconProducts />}
-        title="Produtos de Instalação"
-        subtitle="Gerencie os tipos de produto disponíveis ao criar instalações. Edite o nome, a cor e ative ou desative cada produto. O checklist detalhado é configurado em Templates."
+        title={t("produtos.title")}
+        subtitle={t("produtos.subtitle")}
       />
 
       {(error || success) && (
@@ -595,7 +594,7 @@ function ProdutosInstalacaoSection() {
       {loading ? (
         <div className="flex items-center gap-2 text-sm text-gray-400">
           <span className="w-3.5 h-3.5 rounded-full border-2 border-gray-300 border-t-transparent animate-spin" />
-          Carregando…
+          {t("common.loading")}
         </div>
       ) : (
         <div className="space-y-2">
@@ -608,7 +607,7 @@ function ProdutosInstalacaoSection() {
             const templateCur = edit.checklist_template_id !== undefined
               ? edit.checklist_template_id
               : (p.checklist_template_id ?? "");
-            const templateSelecionado = todosTemplates.find((t) => t.id === templateCur);
+            const templateSelecionado = todosTemplates.find((tpl) => tpl.id === templateCur);
 
             return (
               <div key={p.id} className={`flex flex-col gap-2 px-4 py-3 rounded-xl border transition-all ${dirty ? "border-indigo-200 bg-indigo-50/30" : "border-gray-100 bg-white hover:border-gray-200"}`}>
@@ -617,7 +616,7 @@ function ProdutosInstalacaoSection() {
                   {/* Color picker */}
                   <div className="relative shrink-0 w-7 h-7">
                     <div className="w-7 h-7 rounded-full border-2 border-white shadow-sm overflow-hidden" style={{ background: corCur }}>
-                      <input type="color" value={corCur} title="Alterar cor"
+                      <input type="color" value={corCur} title={t("produtos.changeColor")}
                         onChange={(e) => setEdits((ed) => ({ ...ed, [p.id]: { ...(ed[p.id] || {}), cor: e.target.value } }))}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                     </div>
@@ -629,11 +628,11 @@ function ProdutosInstalacaoSection() {
                     className="flex-1 text-sm font-medium text-gray-800 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-indigo-400 focus:outline-none px-1 py-0.5 transition-colors min-w-0" />
 
                   {/* Task count */}
-                  <span className="text-[11px] text-gray-400 shrink-0 tabular-nums">{p.n_tarefas} tarefa{p.n_tarefas !== 1 ? "s" : ""}</span>
+                  <span className="text-[11px] text-gray-400 shrink-0 tabular-nums">{t("produtos.taskCount", { count: p.n_tarefas })}</span>
 
                   {/* Ativo toggle */}
                   <button type="button" onClick={() => toggleAtivo(p)} disabled={isSaving}
-                    title={p.ativo ? "Ativo — clique para desativar" : "Inativo — clique para ativar"}
+                    title={p.ativo ? t("produtos.toggleActiveTitle") : t("produtos.toggleInactiveTitle")}
                     className={`relative w-9 h-5 rounded-full transition-all shrink-0 ${p.ativo ? "bg-green-400" : "bg-gray-200"} disabled:opacity-50`}>
                     <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${p.ativo ? "left-[18px]" : "left-0.5"}`} />
                   </button>
@@ -642,16 +641,16 @@ function ProdutosInstalacaoSection() {
                     <>
                       <button type="button" onClick={() => saveEdit(p)} disabled={isSaving}
                         className="text-xs px-2.5 py-1 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white font-semibold transition-colors disabled:opacity-50 shrink-0">
-                        {isSaving ? "…" : "Salvar"}
+                        {isSaving ? "…" : t("produtos.save")}
                       </button>
                       <button type="button" onClick={() => setEdits((ed) => { const c = { ...ed }; delete c[p.id]; return c; })}
                         className="text-xs px-2.5 py-1 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors shrink-0">
-                        Cancelar
+                        {t("produtos.cancel")}
                       </button>
                     </>
                   ) : (
                     <button type="button" onClick={() => deletar(p)} disabled={deletingId === p.id}
-                      title="Remover produto"
+                      title={t("produtos.removeProduct")}
                       className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:text-red-400 hover:bg-red-50 transition-colors shrink-0 disabled:opacity-50">
                       {deletingId === p.id
                         ? <span className="w-3.5 h-3.5 rounded-full border-2 border-gray-300 border-t-transparent animate-spin" />
@@ -663,7 +662,7 @@ function ProdutosInstalacaoSection() {
 
                 {/* Template selector row */}
                 <div className="flex items-center gap-2 pl-10">
-                  <span className="text-[11px] text-gray-400 shrink-0 whitespace-nowrap">Template checklist:</span>
+                  <span className="text-[11px] text-gray-400 shrink-0 whitespace-nowrap">{t("produtos.templateLabel")}</span>
                   <select
                     value={templateCur}
                     onChange={(e) => {
@@ -671,13 +670,13 @@ function ProdutosInstalacaoSection() {
                       setEdits((ed) => ({ ...ed, [p.id]: { ...(ed[p.id] || {}), checklist_template_id: val } }));
                     }}
                     className="text-xs text-gray-700 border border-gray-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:border-indigo-400 flex-1 max-w-xs">
-                    <option value="">Usar próprio template</option>
-                    {todosTemplates.map((t) => (
-                      <option key={t.id} value={t.id}>{t.nome}</option>
+                    <option value="">{t("produtos.templateDefault")}</option>
+                    {todosTemplates.map((tpl) => (
+                      <option key={tpl.id} value={tpl.id}>{tpl.nome}</option>
                     ))}
                   </select>
                   {templateSelecionado && (
-                    <span className="text-[11px] text-indigo-500 shrink-0">✓ vinculado</span>
+                    <span className="text-[11px] text-indigo-500 shrink-0">{t("produtos.templateLinked")}</span>
                   )}
                 </div>
               </div>
@@ -685,7 +684,7 @@ function ProdutosInstalacaoSection() {
           })}
 
           {produtos.length === 0 && (
-            <div className="text-sm text-gray-400 text-center py-8">Nenhum produto cadastrado. Adicione o primeiro abaixo.</div>
+            <div className="text-sm text-gray-400 text-center py-8">{t("produtos.empty")}</div>
           )}
 
           {/* Create row */}
@@ -698,22 +697,22 @@ function ProdutosInstalacaoSection() {
                 </div>
               </div>
               <input type="text" value={newNome} onChange={(e) => setNewNome(e.target.value)}
-                placeholder="Nome do produto…" autoFocus
+                placeholder={t("produtos.namePlaceholder")} autoFocus
                 className="flex-1 text-sm text-gray-800 bg-transparent border-b border-indigo-300 focus:outline-none focus:border-indigo-500 px-1 py-0.5 min-w-0" />
               <button type="submit" disabled={saving || !newNome.trim()}
                 className="text-xs px-2.5 py-1 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white font-semibold transition-colors disabled:opacity-50 shrink-0">
-                {saving ? "Criando…" : "Criar"}
+                {saving ? t("produtos.creating") : t("produtos.create")}
               </button>
               <button type="button" onClick={() => { setCreating(false); setNewNome(""); setNewCor("#6366f1"); }}
                 className="text-xs px-2.5 py-1 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors shrink-0">
-                Cancelar
+                {t("produtos.cancel")}
               </button>
             </form>
           ) : (
             <button type="button" onClick={() => setCreating(true)}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-gray-200 text-gray-400 hover:border-indigo-300 hover:text-indigo-500 hover:bg-indigo-50/20 transition-all text-sm font-medium">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
-              Adicionar produto
+              {t("produtos.addProduct")}
             </button>
           )}
         </div>
@@ -734,6 +733,7 @@ function IconErp() {
 }
 
 function ErpSection() {
+  const { t } = useTranslation("configuracoes");
   const BLANK = { base_url: "", api_token: "", timeout: 10 };
   const [form, setForm]       = useState(BLANK);
   const [loading, setLoading] = useState(true);
@@ -756,26 +756,26 @@ function ErpSection() {
 
   async function handleSave(e) {
     e.preventDefault();
-    if (!form.base_url.trim()) { setError("Informe a URL base do ERP."); return; }
+    if (!form.base_url.trim()) { setError(t("erp.errors.baseUrlRequired")); return; }
     setSaving(true); setSuccess(""); setError("");
     try {
       await configuracoesApi.saveErp(form);
-      setSuccess("Configuração salva com sucesso.");
+      setSuccess(t("erp.saveSuccess"));
     } catch (err) {
-      setError(err.message || "Erro ao salvar.");
+      setError(err.message || t("erp.errors.saveFailed"));
     } finally {
       setSaving(false);
     }
   }
 
   async function handleTestar() {
-    if (!form.base_url.trim()) { setError("Informe a URL base antes de testar."); return; }
+    if (!form.base_url.trim()) { setError(t("erp.errors.baseUrlRequiredTest")); return; }
     setTesting(true); setSuccess(""); setError("");
     try {
       const { data } = await configuracoesApi.testarErp(form);
       setSuccess(data.message);
     } catch (err) {
-      setError(err.message || "Falha ao conectar ao ERP.");
+      setError(err.message || t("erp.errors.testFailed"));
     } finally {
       setTesting(false);
     }
@@ -785,43 +785,43 @@ function ErpSection() {
     <div>
       <SectionHeader
         icon={<IconErp />}
-        title="Integração ERP — Consulta de Clientes"
-        subtitle="Os clientes listados no módulo de Instalações são buscados diretamente do ERP via API. Configure a URL e o token de acesso abaixo."
+        title={t("erp.title")}
+        subtitle={t("erp.subtitle")}
       />
 
       {loading ? (
         <div className="flex items-center gap-2 text-sm text-gray-400">
           <span className="w-3.5 h-3.5 rounded-full border-2 border-gray-300 border-t-transparent animate-spin" />
-          Carregando…
+          {t("common.loading")}
         </div>
       ) : (
         <form onSubmit={handleSave} className="space-y-6">
 
           {/* Endpoint info */}
           <div className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">Endpoint consultado</p>
+            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">{t("erp.endpointConsulted")}</p>
             <p className="text-sm font-mono text-gray-700 break-all">
-              <span className="text-gray-400">{form.base_url || "<URL base>"}</span>
+              <span className="text-gray-400">{form.base_url || t("erp.endpointUrlPlaceholder")}</span>
               <span className="text-indigo-600">/api/gerente/v2/CheckClient</span>
             </p>
           </div>
 
           {/* Conexão */}
           <div>
-            <FieldGroup label="Conexão" />
+            <FieldGroup label={t("erp.connection")} />
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-2">
-                <label className={LBL}>URL base do ERP *</label>
+                <label className={LBL}>{t("erp.baseUrlLabel")}</label>
                 <input
                   className={INP}
                   placeholder="http://criaresuporte1.no-ip.info:9000"
                   value={form.base_url}
                   onChange={(e) => set("base_url", e.target.value)}
                 />
-                <p className="text-[11px] text-gray-400 mt-1">Sem barra no final</p>
+                <p className="text-[11px] text-gray-400 mt-1">{t("erp.baseUrlHelp")}</p>
               </div>
               <div>
-                <label className={LBL}>Timeout (segundos)</label>
+                <label className={LBL}>{t("erp.timeoutLabel")}</label>
                 <input
                   className={INP}
                   type="number"
@@ -837,18 +837,18 @@ function ErpSection() {
 
           {/* Autenticação */}
           <div>
-            <FieldGroup label="Autenticação" />
+            <FieldGroup label={t("erp.authentication")} />
             <div>
-              <label className={LBL}>Token de acesso (Bearer)</label>
+              <label className={LBL}>{t("erp.tokenLabel")}</label>
               <input
                 className={INP}
                 type="password"
-                placeholder="Deixe em branco se a API não exige autenticação"
+                placeholder={t("erp.tokenPlaceholder")}
                 value={form.api_token}
                 onChange={(e) => set("api_token", e.target.value)}
               />
               <p className="text-[11px] text-gray-400 mt-1">
-                Enviado como <span className="font-mono">Authorization: Bearer &lt;token&gt;</span>
+                {t("erp.tokenHelpPrefix")} <span className="font-mono">Authorization: Bearer &lt;token&gt;</span>
               </p>
             </div>
           </div>
@@ -863,7 +863,7 @@ function ErpSection() {
             <button type="submit" disabled={saving}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60 transition-colors">
               {saving && <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />}
-              {saving ? "Salvando…" : "Salvar configuração"}
+              {saving ? t("erp.saving") : t("erp.save")}
             </button>
             <button type="button" onClick={handleTestar} disabled={testing || saving}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors">
@@ -873,7 +873,7 @@ function ErpSection() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
               }
-              {testing ? "Testando…" : "Testar conexão"}
+              {testing ? t("erp.testing") : t("erp.testConnection")}
             </button>
           </div>
         </form>
@@ -886,27 +886,27 @@ function ErpSection() {
 
 const NAV = [
   {
-    group: "Sistema",
+    groupKey: "sistema",
     items: [
-      { key: "base",  label: "Base Zerada",   icon: <IconDatabase />, desc: "Arquivo SQL de instalação" },
+      { key: "base",  icon: <IconDatabase /> },
     ],
   },
   {
-    group: "Notificações",
+    groupKey: "notificacoes",
     items: [
-      { key: "email", label: "Email (SMTP)",  icon: <IconEmail />,    desc: "Configuração do servidor de e-mail" },
+      { key: "email", icon: <IconEmail /> },
     ],
   },
   {
-    group: "Instalações",
+    groupKey: "instalacoes",
     items: [
-      { key: "produtos", label: "Produtos",   icon: <IconProducts />, desc: "Tipos de produto para instalações" },
+      { key: "produtos", icon: <IconProducts /> },
     ],
   },
   {
-    group: "Integrações",
+    groupKey: "integracoes",
     items: [
-      { key: "erp", label: "Integração ERP", icon: <IconErp />, desc: "Consulta de clientes via API externa" },
+      { key: "erp", icon: <IconErp /> },
     ],
   },
 ];
@@ -921,24 +921,25 @@ const SECTIONS = {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Configuracoes() {
+  const { t } = useTranslation("configuracoes");
   const [active, setActive] = useState("base");
 
   return (
     <Layout>
       {/* Page header */}
       <div className="mb-7">
-        <h1 className="text-xl font-bold text-gray-900">Configurações</h1>
-        <p className="text-sm text-gray-400 mt-0.5">Gerencie os parâmetros e integrações do sistema</p>
+        <h1 className="text-xl font-bold text-gray-900">{t("page.title")}</h1>
+        <p className="text-sm text-gray-400 mt-0.5">{t("page.subtitle")}</p>
       </div>
 
       <div className="flex gap-6 items-start">
 
         {/* ── Sidebar nav ── */}
         <nav className="w-52 shrink-0">
-          {NAV.map(({ group, items }) => (
-            <div key={group} className="mb-5">
+          {NAV.map(({ groupKey, items }) => (
+            <div key={groupKey} className="mb-5">
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 mb-1">
-                {group}
+                {t(`nav.groups.${groupKey}`)}
               </p>
               {items.map((item) => {
                 const isActive = active === item.key;
@@ -956,7 +957,7 @@ export default function Configuracoes() {
                       {item.icon}
                     </span>
                     <span className={`text-sm font-medium ${isActive ? "text-indigo-700" : ""}`}>
-                      {item.label}
+                      {t(`nav.items.${item.key}.label`)}
                     </span>
                   </button>
                 );

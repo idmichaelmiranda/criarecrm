@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Layout } from "../components/layout/Layout";
 import { gruposApi } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { PERMISSION_LABELS, PERMISSION_MODULES } from "../constants/permissions";
 
 function Modal({ titulo, inicial, onSave, onClose, loading, hasPermission }) {
+  const { t } = useTranslation("gruposPermissao");
   const isEdit = !!inicial?.id;
   const [nome, setNome] = useState(inicial?.nome ?? "");
   const [descricao, setDescricao] = useState(inicial?.descricao ?? "");
@@ -35,7 +37,7 @@ function Modal({ titulo, inicial, onSave, onClose, loading, hasPermission }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!nome.trim()) { setError("Nome é obrigatório."); return; }
+    if (!nome.trim()) { setError(t("errors.nameRequired")); return; }
     try {
       await onSave({ nome: nome.trim(), descricao: descricao.trim() || null, permissoes: [...permissoes], ativo });
     } catch (err) {
@@ -59,30 +61,30 @@ function Modal({ titulo, inicial, onSave, onClose, loading, hasPermission }) {
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
           <div className="px-6 py-5 space-y-4 overflow-y-auto flex-1">
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Nome do Grupo</label>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">{t("modal.groupName")}</label>
               <input
                 value={nome}
                 onChange={(e) => { setNome(e.target.value); setError(""); }}
                 disabled={!canEdit}
-                placeholder="Ex.: Analista, Supervisor..."
+                placeholder={t("modal.groupNamePlaceholder")}
                 className="w-full px-3 py-2.5 rounded-xl text-sm text-gray-900 placeholder-gray-400 border border-gray-200 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all disabled:bg-gray-50 disabled:opacity-60"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Descrição (opcional)</label>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">{t("modal.description")}</label>
               <input
                 value={descricao}
                 onChange={(e) => setDescricao(e.target.value)}
                 disabled={!canEdit}
-                placeholder="Descreva o papel deste grupo"
+                placeholder={t("modal.descriptionPlaceholder")}
                 className="w-full px-3 py-2.5 rounded-xl text-sm text-gray-900 placeholder-gray-400 border border-gray-200 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all disabled:bg-gray-50 disabled:opacity-60"
               />
             </div>
 
             {/* Permissões */}
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Permissões</label>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">{t("modal.permissions")}</label>
               <div className="space-y-2">
                 {PERMISSION_MODULES.map((mod) => {
                   const allOn  = mod.permissions.every((p) => permissoes.has(p));
@@ -149,7 +151,7 @@ function Modal({ titulo, inicial, onSave, onClose, loading, hasPermission }) {
               >
                 <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${ativo ? "translate-x-5" : "translate-x-0.5"}`} />
               </button>
-              <span className="text-sm text-gray-600">{ativo ? "Grupo ativo" : "Grupo inativo"}</span>
+              <span className="text-sm text-gray-600">{ativo ? t("modal.activeGroup") : t("modal.inactiveGroup")}</span>
             </div>
 
             {error && (
@@ -164,7 +166,7 @@ function Modal({ titulo, inicial, onSave, onClose, loading, hasPermission }) {
                 onClick={onClose}
                 className="flex-1 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 border border-gray-200 transition-colors"
               >
-                Cancelar
+                {t("modal.cancel")}
               </button>
               <button
                 type="submit"
@@ -172,7 +174,7 @@ function Modal({ titulo, inicial, onSave, onClose, loading, hasPermission }) {
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 hover:opacity-90 transition-all"
                 style={{ background: "linear-gradient(135deg, #F56316, #d94f0d)" }}
               >
-                {loading ? "Salvando..." : "Salvar"}
+                {loading ? t("modal.saving") : t("modal.save")}
               </button>
             </div>
           )}
@@ -183,6 +185,7 @@ function Modal({ titulo, inicial, onSave, onClose, loading, hasPermission }) {
 }
 
 export default function GruposPermissao() {
+  const { t } = useTranslation("gruposPermissao");
   const { hasPermission } = useAuth();
   const [grupos, setGrupos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -196,7 +199,7 @@ export default function GruposPermissao() {
       const { data } = await gruposApi.listar();
       setGrupos(data);
     } catch {
-      setError("Erro ao carregar grupos.");
+      setError(t("errors.loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -231,8 +234,8 @@ export default function GruposPermissao() {
     <Layout>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Grupos de Permissão</h1>
-          <p className="text-sm text-gray-500 mt-1">Controle o acesso por perfis de usuário</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t("header.title")}</h1>
+          <p className="text-sm text-gray-500 mt-1">{t("header.subtitle")}</p>
         </div>
         {hasPermission("grupos.create") && (
           <button
@@ -243,7 +246,7 @@ export default function GruposPermissao() {
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
             </svg>
-            Novo Grupo
+            {t("header.newGroup")}
           </button>
         )}
       </div>
@@ -257,7 +260,7 @@ export default function GruposPermissao() {
           <div className="w-6 h-6 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" />
         </div>
       ) : grupos.length === 0 ? (
-        <p className="text-gray-400 text-sm text-center py-20">Nenhum grupo cadastrado.</p>
+        <p className="text-gray-400 text-sm text-center py-20">{t("empty")}</p>
       ) : (
         <div className="grid grid-cols-1 gap-3">
           {grupos.map((g) => (
@@ -277,16 +280,16 @@ export default function GruposPermissao() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-semibold text-gray-800">{g.nome}</span>
                   {!g.ativo && (
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-400">Inativo</span>
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-400">{t("inactive")}</span>
                   )}
                 </div>
                 {g.descricao && <p className="text-xs text-gray-400 mt-0.5 truncate">{g.descricao}</p>}
                 <div className="flex items-center gap-3 mt-1.5">
                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-orange-50 text-orange-600">
-                    {g.permissoes?.length ?? 0} permissão{g.permissoes?.length !== 1 ? "ões" : ""}
+                    {t("permissionCount", { count: g.permissoes?.length ?? 0 })}
                   </span>
                   <span className="text-xs text-gray-400">
-                    {g.total_usuarios ?? 0} usuário{g.total_usuarios !== 1 ? "s" : ""}
+                    {t("userCount", { count: g.total_usuarios ?? 0 })}
                   </span>
                 </div>
               </div>
@@ -297,7 +300,7 @@ export default function GruposPermissao() {
                   <button
                     onClick={() => setModal({ item: g })}
                     className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-all"
-                    title="Editar"
+                    title={t("actions.edit")}
                   >
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -308,7 +311,7 @@ export default function GruposPermissao() {
                   <button
                     onClick={() => setDeleteConfirm(g)}
                     className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
-                    title="Excluir"
+                    title={t("actions.delete")}
                   >
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -323,7 +326,7 @@ export default function GruposPermissao() {
 
       {modal !== null && (
         <Modal
-          titulo={modal.item ? "Editar Grupo" : "Novo Grupo"}
+          titulo={modal.item ? t("modal.titleEdit") : t("modal.titleNew")}
           inicial={modal.item}
           onSave={handleSave}
           onClose={() => setModal(null)}
@@ -340,12 +343,12 @@ export default function GruposPermissao() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-base font-semibold text-gray-900 mb-2">Excluir grupo?</h3>
+            <h3 className="text-base font-semibold text-gray-900 mb-2">{t("deleteConfirm.title")}</h3>
             <p className="text-sm text-gray-500 mb-6">
-              Tem certeza que deseja excluir <span className="font-semibold text-gray-800">{deleteConfirm.nome}</span>?
+              {t("deleteConfirm.messageBefore")}<span className="font-semibold text-gray-800">{deleteConfirm.nome}</span>{t("deleteConfirm.messageAfter")}
               {(deleteConfirm.total_usuarios ?? 0) > 0 && (
                 <span className="block mt-1 text-amber-600 text-xs font-medium">
-                  Atenção: {deleteConfirm.total_usuarios} usuário(s) vinculado(s) a este grupo.
+                  {t("deleteConfirm.linkedUsersWarning", { count: deleteConfirm.total_usuarios })}
                 </span>
               )}
             </p>
@@ -354,13 +357,13 @@ export default function GruposPermissao() {
                 onClick={() => setDeleteConfirm(null)}
                 className="flex-1 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 border border-gray-200 transition-colors"
               >
-                Cancelar
+                {t("deleteConfirm.cancel")}
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm.id)}
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors"
               >
-                Excluir
+                {t("deleteConfirm.confirm")}
               </button>
             </div>
           </div>

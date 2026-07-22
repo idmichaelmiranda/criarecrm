@@ -1,0 +1,48 @@
+{
+  "page": {
+    "title": "Templates",
+    "subtitle": "Reusable pipelines and checklists for implementation and installation.",
+    "newTemplate": "New Template"
+  },
+  "tabs": {
+    "implantacao": "Implementation",
+    "instalacao": "Installation"
+  },
+  "search": {
+    "placeholder": "Search template...",
+    "count_one": "{{count}} template",
+    "count_other": "{{count}} templates",
+    "forQuery": " for \"{{query}}\""
+  },
+  "empty": {
+    "noneFound": "No templates found for \"{{query}}\"",
+    "noneRegistered": "No templates registered",
+    "tryOtherTerms": "Try different terms.",
+    "createFirst": "Create the first template to get started.",
+    "createButton": "Create template"
+  },
+  "card": {
+    "inactive": "Inactive",
+    "installation": "Installation",
+    "stages_one": "{{count}} stage",
+    "stages_other": "{{count}} stages",
+    "slaDays": "{{count}}d SLA",
+    "tasks_one": "{{count}} task",
+    "tasks_other": "{{count}} tasks",
+    "popGeral": "General SOP",
+    "viewPopGeral": "View General SOP",
+    "errorOpenPop": "Error opening SOP.",
+    "noStages": "No stages registered.",
+    "days": "{{count}}d",
+    "items_one": "{{count}} item",
+    "items_other": "{{count}} items",
+    "errorLoadingDetails": "Error loading details.",
+    "confirmDelete": "Delete \"{{nome}}\"? This cannot be undone."
+  },
+  "actions": {
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleting": "Deleting...",
+    "manageInSettings": "Manage in Settings"
+  }
+}

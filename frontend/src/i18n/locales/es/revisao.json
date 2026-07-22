@@ -1,0 +1,209 @@
+{
+  "header": {
+    "brand": "CriareCRM",
+    "pageLabel": "Revisión de solicitud"
+  },
+  "loading": {
+    "message": "Cargando su solicitud..."
+  },
+  "error": {
+    "expiredTitle": "Enlace expirado",
+    "invalidTitle": "Enlace inválido",
+    "contactSupport": "Póngase en contacto con nuestro equipo si necesita ayuda."
+  },
+  "success": {
+    "title": "¡Datos enviados!",
+    "prefix": "La información de",
+    "suffix": "fue actualizada con éxito. Nuestro equipo la analizará nuevamente y usted será notificado en breve."
+  },
+  "rejectionBanner": {
+    "title": "Su solicitud necesita ajustes",
+    "reasonPrefix": "Motivo:",
+    "instructionPrefix": "Corrija los campos indicados abajo y haga clic en",
+    "instructionButton": "Enviar corrección",
+    "instructionSuffix": "Nuestro equipo será notificado automáticamente."
+  },
+  "options": {
+    "ramo": { "comercio": "Comercio", "industria": "Industria" },
+    "crt": {
+      "1": "1 - Simples Nacional",
+      "2": "2 - Simples Nacional - Exceso de sublímite",
+      "3": "3 - Régimen Normal"
+    },
+    "regime": {
+      "1": "Simples Nacional",
+      "2": "Lucro Presumido",
+      "3": "Lucro Real"
+    },
+    "st": {
+      "1": "Informante Sustituto",
+      "2": "Informante Sustituido"
+    },
+    "conta": {
+      "corrente": "Cuenta Corriente",
+      "poupanca": "Cuenta de Ahorros",
+      "pagamento": "Cuenta de Pago"
+    }
+  },
+  "cep": {
+    "required": "El código postal es obligatorio",
+    "searching": "Buscando...",
+    "placeholder": "00000-000"
+  },
+  "section": {
+    "readOnlyBadge": "No es necesario modificar"
+  },
+  "sections": {
+    "empresa": {
+      "title": "Datos de la Empresa",
+      "cnpjLabel": "CNPJ *",
+      "cnpjPlaceholder": "00.000.000/0001-00",
+      "cnpjRequired": "El CNPJ es obligatorio",
+      "ieLabel": "Inscripción Estatal",
+      "ieOptional": "Opcional",
+      "ramoLabel": "Rubro de Actividad",
+      "razaoSocialLabel": "Razón Social *",
+      "razaoSocialPlaceholder": "Ej: Empresa Comercio LTDA",
+      "razaoSocialRequired": "La razón social es obligatoria",
+      "nomeFantasiaLabel": "Nombre Comercial",
+      "nomeFantasiaPlaceholder": "Cómo se le conoce",
+      "responsavelLabel": "Responsable",
+      "responsavelPlaceholder": "Nombre del responsable"
+    },
+    "contato": {
+      "title": "Contacto",
+      "emailLabel": "Email *",
+      "emailPlaceholder": "contacto@empresa.com.br",
+      "emailRequired": "El email es obligatorio",
+      "emailInvalid": "Email inválido",
+      "celularLabel": "Celular *",
+      "celularPlaceholder": "(11) 99999-9999",
+      "celularRequired": "El celular es obligatorio",
+      "telefoneFixoLabel": "Teléfono Fijo",
+      "telefoneFixoPlaceholder": "(11) 3333-3333"
+    },
+    "endereco": {
+      "title": "Dirección",
+      "cepLabel": "Código Postal *",
+      "numeroLabel": "Número *",
+      "numeroPlaceholder": "Ej: 123",
+      "numeroRequired": "El número es obligatorio",
+      "enderecoLabel": "Dirección *",
+      "enderecoPlaceholder": "Calle, Avenida...",
+      "enderecoRequired": "La dirección es obligatoria",
+      "bairroLabel": "Barrio *",
+      "bairroPlaceholder": "Ej: Centro",
+      "bairroRequired": "El barrio es obligatorio",
+      "cidadeLabel": "Ciudad *",
+      "cidadePlaceholder": "Ej: São Paulo",
+      "cidadeRequired": "La ciudad es obligatoria",
+      "estadoLabel": "Estado (UF) *",
+      "estadoPlaceholder": "SP",
+      "estadoRequired": "El estado es obligatorio"
+    },
+    "contabilidade": {
+      "title": "Contabilidad",
+      "nomeContadorLabel": "Nombre del Contador *",
+      "nomeContadorPlaceholder": "Nombre completo",
+      "nomeContadorRequired": "El nombre es obligatorio",
+      "cpfLabel": "CPF *",
+      "cpfPlaceholder": "000.000.000-00",
+      "cpfRequired": "El CPF es obligatorio",
+      "crcLabel": "CRC",
+      "crcPlaceholder": "CRC-SP 123456",
+      "cnpjEscritorioLabel": "CNPJ de la Oficina",
+      "cnpjEscritorioPlaceholder": "00.000.000/0001-00",
+      "emailContadorLabel": "Email del Contador",
+      "telefoneFixoLabel": "Teléfono Fijo",
+      "telefoneFixoPlaceholder": "(11) 3333-3333",
+      "celularLabel": "Celular",
+      "celularPlaceholder": "(11) 99999-9999",
+      "cepEscritorioLabel": "Código Postal de la Oficina",
+      "numeroLabel": "Número",
+      "numeroPlaceholder": "Ej: 100",
+      "enderecoLabel": "Dirección",
+      "enderecoPlaceholder": "Calle, Avenida...",
+      "bairroLabel": "Barrio",
+      "cidadeLabel": "Ciudad",
+      "estadoLabel": "Estado (UF)"
+    },
+    "banco": {
+      "title": "Datos Bancarios",
+      "nomeBancoLabel": "Nombre del Banco",
+      "nomeBancoPlaceholder": "Ej: Banco do Brasil",
+      "cnpjBancoLabel": "CNPJ del Banco",
+      "cnpjBancoPlaceholder": "00.000.000/0001-00",
+      "tipoContaLabel": "Tipo de Cuenta",
+      "agenciaLabel": "Agencia",
+      "agenciaPlaceholder": "1234",
+      "dvAgenciaLabel": "DV Agencia",
+      "dvAgenciaPlaceholder": "5",
+      "contaLabel": "Cuenta",
+      "contaPlaceholder": "12345",
+      "dvContaLabel": "DV Cuenta",
+      "dvContaPlaceholder": "6"
+    },
+    "regime": {
+      "title": "Régimen Tributario",
+      "crtLabel": "CRT — Código de Régimen Tributario",
+      "regimeLabel": "Régimen",
+      "condicaoStLabel": "Condición ST",
+      "aliqSimplesLabel": "Alícuota del Simples Nacional (%)",
+      "aliqSimplesPlaceholder": "Ej: 4,00",
+      "receitaBrutaLabel": "Ingresos Brutos (R$)",
+      "receitaBrutaPlaceholder": "Ej: 360000,00"
+    },
+    "pagamento": {
+      "title": "Formas de Pago",
+      "dinheiro": "Efectivo",
+      "chequeVista": "Cheque al Contado",
+      "chequePrazo": "Cheque a Plazo",
+      "cartaoCredito": "Tarjeta de Crédito",
+      "cartaoDebito": "Tarjeta de Débito",
+      "alimentacao": "Alimentación",
+      "cartaoRefeicao": "Tarjeta de Comida",
+      "pix": "Pix (CNPJ)",
+      "aPrazo": "A Plazo",
+      "possuiTef": "¿Tiene TEF?",
+      "integradoraPlaceholder": "Nombre de la integradora (ej: Sitef)"
+    },
+    "fiscal": {
+      "title": "Datos NFe / NFCe",
+      "cscLabel": "CSC",
+      "cscPlaceholder": "Código de seguridad",
+      "tokenLabel": "Token NFCe",
+      "tokenPlaceholder": "Token de la SEFAZ",
+      "ultimaSerieLabel": "Última Serie NFCe",
+      "ultimaSeriePlaceholder": "Ej: 001",
+      "serieNfeLabel": "Serie NF-e",
+      "serieNfePlaceholder": "Ej: 1",
+      "ultimaNfeLabel": "Última NF-e Emitida",
+      "ultimaNfePlaceholder": "Ej: 000001"
+    },
+    "certificado": {
+      "title": "Certificado Digital",
+      "currentPrefix": "Certificado actual:",
+      "selectCertificado": "Seleccionar certificado A1",
+      "replaceCertificado": "Reemplazar certificado A1",
+      "certExtensions": ".pfx o .p12",
+      "change": "Cambiar",
+      "choose": "Elegir",
+      "senhaLabel": "Contraseña del Certificado",
+      "senhaPlaceholder": "Contraseña del archivo .pfx / .p12"
+    },
+    "adquirentes": {
+      "title": "Adquirentes / Procesadoras de Pago",
+      "nome": "Nombre",
+      "cnpj": "CNPJ",
+      "ie": "Insc. Estatal",
+      "nomePlaceholder": "Ej: Cielo",
+      "cnpjPlaceholder": "00.000.000/0001-00",
+      "iePlaceholder": "Opcional"
+    }
+  },
+  "submit": {
+    "error": "Error al enviar. Intente nuevamente.",
+    "sending": "Enviando...",
+    "button": "Enviar corrección"
+  }
+}

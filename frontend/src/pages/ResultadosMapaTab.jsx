@@ -5,6 +5,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "react-leaflet-cluster/dist/assets/MarkerCluster.css";
 import "react-leaflet-cluster/dist/assets/MarkerCluster.Default.css";
+import { useTranslation } from "react-i18next";
 import { resultadosApi } from "../services/api";
 
 const STATUS_COR = {
@@ -12,18 +13,12 @@ const STATUS_COR = {
   em_andamento: "#3b82f6",
   pausada:      "#f59e0b",
 };
-const STATUS_LABEL = {
-  concluida:    "Concluída",
-  em_andamento: "Em andamento",
-  pausada:      "Pausada",
-};
-const TIPO_LABEL = { implantacao: "Implantação", instalacao: "Instalação" };
 
 const PERIODO_OPTS = [
-  { value: "30",  label: "30 dias"  },
-  { value: "90",  label: "90 dias"  },
-  { value: "180", label: "180 dias" },
-  { value: "365", label: "1 ano"    },
+  { value: "30"  },
+  { value: "90"  },
+  { value: "180" },
+  { value: "365" },
 ];
 
 function createStatusIcon(status, coordReal) {
@@ -40,6 +35,7 @@ function createStatusIcon(status, coordReal) {
 }
 
 export default function ResultadosMapaTab({ filtros, onFiltroChange, presentationMode = false }) {
+  const { t, i18n } = useTranslation("resultadosMapa");
   const [pontos,       setPontos]       = useState([]);
   const [loading,      setLoading]      = useState(true);
   const [filtroStatus, setFiltroStatus] = useState("todos");
@@ -103,18 +99,18 @@ export default function ResultadosMapaTab({ filtros, onFiltroChange, presentatio
     <div className={presentationMode ? "" : "space-y-4"}>
       {!presentationMode && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3 flex flex-wrap items-center gap-3">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider shrink-0">Tipo:</span>
+          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider shrink-0">{t("typeFilter.label")}</span>
           {[
-            { key: "todos",       label: "Todos",         count: pontos.length },
-            { key: "implantacao", label: "Implantações",  count: pontos.filter(p => p.tipo === "implantacao").length },
-            { key: "instalacao",  label: "Instalações",   count: pontos.filter(p => p.tipo === "instalacao").length  },
-          ].map(t => (
-            <button key={t.key} onClick={() => setFiltroTipo(t.key)}
+            { key: "todos",       label: t("all"),                    count: pontos.length },
+            { key: "implantacao", label: t("tipo.implantacao"),  count: pontos.filter(p => p.tipo === "implantacao").length },
+            { key: "instalacao",  label: t("tipo.instalacao"),   count: pontos.filter(p => p.tipo === "instalacao").length  },
+          ].map(tp => (
+            <button key={tp.key} onClick={() => setFiltroTipo(tp.key)}
               className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
-                filtroTipo === t.key ? "bg-gray-800 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                filtroTipo === tp.key ? "bg-gray-800 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
-              {t.label} ({t.count})
+              {tp.label} ({tp.count})
             </button>
           ))}
         </div>
@@ -122,12 +118,12 @@ export default function ResultadosMapaTab({ filtros, onFiltroChange, presentatio
 
       {!presentationMode && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3 flex flex-wrap items-center gap-3">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider shrink-0">Status:</span>
+          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider shrink-0">{t("statusFilter.label")}</span>
           {[
-            { key: "todos",        label: "Todos",         cor: null },
-            { key: "concluida",    label: "Concluída",     cor: STATUS_COR.concluida    },
-            { key: "em_andamento", label: "Em andamento",  cor: STATUS_COR.em_andamento },
-            { key: "pausada",      label: "Pausada",       cor: STATUS_COR.pausada      },
+            { key: "todos",        label: t("all"),                     cor: null },
+            { key: "concluida",    label: t("status.concluida"),     cor: STATUS_COR.concluida    },
+            { key: "em_andamento", label: t("status.em_andamento"),  cor: STATUS_COR.em_andamento },
+            { key: "pausada",      label: t("status.pausada"),       cor: STATUS_COR.pausada      },
           ].map(s => (
             <button key={s.key} onClick={() => setFiltroStatus(s.key)}
               className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors flex items-center gap-1.5 ${
@@ -140,21 +136,21 @@ export default function ResultadosMapaTab({ filtros, onFiltroChange, presentatio
             </button>
           ))}
           <span className="ml-auto text-xs text-gray-400">
-            {pontosFiltrados.length} ponto{pontosFiltrados.length !== 1 ? "s" : ""} visível{pontosFiltrados.length !== 1 ? "is" : ""}
+            {t("visiblePoints", { count: pontosFiltrados.length })}
           </span>
         </div>
       )}
 
       {!presentationMode && estadosAtivos.size > 0 && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3 flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider shrink-0">Estados ativos:</span>
+          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider shrink-0">{t("activeStates.label")}</span>
           {[...estadosAtivos].sort().map(uf => (
             <span key={uf} className="px-2 py-0.5 rounded-full text-xs font-bold bg-orange-50 text-orange-600 border border-orange-200">
               {uf}
             </span>
           ))}
           <span className="ml-auto text-xs text-gray-400">
-            {estadosAtivos.size} de 27 estados
+            {t("activeStates.ofTotal", { count: estadosAtivos.size })}
           </span>
         </div>
       )}
@@ -169,18 +165,18 @@ export default function ResultadosMapaTab({ filtros, onFiltroChange, presentatio
           <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1001] flex items-center gap-1.5 flex-wrap justify-center pointer-events-none">
             {filtroTipo !== "todos" && (
               <span className="px-2.5 py-1 rounded-full text-white text-[11px] font-semibold shadow bg-gray-800">
-                {TIPO_LABEL[filtroTipo]}
+                {t(`tipoSingular.${filtroTipo}`)}
               </span>
             )}
             {filtroStatus !== "todos" && (
               <span className="px-2.5 py-1 rounded-full text-white text-[11px] font-semibold shadow"
                 style={{ backgroundColor: STATUS_COR[filtroStatus] || "#374151" }}>
-                {STATUS_LABEL[filtroStatus]}
+                {t(`status.${filtroStatus}`)}
               </span>
             )}
             {filtros.periodo !== "365" && (
               <span className="px-2.5 py-1 rounded-full text-white text-[11px] font-semibold shadow bg-gray-700">
-                {PERIODO_OPTS.find(p => p.value === filtros.periodo)?.label ?? `${filtros.periodo}d`}
+                {PERIODO_OPTS.some(p => p.value === filtros.periodo) ? t(`periods.${filtros.periodo}`) : `${filtros.periodo}d`}
               </span>
             )}
           </div>
@@ -188,7 +184,7 @@ export default function ResultadosMapaTab({ filtros, onFiltroChange, presentatio
 
         {/* Botões flutuantes */}
         <div className="absolute top-3 right-3 z-[1001] flex items-center gap-1.5">
-          <button onClick={() => setPainelAberto(v => !v)} title="Filtros"
+          <button onClick={() => setPainelAberto(v => !v)} title={t("buttons.filters")}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition-all border ${
               painelAberto
                 ? "bg-orange-500 text-white border-orange-500"
@@ -197,10 +193,10 @@ export default function ResultadosMapaTab({ filtros, onFiltroChange, presentatio
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
             </svg>
-            Filtros
+            {t("buttons.filters")}
           </button>
           {!presentationMode && (
-            <button onClick={toggleMapaFull} title={mapaFull ? "Sair da tela cheia" : "Expandir mapa"}
+            <button onClick={toggleMapaFull} title={mapaFull ? t("buttons.exitFullscreen") : t("buttons.expandMap")}
               className="bg-white bg-opacity-90 hover:bg-opacity-100 border border-gray-200 rounded-lg p-1.5 shadow-sm transition-all"
               style={{ lineHeight: 0 }}>
               {mapaFull ? (
@@ -220,31 +216,31 @@ export default function ResultadosMapaTab({ filtros, onFiltroChange, presentatio
         {painelAberto && (
           <div className="absolute top-12 right-3 z-[1001] bg-gray-900 bg-opacity-95 backdrop-blur-sm rounded-xl shadow-2xl p-4 text-xs" style={{ minWidth: 240 }}>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Filtros</span>
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("filterPanel.title")}</span>
               <button onClick={() => setPainelAberto(false)} className="text-gray-500 hover:text-gray-300 text-base leading-none">✕</button>
             </div>
-            <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Tipo</p>
+            <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">{t("filterPanel.type")}</p>
             <div className="flex flex-wrap gap-1.5 mb-3">
               {[
-                { key: "todos",       label: "Todos"        },
-                { key: "implantacao", label: "Implantações" },
-                { key: "instalacao",  label: "Instalações"  },
-              ].map(t => (
-                <button key={t.key} onClick={() => setFiltroTipo(t.key)}
+                { key: "todos",       label: t("all") },
+                { key: "implantacao", label: t("tipo.implantacao") },
+                { key: "instalacao",  label: t("tipo.instalacao") },
+              ].map(tp => (
+                <button key={tp.key} onClick={() => setFiltroTipo(tp.key)}
                   className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ${
-                    filtroTipo === t.key ? "bg-gray-200 text-gray-900" : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                    filtroTipo === tp.key ? "bg-gray-200 text-gray-900" : "bg-gray-700 text-gray-300 hover:bg-gray-600"
                   }`}>
-                  {t.label}
+                  {tp.label}
                 </button>
               ))}
             </div>
-            <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Status</p>
+            <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">{t("filterPanel.status")}</p>
             <div className="flex flex-wrap gap-1.5 mb-3">
               {[
-                { key: "todos",        label: "Todos"        },
-                { key: "concluida",    label: "Concluída"    },
-                { key: "em_andamento", label: "Em andamento" },
-                { key: "pausada",      label: "Pausada"      },
+                { key: "todos",        label: t("all") },
+                { key: "concluida",    label: t("status.concluida") },
+                { key: "em_andamento", label: t("status.em_andamento") },
+                { key: "pausada",      label: t("status.pausada") },
               ].map(s => (
                 <button key={s.key} onClick={() => setFiltroStatus(s.key)}
                   className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ${
@@ -254,14 +250,14 @@ export default function ResultadosMapaTab({ filtros, onFiltroChange, presentatio
                 </button>
               ))}
             </div>
-            <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Período</p>
+            <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">{t("filterPanel.period")}</p>
             <div className="flex flex-wrap gap-1.5">
               {PERIODO_OPTS.map(p => (
                 <button key={p.value} onClick={() => onFiltroChange?.("periodo", p.value)}
                   className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ${
                     filtros.periodo === p.value ? "bg-orange-500 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"
                   }`}>
-                  {p.label}
+                  {t(`periods.${p.value}`)}
                 </button>
               ))}
             </div>
@@ -271,33 +267,33 @@ export default function ResultadosMapaTab({ filtros, onFiltroChange, presentatio
         {/* Legenda por status */}
         {!loading && (
           <div className="absolute bottom-8 left-3 z-[1000] bg-gray-900 bg-opacity-85 backdrop-blur-sm rounded-xl shadow-xl p-3 text-xs select-none" style={{ minWidth: 155 }}>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Legenda</p>
-            <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Status</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t("legend.title")}</p>
+            <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">{t("legend.status")}</p>
             <div className="flex flex-col gap-1.5 mb-3">
               {Object.entries(STATUS_COR).map(([k, cor]) => (
                 <div key={k} className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded-full shrink-0 border border-white border-opacity-30" style={{ backgroundColor: cor }} />
-                  <span className="text-gray-200">{STATUS_LABEL[k]}</span>
+                  <span className="text-gray-200">{t(`status.${k}`)}</span>
                 </div>
               ))}
             </div>
-            <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5 mt-1">Localização</p>
+            <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5 mt-1">{t("legend.location")}</p>
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full shrink-0" style={{ border: "2px solid rgba(255,255,255,0.85)", backgroundColor: "#3b82f6" }} />
-              <span className="text-gray-300">Coord. exata</span>
+              <span className="text-gray-300">{t("legend.exactCoord")}</span>
             </div>
             <div className="flex items-center gap-2 mt-1.5">
               <span className="w-3 h-3 rounded-full shrink-0" style={{ border: "2px dashed #f59e0b", backgroundColor: "#3b82f6" }} />
-              <span className="text-yellow-400">Aprox. (estado)</span>
+              <span className="text-yellow-400">{t("legend.approxState")}</span>
             </div>
-            <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5 mt-2">Estados</p>
+            <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5 mt-2">{t("legend.states")}</p>
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded shrink-0 border border-orange-400" style={{ backgroundColor: "#f97316", opacity: 0.15 }} />
-              <span className="text-gray-300">Com operações</span>
+              <span className="text-gray-300">{t("legend.withOperations")}</span>
             </div>
             <div className="flex items-center gap-2 mt-1.5">
               <span className="w-3 h-3 rounded shrink-0 border border-gray-600" style={{ backgroundColor: "#000", opacity: 0.8 }} />
-              <span className="text-gray-500">Sem operações</span>
+              <span className="text-gray-500">{t("legend.withoutOperations")}</span>
             </div>
           </div>
         )}
@@ -338,42 +334,42 @@ export default function ResultadosMapaTab({ filtros, onFiltroChange, presentatio
                 >
                   <Tooltip sticky direction="top" offset={[0, -8]}>
                     <span style={{ fontSize: 11, fontWeight: 600 }}>{p.cidade || p.estado}</span>
-                    {!p.coordenada_real && <span style={{ fontSize: 10, color: "#f59e0b" }}> ⚠ aprox.</span>}
+                    {!p.coordenada_real && <span style={{ fontSize: 10, color: "#f59e0b" }}>{t("tooltip.approx")}</span>}
                   </Tooltip>
                   <Popup minWidth={210}>
                     <div style={{ fontSize: 12, lineHeight: 1.7 }}>
                       <p style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{p.cliente_nome}</p>
                       <p style={{ color: "#6b7280", marginBottom: 6 }}>{p.cidade} — {p.estado}</p>
                       <p>
-                        <span style={{ color: "#9ca3af" }}>Tipo: </span>
-                        <span style={{ fontWeight: 600 }}>{TIPO_LABEL[p.tipo] || p.tipo}</span>
+                        <span style={{ color: "#9ca3af" }}>{t("popup.type")}</span>
+                        <span style={{ fontWeight: 600 }}>{p.tipo ? t(`tipoSingular.${p.tipo}`) : p.tipo}</span>
                       </p>
                       <p>
-                        <span style={{ color: "#9ca3af" }}>Status: </span>
+                        <span style={{ color: "#9ca3af" }}>{t("popup.status")}</span>
                         <span style={{ fontWeight: 600, color: STATUS_COR[p.status] || "#9ca3af" }}>
-                          {STATUS_LABEL[p.status] || p.status}
+                          {p.status ? t(`status.${p.status}`) : p.status}
                         </span>
                       </p>
                       {p.consultor && (
-                        <p><span style={{ color: "#9ca3af" }}>Consultor: </span>{p.consultor}</p>
+                        <p><span style={{ color: "#9ca3af" }}>{t("popup.consultant")}</span>{p.consultor}</p>
                       )}
                       {p.data_prevista && (
                         <p>
-                          <span style={{ color: "#9ca3af" }}>Prevista: </span>
-                          {new Date(p.data_prevista).toLocaleDateString("pt-BR")}
+                          <span style={{ color: "#9ca3af" }}>{t("popup.expected")}</span>
+                          {new Date(p.data_prevista).toLocaleDateString(i18n.language)}
                         </p>
                       )}
-                      <p><span style={{ color: "#9ca3af" }}>Progresso: </span>{p.progresso ?? 0}%</p>
+                      <p><span style={{ color: "#9ca3af" }}>{t("popup.progress")}</span>{p.progresso ?? 0}%</p>
                       {!p.coordenada_real && (
                         <p style={{ fontSize: 10, color: "#f59e0b", marginTop: 4 }}>
-                          ⚠ Posição aproximada — cidade não mapeada, usando centróide do estado
+                          {t("popup.approxWarning")}
                         </p>
                       )}
                       <a
                         href={`/clientes/${p.cliente_id}`}
                         style={{ display: "inline-block", marginTop: 8, color: "#3b82f6", fontSize: 11, fontWeight: 600, textDecoration: "none" }}
                       >
-                        → Ver cliente
+                        {t("popup.viewClient")}
                       </a>
                     </div>
                   </Popup>
@@ -386,7 +382,7 @@ export default function ResultadosMapaTab({ filtros, onFiltroChange, presentatio
 
       {!presentationMode && (
         <p className="text-[11px] text-gray-400 text-center">
-          * Pinos com coordenada exata da cidade quando disponível. Ícone ⚠ indica posição aproximada (centróide do estado).
+          {t("footnote")}
         </p>
       )}
     </div>

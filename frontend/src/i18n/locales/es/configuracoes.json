@@ -1,0 +1,138 @@
+{
+  "page": {
+    "title": "Configuración",
+    "subtitle": "Administre los parámetros e integraciones del sistema"
+  },
+  "common": {
+    "loading": "Cargando…"
+  },
+  "nav": {
+    "groups": {
+      "sistema": "Sistema",
+      "notificacoes": "Notificaciones",
+      "instalacoes": "Instalaciones",
+      "integracoes": "Integraciones"
+    },
+    "items": {
+      "base": { "label": "Base Inicial", "desc": "Archivo SQL de instalación" },
+      "email": { "label": "Email (SMTP)", "desc": "Configuración del servidor de correo" },
+      "produtos": { "label": "Productos", "desc": "Tipos de producto para instalaciones" },
+      "erp": { "label": "Integración ERP", "desc": "Consulta de clientes vía API externa" }
+    }
+  },
+  "base": {
+    "title": "Base Inicial del Sistema",
+    "subtitle": "Archivo SQL ejecutado en la instalación de cada cliente. Manténgalo siempre actualizado con la última versión liberada.",
+    "currentFile": "Archivo actual",
+    "fileLabel": "Archivo",
+    "sizeLabel": "Tamaño",
+    "updatedLabel": "Última actualización",
+    "versionLabel": "Versión SIA",
+    "noFile": "No se encontró ningún archivo. Suba uno a continuación.",
+    "replaceFile": "Reemplazar archivo",
+    "sendFile": "Subir archivo",
+    "dropzone": {
+      "dragText": "Arrastre el archivo aquí o",
+      "clickText": "haga clic para seleccionar",
+      "onlySql": "Solo archivos .sql"
+    },
+    "change": "Cambiar",
+    "versionFieldLabel": "Versión SIA",
+    "versionPlaceholder": "Ej: 117, 118.2, 2.5.1",
+    "versionHelp": "Indique la versión para control",
+    "sendNewFile": "Subir nuevo archivo",
+    "sending": "Enviando…",
+    "uploadSuccess": "actualizado con éxito — {{size}} el {{date}}",
+    "errors": {
+      "selectSql": "Seleccione un archivo .sql",
+      "uploadFailed": "Error al subir el archivo"
+    }
+  },
+  "email": {
+    "title": "Configuración de Email (SMTP)",
+    "subtitle": "Necesario para enviar el enlace de revisión al cliente cuando se rechaza una solicitud de selección.",
+    "smtpServer": "Servidor SMTP",
+    "hostLabel": "Host",
+    "portLabel": "Puerto",
+    "tlsCheckbox": "Usar TLS (STARTTLS en el puerto 587) — desmarque para SSL en el puerto 465",
+    "authentication": "Autenticación",
+    "userLabel": "Usuario (email de acceso)",
+    "passwordLabel": "Contraseña / App Password",
+    "senderSection": "Remitente y URL del sistema",
+    "senderNameLabel": "Nombre del remitente",
+    "senderEmailLabel": "Email del remitente",
+    "publicUrlLabel": "URL pública del sistema",
+    "linkSentToClient": "Enlace enviado al cliente:",
+    "saveSuccess": "Configuración guardada con éxito.",
+    "saveError": "Error al guardar.",
+    "testError": "Fallo al enviar el email de prueba.",
+    "saving": "Guardando…",
+    "save": "Guardar configuración",
+    "testEmailPlaceholder": "Email para prueba",
+    "sendingTest": "Enviando…",
+    "sendTest": "Enviar prueba"
+  },
+  "erp": {
+    "title": "Integración ERP — Consulta de Clientes",
+    "subtitle": "Los clientes listados en el módulo de Instalaciones se obtienen directamente del ERP vía API. Configure la URL y el token de acceso a continuación.",
+    "endpointConsulted": "Endpoint consultado",
+    "endpointUrlPlaceholder": "<URL base>",
+    "connection": "Conexión",
+    "baseUrlLabel": "URL base del ERP *",
+    "baseUrlHelp": "Sin barra al final",
+    "timeoutLabel": "Timeout (segundos)",
+    "authentication": "Autenticación",
+    "tokenLabel": "Token de acceso (Bearer)",
+    "tokenPlaceholder": "Deje en blanco si la API no requiere autenticación",
+    "tokenHelpPrefix": "Enviado como",
+    "errors": {
+      "baseUrlRequired": "Indique la URL base del ERP.",
+      "baseUrlRequiredTest": "Indique la URL base antes de probar.",
+      "saveFailed": "Error al guardar.",
+      "testFailed": "Fallo al conectar con el ERP."
+    },
+    "saveSuccess": "Configuración guardada con éxito.",
+    "saving": "Guardando…",
+    "save": "Guardar configuración",
+    "testing": "Probando…",
+    "testConnection": "Probar conexión"
+  },
+  "produtos": {
+    "title": "Productos de Instalación",
+    "subtitle": "Administre los tipos de producto disponibles al crear instalaciones. Edite el nombre, el color y active o desactive cada producto. La lista de verificación detallada se configura en Plantillas.",
+    "errors": {
+      "loadFailed": "No fue posible cargar los productos.",
+      "toggleFailed": "Error al actualizar.",
+      "saveFailed": "Error al guardar.",
+      "deleteFailed": "Error al eliminar.",
+      "createFailed": "Error al crear el producto."
+    },
+    "confirmDelete": "¿Eliminar \"{{nome}}\"? Esta acción no se puede deshacer.",
+    "createSuccess_one": "Producto \"{{nome}}\" creado con éxito con {{count}} tarea predeterminada.",
+    "createSuccess_other": "Producto \"{{nome}}\" creado con éxito con {{count}} tareas predeterminadas.",
+    "taskCount_one": "{{count}} tarea",
+    "taskCount_other": "{{count}} tareas",
+    "toggleActiveTitle": "Activo — clic para desactivar",
+    "toggleInactiveTitle": "Inactivo — clic para activar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "removeProduct": "Eliminar producto",
+    "templateLabel": "Plantilla de checklist:",
+    "templateDefault": "Usar plantilla propia",
+    "templateLinked": "✓ vinculado",
+    "empty": "Ningún producto registrado. Agregue el primero a continuación.",
+    "namePlaceholder": "Nombre del producto…",
+    "creating": "Creando…",
+    "create": "Crear",
+    "addProduct": "Agregar producto",
+    "changeColor": "Cambiar color",
+    "defaultStagePrincipal": "Principal",
+    "defaultStageChecklist": "Checklist de Instalación",
+    "defaultTasks": [
+      "Levantamiento de requisitos",
+      "Instalación y configuración",
+      "Pruebas y validación",
+      "Aprobación del cliente"
+    ]
+  }
+}

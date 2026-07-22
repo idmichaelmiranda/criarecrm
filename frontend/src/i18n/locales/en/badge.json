@@ -1,0 +1,27 @@
+{
+  "status": {
+    "nova": "New",
+    "em_triagem": "In Triage",
+    "aprovada": "Approved",
+    "recusada": "Rejected",
+    "aguardando_correcao": "Awaiting Correction",
+    "cancelada": "Cancelled",
+    "em_andamento": "In Progress",
+    "pausada": "Paused",
+    "concluida": "Completed",
+    "pendente": "Pending",
+    "concluido": "Completed",
+    "bloqueada": "Blocked",
+    "bloqueado": "Blocked",
+    "nao_aplicavel": "N/A",
+    "no_prazo": "On Track",
+    "atrasada": "Overdue",
+    "critico": "Critical"
+  },
+  "prioridade": {
+    "baixa": "Low",
+    "normal": "Normal",
+    "alta": "High",
+    "critica": "Critical"
+  }
+}

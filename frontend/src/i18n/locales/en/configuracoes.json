@@ -1,0 +1,138 @@
+{
+  "page": {
+    "title": "Settings",
+    "subtitle": "Manage system parameters and integrations"
+  },
+  "common": {
+    "loading": "Loading…"
+  },
+  "nav": {
+    "groups": {
+      "sistema": "System",
+      "notificacoes": "Notifications",
+      "instalacoes": "Installations",
+      "integracoes": "Integrations"
+    },
+    "items": {
+      "base": { "label": "Base Template", "desc": "Installation SQL file" },
+      "email": { "label": "Email (SMTP)", "desc": "Email server configuration" },
+      "produtos": { "label": "Products", "desc": "Product types for installations" },
+      "erp": { "label": "ERP Integration", "desc": "Customer lookup via external API" }
+    }
+  },
+  "base": {
+    "title": "System Base Template",
+    "subtitle": "SQL file executed when installing each customer. Always keep it updated with the latest released version.",
+    "currentFile": "Current file",
+    "fileLabel": "File",
+    "sizeLabel": "Size",
+    "updatedLabel": "Last updated",
+    "versionLabel": "SIA Version",
+    "noFile": "No file found. Upload one below.",
+    "replaceFile": "Replace file",
+    "sendFile": "Upload file",
+    "dropzone": {
+      "dragText": "Drag the file here or",
+      "clickText": "click to select",
+      "onlySql": ".sql files only"
+    },
+    "change": "Change",
+    "versionFieldLabel": "SIA Version",
+    "versionPlaceholder": "E.g.: 117, 118.2, 2.5.1",
+    "versionHelp": "Enter the version for tracking purposes",
+    "sendNewFile": "Upload new file",
+    "sending": "Uploading…",
+    "uploadSuccess": "updated successfully — {{size}} at {{date}}",
+    "errors": {
+      "selectSql": "Select a .sql file",
+      "uploadFailed": "Error uploading file"
+    }
+  },
+  "email": {
+    "title": "Email Configuration (SMTP)",
+    "subtitle": "Required to send the review link to the customer when a triage request is rejected.",
+    "smtpServer": "SMTP Server",
+    "hostLabel": "Host",
+    "portLabel": "Port",
+    "tlsCheckbox": "Use TLS (STARTTLS on port 587) — uncheck for SSL on port 465",
+    "authentication": "Authentication",
+    "userLabel": "User (login email)",
+    "passwordLabel": "Password / App Password",
+    "senderSection": "Sender and system URL",
+    "senderNameLabel": "Sender name",
+    "senderEmailLabel": "Sender email",
+    "publicUrlLabel": "Public system URL",
+    "linkSentToClient": "Link sent to the customer:",
+    "saveSuccess": "Configuration saved successfully.",
+    "saveError": "Error saving configuration.",
+    "testError": "Failed to send test email.",
+    "saving": "Saving…",
+    "save": "Save configuration",
+    "testEmailPlaceholder": "Email for testing",
+    "sendingTest": "Sending…",
+    "sendTest": "Send test"
+  },
+  "erp": {
+    "title": "ERP Integration — Customer Lookup",
+    "subtitle": "Customers listed in the Installations module are fetched directly from the ERP via API. Configure the URL and access token below.",
+    "endpointConsulted": "Endpoint queried",
+    "endpointUrlPlaceholder": "<base URL>",
+    "connection": "Connection",
+    "baseUrlLabel": "ERP base URL *",
+    "baseUrlHelp": "No trailing slash",
+    "timeoutLabel": "Timeout (seconds)",
+    "authentication": "Authentication",
+    "tokenLabel": "Access token (Bearer)",
+    "tokenPlaceholder": "Leave blank if the API does not require authentication",
+    "tokenHelpPrefix": "Sent as",
+    "errors": {
+      "baseUrlRequired": "Enter the ERP base URL.",
+      "baseUrlRequiredTest": "Enter the base URL before testing.",
+      "saveFailed": "Error saving configuration.",
+      "testFailed": "Failed to connect to the ERP."
+    },
+    "saveSuccess": "Configuration saved successfully.",
+    "saving": "Saving…",
+    "save": "Save configuration",
+    "testing": "Testing…",
+    "testConnection": "Test connection"
+  },
+  "produtos": {
+    "title": "Installation Products",
+    "subtitle": "Manage the product types available when creating installations. Edit the name, color, and activate or deactivate each product. Detailed checklists are configured in Templates.",
+    "errors": {
+      "loadFailed": "Could not load products.",
+      "toggleFailed": "Error updating.",
+      "saveFailed": "Error saving.",
+      "deleteFailed": "Error removing.",
+      "createFailed": "Error creating product."
+    },
+    "confirmDelete": "Remove \"{{nome}}\"? This action cannot be undone.",
+    "createSuccess_one": "Product \"{{nome}}\" created successfully with {{count}} default task.",
+    "createSuccess_other": "Product \"{{nome}}\" created successfully with {{count}} default tasks.",
+    "taskCount_one": "{{count}} task",
+    "taskCount_other": "{{count}} tasks",
+    "toggleActiveTitle": "Active — click to deactivate",
+    "toggleInactiveTitle": "Inactive — click to activate",
+    "save": "Save",
+    "cancel": "Cancel",
+    "removeProduct": "Remove product",
+    "templateLabel": "Checklist template:",
+    "templateDefault": "Use own template",
+    "templateLinked": "✓ linked",
+    "empty": "No products registered. Add the first one below.",
+    "namePlaceholder": "Product name…",
+    "creating": "Creating…",
+    "create": "Create",
+    "addProduct": "Add product",
+    "changeColor": "Change color",
+    "defaultStagePrincipal": "Main",
+    "defaultStageChecklist": "Installation Checklist",
+    "defaultTasks": [
+      "Requirements gathering",
+      "Installation and configuration",
+      "Testing and validation",
+      "Customer approval"
+    ]
+  }
+}

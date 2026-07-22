@@ -1,0 +1,31 @@
+{
+  "leftPanel": {
+    "logoAlt": "CriareTI",
+    "brand": "CriareTI",
+    "tagline": "Plataforma de Implementación",
+    "headline": "Solicita tu acceso a la plataforma.",
+    "subtext": "Después del envío, un administrador revisará tu solicitud y recibirás un correo con el enlace de acceso.",
+    "footer": "© {{year}} CriareTI. Todos los derechos reservados."
+  },
+  "form": {
+    "logoAlt": "CriareTI",
+    "brand": "CriareTI",
+    "title": "Solicitar acceso",
+    "subtitle": "Completa los datos a continuación para solicitar tu registro",
+    "nameLabel": "Nombre completo",
+    "namePlaceholder": "Tu nombre",
+    "emailLabel": "Correo electrónico corporativo",
+    "emailPlaceholder": "tu@email.com",
+    "errorRequired": "Completa nombre y correo electrónico.",
+    "errorDefault": "Error al enviar la solicitud.",
+    "submit": "Solicitar acceso",
+    "submitting": "Enviando...",
+    "loginPrompt": "¿Ya tienes acceso?",
+    "loginLink": "Iniciar sesión"
+  },
+  "success": {
+    "title": "¡Solicitud enviada!",
+    "message": "Tu solicitud de acceso fue recibida. En cuanto un administrador apruebe tu registro, recibirás un correo con el enlace para definir tu contraseña.",
+    "backToLogin": "Volver al inicio de sesión"
+  }
+}

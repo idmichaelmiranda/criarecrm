@@ -1,0 +1,107 @@
+{
+  "header": {
+    "title": "Results",
+    "subtitle": "Operational intelligence center",
+    "filters": "Filters",
+    "clearFilters": "Clear filters",
+    "presentation": "Presentation",
+    "presentationMinimize": "Minimize",
+    "presentationEnter": "Presentation mode — full screen",
+    "presentationExit": "Exit presentation"
+  },
+  "filtersPanel": {
+    "period": "Period",
+    "state": "State",
+    "allStates": "All states"
+  },
+  "periods": {
+    "30": "Last 30 days",
+    "90": "Last 90 days",
+    "180": "Last 6 months",
+    "365": "Last year"
+  },
+  "tabs": {
+    "visaoGeral": "Overview",
+    "mapa": "Map",
+    "equipe": "Team",
+    "produtos": "Products",
+    "regioes": "Regions"
+  },
+  "presentationHud": {
+    "exit": "✕ Exit",
+    "navigateHint": "← → to navigate · ESC to exit",
+    "allBrazil": " · All of Brazil"
+  },
+  "visaoGeral": {
+    "kpis": {
+      "totalClientes": "Total Customers",
+      "implantacoesConcluidas": "Completed Implementations",
+      "emAndamento": "In Progress",
+      "taxaConclusao": "Completion Rate",
+      "instalacoesConcluidas": "Completed Installations",
+      "instalacoesPendentes": "Pending Installations",
+      "implantacoesPausadas": "Paused Implementations",
+      "crescimentoMensal": "Monthly Growth",
+      "crescimentoSub": "{{value}}% vs. previous month"
+    },
+    "charts": {
+      "novosPorMes": "New by Month",
+      "novosPorMesDesc": "Records created in the month (excl. cancelled)",
+      "concluidasPorMes": "Completed by Month",
+      "concluidasPorMesDesc": "By actual completion date, split by type",
+      "produtosMaisImplantados": "Most Implemented Products",
+      "implantacoesPorConsultor": "Implementations by Consultant",
+      "seriesImplantacoes": "Implementations",
+      "seriesInstalacoes": "Installations",
+      "seriesTotal": "Total",
+      "seriesConcluidas": "Completed"
+    }
+  },
+  "equipe": {
+    "empty": "No team data for the selected period.",
+    "conclusion": "{{value}}% completion",
+    "principal": "{{count}} lead",
+    "colaborador": "{{count}} collaborator",
+    "stats": {
+      "total": "Total",
+      "concluidas": "Completed",
+      "tempoMedio": "Avg. time"
+    },
+    "chartTitle": "Installations by Technician",
+    "seriesTotal": "Total",
+    "seriesConcluidas": "Completed",
+    "seriesEmExecucao": "In progress"
+  },
+  "produtos": {
+    "volumePorProduto": "Volume by Product",
+    "taxaConclusaoPorProduto": "Completion Rate by Product",
+    "seriesTotal": "Total",
+    "seriesTaxa": "Rate (%)",
+    "table": {
+      "produto": "Product",
+      "total": "Total",
+      "concluidas": "Completed",
+      "taxa": "Rate",
+      "tempoMedio": "Avg. time"
+    }
+  },
+  "regioes": {
+    "clientesPorEstado": "Customers by State (Top 10)",
+    "volumeConclusoes": "Volume x Completions by State (Top 10)",
+    "volumeConclusoesDesc": "Excluding cancelled · sorted by total operations",
+    "seriesClientes": "Customers",
+    "seriesTotalAtivas": "Total (active)",
+    "seriesConcluidas": "Completed",
+    "rankingTitle": "Full ranking by state",
+    "rankingSubtitle": "Sorted by total operations · excl. cancelled",
+    "table": {
+      "estado": "State",
+      "clientes": "Customers",
+      "implantacoes": "Implementations",
+      "instalacoes": "Installations",
+      "concluidas": "Completed",
+      "taxa": "Rate",
+      "participacao": "Share"
+    }
+  }
+}

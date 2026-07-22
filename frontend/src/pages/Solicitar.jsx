@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { solicitacoesApi } from "../services/api";
 import { useCep } from "../hooks/useCep";
 import { useCnpj, validateCnpj, maskCnpj } from "../hooks/useCnpj";
@@ -12,18 +13,6 @@ import { BANCOS_BR } from "../data/bancos";
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const TOTAL_STEPS = 9;
-
-const STEP_META = [
-  { title: "Dados da Empresa",    subtitle: "Identificação do estabelecimento" },
-  { title: "Contato",             subtitle: "Responsável e meios de contato" },
-  { title: "Endereço",            subtitle: "Localização do estabelecimento" },
-  { title: "Contabilidade",       subtitle: "Dados do escritório contábil" },
-  { title: "Endereço do Contador",subtitle: "Localização do escritório contábil" },
-  { title: "Dados Bancários",     subtitle: "Conta corrente para operações" },
-  { title: "Regime Tributário",   subtitle: "Configurações fiscais e contábeis" },
-  { title: "Formas de Pagamento", subtitle: "Meios aceitos e integração TEF" },
-  { title: "Dados NFe / NFCe",    subtitle: "Emissão de documentos fiscais e certificado digital" },
-];
 
 const STEP_REQUIRED = [
   ["cnpj", "razao_social"],
@@ -37,42 +26,14 @@ const STEP_REQUIRED = [
   [],
 ];
 
-const RAMO_OPTIONS = [
-  { value: "comercio",  label: "Comércio" },
-  { value: "industria", label: "Indústria" },
-];
-
-const CRT_OPTIONS = [
-  { value: "1", label: "1 - Simples Nacional" },
-  { value: "2", label: "2 - Simples Nacional - Excesso de sublimite de receita bruta" },
-  { value: "3", label: "3 - Regime Normal" },
-];
-
-const REGIME_OPTIONS = [
-  { value: "1", label: "Simples Nacional" },
-  { value: "2", label: "Lucro Presumido" },
-  { value: "3", label: "Lucro Real" },
-];
-const REGIME_LABEL = { "1": "Simples Nacional", "2": "Lucro Presumido", "3": "Lucro Real" };
-
-const ST_OPTIONS = [
-  { value: "1", label: "Informante Substituto" },
-  { value: "2", label: "Informante Substituído" },
-];
-const ST_LABEL = { "1": "Informante Substituto", "2": "Informante Substituído" };
-const CONTA_OPTIONS = [
-  { value: "corrente",         label: "Conta Corrente" },
-  { value: "poupanca",         label: "Conta Poupança" },
-  { value: "pagamento",        label: "Conta Pagamento" },
-];
-
 // ─── CNPJ field ───────────────────────────────────────────────────────────────
 
 function CnpjInput({ register, errors, setValue }) {
+  const { t } = useTranslation("solicitar");
   const { fetchCnpj, status } = useCnpj();
   const { ref, onChange: regOnChange, ...rest } = register("cnpj", {
-    required: "CNPJ obrigatório",
-    validate: (v) => validateCnpj(v) || "CNPJ inválido",
+    required: t("cnpj.required"),
+    validate: (v) => validateCnpj(v) || t("cnpj.invalid"),
   });
 
   return (
@@ -80,8 +41,8 @@ function CnpjInput({ register, errors, setValue }) {
       <div className="relative">
         <Input
           ref={ref}
-          label="CNPJ *"
-          placeholder="00.000.000/0001-00"
+          label={t("cnpj.label")}
+          placeholder={t("cnpj.placeholder")}
           maxLength={18}
           error={errors.cnpj?.message}
           onChange={(e) => {
@@ -94,7 +55,7 @@ function CnpjInput({ register, errors, setValue }) {
         {status === "loading" && (
           <span className="absolute right-3 top-8 flex items-center gap-1.5 text-[11px] text-orange-500">
             <span className="w-3 h-3 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" />
-            Consultando...
+            {t("cnpj.consulting")}
           </span>
         )}
       </div>
@@ -104,7 +65,7 @@ function CnpjInput({ register, errors, setValue }) {
           <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
           </svg>
-          Dados preenchidos automaticamente pela Receita Federal
+          {t("cnpj.foundMessage")}
         </div>
       )}
       {status === "not_found" && (
@@ -112,7 +73,7 @@ function CnpjInput({ register, errors, setValue }) {
           <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          CNPJ não encontrado na Receita Federal
+          {t("cnpj.notFoundMessage")}
         </div>
       )}
     </div>
@@ -130,13 +91,14 @@ function maskPhone(raw) {
 }
 
 function PhoneInput({ name, label, required, register, errors }) {
-  const rules = required ? { required: `${label.replace(" *","")} obrigatório` } : {};
+  const { t } = useTranslation("solicitar");
+  const rules = required ? { required: t("phone.requiredTemplate", { label: label.replace(" *", "") }) } : {};
   const { ref, onChange: regOnChange, ...rest } = register(name, rules);
   return (
     <Input
       ref={ref}
       label={label}
-      placeholder="(11) 99999-9999"
+      placeholder={t("phone.placeholder")}
       maxLength={15}
       error={errors[name]?.message}
       onChange={(e) => { e.target.value = maskPhone(e.target.value); regOnChange(e); }}
@@ -148,16 +110,17 @@ function PhoneInput({ name, label, required, register, errors }) {
 // ─── CEP field ────────────────────────────────────────────────────────────────
 
 function CepInput({ name, label, register, errors, setValue, fieldMap, required }) {
+  const { t } = useTranslation("solicitar");
   const { fetchCep, loading } = useCep();
   const { ref, onChange: regOnChange, ...rest } = register(name, {
-    ...(required ? { required: "CEP obrigatório" } : {}),
+    ...(required ? { required: t("cep.required") } : {}),
   });
   return (
     <div className="relative">
       <Input
         ref={ref}
         label={label}
-        placeholder="00000-000"
+        placeholder={t("cep.placeholder")}
         maxLength={9}
         error={errors[name]?.message}
         onChange={(e) => { regOnChange(e); fetchCep(e.target.value, setValue, fieldMap); }}
@@ -165,7 +128,7 @@ function CepInput({ name, label, register, errors, setValue, fieldMap, required 
       />
       {loading && (
         <span className="absolute right-3 top-8 text-[11px] text-orange-500 animate-pulse">
-          Buscando...
+          {t("cep.searching")}
         </span>
       )}
     </div>
@@ -197,6 +160,7 @@ function InfoBanner({ icon, children, variant = "info" }) {
 // ─── Bank Selector ────────────────────────────────────────────────────────────
 
 function BankSelector({ setValue, watch }) {
+  const { t, i18n } = useTranslation("solicitar");
   const [query, setQuery] = useState("");
   const [open, setOpen]   = useState(false);
   const ref = useRef(null);
@@ -218,7 +182,7 @@ function BankSelector({ setValue, watch }) {
       const q = query.toLowerCase();
       return b.nome.toLowerCase().includes(q) || b.codigo.includes(q);
     })
-    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+    .sort((a, b) => a.nome.localeCompare(b.nome, i18n.language));
 
   function select(banco) {
     setValue("nome_banco",   banco.nome);
@@ -248,7 +212,7 @@ function BankSelector({ setValue, watch }) {
         </div>
         <button type="button" onClick={clear}
           className="text-xs text-gray-600 hover:text-gray-800 px-2.5 py-1 rounded-lg bg-white border border-gray-200 hover:border-gray-300 transition-colors shrink-0 font-medium">
-          Trocar
+          {t("bank.change")}
         </button>
       </div>
     );
@@ -256,14 +220,14 @@ function BankSelector({ setValue, watch }) {
 
   return (
     <div className="col-span-2 relative" ref={ref}>
-      <label className="block text-xs font-semibold text-gray-500 mb-1.5">Banco</label>
+      <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("bank.label")}</label>
       <div className="relative">
         <input
           type="text"
           value={query}
           onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
           onFocus={() => setOpen(true)}
-          placeholder="Buscar por nome ou código — ex: Bradesco ou 237"
+          placeholder={t("bank.searchPlaceholder")}
           autoComplete="off"
           className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 pr-9"
         />
@@ -283,7 +247,7 @@ function BankSelector({ setValue, watch }) {
             </button>
           )) : (
             <div className="px-4 py-3 text-sm text-gray-400 text-center">
-              Nenhum banco encontrado para "{query}"
+              {t("bank.noneFound", { query })}
             </div>
           )}
         </div>
@@ -295,62 +259,70 @@ function BankSelector({ setValue, watch }) {
 // ─── Steps ────────────────────────────────────────────────────────────────────
 
 function Step0({ r, e, sv }) {
+  const { t } = useTranslation("solicitar");
+  const RAMO_OPTIONS = [
+    { value: "comercio",  label: t("options.ramo.comercio") },
+    { value: "industria", label: t("options.ramo.industria") },
+  ];
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div className="col-span-2">
         <CnpjInput register={r} errors={e} setValue={sv} />
       </div>
-      <Input label="Inscrição Estadual" placeholder="Opcional" {...r("ie")} />
-      <Select label="Ramo de Atividade" options={RAMO_OPTIONS} {...r("ramo_atividade")} />
+      <Input label={t("step0.ieLabel")} placeholder={t("step0.ieOptional")} {...r("ie")} />
+      <Select label={t("step0.ramoLabel")} options={RAMO_OPTIONS} {...r("ramo_atividade")} />
       <div className="col-span-2">
-        <Input label="Razão Social *" placeholder="Ex: Empresa Comércio LTDA"
-          error={e.razao_social?.message} {...r("razao_social", { required: "Razão social obrigatória" })} />
+        <Input label={t("step0.razaoSocialLabel")} placeholder={t("step0.razaoSocialPlaceholder")}
+          error={e.razao_social?.message} {...r("razao_social", { required: t("step0.razaoSocialRequired") })} />
       </div>
-      <Input label="Nome Fantasia" placeholder="Como é conhecido" {...r("nome_fantasia")} />
-      <Input label="Responsável" placeholder="Nome do responsável" {...r("responsavel")} />
+      <Input label={t("step0.nomeFantasiaLabel")} placeholder={t("step0.nomeFantasiaPlaceholder")} {...r("nome_fantasia")} />
+      <Input label={t("step0.responsavelLabel")} placeholder={t("step0.responsavelPlaceholder")} {...r("responsavel")} />
     </div>
   );
 }
 
 function Step1({ r, e }) {
+  const { t } = useTranslation("solicitar");
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div className="col-span-2">
-        <Input label="E-mail *" type="email" placeholder="contato@empresa.com.br"
+        <Input label={t("step1.emailLabel")} type="email" placeholder={t("step1.emailPlaceholder")}
           error={e.email?.message}
           {...r("email", {
-            required: "E-mail obrigatório",
-            pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/, message: "Informe um e-mail válido" },
+            required: t("step1.emailRequired"),
+            pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/, message: t("step1.emailInvalid") },
           })} />
       </div>
-      <PhoneInput name="telefone_celular" label="Celular *" required register={r} errors={e} />
-      <PhoneInput name="telefone_fixo"   label="Telefone Fixo"   register={r} errors={e} />
+      <PhoneInput name="telefone_celular" label={t("step1.celularLabel")} required register={r} errors={e} />
+      <PhoneInput name="telefone_fixo"   label={t("step1.telefoneFixoLabel")}   register={r} errors={e} />
     </div>
   );
 }
 
 function Step2({ r, e, sv }) {
+  const { t } = useTranslation("solicitar");
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <CepInput name="cep" label="CEP *" register={r} errors={e} setValue={sv} required
+      <CepInput name="cep" label={t("step2.cepLabel")} register={r} errors={e} setValue={sv} required
         fieldMap={{ logradouro: "endereco", bairro: "bairro", cidade: "cidade", estado: "estado" }} />
-      <Input label="Número *" placeholder="Ex: 123"
-        error={e.numero?.message} {...r("numero", { required: "Número obrigatório" })} />
+      <Input label={t("step2.numeroLabel")} placeholder={t("step2.numeroPlaceholder")}
+        error={e.numero?.message} {...r("numero", { required: t("step2.numeroRequired") })} />
       <div className="col-span-2">
-        <Input label="Endereço *" placeholder="Rua, Avenida..."
-          error={e.endereco?.message} {...r("endereco", { required: "Endereço obrigatório" })} />
+        <Input label={t("step2.enderecoLabel")} placeholder={t("step2.enderecoPlaceholder")}
+          error={e.endereco?.message} {...r("endereco", { required: t("step2.enderecoRequired") })} />
       </div>
-      <Input label="Bairro *" placeholder="Ex: Centro"
-        error={e.bairro?.message} {...r("bairro", { required: "Bairro obrigatório" })} />
-      <Input label="Cidade *" placeholder="Ex: São Paulo"
-        error={e.cidade?.message} {...r("cidade", { required: "Cidade obrigatória" })} />
-      <Input label="Estado (UF) *" placeholder="SP" maxLength={2}
-        error={e.estado?.message} {...r("estado", { required: "Estado obrigatório" })} />
+      <Input label={t("step2.bairroLabel")} placeholder={t("step2.bairroPlaceholder")}
+        error={e.bairro?.message} {...r("bairro", { required: t("step2.bairroRequired") })} />
+      <Input label={t("step2.cidadeLabel")} placeholder={t("step2.cidadePlaceholder")}
+        error={e.cidade?.message} {...r("cidade", { required: t("step2.cidadeRequired") })} />
+      <Input label={t("step2.estadoLabel")} placeholder={t("step2.estadoPlaceholder")} maxLength={2}
+        error={e.estado?.message} {...r("estado", { required: t("step2.estadoRequired") })} />
     </div>
   );
 }
 
 function Step3({ r, e }) {
+  const { t } = useTranslation("solicitar");
   return (
     <div className="space-y-4">
       <InfoBanner variant="info" icon={
@@ -358,69 +330,76 @@ function Step3({ r, e }) {
           <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       }>
-        Solicite estas informações diretamente com o escritório de contabilidade da empresa antes de prosseguir.
+        {t("step3.infoBanner")}
       </InfoBanner>
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div className="col-span-2">
-        <Input label="Nome do Contador *" placeholder="Nome completo"
+        <Input label={t("step3.nomeContadorLabel")} placeholder={t("step3.nomeContadorPlaceholder")}
           error={e.nome_contador?.message}
-          {...r("nome_contador", { required: "Nome obrigatório" })} />
+          {...r("nome_contador", { required: t("step3.nomeContadorRequired") })} />
       </div>
-      <Input label="CPF *" placeholder="000.000.000-00"
+      <Input label={t("step3.cpfLabel")} placeholder={t("step3.cpfPlaceholder")}
         error={e.cpf_contador?.message}
-        {...r("cpf_contador", { required: "CPF obrigatório" })} />
-      <Input label="CRC" placeholder="CRC-SP 123456" {...r("crc")} />
-      <Input label="CNPJ do Escritório" placeholder="00.000.000/0001-00" {...r("cnpj_contador")} />
-      <Input label="E-mail do Contador" type="email" placeholder="contador@escritorio.com.br"
+        {...r("cpf_contador", { required: t("step3.cpfRequired") })} />
+      <Input label={t("step3.crcLabel")} placeholder={t("step3.crcPlaceholder")} {...r("crc")} />
+      <Input label={t("step3.cnpjEscritorioLabel")} placeholder={t("step3.cnpjEscritorioPlaceholder")} {...r("cnpj_contador")} />
+      <Input label={t("step3.emailContadorLabel")} type="email" placeholder={t("step3.emailContadorPlaceholder")}
         error={e.email_contador?.message}
         {...r("email_contador", {
-          pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/, message: "Informe um e-mail válido" },
+          pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/, message: t("step1.emailInvalid") },
         })} />
-      <Input label="Telefone Fixo" placeholder="(11) 3333-3333" {...r("tel_fixo_contador")} />
-      <Input label="Celular" placeholder="(11) 99999-9999" {...r("tel_cel_contador")} />
+      <Input label={t("step3.telefoneFixoLabel")} placeholder={t("step3.telefoneFixoPlaceholder")} {...r("tel_fixo_contador")} />
+      <Input label={t("step3.celularLabel")} placeholder={t("phone.placeholder")} {...r("tel_cel_contador")} />
     </div>
     </div>
   );
 }
 
 function Step4({ r, e, sv }) {
+  const { t } = useTranslation("solicitar");
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <CepInput name="cep_contador" label="CEP" register={r} errors={e} setValue={sv}
+      <CepInput name="cep_contador" label={t("step4.cepLabel")} register={r} errors={e} setValue={sv}
         fieldMap={{ logradouro: "end_contador", bairro: "bairro_contador", cidade: "cidade_contador", estado: "estado_contador" }} />
-      <Input label="Número" placeholder="Ex: 123" {...r("num_contador")} />
+      <Input label={t("step4.numeroLabel")} placeholder={t("step4.numeroPlaceholder")} {...r("num_contador")} />
       <div className="col-span-2">
-        <Input label="Endereço" placeholder="Rua, Avenida..." {...r("end_contador")} />
+        <Input label={t("step4.enderecoLabel")} placeholder={t("step4.enderecoPlaceholder")} {...r("end_contador")} />
       </div>
-      <Input label="Bairro" placeholder="Ex: Centro" {...r("bairro_contador")} />
-      <Input label="Cidade" placeholder="Ex: São Paulo" {...r("cidade_contador")} />
-      <Input label="Estado (UF)" placeholder="SP" maxLength={2} {...r("estado_contador")} />
+      <Input label={t("step4.bairroLabel")} placeholder={t("step4.bairroPlaceholder")} {...r("bairro_contador")} />
+      <Input label={t("step4.cidadeLabel")} placeholder={t("step4.cidadePlaceholder")} {...r("cidade_contador")} />
+      <Input label={t("step4.estadoLabel")} placeholder={t("step4.estadoPlaceholder")} maxLength={2} {...r("estado_contador")} />
     </div>
   );
 }
 
 function Step5({ r, sv, watch }) {
+  const { t } = useTranslation("solicitar");
+  const CONTA_OPTIONS = [
+    { value: "corrente",  label: t("options.conta.corrente") },
+    { value: "poupanca",  label: t("options.conta.poupanca") },
+    { value: "pagamento", label: t("options.conta.pagamento") },
+  ];
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <BankSelector setValue={sv} watch={watch} />
-      <Select label="Tipo de Conta" options={CONTA_OPTIONS} {...r("tipo_conta")} />
+      <Select label={t("step5.tipoContaLabel")} options={CONTA_OPTIONS} {...r("tipo_conta")} />
       <div>
-        <label className="block text-xs font-semibold text-gray-500 mb-1.5">Agência</label>
+        <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("step5.agenciaLabel")}</label>
         <div className="flex items-center gap-1.5">
-          <input placeholder="1234" {...r("agencia")}
+          <input placeholder={t("step5.agenciaPlaceholder")} {...r("agencia")}
             className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400" />
           <span className="text-gray-400 font-bold select-none">-</span>
-          <input placeholder="DV" {...r("dv_agencia")}
+          <input placeholder={t("step5.dvPlaceholder")} {...r("dv_agencia")}
             className="w-14 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400" />
         </div>
       </div>
       <div>
-        <label className="block text-xs font-semibold text-gray-500 mb-1.5">Conta</label>
+        <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("step5.contaLabel")}</label>
         <div className="flex items-center gap-1.5">
-          <input placeholder="12345" {...r("conta")}
+          <input placeholder={t("step5.contaPlaceholder")} {...r("conta")}
             className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400" />
           <span className="text-gray-400 font-bold select-none">-</span>
-          <input placeholder="DV" {...r("dv_conta")}
+          <input placeholder={t("step5.dvPlaceholder")} {...r("dv_conta")}
             className="w-14 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400" />
         </div>
       </div>
@@ -429,6 +408,21 @@ function Step5({ r, sv, watch }) {
 }
 
 function Step6({ r, watch }) {
+  const { t } = useTranslation("solicitar");
+  const CRT_OPTIONS = [
+    { value: "1", label: t("options.crt.1") },
+    { value: "2", label: t("options.crt.2") },
+    { value: "3", label: t("options.crt.3") },
+  ];
+  const REGIME_OPTIONS = [
+    { value: "1", label: t("options.regime.1") },
+    { value: "2", label: t("options.regime.2") },
+    { value: "3", label: t("options.regime.3") },
+  ];
+  const ST_OPTIONS = [
+    { value: "1", label: t("options.st.1") },
+    { value: "2", label: t("options.st.2") },
+  ];
   const regime = watch("regime_tributario");
   const isSimples = regime === "1";
   return (
@@ -438,18 +432,18 @@ function Step6({ r, watch }) {
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
         </svg>
       }>
-        Em caso de dúvidas sobre estas informações, consulte o contador responsável pela empresa antes de preencher.
+        {t("step6.infoBanner")}
       </InfoBanner>
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div className="col-span-2">
-        <Select label="CRT — Código de Regime Tributário" options={CRT_OPTIONS} {...r("crt")} />
+        <Select label={t("step6.crtLabel")} options={CRT_OPTIONS} {...r("crt")} />
       </div>
-      <Select label="Regime" options={REGIME_OPTIONS} {...r("regime_tributario")} />
-      <Select label="Condição ST" options={ST_OPTIONS} {...r("condicao_st")} />
+      <Select label={t("step6.regimeLabel")} options={REGIME_OPTIONS} {...r("regime_tributario")} />
+      <Select label={t("step6.condicaoStLabel")} options={ST_OPTIONS} {...r("condicao_st")} />
       {isSimples && (
         <>
-          <Input label="Alíq. do Simples Nacional (%)" placeholder="Ex: 4,00" {...r("aliq_simples")} />
-          <Input label="Receita Bruta (R$)" placeholder="Ex: 360000,00" {...r("receita_bruta")} />
+          <Input label={t("step6.aliqSimplesLabel")} placeholder={t("step6.aliqSimplesPlaceholder")} {...r("aliq_simples")} />
+          <Input label={t("step6.receitaBrutaLabel")} placeholder={t("step6.receitaBrutaPlaceholder")} {...r("receita_bruta")} />
         </>
       )}
     </div>
@@ -481,21 +475,21 @@ function InfoTooltip({ text }) {
   );
 }
 
-const PAYMENT_METHODS = [
-  { key: "dinheiro",        label: "Dinheiro",    info: null },
-  { key: "cheque",          label: "Cheque",      info: null },
-  { key: "cartao_pos",      label: "Cartão-POS",  info: "Terminal físico (maquininha). Aceita crédito e débito nas bandeiras cadastradas junto à adquirente." },
-  { key: "pagamento_prazo", label: "Prazo",       info: null },
-  { key: "pix",             label: "PIX",         info: null },
-  { key: "cartao_tef",      label: "Cartão-TEF",  info: "Integração via software com a integradora (ex: Sitef). Aceita crédito e débito sem maquininha separada — o sistema comunica diretamente com a operadora." },
-];
-
 function Step7({ r, watch }) {
+  const { t } = useTranslation("solicitar");
+  const PAYMENT_METHODS = [
+    { key: "dinheiro",        label: t("step7.methods.dinheiro.label"),        info: null },
+    { key: "cheque",          label: t("step7.methods.cheque.label"),          info: null },
+    { key: "cartao_pos",      label: t("step7.methods.cartao_pos.label"),      info: t("step7.methods.cartao_pos.info") },
+    { key: "pagamento_prazo", label: t("step7.methods.pagamento_prazo.label"), info: null },
+    { key: "pix",             label: t("step7.methods.pix.label"),             info: null },
+    { key: "cartao_tef",      label: t("step7.methods.cartao_tef.label"),      info: t("step7.methods.cartao_tef.info") },
+  ];
   const cartaoTef = watch("cartao_tef");
   return (
     <div className="space-y-4">
       <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
-        Selecione as formas de pagamento aceitas
+        {t("step7.heading")}
       </p>
       <div className="space-y-2">
         {PAYMENT_METHODS.map(({ key, label, info }) => (
@@ -518,8 +512,8 @@ function Step7({ r, watch }) {
       {cartaoTef && (
         <div className="pt-1">
           <Input
-            label="Integradora TEF"
-            placeholder="Ex: Sitef, Tef Dedicado, PayGo..."
+            label={t("step7.integradoraLabel")}
+            placeholder={t("step7.integradoraPlaceholder")}
             {...r("integradora")}
           />
         </div>
@@ -529,19 +523,20 @@ function Step7({ r, watch }) {
 }
 
 function Step8({ r, certFile, onCertChange }) {
+  const { t } = useTranslation("solicitar");
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Input label="CSC" placeholder="Código de segurança" {...r("csc")} />
-        <Input label="Token NFCe" placeholder="Token da SEFAZ" {...r("token")} />
-        <Input label="Última Série NFCe" placeholder="Ex: 001" {...r("ultima_serie_nfce")} />
-        <Input label="Série NF-e" placeholder="Ex: 1" {...r("serie_nfe")} />
-        <Input label="Última NF-e Emitida" placeholder="Ex: 000001" {...r("ultima_nfe_emitida")} />
+        <Input label={t("step8.cscLabel")} placeholder={t("step8.cscPlaceholder")} {...r("csc")} />
+        <Input label={t("step8.tokenLabel")} placeholder={t("step8.tokenPlaceholder")} {...r("token")} />
+        <Input label={t("step8.ultimaSerieLabel")} placeholder={t("step8.ultimaSeriePlaceholder")} {...r("ultima_serie_nfce")} />
+        <Input label={t("step8.serieNfeLabel")} placeholder={t("step8.serieNfePlaceholder")} {...r("serie_nfe")} />
+        <Input label={t("step8.ultimaNfeLabel")} placeholder={t("step8.ultimaNfePlaceholder")} {...r("ultima_nfe_emitida")} />
       </div>
 
       <div>
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">
-          Certificado Digital
+          {t("step8.certificadoHeading")}
         </p>
         <label className="flex items-center gap-4 p-4 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-orange-400 transition-colors group">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
@@ -553,21 +548,21 @@ function Step8({ r, certFile, onCertChange }) {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-700 truncate">
-              {certFile ? certFile.name : "Selecionar certificado A1"}
+              {certFile ? certFile.name : t("step8.selectCertificado")}
             </p>
-            <p className="text-xs text-gray-400 mt-0.5">.pfx ou .p12</p>
+            <p className="text-xs text-gray-400 mt-0.5">{t("step8.certExtensions")}</p>
           </div>
           <span className="text-xs text-gray-400 group-hover:text-orange-500 font-medium shrink-0 transition-colors">
-            {certFile ? "Trocar" : "Escolher"}
+            {certFile ? t("step8.change") : t("step8.choose")}
           </span>
           <input type="file" accept=".pfx,.p12,.cer,.crt" className="hidden"
             onChange={(e) => onCertChange(e.target.files?.[0] || null)} />
         </label>
         <div className="mt-3">
           <Input
-            label="Senha do Certificado"
+            label={t("step8.senhaLabel")}
             type="password"
-            placeholder="Senha do arquivo .pfx / .p12"
+            placeholder={t("step8.senhaPlaceholder")}
             {...r("senha_certificado")}
           />
         </div>
@@ -580,13 +575,16 @@ function Step8({ r, certFile, onCertChange }) {
 // ─── Confirmation ─────────────────────────────────────────────────────────────
 
 function Confirmation({ getValues, certFile }) {
+  const { t } = useTranslation("solicitar");
+  const REGIME_LABEL = { "1": t("options.regime.1"), "2": t("options.regime.2"), "3": t("options.regime.3") };
+  const ST_LABEL = { "1": t("options.st.1"), "2": t("options.st.2") };
   const v = getValues();
   const sections = [
-    { title: "Empresa", rows: [["Razão Social", v.razao_social], ["CNPJ", v.cnpj], ["E-mail", v.email], ["Celular", v.telefone_celular], ["Responsável", v.responsavel]] },
-    { title: "Endereço", rows: [["CEP", v.cep], ["Endereço", v.endereco ? `${v.endereco}, ${v.numero}` : ""], ["Cidade/UF", v.cidade ? `${v.cidade} / ${v.estado}` : ""]] },
-    { title: "Contabilidade", rows: [["Contador", v.nome_contador], ["CPF", v.cpf_contador], ["E-mail", v.email_contador]] },
-    { title: "Banco", rows: [["Banco", v.nome_banco], ["Ag / Conta", v.agencia ? `${v.agencia}-${v.dv_agencia || ""} / ${v.conta}-${v.dv_conta || ""}` : ""], ["Tipo", v.tipo_conta]] },
-    { title: "Fiscal", rows: [["Regime", REGIME_LABEL[v.regime_tributario] || v.regime_tributario], ["ICMS", v.regime_icms], ["Cond. ST", ST_LABEL[v.condicao_st] || v.condicao_st]] },
+    { title: t("confirmation.sections.empresa"), rows: [[t("confirmation.fields.razaoSocial"), v.razao_social], [t("confirmation.fields.cnpj"), v.cnpj], [t("confirmation.fields.email"), v.email], [t("confirmation.fields.celular"), v.telefone_celular], [t("confirmation.fields.responsavel"), v.responsavel]] },
+    { title: t("confirmation.sections.endereco"), rows: [[t("confirmation.fields.cep"), v.cep], [t("confirmation.fields.endereco"), v.endereco ? `${v.endereco}, ${v.numero}` : ""], [t("confirmation.fields.cidadeUf"), v.cidade ? `${v.cidade} / ${v.estado}` : ""]] },
+    { title: t("confirmation.sections.contabilidade"), rows: [[t("confirmation.fields.contador"), v.nome_contador], [t("confirmation.fields.cpf"), v.cpf_contador], [t("confirmation.fields.email"), v.email_contador]] },
+    { title: t("confirmation.sections.banco"), rows: [[t("confirmation.fields.banco"), v.nome_banco], [t("confirmation.fields.agConta"), v.agencia ? `${v.agencia}-${v.dv_agencia || ""} / ${v.conta}-${v.dv_conta || ""}` : ""], [t("confirmation.fields.tipo"), v.tipo_conta]] },
+    { title: t("confirmation.sections.fiscal"), rows: [[t("confirmation.fields.regime"), REGIME_LABEL[v.regime_tributario] || v.regime_tributario], [t("confirmation.fields.icms"), v.regime_icms], [t("confirmation.fields.condSt"), ST_LABEL[v.condicao_st] || v.condicao_st]] },
   ];
   return (
     <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
@@ -636,30 +634,14 @@ function buildPayload(d) {
 
 // ─── Checklist Modal ──────────────────────────────────────────────────────────
 
-const CHECKLIST_ITEMS = [
-  {
-    icon: "🔐",
-    label: "Certificado Digital A1",
-    detail: "Arquivo .pfx ou .p12 e a senha de acesso",
-  },
-  {
-    icon: "🔑",
-    label: "CSC e TOKEN NFCe",
-    detail: "Código de Segurança do Contribuinte e Token da SEFAZ",
-  },
-  {
-    icon: "📄",
-    label: "Séries de Documentos Fiscais",
-    detail: "Série da NF-e e última série do NFCe utilizada",
-  },
-  {
-    icon: "🏢",
-    label: "Dados da Contabilidade",
-    detail: "Nome, CPF, CNPJ, CRC, e-mail, telefone e endereço completo do contador",
-  },
-];
-
 function PreCheckModal({ onStart }) {
+  const { t } = useTranslation("solicitar");
+  const CHECKLIST_ITEMS = [
+    { icon: "🔐", label: t("precheck.checklist.certificado.label"), detail: t("precheck.checklist.certificado.detail") },
+    { icon: "🔑", label: t("precheck.checklist.csc.label"),         detail: t("precheck.checklist.csc.detail") },
+    { icon: "📄", label: t("precheck.checklist.series.label"),      detail: t("precheck.checklist.series.detail") },
+    { icon: "🏢", label: t("precheck.checklist.contabilidade.label"), detail: t("precheck.checklist.contabilidade.detail") },
+  ];
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
@@ -669,11 +651,11 @@ function PreCheckModal({ onStart }) {
           <div className="flex items-center gap-3 mb-1">
             <span className="text-2xl">📋</span>
             <h2 className="text-lg font-bold text-white leading-tight">
-              Antes de começar
+              {t("precheck.title")}
             </h2>
           </div>
           <p className="text-sm text-orange-100 leading-relaxed">
-            Tenha as informações abaixo em mãos para preencher o formulário com agilidade e sem interrupções.
+            {t("precheck.subtitle")}
           </p>
         </div>
 
@@ -696,7 +678,7 @@ function PreCheckModal({ onStart }) {
             <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <p className="text-xs text-blue-700 leading-relaxed">
-            Você poderá pular campos opcionais e retornar depois. Os dados obrigatórios estão marcados com <strong>*</strong>.
+            {t("precheck.tipPrefix")} <strong>*</strong>.
           </p>
         </div>
 
@@ -707,7 +689,7 @@ function PreCheckModal({ onStart }) {
             className="w-full py-3.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 active:scale-[0.98]"
             style={{ background: "linear-gradient(135deg, #F56316, #d94f0d)" }}
           >
-            Estou pronto — iniciar preenchimento →
+            {t("precheck.cta")}
           </button>
         </div>
 
@@ -719,12 +701,15 @@ function PreCheckModal({ onStart }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Solicitar() {
+  const { t } = useTranslation("solicitar");
   const navigate = useNavigate();
   const [showPreCheck, setShowPreCheck] = useState(true);
   const [step, setStep] = useState(0);
   const [certFile, setCertFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [apiError, setApiError] = useState("");
+
+  const STEP_META = t("steps.meta", { returnObjects: true });
 
   const { register: r, handleSubmit, getValues, trigger, setValue: sv, watch, formState: { errors: e } } =
     useForm({ mode: "onBlur" });
@@ -751,7 +736,7 @@ export default function Solicitar() {
     }
   }
 
-  const meta = STEP_META[step] || { title: "Confirmação", subtitle: "Revise os dados antes de enviar" };
+  const meta = STEP_META[step] || { title: t("steps.confirmationTitle"), subtitle: t("steps.confirmationSubtitle") };
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -762,8 +747,8 @@ export default function Solicitar() {
       <header className="fixed top-0 inset-x-0 z-20 bg-white border-b border-gray-100">
         <div className="max-w-xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <img src="/logo.jpg" alt="CriareTI" className="h-7 w-7 rounded-lg" />
-            <span className="text-sm font-semibold text-gray-900">CriareTI</span>
+            <img src="/logo.jpg" alt={t("header.logoAlt")} className="h-7 w-7 rounded-lg" />
+            <span className="text-sm font-semibold text-gray-900">{t("header.brand")}</span>
           </div>
           <span className="text-xs text-gray-400 font-medium">
             {step + 1} <span className="text-gray-300">/</span> {TOTAL_STEPS + 1}
@@ -772,7 +757,7 @@ export default function Solicitar() {
             onClick={() => navigate("/")}
             className="text-xs text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1"
           >
-            Cancelar
+            {t("header.cancel")}
           </button>
         </div>
         {/* Progress bar */}
@@ -792,7 +777,7 @@ export default function Solicitar() {
           <div className="mb-7">
             <p className="text-xs font-semibold uppercase tracking-widest mb-1.5"
               style={{ color: "#F56316" }}>
-              {isConfirmation ? "Etapa final" : `Etapa ${step + 1}`}
+              {isConfirmation ? t("steps.finalStepLabel") : t("steps.stepLabel", { n: step + 1 })}
             </p>
             <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{meta.title}</h1>
             <p className="text-sm text-gray-400 mt-1">{meta.subtitle}</p>
@@ -832,7 +817,7 @@ export default function Solicitar() {
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
-              Voltar
+              {t("footer.back")}
             </button>
           ) : (
             <span />
@@ -844,7 +829,7 @@ export default function Solicitar() {
               className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]"
               style={{ backgroundColor: "#F56316" }}
             >
-              Continuar
+              {t("footer.continue")}
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
@@ -859,11 +844,11 @@ export default function Solicitar() {
               {submitting ? (
                 <>
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Enviando...
+                  {t("footer.submitting")}
                 </>
               ) : (
                 <>
-                  Enviar Solicitação
+                  {t("footer.submit")}
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>

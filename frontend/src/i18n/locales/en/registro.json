@@ -1,0 +1,31 @@
+{
+  "leftPanel": {
+    "logoAlt": "CriareTI",
+    "brand": "CriareTI",
+    "tagline": "Implementation Platform",
+    "headline": "Request your access to the platform.",
+    "subtext": "After submitting, an administrator will review your request and you will receive an email with the access link.",
+    "footer": "© {{year}} CriareTI. All rights reserved."
+  },
+  "form": {
+    "logoAlt": "CriareTI",
+    "brand": "CriareTI",
+    "title": "Request access",
+    "subtitle": "Fill in the details below to request your account",
+    "nameLabel": "Full name",
+    "namePlaceholder": "Your name",
+    "emailLabel": "Corporate email",
+    "emailPlaceholder": "you@email.com",
+    "errorRequired": "Fill in name and email.",
+    "errorDefault": "Error sending request.",
+    "submit": "Request access",
+    "submitting": "Sending...",
+    "loginPrompt": "Already have access?",
+    "loginLink": "Sign in"
+  },
+  "success": {
+    "title": "Request sent!",
+    "message": "Your access request has been received. As soon as an administrator approves your registration, you will receive an email with the link to set your password.",
+    "backToLogin": "Back to sign in"
+  }
+}

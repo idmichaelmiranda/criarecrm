@@ -1,0 +1,63 @@
+{
+  "title": "Clientes",
+  "subtitleLoading": "Carregando…",
+  "subtitle_one": "{{count}} cliente cadastrado",
+  "subtitle_other": "{{count}} clientes cadastrados",
+  "novaSolicitacao": "Nova Solicitação",
+  "loading": "Carregando clientes...",
+  "search": {
+    "placeholder": "Buscar por nome, CNPJ ou e-mail…",
+    "resultCount_one": "{{count}} resultado para \"{{term}}\"",
+    "resultCount_other": "{{count}} resultados para \"{{term}}\""
+  },
+  "stats": {
+    "total": "Total",
+    "ativos": "Ativos",
+    "inativos": "Inativos",
+    "simplesNacional": "Simples Nacional",
+    "lucroPresReal": "Lucro Pres./Real",
+    "lucroPresRealSub": "{{presumido}} presumido · {{real}} real"
+  },
+  "error": {
+    "retry": "Tentar novamente"
+  },
+  "tabs": {
+    "todos": "Todos",
+    "ativos": "Ativos",
+    "inativos": "Inativos"
+  },
+  "empty": {
+    "searchTitle": "Nenhum resultado encontrado",
+    "defaultTitle": "Nenhum cliente nesta categoria",
+    "searchDescription": "Tente outro termo de busca.",
+    "defaultDescription": "Clientes são criados automaticamente ao aprovar uma solicitação."
+  },
+  "table": {
+    "empresa": "Empresa",
+    "cnpj": "CNPJ",
+    "cidadeUf": "Cidade / UF",
+    "regime": "Regime",
+    "status": "Status",
+    "atualizado": "Atualizado",
+    "ativo": "Ativo",
+    "inativo": "Inativo",
+    "copiarCnpj": "Copiar CNPJ",
+    "verDetalhes": "Ver detalhes"
+  },
+  "footer": {
+    "mostrando": "Mostrando",
+    "de": "de",
+    "clientes": "clientes",
+    "filtro": "· filtro:",
+    "limpar": "(limpar)",
+    "busca": "· busca:",
+    "legendSimples": "{{count}} Simples",
+    "legendPresumido": "{{count}} Presumido",
+    "legendReal": "{{count}} Real"
+  },
+  "regimeOptions": {
+    "1": "Simples Nacional",
+    "2": "Lucro Presumido",
+    "3": "Lucro Real"
+  }
+}

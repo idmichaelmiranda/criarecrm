@@ -1,0 +1,48 @@
+{
+  "page": {
+    "title": "Plantillas",
+    "subtitle": "Pipelines y listas de verificación reutilizables para implementación e instalación.",
+    "newTemplate": "Nueva Plantilla"
+  },
+  "tabs": {
+    "implantacao": "Implementación",
+    "instalacao": "Instalación"
+  },
+  "search": {
+    "placeholder": "Buscar plantilla...",
+    "count_one": "{{count}} plantilla",
+    "count_other": "{{count}} plantillas",
+    "forQuery": " para \"{{query}}\""
+  },
+  "empty": {
+    "noneFound": "No se encontraron plantillas para \"{{query}}\"",
+    "noneRegistered": "Ninguna plantilla registrada",
+    "tryOtherTerms": "Prueba otros términos.",
+    "createFirst": "Crea la primera plantilla para comenzar.",
+    "createButton": "Crear plantilla"
+  },
+  "card": {
+    "inactive": "Inactiva",
+    "installation": "Instalación",
+    "stages_one": "{{count}} etapa",
+    "stages_other": "{{count}} etapas",
+    "slaDays": "{{count}}d SLA",
+    "tasks_one": "{{count}} tarea",
+    "tasks_other": "{{count}} tareas",
+    "popGeral": "POP General",
+    "viewPopGeral": "Ver POP General",
+    "errorOpenPop": "Error al abrir el POP.",
+    "noStages": "Ninguna etapa registrada.",
+    "days": "{{count}}d",
+    "items_one": "{{count}} ítem",
+    "items_other": "{{count}} ítems",
+    "errorLoadingDetails": "Error al cargar los detalles.",
+    "confirmDelete": "¿Eliminar \"{{nome}}\"? No se puede deshacer."
+  },
+  "actions": {
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "deleting": "Eliminando...",
+    "manageInSettings": "Gestionar en Configuración"
+  }
+}

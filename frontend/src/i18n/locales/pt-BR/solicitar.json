@@ -1,0 +1,240 @@
+{
+  "steps": {
+    "meta": [
+      { "title": "Dados da Empresa",     "subtitle": "Identificação do estabelecimento" },
+      { "title": "Contato",              "subtitle": "Responsável e meios de contato" },
+      { "title": "Endereço",             "subtitle": "Localização do estabelecimento" },
+      { "title": "Contabilidade",        "subtitle": "Dados do escritório contábil" },
+      { "title": "Endereço do Contador", "subtitle": "Localização do escritório contábil" },
+      { "title": "Dados Bancários",      "subtitle": "Conta corrente para operações" },
+      { "title": "Regime Tributário",    "subtitle": "Configurações fiscais e contábeis" },
+      { "title": "Formas de Pagamento",  "subtitle": "Meios aceitos e integração TEF" },
+      { "title": "Dados NFe / NFCe",     "subtitle": "Emissão de documentos fiscais e certificado digital" }
+    ],
+    "stepLabel": "Etapa {{n}}",
+    "finalStepLabel": "Etapa final",
+    "confirmationTitle": "Confirmação",
+    "confirmationSubtitle": "Revise os dados antes de enviar"
+  },
+  "header": {
+    "brand": "CriareTI",
+    "logoAlt": "CriareTI",
+    "cancel": "Cancelar"
+  },
+  "footer": {
+    "back": "Voltar",
+    "continue": "Continuar",
+    "submit": "Enviar Solicitação",
+    "submitting": "Enviando..."
+  },
+  "options": {
+    "ramo": { "comercio": "Comércio", "industria": "Indústria" },
+    "crt": {
+      "1": "1 - Simples Nacional",
+      "2": "2 - Simples Nacional - Excesso de sublimite de receita bruta",
+      "3": "3 - Regime Normal"
+    },
+    "regime": {
+      "1": "Simples Nacional",
+      "2": "Lucro Presumido",
+      "3": "Lucro Real"
+    },
+    "st": {
+      "1": "Informante Substituto",
+      "2": "Informante Substituído"
+    },
+    "conta": {
+      "corrente": "Conta Corrente",
+      "poupanca": "Conta Poupança",
+      "pagamento": "Conta Pagamento"
+    }
+  },
+  "cnpj": {
+    "label": "CNPJ *",
+    "placeholder": "00.000.000/0001-00",
+    "required": "CNPJ obrigatório",
+    "invalid": "CNPJ inválido",
+    "consulting": "Consultando...",
+    "foundMessage": "Dados preenchidos automaticamente pela Receita Federal",
+    "notFoundMessage": "CNPJ não encontrado na Receita Federal"
+  },
+  "phone": {
+    "requiredTemplate": "{{label}} obrigatório",
+    "placeholder": "(11) 99999-9999"
+  },
+  "cep": {
+    "required": "CEP obrigatório",
+    "searching": "Buscando...",
+    "placeholder": "00000-000"
+  },
+  "bank": {
+    "label": "Banco",
+    "searchPlaceholder": "Buscar por nome ou código — ex: Bradesco ou 237",
+    "change": "Trocar",
+    "noneFound": "Nenhum banco encontrado para \"{{query}}\""
+  },
+  "step0": {
+    "ieLabel": "Inscrição Estadual",
+    "ieOptional": "Opcional",
+    "ramoLabel": "Ramo de Atividade",
+    "razaoSocialLabel": "Razão Social *",
+    "razaoSocialPlaceholder": "Ex: Empresa Comércio LTDA",
+    "razaoSocialRequired": "Razão social obrigatória",
+    "nomeFantasiaLabel": "Nome Fantasia",
+    "nomeFantasiaPlaceholder": "Como é conhecido",
+    "responsavelLabel": "Responsável",
+    "responsavelPlaceholder": "Nome do responsável"
+  },
+  "step1": {
+    "emailLabel": "E-mail *",
+    "emailPlaceholder": "contato@empresa.com.br",
+    "emailRequired": "E-mail obrigatório",
+    "emailInvalid": "Informe um e-mail válido",
+    "celularLabel": "Celular *",
+    "telefoneFixoLabel": "Telefone Fixo"
+  },
+  "step2": {
+    "cepLabel": "CEP *",
+    "numeroLabel": "Número *",
+    "numeroPlaceholder": "Ex: 123",
+    "numeroRequired": "Número obrigatório",
+    "enderecoLabel": "Endereço *",
+    "enderecoPlaceholder": "Rua, Avenida...",
+    "enderecoRequired": "Endereço obrigatório",
+    "bairroLabel": "Bairro *",
+    "bairroPlaceholder": "Ex: Centro",
+    "bairroRequired": "Bairro obrigatório",
+    "cidadeLabel": "Cidade *",
+    "cidadePlaceholder": "Ex: São Paulo",
+    "cidadeRequired": "Cidade obrigatória",
+    "estadoLabel": "Estado (UF) *",
+    "estadoPlaceholder": "SP",
+    "estadoRequired": "Estado obrigatório"
+  },
+  "step3": {
+    "infoBanner": "Solicite estas informações diretamente com o escritório de contabilidade da empresa antes de prosseguir.",
+    "nomeContadorLabel": "Nome do Contador *",
+    "nomeContadorPlaceholder": "Nome completo",
+    "nomeContadorRequired": "Nome obrigatório",
+    "cpfLabel": "CPF *",
+    "cpfPlaceholder": "000.000.000-00",
+    "cpfRequired": "CPF obrigatório",
+    "crcLabel": "CRC",
+    "crcPlaceholder": "CRC-SP 123456",
+    "cnpjEscritorioLabel": "CNPJ do Escritório",
+    "cnpjEscritorioPlaceholder": "00.000.000/0001-00",
+    "emailContadorLabel": "E-mail do Contador",
+    "emailContadorPlaceholder": "contador@escritorio.com.br",
+    "telefoneFixoLabel": "Telefone Fixo",
+    "telefoneFixoPlaceholder": "(11) 3333-3333",
+    "celularLabel": "Celular"
+  },
+  "step4": {
+    "cepLabel": "CEP",
+    "numeroLabel": "Número",
+    "numeroPlaceholder": "Ex: 123",
+    "enderecoLabel": "Endereço",
+    "enderecoPlaceholder": "Rua, Avenida...",
+    "bairroLabel": "Bairro",
+    "bairroPlaceholder": "Ex: Centro",
+    "cidadeLabel": "Cidade",
+    "cidadePlaceholder": "Ex: São Paulo",
+    "estadoLabel": "Estado (UF)",
+    "estadoPlaceholder": "SP"
+  },
+  "step5": {
+    "tipoContaLabel": "Tipo de Conta",
+    "agenciaLabel": "Agência",
+    "agenciaPlaceholder": "1234",
+    "dvPlaceholder": "DV",
+    "contaLabel": "Conta",
+    "contaPlaceholder": "12345"
+  },
+  "step6": {
+    "infoBanner": "Em caso de dúvidas sobre estas informações, consulte o contador responsável pela empresa antes de preencher.",
+    "crtLabel": "CRT — Código de Regime Tributário",
+    "regimeLabel": "Regime",
+    "condicaoStLabel": "Condição ST",
+    "aliqSimplesLabel": "Alíq. do Simples Nacional (%)",
+    "aliqSimplesPlaceholder": "Ex: 4,00",
+    "receitaBrutaLabel": "Receita Bruta (R$)",
+    "receitaBrutaPlaceholder": "Ex: 360000,00"
+  },
+  "step7": {
+    "heading": "Selecione as formas de pagamento aceitas",
+    "methods": {
+      "dinheiro": { "label": "Dinheiro" },
+      "cheque": { "label": "Cheque" },
+      "cartao_pos": {
+        "label": "Cartão-POS",
+        "info": "Terminal físico (maquininha). Aceita crédito e débito nas bandeiras cadastradas junto à adquirente."
+      },
+      "pagamento_prazo": { "label": "Prazo" },
+      "pix": { "label": "PIX" },
+      "cartao_tef": {
+        "label": "Cartão-TEF",
+        "info": "Integração via software com a integradora (ex: Sitef). Aceita crédito e débito sem maquininha separada — o sistema comunica diretamente com a operadora."
+      }
+    },
+    "integradoraLabel": "Integradora TEF",
+    "integradoraPlaceholder": "Ex: Sitef, Tef Dedicado, PayGo..."
+  },
+  "step8": {
+    "cscLabel": "CSC",
+    "cscPlaceholder": "Código de segurança",
+    "tokenLabel": "Token NFCe",
+    "tokenPlaceholder": "Token da SEFAZ",
+    "ultimaSerieLabel": "Última Série NFCe",
+    "ultimaSeriePlaceholder": "Ex: 001",
+    "serieNfeLabel": "Série NF-e",
+    "serieNfePlaceholder": "Ex: 1",
+    "ultimaNfeLabel": "Última NF-e Emitida",
+    "ultimaNfePlaceholder": "Ex: 000001",
+    "certificadoHeading": "Certificado Digital",
+    "selectCertificado": "Selecionar certificado A1",
+    "certExtensions": ".pfx ou .p12",
+    "change": "Trocar",
+    "choose": "Escolher",
+    "senhaLabel": "Senha do Certificado",
+    "senhaPlaceholder": "Senha do arquivo .pfx / .p12"
+  },
+  "confirmation": {
+    "sections": {
+      "empresa": "Empresa",
+      "endereco": "Endereço",
+      "contabilidade": "Contabilidade",
+      "banco": "Banco",
+      "fiscal": "Fiscal"
+    },
+    "fields": {
+      "razaoSocial": "Razão Social",
+      "cnpj": "CNPJ",
+      "email": "E-mail",
+      "celular": "Celular",
+      "responsavel": "Responsável",
+      "cep": "CEP",
+      "endereco": "Endereço",
+      "cidadeUf": "Cidade/UF",
+      "contador": "Contador",
+      "cpf": "CPF",
+      "banco": "Banco",
+      "agConta": "Ag / Conta",
+      "tipo": "Tipo",
+      "regime": "Regime",
+      "icms": "ICMS",
+      "condSt": "Cond. ST"
+    }
+  },
+  "precheck": {
+    "checklist": {
+      "certificado": { "label": "Certificado Digital A1", "detail": "Arquivo .pfx ou .p12 e a senha de acesso" },
+      "csc": { "label": "CSC e TOKEN NFCe", "detail": "Código de Segurança do Contribuinte e Token da SEFAZ" },
+      "series": { "label": "Séries de Documentos Fiscais", "detail": "Série da NF-e e última série do NFCe utilizada" },
+      "contabilidade": { "label": "Dados da Contabilidade", "detail": "Nome, CPF, CNPJ, CRC, e-mail, telefone e endereço completo do contador" }
+    },
+    "title": "Antes de começar",
+    "subtitle": "Tenha as informações abaixo em mãos para preencher o formulário com agilidade e sem interrupções.",
+    "tipPrefix": "Você poderá pular campos opcionais e retornar depois. Os dados obrigatórios estão marcados com",
+    "cta": "Estou pronto — iniciar preenchimento →"
+  }
+}

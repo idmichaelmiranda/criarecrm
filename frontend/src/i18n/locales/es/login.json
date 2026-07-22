@@ -1,0 +1,30 @@
+{
+  "leftPanel": {
+    "logoAlt": "CriareTI",
+    "brand": "CriareTI",
+    "tagline": "Plataforma de Implementación",
+    "headline": "Gestiona implementaciones con eficiencia y control.",
+    "subtext": "Triaje, gestión de clientes, control de etapas y mucho más — todo en un único panel operativo.",
+    "features": {
+      "triagem": { "title": "Triaje inteligente", "desc": "Recibe y procesa solicitudes en tiempo real" },
+      "rbac": { "title": "RBAC completo", "desc": "Control de acceso por perfiles y permisos" },
+      "sla": { "title": "Seguimiento de SLA", "desc": "Monitorea plazos y riesgos automáticamente" }
+    },
+    "footer": "© {{year}} CriareTI. Todos los derechos reservados."
+  },
+  "form": {
+    "logoAlt": "CriareTI",
+    "brand": "CriareTI",
+    "title": "Entrar en la plataforma",
+    "subtitle": "Accede con tus credenciales corporativas",
+    "emailLabel": "Correo electrónico",
+    "emailPlaceholder": "tu@email.com",
+    "passwordLabel": "Contraseña",
+    "submit": "Entrar",
+    "submitting": "Entrando...",
+    "errorRequired": "Completa correo electrónico y contraseña.",
+    "errorDefault": "Correo o contraseña incorrectos. Verifica tus credenciales e intenta de nuevo.",
+    "registerLink": "¿Primer acceso? Solicita tu registro",
+    "troubleAccessing": "¿Problemas para acceder? Contacta al administrador."
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "leftPanel": {
+    "logoAlt": "CriareTI",
+    "brand": "CriareTI",
+    "tagline": "Implementation Platform",
+    "headline": "Set your access password.",
+    "subtext": "Choose a secure password. You will use it to access the platform going forward.",
+    "footer": "© {{year}} CriareTI. All rights reserved."
+  },
+  "form": {
+    "logoAlt": "CriareTI",
+    "brand": "CriareTI",
+    "title": "Set your password",
+    "subtitle": "Choose a password to access the platform",
+    "newPasswordLabel": "New password",
+    "newPasswordPlaceholder": "At least 6 characters",
+    "confirmPasswordLabel": "Confirm password",
+    "confirmPasswordPlaceholder": "Repeat the password",
+    "errorMinLength": "Password must be at least 6 characters long.",
+    "errorMismatch": "Passwords do not match.",
+    "errorDefault": "Error setting password.",
+    "submit": "Set password and sign in",
+    "submitting": "Saving..."
+  },
+  "success": {
+    "title": "Password set!",
+    "message": "Your password was created successfully. You can now sign in to the platform.",
+    "goToLogin": "Go to sign in"
+  }
+}

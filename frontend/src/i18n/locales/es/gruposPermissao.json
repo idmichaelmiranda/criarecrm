@@ -1,0 +1,44 @@
+{
+  "header": {
+    "title": "Grupos de Permisos",
+    "subtitle": "Controla el acceso por perfiles de usuario",
+    "newGroup": "Nuevo Grupo"
+  },
+  "errors": {
+    "loadFailed": "Error al cargar los grupos.",
+    "nameRequired": "El nombre es obligatorio."
+  },
+  "empty": "No hay grupos registrados.",
+  "inactive": "Inactivo",
+  "permissionCount_one": "{{count}} permiso",
+  "permissionCount_other": "{{count}} permisos",
+  "userCount_one": "{{count}} usuario",
+  "userCount_other": "{{count}} usuarios",
+  "actions": {
+    "edit": "Editar",
+    "delete": "Eliminar"
+  },
+  "modal": {
+    "titleEdit": "Editar Grupo",
+    "titleNew": "Nuevo Grupo",
+    "groupName": "Nombre del Grupo",
+    "groupNamePlaceholder": "Ej.: Analista, Supervisor...",
+    "description": "Descripción (opcional)",
+    "descriptionPlaceholder": "Describe el papel de este grupo",
+    "permissions": "Permisos",
+    "activeGroup": "Grupo activo",
+    "inactiveGroup": "Grupo inactivo",
+    "cancel": "Cancelar",
+    "saving": "Guardando...",
+    "save": "Guardar"
+  },
+  "deleteConfirm": {
+    "title": "¿Eliminar grupo?",
+    "messageBefore": "¿Seguro que deseas eliminar ",
+    "messageAfter": "?",
+    "linkedUsersWarning_one": "Atención: {{count}} usuario vinculado a este grupo.",
+    "linkedUsersWarning_other": "Atención: {{count}} usuarios vinculados a este grupo.",
+    "cancel": "Cancelar",
+    "confirm": "Eliminar"
+  }
+}

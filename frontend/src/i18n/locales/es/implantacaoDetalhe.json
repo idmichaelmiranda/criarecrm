@@ -1,0 +1,187 @@
+{
+  "prazo": {
+    "overdue": "{{count}}d atr.",
+    "today": "Hoy",
+    "tomorrow": "Mañana",
+    "days": "{{count}}d"
+  },
+  "common": {
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "color": "Color",
+    "loading": "...",
+    "ok": "OK"
+  },
+  "pipeline": {
+    "etapaTooltip": "{{nome}} — {{done}}/{{total}} tareas",
+    "renameTooltip": "{{nome}} · Doble clic para renombrar",
+    "addEtapaTooltip": "Agregar nueva etapa",
+    "new": "Nueva"
+  },
+  "etapaDropdown": {
+    "start": "▶  Iniciar",
+    "markCompleted": "✓  Marcar como Finalizada",
+    "skip": "→  Saltar Etapa",
+    "reopen": "↺  Reabrir",
+    "edit": "✏️  Editar etapa",
+    "moveLeft": "← Mover a la izquierda",
+    "moveRight": "→ Mover a la derecha",
+    "remove": "🗑  Eliminar etapa"
+  },
+  "editEtapaModal": {
+    "title": "Editar Etapa",
+    "nameLabel": "Nombre de la etapa",
+    "slaLabel": "SLA de la etapa (días)"
+  },
+  "subItem": {
+    "confirmRemove": "¿Eliminar \"{{titulo}}\"?",
+    "dblClickRename": "Doble clic para renombrar",
+    "archive": "Archivar",
+    "unarchive": "Desarchivar"
+  },
+  "kanbanCard": {
+    "confirmRemove": "¿Eliminar \"{{titulo}}\"?",
+    "viewPop": "Ver POE (PDF de referencia)",
+    "pop": "POE",
+    "required": "Obligatoria",
+    "customTask": "Tarea personalizada",
+    "dblClickRename": "Doble clic para renombrar",
+    "responsibleTooltip": "Responsable: {{nome}}",
+    "assignResponsible": "Asignar responsable",
+    "respShort": "resp.",
+    "removeResponsible": "Quitar responsable",
+    "noUsers": "Ningún usuario",
+    "deadlineTooltip": "Plazo: {{date}}",
+    "addDeadline": "plazo",
+    "addDeadlineTooltip": "Agregar plazo",
+    "subItemsProgress_one": "{{done}}/{{count}} subelemento",
+    "subItemsProgress_other": "{{done}}/{{count}} subelementos",
+    "notApplicable": "⊘ No aplicable",
+    "editNote": "Editar nota",
+    "addNote": "Agregar nota",
+    "subItemsTooltip": "Subelementos",
+    "reactivateTask": "Reactivar tarea",
+    "markNotApplicable": "Marcar como No Aplicable",
+    "moveUp": "Mover hacia arriba",
+    "moveDown": "Mover hacia abajo",
+    "unarchiveTask": "Desarchivar tarea",
+    "archiveTask": "Archivar tarea",
+    "removeTask": "Eliminar tarea",
+    "archivedSubItems_one": "{{count}} subelemento archivado",
+    "archivedSubItems_other": "{{count}} subelementos archivados",
+    "subItemPlaceholder": "Nombre del subelemento...",
+    "addSubItem": "subelemento",
+    "notePlaceholder": "Nota, instrucción o detalle para esta tarea...",
+    "saveNote": "Guardar nota"
+  },
+  "kanbanColumn": {
+    "reorderTooltip": "Reordenar mediante el menú ⋮",
+    "slaTooltip": "SLA de la etapa: {{dias}} días",
+    "slaOverdue": "{{count}}d atr.",
+    "slaDaysLeft": "{{count}}d SLA",
+    "noTasksFiltered": "Ninguna tarea con este filtro",
+    "noTasks": "Sin tareas",
+    "dropHere": "Soltar aquí",
+    "archivedCount_one": "{{count}} archivada",
+    "archivedCount_other": "{{count}} archivadas",
+    "taskNamePlaceholder": "Nombre de la tarea...",
+    "addTask": "Agregar tarea",
+    "confirmDeleteEtapa": "¿Eliminar la etapa \"{{nome}}\"? Las tareas de esta etapa se conservarán sin etapa."
+  },
+  "kanbanTab": {
+    "searchPlaceholder": "Buscar tarea...",
+    "allResponsibles": "Todos los responsables",
+    "allStatuses": "Todos los estados",
+    "statusPending": "Pendientes",
+    "statusBlocked": "Bloqueadas",
+    "statusNotApplicable": "No aplicables",
+    "clearFilters": "✕ Limpiar filtros",
+    "newEtapaPlaceholder": "Nombre de la nueva etapa...",
+    "slaDaysLabel": "SLA (días)",
+    "create": "Crear",
+    "newEtapa": "Nueva etapa"
+  },
+  "timelineTab": {
+    "empty": "No hay eventos en la línea de tiempo.",
+    "by": "por {{nome}}"
+  },
+  "comentariosTab": {
+    "placeholder": "Escribe un comentario interno...",
+    "send": "Enviar",
+    "empty": "Aún no hay comentarios."
+  },
+  "clienteTab": {
+    "notFound": "Cliente no encontrado.",
+    "viewFull": "Ver ficha completa →",
+    "fields": {
+      "email": "Correo electrónico",
+      "cellphone": "Celular",
+      "responsible": "Responsable",
+      "phone": "Tel. Fijo",
+      "cityState": "Ciudad/Estado",
+      "zip": "Código Postal"
+    }
+  },
+  "responsavelModal": {
+    "title": "Definir Responsable",
+    "userLabel": "Usuario",
+    "selectPlaceholder": "Selecciona un usuario…",
+    "confirm": "Confirmar"
+  },
+  "editPanel": {
+    "title": "Editar Implementación",
+    "statusLabel": "Estado",
+    "status": {
+      "em_andamento": "En Curso",
+      "pausada": "Pausada",
+      "concluida": "Finalizada",
+      "cancelada": "Cancelada"
+    },
+    "responsibleLabel": "Responsable",
+    "noResponsible": "Sin responsable",
+    "consultantLabel": "Consultor",
+    "consultantPlaceholder": "Nombre del consultor",
+    "expectedDateLabel": "Fecha Prevista",
+    "priorityLabel": "Prioridad",
+    "priority": {
+      "baixa": "Baja",
+      "normal": "Normal",
+      "alta": "Alta",
+      "critica": "Crítica"
+    },
+    "notesLabel": "Observaciones",
+    "notesPlaceholder": "Notas internas..."
+  },
+  "tabs": {
+    "checklist": "Kanban",
+    "timeline": "Cronología",
+    "comentarios": "Comentarios",
+    "cliente": "Cliente"
+  },
+  "page": {
+    "breadcrumb": "Implementaciones",
+    "back": "← Volver",
+    "dataConversion": "Conversión de datos",
+    "goLiveLabel": "🚀 Go Live: {{date}}",
+    "confirmRemoveGoLive": "¿Eliminar el registro de Go Live?",
+    "removeGoLiveTooltip": "Eliminar Go Live",
+    "registerGoLive": "🚀 Registrar Go Live",
+    "change": "Cambiar",
+    "noResponsible": "Sin responsable",
+    "consultantLabel": "Consultor: {{nome}}",
+    "slaLabel": "SLA: {{date}}",
+    "startLabel": "Inicio: {{date}}",
+    "edit": "Editar",
+    "overallProgress": "Progreso general",
+    "pendingCount_one": "{{count}} pendiente",
+    "pendingCount_other": "{{count}} pendientes",
+    "newEtapa": "Nueva Etapa",
+    "onlyPending": "Solo pendientes",
+    "expandTooltip": "Expandir a pantalla completa",
+    "expand": "Expandir",
+    "minimizeTooltip": "Minimizar (Esc)",
+    "minimize": "Minimizar",
+    "escKey": "Esc"
+  }
+}

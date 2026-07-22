@@ -1,0 +1,72 @@
+{
+  "toast": {
+    "title": "Solicitação enviada!",
+    "desc": "Nossa equipe entrará em contato em breve."
+  },
+  "scrollNav": {
+    "backToTop": "Voltar ao topo",
+    "nextSection": "Próxima seção"
+  },
+  "header": {
+    "brand": "Criare TI",
+    "logoAlt": "CriareTI",
+    "navComoFunciona": "Como funciona",
+    "navOQueFazemos": "O que fazemos",
+    "cta": "Solicitar Implantação"
+  },
+  "hero": {
+    "logoAlt": "Criare ERP",
+    "badge": "ERP especializado para o varejo",
+    "headline1": "Seu ERP completo para uma gestão",
+    "headlineHighlight": "mais segura e ágil",
+    "subtitle": "O ERP Criare foi desenvolvido para simplificar sua operação, reduzir riscos e dar visibilidade total do seu negócio.",
+    "cta": "Solicitar Implantação",
+    "ctaSecondary": "Falar com um especialista",
+    "trust": {
+      "steps": "Implantação em 4 etapas",
+      "support": "Suporte pós go-live",
+      "secure": "Ambiente seguro",
+      "roi": "Retorno rápido e mensurável"
+    }
+  },
+  "modules": {
+    "sectionLabel": "O que configuramos",
+    "vendas": { "title": "Gestão de Vendas", "b1": "PDV integrado e ágil", "b2": "Pedidos, orçamentos e NF-e", "b3": "Comissão de vendedores" },
+    "estoque": { "title": "Estoque Inteligente", "b1": "Inventário em tempo real", "b2": "Reposição automática por mínimo", "b3": "Rastreio por lote e validade" },
+    "financeiro": { "title": "Financeiro Integrado", "b1": "Fluxo de caixa em tempo real", "b2": "Contas a pagar e receber", "b3": "Conciliação bancária automática" },
+    "fiscal": { "title": "Fiscal e Tributário", "b1": "Emissão de NF-e, NFC-e e CT-e", "b2": "Cálculo automático de impostos", "b3": "Obrigações acessórias (SPED, EFD)" },
+    "relatorios": { "title": "Relatórios e BI", "b1": "Dashboards de vendas e estoque", "b2": "Indicadores de performance (KPIs)", "b3": "Exportação para Excel e PDF" },
+    "seguranca": { "title": "Segurança e Permissões", "b1": "Perfis de acesso por usuário", "b2": "Log de auditoria completo", "b3": "Backup automático e criptografado" }
+  },
+  "comoFunciona": {
+    "eyebrow": "Como funciona",
+    "title": "Quatro etapas até o sistema no ar",
+    "subtitle": "Um processo simples e guiado — do primeiro contato ao go-live, com suporte em cada etapa.",
+    "step1": { "title": "Preencha o formulário", "desc": "Informe os dados da empresa, regime tributário e configurações fiscais em um formulário guiado — leva menos de 10 minutos.", "time": "~10 min" },
+    "step2": { "title": "Nossa equipe analisa", "desc": "Especialistas revisam cada informação e preparam o ambiente do sistema personalizado para o seu negócio.", "time": "1–2 dias úteis" },
+    "step3": { "title": "Implantação e homologação", "desc": "Instalamos e configuramos todo o sistema, executamos testes e validações em ambiente de homologação antes do go-live.", "time": "3–5 dias úteis" },
+    "step4": { "title": "Sistema em produção", "desc": "Go-live com acompanhamento total, treinamento da equipe e suporte dedicado nos primeiros dias de operação.", "time": "Go Live! 🚀" }
+  },
+  "trust": {
+    "eyebrow": "Seguro e confiável",
+    "title1": "Seus dados tratados com",
+    "title2": "total confidencialidade.",
+    "desc": "Todas as informações enviadas no formulário são tratadas com sigilo absoluto, usadas exclusivamente para a configuração do seu sistema de gestão.",
+    "cta": "Começar agora",
+    "lgpd": { "title": "LGPD Compliant", "desc": "Dados protegidos conforme a Lei Geral de Proteção de Dados" },
+    "conexao": { "title": "Conexão segura", "desc": "Transmissão criptografada SSL/TLS em todo o formulário" },
+    "equipe": { "title": "Equipe certificada", "desc": "Especialistas com experiência em ERP de varejo" },
+    "suporte": { "title": "Suporte dedicado", "desc": "Canal direto com a equipe durante toda a implantação" }
+  },
+  "cta": {
+    "logoAlt": "CriareTI",
+    "title": "Pronto para começar?",
+    "subtitle": "Preencha o formulário em poucos minutos e nossa equipe entra em contato para iniciar a implantação do seu sistema.",
+    "button": "Solicitar Implantação",
+    "responseTime": "Retorno em até 2 dias úteis"
+  },
+  "footer": {
+    "logoAlt": "CriareTI",
+    "copyright": "© {{year}} Criare TI. Todos os direitos reservados."
+  }
+}

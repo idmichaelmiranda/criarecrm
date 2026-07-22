@@ -1,0 +1,64 @@
+{
+  "typeFilter": { "label": "Tipo:" },
+  "statusFilter": { "label": "Status:" },
+  "all": "Todos",
+  "status": {
+    "concluida": "Concluída",
+    "em_andamento": "Em andamento",
+    "pausada": "Pausada"
+  },
+  "tipo": {
+    "implantacao": "Implantações",
+    "instalacao": "Instalações"
+  },
+  "tipoSingular": {
+    "implantacao": "Implantação",
+    "instalacao": "Instalação"
+  },
+  "visiblePoints_one": "{{count}} ponto visível",
+  "visiblePoints_other": "{{count}} pontos visíveis",
+  "activeStates": {
+    "label": "Estados ativos:",
+    "ofTotal": "{{count}} de 27 estados"
+  },
+  "buttons": {
+    "filters": "Filtros",
+    "exitFullscreen": "Sair da tela cheia",
+    "expandMap": "Expandir mapa"
+  },
+  "filterPanel": {
+    "title": "Filtros",
+    "type": "Tipo",
+    "status": "Status",
+    "period": "Período"
+  },
+  "periods": {
+    "30": "30 dias",
+    "90": "90 dias",
+    "180": "180 dias",
+    "365": "1 ano"
+  },
+  "legend": {
+    "title": "Legenda",
+    "status": "Status",
+    "location": "Localização",
+    "exactCoord": "Coord. exata",
+    "approxState": "Aprox. (estado)",
+    "states": "Estados",
+    "withOperations": "Com operações",
+    "withoutOperations": "Sem operações"
+  },
+  "tooltip": {
+    "approx": " ⚠ aprox."
+  },
+  "popup": {
+    "type": "Tipo: ",
+    "status": "Status: ",
+    "consultant": "Consultor: ",
+    "expected": "Prevista: ",
+    "progress": "Progresso: ",
+    "approxWarning": "⚠ Posição aproximada — cidade não mapeada, usando centróide do estado",
+    "viewClient": "→ Ver cliente"
+  },
+  "footnote": "* Pinos com coordenada exata da cidade quando disponível. Ícone ⚠ indica posição aproximada (centróide do estado)."
+}

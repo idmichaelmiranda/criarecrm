@@ -1,0 +1,44 @@
+{
+  "header": {
+    "title": "Permission Groups",
+    "subtitle": "Control access by user profile",
+    "newGroup": "New Group"
+  },
+  "errors": {
+    "loadFailed": "Failed to load groups.",
+    "nameRequired": "Name is required."
+  },
+  "empty": "No groups registered.",
+  "inactive": "Inactive",
+  "permissionCount_one": "{{count}} permission",
+  "permissionCount_other": "{{count}} permissions",
+  "userCount_one": "{{count}} user",
+  "userCount_other": "{{count}} users",
+  "actions": {
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "modal": {
+    "titleEdit": "Edit Group",
+    "titleNew": "New Group",
+    "groupName": "Group Name",
+    "groupNamePlaceholder": "E.g.: Analyst, Supervisor...",
+    "description": "Description (optional)",
+    "descriptionPlaceholder": "Describe this group's role",
+    "permissions": "Permissions",
+    "activeGroup": "Active group",
+    "inactiveGroup": "Inactive group",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "save": "Save"
+  },
+  "deleteConfirm": {
+    "title": "Delete group?",
+    "messageBefore": "Are you sure you want to delete ",
+    "messageAfter": "?",
+    "linkedUsersWarning_one": "Warning: {{count}} user linked to this group.",
+    "linkedUsersWarning_other": "Warning: {{count}} users linked to this group.",
+    "cancel": "Cancel",
+    "confirm": "Delete"
+  }
+}

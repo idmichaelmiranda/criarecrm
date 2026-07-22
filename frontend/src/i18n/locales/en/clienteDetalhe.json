@@ -1,0 +1,260 @@
+{
+  "tabs": {
+    "cadastro": "Registration",
+    "contabilidade": "Accounting",
+    "operacional": "Operational",
+    "fiscal": "Tax / e-Invoice",
+    "implantacoes": "Implementations"
+  },
+  "paymentFields": {
+    "dinheiro": "Cash",
+    "cheque": "Check",
+    "cartao_pos": "Card-POS",
+    "pagamento_prazo": "Term",
+    "pix": "PIX",
+    "cartao_tef": "Card-TEF"
+  },
+  "regimeOptions": {
+    "1": "Simples Nacional",
+    "2": "Assumed Profit",
+    "3": "Actual Profit"
+  },
+  "crtOptions": {
+    "1": "1 - Simples Nacional",
+    "2": "2 - Simples Nacional - Gross revenue sublimit exceeded",
+    "3": "3 - Normal Regime"
+  },
+  "stOptions": {
+    "1": "Substitute Filer",
+    "2": "Substituted Filer"
+  },
+  "contaOptions": {
+    "corrente": "Checking Account",
+    "poupanca": "Savings Account",
+    "pagamento": "Payment Account"
+  },
+  "cepBuscando": "Looking up...",
+  "validation": {
+    "obrigatorio": "Required",
+    "emailInvalido": "Invalid e-mail",
+    "campoObrigatorio": "{{campo}} required"
+  },
+  "cadastro": {
+    "view": {
+      "razaoSocial": "Legal Name",
+      "nomeFantasia": "Trade Name",
+      "cnpj": "Tax ID",
+      "ie": "State Registration",
+      "email": "E-mail",
+      "responsavel": "Contact Person",
+      "telefoneFixo": "Landline",
+      "celular": "Mobile",
+      "endereco": "Address",
+      "cep": "ZIP Code",
+      "enderecoField": "Address",
+      "numero": "Number",
+      "bairro": "Neighborhood",
+      "cidade": "City",
+      "estado": "State",
+      "enderecoVazio": "Address not provided."
+    },
+    "edit": {
+      "razaoSocial": "Legal Name *",
+      "nomeFantasia": "Trade Name",
+      "cnpj": "Tax ID",
+      "ie": "State Registration",
+      "email": "E-mail *",
+      "responsavel": "Contact Person",
+      "telefoneFixo": "Landline",
+      "telefoneFixoPlaceholder": "(00) 0000-0000",
+      "celular": "Mobile *",
+      "celularPlaceholder": "(00) 00000-0000",
+      "endereco": "Address",
+      "cep": "ZIP Code",
+      "numero": "Number",
+      "enderecoField": "Address",
+      "bairro": "Neighborhood",
+      "cidade": "City",
+      "estadoUf": "State (abbrev.)"
+    }
+  },
+  "contabilidade": {
+    "view": {
+      "vazio": "Accounting information not provided.",
+      "nomeContador": "Accountant Name",
+      "cpf": "National ID (CPF)",
+      "crc": "Accountant License (CRC)",
+      "cnpj": "Tax ID",
+      "email": "E-mail",
+      "telefoneFixo": "Landline",
+      "celular": "Mobile",
+      "enderecoContador": "Accountant Address",
+      "cep": "ZIP Code",
+      "endereco": "Address",
+      "numero": "Number",
+      "bairro": "Neighborhood",
+      "cidade": "City",
+      "estado": "State"
+    },
+    "edit": {
+      "nomeContador": "Accountant Name *",
+      "cpf": "National ID (CPF)",
+      "cpfPlaceholder": "000.000.000-00",
+      "crc": "Accountant License (CRC)",
+      "crcPlaceholder": "CRC-MG 123456",
+      "cnpjEscritorio": "Firm Tax ID",
+      "cnpjEscritorioPlaceholder": "00.000.000/0001-00",
+      "email": "E-mail",
+      "telefoneFixo": "Landline",
+      "telefoneFixoPlaceholder": "(00) 0000-0000",
+      "celular": "Mobile",
+      "celularPlaceholder": "(00) 00000-0000",
+      "enderecoContador": "Accountant Address",
+      "cep": "ZIP Code",
+      "numero": "Number",
+      "endereco": "Address",
+      "bairro": "Neighborhood",
+      "cidade": "City",
+      "estadoUf": "State (abbrev.)"
+    }
+  },
+  "operacional": {
+    "view": {
+      "dadosBancarios": "Banking Details",
+      "codBanco": "Bank Code",
+      "banco": "Bank",
+      "cnpjBanco": "Bank Tax ID",
+      "tipoConta": "Account Type",
+      "agencia": "Branch",
+      "conta": "Account",
+      "dadosBancariosVazio": "Banking details not provided.",
+      "formasPagamento": "Payment Methods",
+      "formasPagamentoVazio": "Payment methods not provided.",
+      "integradoraTef": "TEF Integrator"
+    },
+    "edit": {
+      "tipoConta": "Account Type",
+      "agencia": "Branch",
+      "agenciaPlaceholder": "1234",
+      "dvPlaceholder": "Check digit",
+      "conta": "Account",
+      "contaPlaceholder": "12345",
+      "formasPagamento": "Payment Methods",
+      "formasAceitas": "Accepted methods",
+      "integradoraTef": "TEF Integrator",
+      "integradoraTefPlaceholder": "E.g.: Sitef, Dedicated TEF, PayGo..."
+    },
+    "bankSelector": {
+      "label": "Bank",
+      "placeholder": "Search by name or code — e.g. Bradesco or 237",
+      "trocar": "Change",
+      "nenhumEncontrado": "No bank found for \"{{query}}\""
+    }
+  },
+  "fiscal": {
+    "view": {
+      "regimeTributarioTitulo": "Tax Regime",
+      "crt": "CRT",
+      "regimeTributario": "Tax Regime",
+      "condicaoSt": "ST Condition",
+      "aliqSimples": "Simples Nacional Rate",
+      "receitaBruta": "Gross Revenue",
+      "regimeVazio": "Tax regime not provided.",
+      "nfe": "e-Invoice (NF-e)",
+      "serieNfe": "NF-e Series",
+      "ultimaNfeEmitida": "Last NF-e Issued",
+      "nfce": "Consumer e-Invoice (NFC-e)",
+      "csc": "Security Code (CSC)",
+      "token": "Token",
+      "ultimaSerieNfce": "Last NFC-e Series",
+      "certificadoDigital": "Digital Certificate",
+      "arquivo": "File",
+      "verificando": "Checking…",
+      "baixando": "Downloading…",
+      "baixar": "Download",
+      "senha": "Password",
+      "dadosFiscaisVazio": "Tax information not provided."
+    },
+    "edit": {
+      "regimeTributario": "Tax Regime",
+      "crtSelectLabel": "CRT — Tax Regime Code",
+      "regime": "Regime",
+      "condicaoSt": "ST Condition",
+      "aliqSimples": "Simples Nacional Rate (%)",
+      "aliqSimplesPlaceholder": "E.g.: 4.00",
+      "receitaBruta": "Gross Revenue ($)",
+      "receitaBrutaPlaceholder": "E.g.: 360000.00",
+      "nfe": "e-Invoice (NF-e)",
+      "serieNfe": "NF-e Series",
+      "serieNfePlaceholder": "E.g.: 1",
+      "ultimaNfeEmitida": "Last NF-e Issued",
+      "ultimaNfeEmitidaPlaceholder": "E.g.: 000001",
+      "nfce": "Consumer e-Invoice (NFC-e)",
+      "csc": "Security Code (CSC)",
+      "cscPlaceholder": "Security code",
+      "token": "Token",
+      "tokenPlaceholder": "SEFAZ token",
+      "ultimaSerieNfce": "Last NFC-e Series",
+      "ultimaSerieNfcePlaceholder": "E.g.: 001",
+      "certificadoDigital": "Digital Certificate",
+      "senhaCertificado": "Certificate Password",
+      "senhaCertificadoPlaceholder": "Password for the .pfx / .p12 file"
+    }
+  },
+  "implantacoes": {
+    "vazio": "No implementations found for this client.",
+    "consultor": "Consultant: {{nome}}",
+    "sla": "SLA: {{data}}",
+    "abrir": "Open →"
+  },
+  "implantacaoBadge": {
+    "ativas_one": "{{count}} active implementation",
+    "ativas_other": "{{count}} active implementations",
+    "total_one": "{{count}} implementation",
+    "total_other": "{{count}} implementations"
+  },
+  "header": {
+    "breadcrumbClientes": "Clients",
+    "editando": "Editing",
+    "cadastroEm": "Registered: {{data}}",
+    "cancelar": "Cancel",
+    "salvar": "Save",
+    "salvando": "Saving…",
+    "editar": "Edit",
+    "gerarBase": "Generate Database",
+    "gerando": "Generating…",
+    "chaveApi": "API Key"
+  },
+  "requestBanner": {
+    "titulo": "Installation requested via Assistente Criare — Tax ID {{cnpj}}",
+    "tempo": "created {{criada}} · expires {{expira}}",
+    "recusar": "Decline",
+    "aprovar": "Approve",
+    "aguarde": "Please wait…"
+  },
+  "errors": {
+    "voltarClientes": "← Back to Clients",
+    "aprovarSolicitacao": "Error approving request",
+    "recusarSolicitacao": "Error declining request",
+    "salvar": "Error saving",
+    "gerarBase": "Error generating database",
+    "gerarChaveApi": "Error generating API key"
+  },
+  "confirm": {
+    "novaChave": "Generating a new key invalidates the previous one. Continue?"
+  },
+  "modalAmbiente": {
+    "titulo": "Generate Database",
+    "subtitulo": "Select the environment to generate the database for",
+    "producao": "Production",
+    "homologacao": "Staging",
+    "cancelar": "Cancel"
+  },
+  "modalChave": {
+    "titulo": "API key generated",
+    "subtitulo": "Copy and configure it in the installer for",
+    "aviso": "This key will not be shown again.",
+    "copiar": "Copy",
+    "fechar": "Close"
+  }
+}

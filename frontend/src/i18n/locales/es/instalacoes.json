@@ -1,0 +1,126 @@
+{
+  "semResponsavel": "Sin responsable",
+  "tipos": {
+    "pdv": "POS Adicional",
+    "coletor": "Colector Móvil",
+    "forca_vendas": "Fuerza de Ventas",
+    "impressora": "Impresora",
+    "outro": "Otro"
+  },
+  "status": {
+    "agendada": "Programada",
+    "em_execucao": "En Ejecución",
+    "concluida": "Finalizada",
+    "cancelada": "Cancelada"
+  },
+  "priorityOptions": {
+    "normal": "Normal",
+    "alta": "Alta",
+    "urgente": "Urgente"
+  },
+  "tabs": {
+    "ativas": "Activas",
+    "historico": "Historial"
+  },
+  "legend": {
+    "title": "Leyenda:",
+    "atrasada": "Vencida"
+  },
+  "dateRelative": {
+    "overdue_one": "{{count}}d de retraso",
+    "overdue_other": "{{count}}d de retraso",
+    "today": "Hoy",
+    "tomorrow": "Mañana",
+    "daysShort": "{{count}}d"
+  },
+  "header": {
+    "title": "Instalaciones",
+    "subtitle": "POS adicionales, colectores, fuerza de ventas y más",
+    "newButton": "Nueva Instalación"
+  },
+  "kpi": {
+    "agendadas": "Programadas",
+    "emExecucao": "En Ejecución",
+    "concluidas": "Finalizadas",
+    "atrasadas": "Vencidas"
+  },
+  "filters": {
+    "searchPlaceholder": "Buscar cliente o código…",
+    "allTypes": "Todos los tipos",
+    "period": "Período",
+    "periodPopover": {
+      "title": "Filtrar por período",
+      "toggleAgendamento": "Programación",
+      "toggleConclusao": "Finalización",
+      "presets": {
+        "hoje": "Hoy",
+        "semana": "Esta semana",
+        "mes": "Este mes",
+        "mesPassado": "Mes pasado"
+      },
+      "custom": "Personalizado",
+      "from": "Desde",
+      "to": "Hasta",
+      "clear": "Limpiar filtro de período"
+    },
+    "meusInstalacoes": "Mis instalaciones"
+  },
+  "periodChip": {
+    "range": ": {{start}} → {{end}}",
+    "from": ": desde {{start}}",
+    "to": ": hasta {{end}}"
+  },
+  "resultsFound_one": "{{count}} instalación encontrada",
+  "resultsFound_other": "{{count}} instalaciones encontradas",
+  "table": {
+    "empty": "Ninguna instalación encontrada.",
+    "headers": {
+      "cliente": "Cliente",
+      "tipo": "Tipo",
+      "status": "Estado",
+      "progresso": "Progreso",
+      "responsavel": "Responsable",
+      "agendado": "Programado",
+      "concluido": "Finalizado"
+    },
+    "overdueBadge": "VENCIDA",
+    "priorityUrgent": "URGENTE",
+    "priorityHigh": "ALTA"
+  },
+  "modal": {
+    "title": "Nueva Instalación",
+    "subtitle": "Completa los datos y selecciona los productos",
+    "clienteSection": "Cliente",
+    "trocar": "Cambiar",
+    "cnpjPlaceholder": "Ingresa el CUIT/RFC del cliente…",
+    "buscar": "Buscar",
+    "selecionar": "Seleccionar",
+    "cnpjHint": "Ingresa el CUIT/RFC y haz clic en Buscar para consultar el ERP.",
+    "cnpjNotFound": "CUIT/RFC no encontrado o cliente inactivo en el ERP.",
+    "erpError": "Error al consultar el ERP.",
+    "errorSelectCliente": "Selecciona el cliente.",
+    "errorSelectTipo": "Selecciona al menos un tipo de producto.",
+    "contatoSection": "Contacto en el Lugar",
+    "nome": "Nombre",
+    "quemVaiReceber": "Quién va a recibir",
+    "telefone": "Teléfono",
+    "telefonePlaceholder": "(00) 00000-0000",
+    "agendamentoSection": "Programación",
+    "dataAgendada": "Fecha Programada",
+    "prioridade": "Prioridad",
+    "responsavelExecucao": "Responsable de la ejecución",
+    "observacoesSection": "Observaciones",
+    "observacoesPlaceholder": "Información adicional sobre la instalación…",
+    "produtosSection": "Productos",
+    "unitsBadge": "{{count}} un.",
+    "loadingProdutos": "Cargando productos…",
+    "noProdutosAtivos": "Ningún producto activo. Configúralo en Configuración.",
+    "summary_one": "{{totalQty}} un. · {{count}} tipo",
+    "summary_other": "{{totalQty}} un. · {{count}} tipos",
+    "checklistsPerProduct": " · checklists por producto",
+    "cancelar": "Cancelar",
+    "criando": "Creando…",
+    "criarInstalacao": "Crear Instalación",
+    "criarInstalacaoComQty": "Crear Instalación ({{count}} un.)"
+  }
+}

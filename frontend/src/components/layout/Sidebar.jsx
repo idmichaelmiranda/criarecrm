@@ -1,9 +1,11 @@
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { solicitacoesApi, usuariosApi, authApi, instalacaosApi, notificacoesApi, solicitacoesInstaladorApi } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 import { timeAgoFromUTC } from "../../utils/dateUtils";
+import { LanguageSwitcher } from "../LanguageSwitcher";
 
 function getStrength(s) {
   if (!s) return 0;
@@ -16,13 +18,14 @@ function getStrength(s) {
 }
 const STRENGTH_LEVELS = [
   null,
-  { label: "Fraca",   bar: "bg-red-500",    w: "w-1/4" },
-  { label: "Regular", bar: "bg-yellow-500", w: "w-2/4" },
-  { label: "Boa",     bar: "bg-blue-500",   w: "w-3/4" },
-  { label: "Forte",   bar: "bg-green-500",  w: "w-full" },
+  { key: "weak",   bar: "bg-red-500",    w: "w-1/4" },
+  { key: "fair",   bar: "bg-yellow-500", w: "w-2/4" },
+  { key: "good",   bar: "bg-blue-500",   w: "w-3/4" },
+  { key: "strong", bar: "bg-green-500",  w: "w-full" },
 ];
 
 function AlterarSenhaModal({ onClose }) {
+  const { t } = useTranslation("sidebar");
   const [form, setForm]       = useState({ atual: "", nova: "", confirma: "" });
   const [show, setShow]       = useState({ atual: false, nova: false, confirma: false });
   const [loading, setLoading] = useState(false);
@@ -35,16 +38,16 @@ function AlterarSenhaModal({ onClose }) {
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
-    if (!form.atual) { setError("Informe a senha atual."); return; }
-    if (form.nova.length < 8) { setError("A nova senha deve ter no mínimo 8 caracteres."); return; }
-    if (form.nova !== form.confirma) { setError("As senhas não coincidem."); return; }
+    if (!form.atual) { setError(t("alterarSenha.errorCurrentRequired")); return; }
+    if (form.nova.length < 8) { setError(t("alterarSenha.errorMinLength")); return; }
+    if (form.nova !== form.confirma) { setError(t("alterarSenha.errorMismatch")); return; }
     setLoading(true);
     try {
       await usuariosApi.alterarSenha({ senha_atual: form.atual, senha_nova: form.nova });
       setSuccess(true);
       setTimeout(onClose, 1800);
     } catch (err) {
-      setError(err.message || "Erro ao alterar senha.");
+      setError(err.message || t("alterarSenha.errorDefault"));
     } finally {
       setLoading(false);
     }
@@ -74,7 +77,7 @@ function AlterarSenhaModal({ onClose }) {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
               </svg>
             </div>
-            <h2 className="text-sm font-semibold text-white">Alterar senha</h2>
+            <h2 className="text-sm font-semibold text-white">{t("alterarSenha.title")}</h2>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-white w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -85,12 +88,12 @@ function AlterarSenhaModal({ onClose }) {
             <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
               <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
             </div>
-            <p className="text-sm font-semibold text-gray-800">Senha alterada com sucesso!</p>
+            <p className="text-sm font-semibold text-gray-800">{t("alterarSenha.successMessage")}</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
             <div>
-              <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Senha atual</label>
+              <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{t("alterarSenha.currentPasswordLabel")}</label>
               <div className="relative">
                 <input type={show.atual ? "text" : "password"} value={form.atual}
                   onChange={(e) => { setForm((p) => ({ ...p, atual: e.target.value })); setError(""); }}
@@ -99,7 +102,7 @@ function AlterarSenhaModal({ onClose }) {
               </div>
             </div>
             <div>
-              <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Nova senha</label>
+              <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{t("alterarSenha.newPasswordLabel")}</label>
               <div className="relative">
                 <input type={show.nova ? "text" : "password"} value={form.nova}
                   onChange={(e) => { setForm((p) => ({ ...p, nova: e.target.value })); setError(""); }}
@@ -112,13 +115,13 @@ function AlterarSenhaModal({ onClose }) {
                     <div className={`h-full rounded-full transition-all duration-300 ${level?.bar ?? ""} ${level?.w ?? "w-0"}`} />
                   </div>
                   <p className={`text-[11px] font-medium ${str === 1 ? "text-red-500" : str === 2 ? "text-yellow-600" : str === 3 ? "text-blue-600" : "text-green-600"}`}>
-                    {level?.label}
+                    {level?.key && t(`alterarSenha.strength.${level.key}`)}
                   </p>
                 </div>
               )}
             </div>
             <div>
-              <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Confirmar nova senha</label>
+              <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{t("alterarSenha.confirmPasswordLabel")}</label>
               <div className="relative">
                 <input type={show.confirma ? "text" : "password"} value={form.confirma}
                   onChange={(e) => { setForm((p) => ({ ...p, confirma: e.target.value })); setError(""); }}
@@ -127,14 +130,14 @@ function AlterarSenhaModal({ onClose }) {
                 <EyeBtn field="confirma" />
               </div>
               {form.confirma && form.confirma !== form.nova && (
-                <p className="text-[11px] text-red-500 mt-1">As senhas não coincidem.</p>
+                <p className="text-[11px] text-red-500 mt-1">{t("alterarSenha.errorMismatch")}</p>
               )}
             </div>
             {error && <p className="text-xs text-red-600 px-3 py-2 rounded-xl bg-red-50 border border-red-100">{error}</p>}
             <div className="flex gap-3 pt-1">
-              <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 border border-gray-200 transition-colors">Cancelar</button>
+              <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 border border-gray-200 transition-colors">{t("alterarSenha.cancel")}</button>
               <button type="submit" disabled={loading} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50 transition-colors">
-                {loading ? "Salvando..." : "Alterar senha"}
+                {loading ? t("alterarSenha.saving") : t("alterarSenha.title")}
               </button>
             </div>
           </form>
@@ -157,51 +160,51 @@ function Icon({ d }) {
 const MENU = {
   OPERACIONAL: [
     {
-      to: "/admin", end: true, label: "Dashboard", permission: "dashboard.view",
+      to: "/admin", end: true, labelKey: "dashboard", permission: "dashboard.view",
       d: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
     },
     {
-      to: "/admin/triagem", label: "Triagem", permission: "triagem.view", badge: true,
+      to: "/admin/triagem", labelKey: "triagem", permission: "triagem.view", badge: true,
       d: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4",
     },
     {
-      to: "/admin/implantacoes", label: "Implantações", permission: "implantacoes.view",
+      to: "/admin/implantacoes", labelKey: "implantacoes", permission: "implantacoes.view",
       d: "M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2",
     },
     {
-      to: "/instalacoes", label: "Instalações", permission: "instalacoes.view", installsBadge: true,
+      to: "/instalacoes", labelKey: "instalacoes", permission: "instalacoes.view", installsBadge: true,
       d: "M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18",
     },
     {
-      to: "/admin/clientes", label: "Clientes", permission: "clientes.view",
+      to: "/admin/clientes", labelKey: "clientes", permission: "clientes.view",
       d: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
     },
     {
-      to: "/assistente-criare", label: "Assistente Criare", permission: "instalador.aprovar", assistenteBadge: true,
+      to: "/assistente-criare", labelKey: "assistenteCriare", permission: "instalador.aprovar", assistenteBadge: true,
       d: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
     },
   ],
   CONFIGURACAO: [
     {
-      to: "/admin/templates", label: "Templates", permission: "templates.view",
+      to: "/admin/templates", labelKey: "templates", permission: "templates.view",
       d: "M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z",
     },
     {
-      to: "/admin/bd-restore", label: "BD Restore", permission: "configuracoes.view", beta: true,
+      to: "/admin/bd-restore", labelKey: "bdRestore", permission: "configuracoes.view", beta: true,
       d: "M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4",
     },
   ],
   ADMINISTRACAO: [
     {
-      to: "/admin/usuarios", label: "Usuários", permission: "usuarios.view", pendenteBadge: true,
+      to: "/admin/usuarios", labelKey: "usuarios", permission: "usuarios.view", pendenteBadge: true,
       d: "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z",
     },
     {
-      to: "/admin/grupos-permissao", label: "Grupos de Permissão", permission: "grupos.view",
+      to: "/admin/grupos-permissao", labelKey: "gruposPermissao", permission: "grupos.view",
       d: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
     },
     {
-      to: "/admin/resultados", label: "Resultados", permission: "resultados.view",
+      to: "/admin/resultados", labelKey: "resultados", permission: "resultados.view",
       d: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
     },
   ],
@@ -210,6 +213,8 @@ const MENU = {
 // ── Nav Item ──────────────────────────────────────────────────────────────────
 
 function NavItem({ item, badge = 0, pendenteBadge = 0, installsBadge = 0, assistenteBadge = 0, collapsed = false }) {
+  const { t } = useTranslation("sidebar");
+  const label = t(`nav.${item.labelKey}`);
   const hasBadge =
     (item.badge && badge > 0) ||
     (item.installsBadge && installsBadge > 0) ||
@@ -220,7 +225,7 @@ function NavItem({ item, badge = 0, pendenteBadge = 0, installsBadge = 0, assist
     <NavLink
       to={item.to}
       end={item.end}
-      title={collapsed ? item.label : undefined}
+      title={collapsed ? label : undefined}
       className={({ isActive }) =>
         `flex items-center rounded-lg text-sm font-medium transition-all duration-150 relative
         ${collapsed ? "justify-center py-2.5 mx-1 px-0" : "gap-3 px-3 py-2.5"}
@@ -234,7 +239,7 @@ function NavItem({ item, badge = 0, pendenteBadge = 0, installsBadge = 0, assist
         )}
       </div>
 
-      {!collapsed && <span className="flex-1 min-w-0 truncate">{item.label}</span>}
+      {!collapsed && <span className="flex-1 min-w-0 truncate">{label}</span>}
 
       {!collapsed && item.badge && badge > 0 && (
         <span className="min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-orange-500 text-white text-[11px] font-bold leading-none">
@@ -258,21 +263,22 @@ function NavItem({ item, badge = 0, pendenteBadge = 0, installsBadge = 0, assist
       )}
       {!collapsed && item.beta && (
         <span className="h-4 px-1.5 flex items-center justify-center rounded text-[9px] font-bold leading-none text-violet-300 bg-violet-500/20 border border-violet-500/30 uppercase tracking-wide">
-          Beta
+          {t("nav.beta")}
         </span>
       )}
     </NavLink>
   );
 }
 
-function NavGroup({ title, items, badge, pendenteBadge, installsBadge, assistenteBadge, hasPermission, collapsed = false }) {
+function NavGroup({ titleKey, items, badge, pendenteBadge, installsBadge, assistenteBadge, hasPermission, collapsed = false }) {
+  const { t } = useTranslation("sidebar");
   const visible = items.filter((i) => hasPermission(i.permission));
   if (visible.length === 0) return null;
   return (
     <div className="pt-4 first:pt-0">
       {collapsed
         ? <div className="h-px bg-white/5 mx-2 mb-2 first:hidden" />
-        : <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest px-3 pb-2">{title}</p>
+        : <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest px-3 pb-2">{t(`nav.groups.${titleKey}`)}</p>
       }
       {visible.map((item) => (
         <NavItem
@@ -302,6 +308,7 @@ const NOTIF_TIPO = {
 const NOTIF_DEFAULT = { bg: "bg-gray-100", fg: "text-gray-400", d: "M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" };
 
 function NotifDropdown({ notifs, loading, onMarcarLida, onMarcarTodas, onClose, navigate, collapsed, isMobile }) {
+  const { t } = useTranslation("sidebar");
   const ref = useRef(null);
 
   useEffect(() => {
@@ -367,7 +374,7 @@ function NotifDropdown({ notifs, loading, onMarcarLida, onMarcarTodas, onClose, 
     >
       <div className="flex items-center justify-between px-4 py-3.5 border-b border-gray-100 bg-gray-50/70 shrink-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-gray-800">Notificações</span>
+          <span className="text-sm font-bold text-gray-800">{t("notif.title")}</span>
           {naoLidas.length > 0 && (
             <span className="min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-orange-500 text-white text-[10px] font-bold leading-none">
               {naoLidas.length}
@@ -379,7 +386,7 @@ function NotifDropdown({ notifs, loading, onMarcarLida, onMarcarTodas, onClose, 
             onClick={onMarcarTodas}
             className="text-[11px] text-orange-500 hover:text-orange-600 font-semibold transition-colors"
           >
-            Marcar todas como lidas
+            {t("notif.markAllRead")}
           </button>
         )}
       </div>
@@ -396,15 +403,15 @@ function NotifDropdown({ notifs, loading, onMarcarLida, onMarcarTodas, onClose, 
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <p className="text-sm font-semibold text-gray-700">Tudo em dia</p>
-            <p className="text-xs text-gray-400 mt-1 text-center">Nenhuma notificação no momento.</p>
+            <p className="text-sm font-semibold text-gray-700">{t("notif.allCaughtUp")}</p>
+            <p className="text-xs text-gray-400 mt-1 text-center">{t("notif.noneAtMoment")}</p>
           </div>
         ) : (
           <>
             {naoLidas.length > 0 && (
               <>
                 <div className="px-4 py-2 bg-orange-50/60 border-b border-orange-100/60 sticky top-0">
-                  <span className="text-[10px] font-bold text-orange-600 uppercase tracking-widest">Não lidas</span>
+                  <span className="text-[10px] font-bold text-orange-600 uppercase tracking-widest">{t("notif.unread")}</span>
                 </div>
                 {naoLidas.map((n) => <NotifItem key={n.id} n={n} />)}
               </>
@@ -412,7 +419,7 @@ function NotifDropdown({ notifs, loading, onMarcarLida, onMarcarTodas, onClose, 
             {lidas.length > 0 && (
               <>
                 <div className="px-4 py-2 bg-gray-50 border-b border-gray-100 sticky top-0">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Anteriores</span>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("notif.previous")}</span>
                 </div>
                 {lidas.map((n) => <NotifItem key={n.id} n={n} />)}
               </>
@@ -427,6 +434,7 @@ function NotifDropdown({ notifs, loading, onMarcarLida, onMarcarTodas, onClose, 
 // ── Popup senha do dia (modo colapsado) ──────────────────────────────────────
 
 function SenhaDiaPopup({ senhaDia, senhaLoading, senhaVisible, setSenhaVisible, senhaCopied, onCopy, onClose }) {
+  const { t } = useTranslation("sidebar");
   const ref = useRef(null);
   useEffect(() => {
     function handleClick(e) {
@@ -447,17 +455,17 @@ function SenhaDiaPopup({ senhaDia, senhaLoading, senhaVisible, setSenhaVisible, 
           <svg className="w-3 h-3 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
           </svg>
-          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Senha do dia</span>
+          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">{t("senhaDia.title")}</span>
         </div>
         <div className="flex items-center gap-0.5">
-          <button onClick={() => setSenhaVisible((v) => !v)} title={senhaVisible ? "Ocultar" : "Revelar"}
+          <button onClick={() => setSenhaVisible((v) => !v)} title={senhaVisible ? t("senhaDia.hide") : t("senhaDia.reveal")}
             className="w-6 h-6 flex items-center justify-center rounded text-slate-500 hover:text-slate-300 transition-colors">
             {senhaVisible
               ? <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
               : <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
             }
           </button>
-          <button onClick={onCopy} title={senhaCopied ? "Copiado!" : "Copiar"}
+          <button onClick={onCopy} title={senhaCopied ? t("senhaDia.copied") : t("senhaDia.copy")}
             className={`w-6 h-6 flex items-center justify-center rounded transition-colors ${senhaCopied ? "text-emerald-400" : "text-slate-500 hover:text-slate-300"}`}>
             {senhaCopied
               ? <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
@@ -468,10 +476,10 @@ function SenhaDiaPopup({ senhaDia, senhaLoading, senhaVisible, setSenhaVisible, 
       </div>
       <p className="font-mono font-bold text-slate-200 text-sm tracking-wider break-all">
         {senhaLoading
-          ? <span className="text-slate-500 text-xs font-normal">carregando...</span>
+          ? <span className="text-slate-500 text-xs font-normal">{t("senhaDia.loading")}</span>
           : senhaDia
             ? (senhaVisible ? senhaDia : "• • • • • •")
-            : <span className="text-slate-500 text-xs font-normal">indisponível</span>
+            : <span className="text-slate-500 text-xs font-normal">{t("senhaDia.unavailable")}</span>
         }
       </p>
     </div>
@@ -481,6 +489,7 @@ function SenhaDiaPopup({ senhaDia, senhaLoading, senhaVisible, setSenhaVisible, 
 // ── Sidebar principal ─────────────────────────────────────────────────────────
 
 export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMobile = false, onMobileClose }) {
+  const { t } = useTranslation("sidebar");
   const [triageCount, setTriageCount]       = useState(0);
   const [pendentesCount, setPendentesCount] = useState(0);
   const [semRespCount, setSemRespCount]     = useState(0);
@@ -686,7 +695,7 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
 
               <button
                 onClick={handleOpenNotifs}
-                title="Notificações"
+                title={t("notif.title")}
                 className={`relative w-8 h-8 flex items-center justify-center rounded-lg transition-all ${
                   showNotifs ? "text-orange-400 bg-orange-500/20" : notifCount > 0 ? "text-slate-300 bg-white/8 hover:bg-white/12" : "text-slate-500 hover:text-slate-300 hover:bg-white/8"
                 }`}
@@ -709,7 +718,7 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
             <div className="flex items-center gap-2">
               <button
                 onClick={handleAvatarClick}
-                title="Alterar foto"
+                title={t("user.changePhoto")}
                 disabled={uploading}
                 className="relative w-10 h-10 rounded-full shrink-0 group focus:outline-none"
               >
@@ -737,12 +746,12 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
 
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold text-slate-300 truncate">{user.nome}</p>
-                <p className="text-[10px] text-slate-600 truncate">{user.grupo_nome || "Sem grupo"}</p>
+                <p className="text-[10px] text-slate-600 truncate">{user.grupo_nome || t("user.noGroup")}</p>
               </div>
 
               <button
                 onClick={() => setShowAlterarSenha(true)}
-                title="Alterar senha"
+                title={t("alterarSenha.title")}
                 className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/8 transition-all shrink-0"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
@@ -752,7 +761,7 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
 
               <button
                 onClick={handleOpenNotifs}
-                title="Notificações"
+                title={t("notif.title")}
                 className={`relative w-9 h-9 flex items-center justify-center rounded-lg transition-all shrink-0 ${
                   showNotifs ? "text-orange-400 bg-orange-500/20" : notifCount > 0 ? "text-slate-300 bg-white/8 hover:bg-white/12" : "text-slate-500 hover:text-slate-300 hover:bg-white/8"
                 }`}
@@ -777,9 +786,9 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
 
       {/* ── Nav ── */}
       <nav className={`flex-1 py-3 overflow-y-auto space-y-0.5 ${collapsed ? "px-0" : "px-3"}`}>
-        <NavGroup title="Operacional"   items={MENU.OPERACIONAL}   badge={triageCount}   pendenteBadge={0}              installsBadge={semRespCount} assistenteBadge={assistenteCount} hasPermission={hasPermission} collapsed={collapsed} />
-        <NavGroup title="Configuração"  items={MENU.CONFIGURACAO}  badge={0}             pendenteBadge={0}              installsBadge={0}            hasPermission={hasPermission} collapsed={collapsed} />
-        <NavGroup title="Administração" items={MENU.ADMINISTRACAO} badge={0}             pendenteBadge={pendentesCount} installsBadge={0}            hasPermission={hasPermission} collapsed={collapsed} />
+        <NavGroup titleKey="operacional"    items={MENU.OPERACIONAL}   badge={triageCount}   pendenteBadge={0}              installsBadge={semRespCount} assistenteBadge={assistenteCount} hasPermission={hasPermission} collapsed={collapsed} />
+        <NavGroup titleKey="configuracao"   items={MENU.CONFIGURACAO}  badge={0}             pendenteBadge={0}              installsBadge={0}            hasPermission={hasPermission} collapsed={collapsed} />
+        <NavGroup titleKey="administracao"  items={MENU.ADMINISTRACAO} badge={0}             pendenteBadge={pendentesCount} installsBadge={0}            hasPermission={hasPermission} collapsed={collapsed} />
       </nav>
 
       {/* ── Senha do dia ── */}
@@ -787,7 +796,7 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
         <div className="flex justify-center pb-1 shrink-0">
           <button
             onClick={() => setShowSenhaPopup((v) => !v)}
-            title="Senha do dia"
+            title={t("senhaDia.title")}
             className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${
               showSenhaPopup ? "text-amber-400 bg-amber-500/20" : "text-slate-600 hover:text-amber-400 hover:bg-amber-500/10"
             }`}
@@ -804,17 +813,17 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
               <svg className="w-3 h-3 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
               </svg>
-              <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Senha do dia</span>
+              <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">{t("senhaDia.title")}</span>
             </div>
             <div className="flex items-center gap-0.5">
-              <button onClick={() => setSenhaVisible((v) => !v)} title={senhaVisible ? "Ocultar" : "Revelar"}
+              <button onClick={() => setSenhaVisible((v) => !v)} title={senhaVisible ? t("senhaDia.hide") : t("senhaDia.reveal")}
                 className="w-6 h-6 flex items-center justify-center rounded text-slate-600 hover:text-slate-300 transition-colors">
                 {senhaVisible
                   ? <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
                   : <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                 }
               </button>
-              <button onClick={handleCopySenha} title={senhaCopied ? "Copiado!" : "Copiar"}
+              <button onClick={handleCopySenha} title={senhaCopied ? t("senhaDia.copied") : t("senhaDia.copy")}
                 className={`w-6 h-6 flex items-center justify-center rounded transition-colors ${senhaCopied ? "text-emerald-400" : "text-slate-600 hover:text-slate-300"}`}>
                 {senhaCopied
                   ? <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
@@ -825,10 +834,10 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
           </div>
           <p className="font-mono font-bold text-slate-200 text-sm tracking-wider break-all min-h-[18px]">
             {senhaLoading
-              ? <span className="text-slate-600 text-xs font-normal font-sans">carregando...</span>
+              ? <span className="text-slate-600 text-xs font-normal font-sans">{t("senhaDia.loading")}</span>
               : senhaDia
                 ? (senhaVisible ? senhaDia : "• • • • • •")
-                : <span className="text-slate-600 text-xs font-normal font-sans">indisponível</span>
+                : <span className="text-slate-600 text-xs font-normal font-sans">{t("senhaDia.unavailable")}</span>
             }
           </p>
         </div>
@@ -840,11 +849,12 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
           /* Modo colapsado: logo centralizado + sair */
           <div className="flex flex-col items-center gap-3">
             <div className="w-9 h-9 rounded-xl overflow-hidden ring-1 ring-white/10 shadow-lg shrink-0">
-              <img src="/logo.jpg" alt="CriareTI" className="w-full h-full object-cover" />
+              <img src="/logo.jpg" alt={t("brand.logoAlt")} className="w-full h-full object-cover" />
             </div>
+            <LanguageSwitcher theme="dark" usePortal iconOnly />
             <button
               onClick={handleLogout}
-              title="Sair"
+              title={t("logout")}
               className="w-8 h-8 flex items-center justify-center rounded-md text-slate-600 hover:text-slate-300 hover:bg-white/8 transition-all"
             >
               <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -858,27 +868,30 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
             <div className="flex items-center justify-between gap-2 mb-3">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-9 h-9 rounded-xl overflow-hidden ring-1 ring-white/10 shrink-0 shadow-lg">
-                  <img src="/logo.jpg" alt="CriareTI" className="w-full h-full object-cover" />
+                  <img src="/logo.jpg" alt={t("brand.logoAlt")} className="w-full h-full object-cover" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-white font-bold text-[15px] leading-none tracking-tight">CriareTI</p>
+                  <p className="text-white font-bold text-[15px] leading-none tracking-tight">{t("brand.name")}</p>
                   <span className="inline-flex items-center mt-1.5 px-1.5 py-0.5 rounded-md bg-white/5 border border-white/8 text-[9px] font-semibold text-slate-400 uppercase tracking-widest leading-none">
-                    Implantações
+                    {t("brand.tagline")}
                   </span>
                 </div>
               </div>
-              {hasPermission("configuracoes.view") && (
-                <button
-                  onClick={() => navigate("/admin/configuracoes")}
-                  title="Configurações"
-                  className="w-7 h-7 flex items-center justify-center rounded-md text-slate-600 hover:text-slate-300 hover:bg-white/8 transition-all shrink-0"
-                >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </button>
-              )}
+              <div className="flex items-center gap-1 shrink-0">
+                <LanguageSwitcher theme="dark" usePortal iconOnly />
+                {hasPermission("configuracoes.view") && (
+                  <button
+                    onClick={() => navigate("/admin/configuracoes")}
+                    title={t("settings")}
+                    className="w-7 h-7 flex items-center justify-center rounded-md text-slate-600 hover:text-slate-300 hover:bg-white/8 transition-all shrink-0"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </button>
+                )}
+              </div>
             </div>
             <button
               onClick={handleLogout}
@@ -887,7 +900,7 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
               <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
-              Sair
+              {t("logout")}
             </button>
           </>
         )}
@@ -925,7 +938,7 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
     {/* ── Botão toggle — tab visível na borda direita do sidebar (apenas desktop) ── */}
     <button
       onClick={onToggle}
-      title={collapsed ? "Expandir menu" : "Recolher menu"}
+      title={collapsed ? t("toggle.expand") : t("toggle.collapse")}
       className="fixed top-1/2 -translate-y-1/2 z-40 hidden md:flex items-center justify-center
                  bg-[#2a3458] hover:bg-orange-500
                  border border-l-0 border-white/20 hover:border-orange-400

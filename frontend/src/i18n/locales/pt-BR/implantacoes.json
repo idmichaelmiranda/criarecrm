@@ -1,0 +1,84 @@
+{
+  "prio": {
+    "baixa": "Baixa",
+    "alta": "Alta",
+    "critica": "Crítica"
+  },
+  "slaRelativo": {
+    "overdue": "Vencido {{count}}d",
+    "dueToday": "Vence hoje",
+    "tomorrow": "Amanhã",
+    "daysLeft_one": "{{count}} dia",
+    "daysLeft_other": "{{count}} dias"
+  },
+  "common": {
+    "clear": "Limpar ✕",
+    "close": "Fechar ✕"
+  },
+  "contextBanner": {
+    "overdueTitle_one": "{{count}} implantação com SLA vencido",
+    "overdueTitle_other": "{{count}} implantações com SLA vencido",
+    "overdueDesc": "Revise os prazos, atualize o status ou negocie nova data com o cliente — ação imediata necessária.",
+    "criticalTitle_one": "{{count}} implantação em risco de SLA",
+    "criticalTitle_other": "{{count}} implantações em risco de SLA",
+    "criticalDesc": "Menos de 3 dias para vencimento — priorize essas implantações hoje.",
+    "tasksTitle": "Tarefas com prazo vencido detectadas",
+    "tasksDesc": "As implantações com SLA mais crítico foram listadas primeiro. Abra cada uma para identificar quais tarefas estão atrasadas e atribuir responsáveis."
+  },
+  "tabs": {
+    "emAndamento": "Em Andamento",
+    "todas": "Todas"
+  },
+  "statusSubfilters": {
+    "all": "Todos os status",
+    "emAndamento": "Em Andamento",
+    "pausada": "Pausadas",
+    "concluida": "Concluídas",
+    "cancelada": "Canceladas"
+  },
+  "slaFilters": {
+    "any": "Qualquer SLA",
+    "atrasada": "🔴 Atrasadas",
+    "critico": "🟡 Crítico",
+    "ok": "🟢 No Prazo"
+  },
+  "prioridadeFilters": {
+    "any": "Qualquer Prioridade",
+    "critica": "Crítica",
+    "alta": "Alta",
+    "normal": "Normal",
+    "baixa": "Baixa"
+  },
+  "page": {
+    "title": "Implantações",
+    "subtitleFiltered": "{{filtered}} de {{total}} implantações",
+    "subtitleTotal_one": "{{count}} implantação",
+    "subtitleTotal_other": "{{count}} implantações",
+    "kpi": {
+      "inProgress": "Em Andamento",
+      "slaOverdue": "SLA Vencido",
+      "requiresAttention": "requer atenção",
+      "onSchedule": "tudo no prazo",
+      "withConversion": "Com Conversão",
+      "ofData": "de dados",
+      "completed": "Concluídas"
+    },
+    "searchPlaceholder": "Buscar empresa, código...",
+    "clearFilters": "Limpar ✕",
+    "headers": {
+      "client": "Cliente",
+      "status": "Status",
+      "progress": "Progresso",
+      "responsible": "Responsável",
+      "sla": "SLA"
+    },
+    "emptyTitle": "Nenhuma implantação encontrada",
+    "emptyFiltered": "Tente ajustar os filtros.",
+    "emptyDefault": "As implantações são criadas ao aprovar uma solicitação na Triagem.",
+    "slaOverdueBadge": "SLA VENCIDO",
+    "slaCriticalBadge": "⚠ EM RISCO",
+    "overdueTasksBadge_one": "{{count}} tarefa vencida",
+    "overdueTasksBadge_other": "{{count}} tarefas vencidas",
+    "dataConversionBadge": "Conversão de dados"
+  }
+}

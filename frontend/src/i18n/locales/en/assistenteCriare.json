@@ -1,0 +1,72 @@
+{
+  "header": {
+    "title": "Assistente Criare",
+    "subtitle": "Approval of installations requested by the ERP installer",
+    "pendingBadge": "{{count}} awaiting response"
+  },
+  "tabs": {
+    "pending": "Pending",
+    "history": "History"
+  },
+  "search": {
+    "placeholder": "Search by name or CNPJ..."
+  },
+  "statusHistorico": {
+    "all": "All",
+    "aprovada": "Approved",
+    "recusada": "Rejected",
+    "expirada": "Expired",
+    "cancelada": "Canceled"
+  },
+  "status": {
+    "pendente": "Pending",
+    "aprovada": "Approved",
+    "recusada": "Rejected",
+    "expirada": "Expired",
+    "cancelada": "Canceled by installer"
+  },
+  "counter": {
+    "clients_one": "{{count}} client",
+    "clients_other": "{{count}} clients",
+    "requests_one": "{{count}} request",
+    "requests_other": "{{count}} requests"
+  },
+  "empty": {
+    "noneForFilter": "No requests found for this filter",
+    "nonePending": "No pending requests",
+    "noneHistory": "No history yet"
+  },
+  "table": {
+    "client": "Client",
+    "createdAt": "Created at",
+    "expiresAt": "Expires at",
+    "decidedAt": "Decided at",
+    "responsible": "Responsible",
+    "status": "Status",
+    "expiresPrefix": "expires {{time}}",
+    "previousAttempt": "previous attempt"
+  },
+  "group": {
+    "previousCount_one": "+{{count}} previous",
+    "previousCount_other": "+{{count}} previous"
+  },
+  "actions": {
+    "reject": "Reject",
+    "approve": "Approve",
+    "waiting": "Please wait…"
+  },
+  "loadMore": {
+    "button": "Load more ({{count}} remaining)"
+  },
+  "clientCell": {
+    "noRecord": "New CNPJ, not registered"
+  },
+  "toast": {
+    "loadError": "Error loading requests.",
+    "alreadyAnswered": "This request has already been answered by someone else — the list has been updated.",
+    "approveSuccess": "Installation approved for {{nome}}.",
+    "rejectSuccess": "Request from {{nome}} rejected.",
+    "errorApprove": "Error approving.",
+    "errorReject": "Error rejecting."
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "leftPanel": {
+    "logoAlt": "CriareTI",
+    "brand": "CriareTI",
+    "tagline": "Plataforma de Implantação",
+    "headline": "Gerencie implantações com eficiência e controle.",
+    "subtext": "Triagem, gestão de clientes, controle de etapas e muito mais — tudo em um único painel operacional.",
+    "features": {
+      "triagem": { "title": "Triagem inteligente", "desc": "Receba e processe solicitações em tempo real" },
+      "rbac": { "title": "RBAC completo", "desc": "Controle de acesso por perfis e permissões" },
+      "sla": { "title": "Rastreamento de SLA", "desc": "Monitore prazos e riscos automaticamente" }
+    },
+    "footer": "© {{year}} CriareTI. Todos os direitos reservados."
+  },
+  "form": {
+    "logoAlt": "CriareTI",
+    "brand": "CriareTI",
+    "title": "Entrar na plataforma",
+    "subtitle": "Acesse com suas credenciais corporativas",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "seu@email.com",
+    "passwordLabel": "Senha",
+    "submit": "Entrar",
+    "submitting": "Entrando...",
+    "errorRequired": "Preencha e-mail e senha.",
+    "errorDefault": "E-mail ou senha incorretos. Verifique suas credenciais e tente novamente.",
+    "registerLink": "Primeiro acesso? Solicite seu cadastro",
+    "troubleAccessing": "Problemas para acessar? Contate o administrador."
+  }
+}

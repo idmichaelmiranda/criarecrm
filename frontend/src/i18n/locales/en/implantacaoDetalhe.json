@@ -1,0 +1,187 @@
+{
+  "prazo": {
+    "overdue": "{{count}}d late",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "days": "{{count}}d"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "color": "Color",
+    "loading": "...",
+    "ok": "OK"
+  },
+  "pipeline": {
+    "etapaTooltip": "{{nome}} — {{done}}/{{total}} tasks",
+    "renameTooltip": "{{nome}} · Double-click to rename",
+    "addEtapaTooltip": "Add new stage",
+    "new": "New"
+  },
+  "etapaDropdown": {
+    "start": "▶  Start",
+    "markCompleted": "✓  Mark as Completed",
+    "skip": "→  Skip Stage",
+    "reopen": "↺  Reopen",
+    "edit": "✏️  Edit stage",
+    "moveLeft": "← Move left",
+    "moveRight": "→ Move right",
+    "remove": "🗑  Remove stage"
+  },
+  "editEtapaModal": {
+    "title": "Edit Stage",
+    "nameLabel": "Stage name",
+    "slaLabel": "Stage SLA (days)"
+  },
+  "subItem": {
+    "confirmRemove": "Remove \"{{titulo}}\"?",
+    "dblClickRename": "Double-click to rename",
+    "archive": "Archive",
+    "unarchive": "Unarchive"
+  },
+  "kanbanCard": {
+    "confirmRemove": "Remove \"{{titulo}}\"?",
+    "viewPop": "View SOP (reference PDF)",
+    "pop": "SOP",
+    "required": "Required",
+    "customTask": "Custom task",
+    "dblClickRename": "Double-click to rename",
+    "responsibleTooltip": "Owner: {{nome}}",
+    "assignResponsible": "Assign owner",
+    "respShort": "owner",
+    "removeResponsible": "Remove owner",
+    "noUsers": "No users",
+    "deadlineTooltip": "Due date: {{date}}",
+    "addDeadline": "due date",
+    "addDeadlineTooltip": "Add due date",
+    "subItemsProgress_one": "{{done}}/{{count}} sub-item",
+    "subItemsProgress_other": "{{done}}/{{count}} sub-items",
+    "notApplicable": "⊘ Not applicable",
+    "editNote": "Edit note",
+    "addNote": "Add note",
+    "subItemsTooltip": "Sub-items",
+    "reactivateTask": "Reactivate task",
+    "markNotApplicable": "Mark as Not Applicable",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "unarchiveTask": "Unarchive task",
+    "archiveTask": "Archive task",
+    "removeTask": "Remove task",
+    "archivedSubItems_one": "{{count}} archived sub-item",
+    "archivedSubItems_other": "{{count}} archived sub-items",
+    "subItemPlaceholder": "Sub-item name...",
+    "addSubItem": "sub-item",
+    "notePlaceholder": "Note, instruction, or detail for this task...",
+    "saveNote": "Save note"
+  },
+  "kanbanColumn": {
+    "reorderTooltip": "Reorder via ⋮ menu",
+    "slaTooltip": "Stage SLA: {{dias}} days",
+    "slaOverdue": "{{count}}d late",
+    "slaDaysLeft": "{{count}}d SLA",
+    "noTasksFiltered": "No tasks match this filter",
+    "noTasks": "No tasks",
+    "dropHere": "Drop here",
+    "archivedCount_one": "{{count}} archived",
+    "archivedCount_other": "{{count}} archived",
+    "taskNamePlaceholder": "Task name...",
+    "addTask": "Add task",
+    "confirmDeleteEtapa": "Remove the stage \"{{nome}}\"? Tasks in this stage will be kept without a stage."
+  },
+  "kanbanTab": {
+    "searchPlaceholder": "Search tasks...",
+    "allResponsibles": "All owners",
+    "allStatuses": "All statuses",
+    "statusPending": "Pending",
+    "statusBlocked": "Blocked",
+    "statusNotApplicable": "Not applicable",
+    "clearFilters": "✕ Clear filters",
+    "newEtapaPlaceholder": "New stage name...",
+    "slaDaysLabel": "SLA (days)",
+    "create": "Create",
+    "newEtapa": "New stage"
+  },
+  "timelineTab": {
+    "empty": "No events in the timeline.",
+    "by": "by {{nome}}"
+  },
+  "comentariosTab": {
+    "placeholder": "Write an internal comment...",
+    "send": "Send",
+    "empty": "No comments yet."
+  },
+  "clienteTab": {
+    "notFound": "Client not found.",
+    "viewFull": "View full profile →",
+    "fields": {
+      "email": "Email",
+      "cellphone": "Mobile",
+      "responsible": "Owner",
+      "phone": "Landline",
+      "cityState": "City/State",
+      "zip": "ZIP Code"
+    }
+  },
+  "responsavelModal": {
+    "title": "Set Owner",
+    "userLabel": "User",
+    "selectPlaceholder": "Select a user…",
+    "confirm": "Confirm"
+  },
+  "editPanel": {
+    "title": "Edit Implementation",
+    "statusLabel": "Status",
+    "status": {
+      "em_andamento": "In Progress",
+      "pausada": "Paused",
+      "concluida": "Completed",
+      "cancelada": "Cancelled"
+    },
+    "responsibleLabel": "Owner",
+    "noResponsible": "No owner",
+    "consultantLabel": "Consultant",
+    "consultantPlaceholder": "Consultant name",
+    "expectedDateLabel": "Expected Date",
+    "priorityLabel": "Priority",
+    "priority": {
+      "baixa": "Low",
+      "normal": "Normal",
+      "alta": "High",
+      "critica": "Critical"
+    },
+    "notesLabel": "Notes",
+    "notesPlaceholder": "Internal notes..."
+  },
+  "tabs": {
+    "checklist": "Kanban",
+    "timeline": "Timeline",
+    "comentarios": "Comments",
+    "cliente": "Client"
+  },
+  "page": {
+    "breadcrumb": "Implementations",
+    "back": "← Back",
+    "dataConversion": "Data conversion",
+    "goLiveLabel": "🚀 Go Live: {{date}}",
+    "confirmRemoveGoLive": "Remove the Go Live record?",
+    "removeGoLiveTooltip": "Remove Go Live",
+    "registerGoLive": "🚀 Record Go Live",
+    "change": "Change",
+    "noResponsible": "No owner",
+    "consultantLabel": "Consultant: {{nome}}",
+    "slaLabel": "SLA: {{date}}",
+    "startLabel": "Start: {{date}}",
+    "edit": "Edit",
+    "overallProgress": "Overall progress",
+    "pendingCount_one": "{{count}} pending",
+    "pendingCount_other": "{{count}} pending",
+    "newEtapa": "New Stage",
+    "onlyPending": "Pending only",
+    "expandTooltip": "Expand to full screen",
+    "expand": "Expand",
+    "minimizeTooltip": "Minimize (Esc)",
+    "minimize": "Minimize",
+    "escKey": "Esc"
+  }
+}

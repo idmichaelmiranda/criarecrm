@@ -1,0 +1,260 @@
+{
+  "tabs": {
+    "cadastro": "Registro",
+    "contabilidade": "Contabilidad",
+    "operacional": "Operativo",
+    "fiscal": "Fiscal / Factura Electrónica",
+    "implantacoes": "Implementaciones"
+  },
+  "paymentFields": {
+    "dinheiro": "Efectivo",
+    "cheque": "Cheque",
+    "cartao_pos": "Tarjeta-POS",
+    "pagamento_prazo": "Plazo",
+    "pix": "PIX",
+    "cartao_tef": "Tarjeta-TEF"
+  },
+  "regimeOptions": {
+    "1": "Simples Nacional",
+    "2": "Utilidad Presunta",
+    "3": "Utilidad Real"
+  },
+  "crtOptions": {
+    "1": "1 - Simples Nacional",
+    "2": "2 - Simples Nacional - Exceso del sublímite de ingresos brutos",
+    "3": "3 - Régimen Normal"
+  },
+  "stOptions": {
+    "1": "Informante Sustituto",
+    "2": "Informante Sustituido"
+  },
+  "contaOptions": {
+    "corrente": "Cuenta Corriente",
+    "poupanca": "Cuenta de Ahorros",
+    "pagamento": "Cuenta de Pago"
+  },
+  "cepBuscando": "Buscando...",
+  "validation": {
+    "obrigatorio": "Obligatorio",
+    "emailInvalido": "E-mail inválido",
+    "campoObrigatorio": "{{campo}} obligatorio"
+  },
+  "cadastro": {
+    "view": {
+      "razaoSocial": "Razón Social",
+      "nomeFantasia": "Nombre Comercial",
+      "cnpj": "CNPJ",
+      "ie": "Registro Estatal",
+      "email": "E-mail",
+      "responsavel": "Responsable",
+      "telefoneFixo": "Teléfono Fijo",
+      "celular": "Celular",
+      "endereco": "Dirección",
+      "cep": "Código Postal",
+      "enderecoField": "Dirección",
+      "numero": "Número",
+      "bairro": "Barrio",
+      "cidade": "Ciudad",
+      "estado": "Estado",
+      "enderecoVazio": "Dirección no informada."
+    },
+    "edit": {
+      "razaoSocial": "Razón Social *",
+      "nomeFantasia": "Nombre Comercial",
+      "cnpj": "CNPJ",
+      "ie": "Registro Estatal",
+      "email": "E-mail *",
+      "responsavel": "Responsable",
+      "telefoneFixo": "Teléfono Fijo",
+      "telefoneFixoPlaceholder": "(00) 0000-0000",
+      "celular": "Celular *",
+      "celularPlaceholder": "(00) 00000-0000",
+      "endereco": "Dirección",
+      "cep": "Código Postal",
+      "numero": "Número",
+      "enderecoField": "Dirección",
+      "bairro": "Barrio",
+      "cidade": "Ciudad",
+      "estadoUf": "Estado (sigla)"
+    }
+  },
+  "contabilidade": {
+    "view": {
+      "vazio": "Contabilidad no informada.",
+      "nomeContador": "Nombre del Contador",
+      "cpf": "CPF",
+      "crc": "Matrícula de Contador (CRC)",
+      "cnpj": "CNPJ",
+      "email": "E-mail",
+      "telefoneFixo": "Teléfono Fijo",
+      "celular": "Celular",
+      "enderecoContador": "Dirección del Contador",
+      "cep": "Código Postal",
+      "endereco": "Dirección",
+      "numero": "Número",
+      "bairro": "Barrio",
+      "cidade": "Ciudad",
+      "estado": "Estado"
+    },
+    "edit": {
+      "nomeContador": "Nombre del Contador *",
+      "cpf": "CPF",
+      "cpfPlaceholder": "000.000.000-00",
+      "crc": "Matrícula de Contador (CRC)",
+      "crcPlaceholder": "CRC-MG 123456",
+      "cnpjEscritorio": "CNPJ del Despacho",
+      "cnpjEscritorioPlaceholder": "00.000.000/0001-00",
+      "email": "E-mail",
+      "telefoneFixo": "Teléfono Fijo",
+      "telefoneFixoPlaceholder": "(00) 0000-0000",
+      "celular": "Celular",
+      "celularPlaceholder": "(00) 00000-0000",
+      "enderecoContador": "Dirección del Contador",
+      "cep": "Código Postal",
+      "numero": "Número",
+      "endereco": "Dirección",
+      "bairro": "Barrio",
+      "cidade": "Ciudad",
+      "estadoUf": "Estado (sigla)"
+    }
+  },
+  "operacional": {
+    "view": {
+      "dadosBancarios": "Datos Bancarios",
+      "codBanco": "Cód. Banco",
+      "banco": "Banco",
+      "cnpjBanco": "CNPJ del Banco",
+      "tipoConta": "Tipo de Cuenta",
+      "agencia": "Sucursal",
+      "conta": "Cuenta",
+      "dadosBancariosVazio": "Datos bancarios no informados.",
+      "formasPagamento": "Formas de Pago",
+      "formasPagamentoVazio": "Formas de pago no informadas.",
+      "integradoraTef": "Integradora TEF"
+    },
+    "edit": {
+      "tipoConta": "Tipo de Cuenta",
+      "agencia": "Sucursal",
+      "agenciaPlaceholder": "1234",
+      "dvPlaceholder": "DV",
+      "conta": "Cuenta",
+      "contaPlaceholder": "12345",
+      "formasPagamento": "Formas de Pago",
+      "formasAceitas": "Formas aceptadas",
+      "integradoraTef": "Integradora TEF",
+      "integradoraTefPlaceholder": "Ej.: Sitef, Tef Dedicado, PayGo..."
+    },
+    "bankSelector": {
+      "label": "Banco",
+      "placeholder": "Buscar por nombre o código — ej. Bradesco o 237",
+      "trocar": "Cambiar",
+      "nenhumEncontrado": "Ningún banco encontrado para \"{{query}}\""
+    }
+  },
+  "fiscal": {
+    "view": {
+      "regimeTributarioTitulo": "Régimen Tributario",
+      "crt": "CRT",
+      "regimeTributario": "Régimen Tributario",
+      "condicaoSt": "Condición ST",
+      "aliqSimples": "Alíc. Simples Nacional",
+      "receitaBruta": "Ingresos Brutos",
+      "regimeVazio": "Régimen fiscal no informado.",
+      "nfe": "Factura Electrónica (NF-e)",
+      "serieNfe": "Serie NF-e",
+      "ultimaNfeEmitida": "Última NF-e Emitida",
+      "nfce": "Factura Electrónica al Consumidor (NFC-e)",
+      "csc": "CSC",
+      "token": "Token",
+      "ultimaSerieNfce": "Última Serie NFC-e",
+      "certificadoDigital": "Certificado Digital",
+      "arquivo": "Archivo",
+      "verificando": "Verificando…",
+      "baixando": "Descargando…",
+      "baixar": "Descargar",
+      "senha": "Contraseña",
+      "dadosFiscaisVazio": "Datos fiscales no informados."
+    },
+    "edit": {
+      "regimeTributario": "Régimen Tributario",
+      "crtSelectLabel": "CRT — Código de Régimen Tributario",
+      "regime": "Régimen",
+      "condicaoSt": "Condición ST",
+      "aliqSimples": "Alíc. Simples Nacional (%)",
+      "aliqSimplesPlaceholder": "Ej.: 4,00",
+      "receitaBruta": "Ingresos Brutos (R$)",
+      "receitaBrutaPlaceholder": "Ej.: 360000,00",
+      "nfe": "Factura Electrónica (NF-e)",
+      "serieNfe": "Serie NF-e",
+      "serieNfePlaceholder": "Ej.: 1",
+      "ultimaNfeEmitida": "Última NF-e Emitida",
+      "ultimaNfeEmitidaPlaceholder": "Ej.: 000001",
+      "nfce": "Factura Electrónica al Consumidor (NFC-e)",
+      "csc": "CSC",
+      "cscPlaceholder": "Código de seguridad",
+      "token": "Token",
+      "tokenPlaceholder": "Token de la SEFAZ",
+      "ultimaSerieNfce": "Última Serie NFC-e",
+      "ultimaSerieNfcePlaceholder": "Ej.: 001",
+      "certificadoDigital": "Certificado Digital",
+      "senhaCertificado": "Contraseña del Certificado",
+      "senhaCertificadoPlaceholder": "Contraseña del archivo .pfx / .p12"
+    }
+  },
+  "implantacoes": {
+    "vazio": "Ninguna implementación encontrada para este cliente.",
+    "consultor": "Consultor: {{nome}}",
+    "sla": "SLA: {{data}}",
+    "abrir": "Abrir →"
+  },
+  "implantacaoBadge": {
+    "ativas_one": "{{count}} implementación activa",
+    "ativas_other": "{{count}} implementaciones activas",
+    "total_one": "{{count}} implementación",
+    "total_other": "{{count}} implementaciones"
+  },
+  "header": {
+    "breadcrumbClientes": "Clientes",
+    "editando": "Editando",
+    "cadastroEm": "Registro: {{data}}",
+    "cancelar": "Cancelar",
+    "salvar": "Guardar",
+    "salvando": "Guardando…",
+    "editar": "Editar",
+    "gerarBase": "Generar Base",
+    "gerando": "Generando…",
+    "chaveApi": "Clave API"
+  },
+  "requestBanner": {
+    "titulo": "Instalación solicitada por el Asistente Criare — CNPJ {{cnpj}}",
+    "tempo": "creada {{criada}} · expira {{expira}}",
+    "recusar": "Rechazar",
+    "aprovar": "Aprobar",
+    "aguarde": "Espere…"
+  },
+  "errors": {
+    "voltarClientes": "← Volver a Clientes",
+    "aprovarSolicitacao": "Error al aprobar la solicitud",
+    "recusarSolicitacao": "Error al rechazar la solicitud",
+    "salvar": "Error al guardar",
+    "gerarBase": "Error al generar la base",
+    "gerarChaveApi": "Error al generar la clave de API"
+  },
+  "confirm": {
+    "novaChave": "Generar una nueva clave invalida la anterior. ¿Continuar?"
+  },
+  "modalAmbiente": {
+    "titulo": "Generar Base de Datos",
+    "subtitulo": "Seleccione el ambiente para generar la base de",
+    "producao": "Producción",
+    "homologacao": "Homologación",
+    "cancelar": "Cancelar"
+  },
+  "modalChave": {
+    "titulo": "Clave de API generada",
+    "subtitulo": "Copie y configure en el instalador de",
+    "aviso": "Esta clave no se mostrará nuevamente.",
+    "copiar": "Copiar",
+    "fechar": "Cerrar"
+  }
+}

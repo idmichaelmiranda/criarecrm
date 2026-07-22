@@ -1,0 +1,160 @@
+{
+  "greeting": { "night": "Good evening", "morning": "Good morning", "afternoon": "Good afternoon" },
+  "header": {
+    "subtitleLoading": "Loading operational data…",
+    "subtitleLoaded": "Operations Center · {{refresh}}",
+    "refreshing": "Refreshing",
+    "refresh": "Refresh",
+    "newTriage": "New Triage"
+  },
+  "time": {
+    "now": "just now",
+    "minutesAgo": "{{count}}min",
+    "hoursAgo": "{{count}}h",
+    "daysAgo": "{{count}}d",
+    "refreshedNow": "refreshed just now",
+    "refreshedInstant": "refreshed moments ago",
+    "refreshedMinutesAgo": "refreshed {{count}}min ago",
+    "refreshedHoursAgo": "refreshed {{count}}h ago",
+    "today": "Today",
+    "yesterday": "Yesterday"
+  },
+  "kpi": {
+    "activeImplantacoes": "Active Implementations",
+    "newThisWeek_one": "+{{count}} new this wk.",
+    "newThisWeek_other": "+{{count}} new this wk.",
+    "slaOverdue": "SLA Overdue",
+    "immediateAction": "Immediate action",
+    "overdueThisWeek_one": "+{{count}} overdue this wk.",
+    "overdueThisWeek_other": "+{{count}} overdue this wk.",
+    "slaCritical": "SLA Critical",
+    "lessThan3Days": "< 3 days",
+    "goLivesWeek": "Go Lives this week",
+    "viewDetails": "View details →",
+    "completionRate": "Completion Rate",
+    "completedCount_one": "{{count}} completed",
+    "completedCount_other": "{{count}} completed",
+    "thisWeek_one": "+{{count}} this wk.",
+    "thisWeek_other": "+{{count}} this wk.",
+    "pendingTriage": "Pending Triage",
+    "newPlusAnalyzing": "New + under review",
+    "overdueTasks": "Overdue Tasks",
+    "expiredDeadline": "Deadline expired",
+    "installationsNoResp": "Installations w/o Owner",
+    "awaitingAssignment": "Awaiting assignment",
+    "overdue_one": "{{count}} overdue",
+    "overdue_other": "{{count}} overdue",
+    "todayCount": "{{count}} today",
+    "future_one": "{{count}} upcoming",
+    "future_other": "{{count}} upcoming"
+  },
+  "alert": {
+    "overdue_one": "{{count}} implementation with overdue SLA",
+    "overdue_other": "{{count}} implementations with overdue SLA",
+    "immediateActionNeeded": "Immediate action needed",
+    "criticalRisk": "{{count}} at SLA risk",
+    "lessThan3Days": "Less than 3 days to due date",
+    "tasksOverdue_one": "{{count}} task with an overdue deadline",
+    "tasksOverdue_other": "{{count}} tasks with an overdue deadline",
+    "inActiveImplantacoes": "In active implementations",
+    "pendingTriage_one": "{{count}} request awaiting triage",
+    "pendingTriage_other": "{{count}} requests awaiting triage",
+    "inQueue": "In the intake queue",
+    "installationsOverdue_one": "{{count}} overdue installation without an owner",
+    "installationsOverdue_other": "{{count}} overdue installations without an owner",
+    "installationsToday_one": "{{count}} installation due TODAY without an owner",
+    "installationsToday_other": "{{count}} installations due TODAY without an owner",
+    "installationsTotal_one": "{{count}} installation without an owner",
+    "installationsTotal_other": "{{count}} installations without an owner",
+    "waiting": "Awaiting assignment",
+    "viewMore": "View →"
+  },
+  "pipeline": {
+    "title": "Operational Pipeline",
+    "subtitle_one": "{{count}} active implementation",
+    "subtitle_other": "{{count}} active implementations",
+    "filtering": "· Filtering: {{stage}}",
+    "clear": "✕ Clear",
+    "viewAll": "View all →",
+    "close": "Close",
+    "expand": "Expand to full screen",
+    "more": "+{{count}} more",
+    "empty": "empty"
+  },
+  "fila": {
+    "title": "Operational Queue",
+    "filteredSubtitle": "{{count}} in \"{{stage}}\" — click the stage to clear the filter",
+    "topSubtitle": "Top {{count}}",
+    "ofTotal": " of {{total}}",
+    "sortedBy": " · sorted by urgency · SLA · Priority",
+    "emptyInStage": "No implementations in \"{{stage}}\"",
+    "headers": {
+      "company": "Company",
+      "stage": "Stage",
+      "bottleneck": "Bottleneck",
+      "sla": "SLA",
+      "progress": "Progress",
+      "responsible": "Owner",
+      "priority": "Priority"
+    },
+    "unassigned": "Unassigned",
+    "daysInStage": "{{count}}d"
+  },
+  "sla": {
+    "ok": "On Track",
+    "critico": "Critical",
+    "atrasada": "Overdue",
+    "em_risco": "At Risk",
+    "overdueDays": "{{count}}d overdue",
+    "dueToday": "Due today",
+    "daysLeft": "{{count}}d left"
+  },
+  "prio": { "critica": "Critical", "alta": "High", "normal": "Normal", "baixa": "Low" },
+  "timeline": {
+    "title": "Operational Timeline",
+    "subtitle": "Last 30 events · filter by type",
+    "filters": { "all": "All", "stages": "Stages", "tasks": "Tasks", "goLives": "Go Lives", "comments": "Comments" },
+    "empty": "No events found.",
+    "by": "by {{name}}"
+  },
+  "chart": {
+    "title": "Completions by Month",
+    "subtitle": "Last 6 months",
+    "legendImplantacoes": "Implementations",
+    "legendInstalacoes": "Installations",
+    "tooltipInstalacoes": "{{label}} — Installations: {{count}}",
+    "tooltipImplantacoes": "{{label}} — Implementations: {{count}}"
+  },
+  "workload": {
+    "title": "Workload by Consultant",
+    "subtitle_one": "{{count}} consultant",
+    "subtitle_other": "{{count}} consultants",
+    "implCount": "{{count}} impl.",
+    "avgProgress": "{{pct}}% avg. progress",
+    "overdueCount_one": "{{count}} overdue",
+    "overdueCount_other": "{{count}} overdue"
+  },
+  "funnel": {
+    "title": "Funnel & SLA",
+    "labels": {
+      "requests": "Requests",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "inProgress": "In Progress",
+      "completed": "Completed"
+    },
+    "rejectionRate": "{{pct}}% rejection",
+    "slaHealth_one": "SLA Health · {{count}} active",
+    "slaHealth_other": "SLA Health · {{count}} active",
+    "noneActive": "No active implementations"
+  },
+  "goLives": {
+    "title": "Go Lives this week 🚀",
+    "subtitle_one": "{{count}} implementation completed",
+    "subtitle_other": "{{count}} implementations completed"
+  },
+  "empty": {
+    "title": "No active implementations",
+    "subtitle": "Approve a request to get started"
+  }
+}

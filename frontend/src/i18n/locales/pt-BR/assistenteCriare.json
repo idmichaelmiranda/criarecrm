@@ -1,0 +1,72 @@
+{
+  "header": {
+    "title": "Assistente Criare",
+    "subtitle": "Aprovação de instalações solicitadas pelo instalador do ERP",
+    "pendingBadge": "{{count}} aguardando resposta"
+  },
+  "tabs": {
+    "pending": "Pendentes",
+    "history": "Histórico"
+  },
+  "search": {
+    "placeholder": "Buscar por nome ou CNPJ..."
+  },
+  "statusHistorico": {
+    "all": "Todos",
+    "aprovada": "Aprovada",
+    "recusada": "Recusada",
+    "expirada": "Expirada",
+    "cancelada": "Cancelada"
+  },
+  "status": {
+    "pendente": "Pendente",
+    "aprovada": "Aprovada",
+    "recusada": "Recusada",
+    "expirada": "Expirada",
+    "cancelada": "Cancelada pelo instalador"
+  },
+  "counter": {
+    "clients_one": "{{count}} cliente",
+    "clients_other": "{{count}} clientes",
+    "requests_one": "{{count}} solicitação",
+    "requests_other": "{{count}} solicitações"
+  },
+  "empty": {
+    "noneForFilter": "Nenhuma solicitação encontrada para esse filtro",
+    "nonePending": "Nenhuma solicitação pendente",
+    "noneHistory": "Nenhum histórico ainda"
+  },
+  "table": {
+    "client": "Cliente",
+    "createdAt": "Criada em",
+    "expiresAt": "Expira em",
+    "decidedAt": "Decisão em",
+    "responsible": "Responsável",
+    "status": "Status",
+    "expiresPrefix": "expira {{time}}",
+    "previousAttempt": "tentativa anterior"
+  },
+  "group": {
+    "previousCount_one": "+{{count}} anterior",
+    "previousCount_other": "+{{count}} anteriores"
+  },
+  "actions": {
+    "reject": "Recusar",
+    "approve": "Aprovar",
+    "waiting": "Aguarde…"
+  },
+  "loadMore": {
+    "button": "Carregar mais ({{count}} restantes)"
+  },
+  "clientCell": {
+    "noRecord": "CNPJ novo, sem cadastro"
+  },
+  "toast": {
+    "loadError": "Erro ao carregar solicitações.",
+    "alreadyAnswered": "Essa solicitação já foi respondida por outra pessoa — a lista foi atualizada.",
+    "approveSuccess": "Instalação aprovada para {{nome}}.",
+    "rejectSuccess": "Solicitação de {{nome}} recusada.",
+    "errorApprove": "Erro ao aprovar.",
+    "errorReject": "Erro ao recusar."
+  }
+}

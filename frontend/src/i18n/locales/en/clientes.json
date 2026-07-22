@@ -1,0 +1,63 @@
+{
+  "title": "Clients",
+  "subtitleLoading": "Loading…",
+  "subtitle_one": "{{count}} client registered",
+  "subtitle_other": "{{count}} clients registered",
+  "novaSolicitacao": "New Request",
+  "loading": "Loading clients...",
+  "search": {
+    "placeholder": "Search by name, tax ID or email…",
+    "resultCount_one": "{{count}} result for \"{{term}}\"",
+    "resultCount_other": "{{count}} results for \"{{term}}\""
+  },
+  "stats": {
+    "total": "Total",
+    "ativos": "Active",
+    "inativos": "Inactive",
+    "simplesNacional": "Simples Nacional",
+    "lucroPresReal": "Presumed/Actual Profit",
+    "lucroPresRealSub": "{{presumido}} presumed · {{real}} actual"
+  },
+  "error": {
+    "retry": "Try again"
+  },
+  "tabs": {
+    "todos": "All",
+    "ativos": "Active",
+    "inativos": "Inactive"
+  },
+  "empty": {
+    "searchTitle": "No results found",
+    "defaultTitle": "No clients in this category",
+    "searchDescription": "Try a different search term.",
+    "defaultDescription": "Clients are created automatically when a request is approved."
+  },
+  "table": {
+    "empresa": "Company",
+    "cnpj": "Tax ID",
+    "cidadeUf": "City / State",
+    "regime": "Tax Regime",
+    "status": "Status",
+    "atualizado": "Updated",
+    "ativo": "Active",
+    "inativo": "Inactive",
+    "copiarCnpj": "Copy tax ID",
+    "verDetalhes": "View details"
+  },
+  "footer": {
+    "mostrando": "Showing",
+    "de": "of",
+    "clientes": "clients",
+    "filtro": "· filter:",
+    "limpar": "(clear)",
+    "busca": "· search:",
+    "legendSimples": "{{count}} Simples Nacional",
+    "legendPresumido": "{{count}} Presumed",
+    "legendReal": "{{count}} Actual"
+  },
+  "regimeOptions": {
+    "1": "Simples Nacional",
+    "2": "Presumed Profit",
+    "3": "Actual Profit"
+  }
+}

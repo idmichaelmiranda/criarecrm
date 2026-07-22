@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Layout } from "../components/layout/Layout";
 import { bdRestoreApi } from "../services/api";
 
@@ -77,34 +78,15 @@ function InfoTooltip({ children }) {
 // ── Configuração das abas ─────────────────────────────────────────────────────
 
 const TABS = [
-  {
-    id: "firebird",
-    label: "SIA PDV PAF",
-    sublabel: ".fdb · .gdb · .ib",
-    steps: ["Carregar Firebird", "Analisar tabelas", "Gerar Base SQL"],
-    ready: true,
-  },
-  {
-    id: "excel",
-    label: "Planilha Excel",
-    sublabel: ".xlsx · .xls",
-    steps: ["Carregar Planilha", "Mapear colunas", "Gerar Base SQL"],
-    ready: false,
-    desc: "Importe produtos, clientes e configurações diretamente de planilhas Excel pré-formatadas. Ideal para bases que não utilizam Firebird.",
-  },
-  {
-    id: "sql",
-    label: "BDsia SQL",
-    sublabel: "Comparativo PAF",
-    steps: ["Carregar bdsia.sql", "Comparar com PAF", "Gerar Base mesclada"],
-    ready: false,
-    desc: "Carrega o bdsia.sql, realiza comparativo estrutural com a base PAF importada e gera uma base mesclada pronta para carga.",
-  },
+  { id: "firebird", ready: true },
+  { id: "excel", ready: false },
+  { id: "sql", ready: false },
 ];
 
 // ── Tab strip ─────────────────────────────────────────────────────────────────
 
 function TabStrip({ activeTab, onChange }) {
+  const { t } = useTranslation("bdRestore");
   const Icon = { firebird: IconDatabase, excel: IconTable, sql: IconCode };
   return (
     <div className="flex gap-2 mb-7 p-1 bg-gray-50 rounded-xl border border-gray-100">
@@ -129,15 +111,15 @@ function TabStrip({ activeTab, onChange }) {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <p className={`text-sm font-semibold truncate ${active ? "text-gray-800" : "text-gray-500"}`}>
-                  {tab.label}
+                  {t(`tabs.${tab.id}.label`)}
                 </p>
                 {!tab.ready && (
                   <span className="shrink-0 text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-600">
-                    Em breve
+                    {t("tabs.comingSoon")}
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-gray-400 mt-0.5 truncate">{tab.sublabel}</p>
+              <p className="text-[11px] text-gray-400 mt-0.5 truncate">{t(`tabs.${tab.id}.sublabel`)}</p>
             </div>
           </button>
         );
@@ -149,6 +131,7 @@ function TabStrip({ activeTab, onChange }) {
 // ── Step header ───────────────────────────────────────────────────────────────
 
 function StepHeader({ number, title, subtitle, done, locked }) {
+  const { t } = useTranslation("bdRestore");
   return (
     <div className="flex items-start gap-3 mb-5">
       <div className={`w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-xs font-bold mt-0.5 transition-colors ${
@@ -164,7 +147,7 @@ function StepHeader({ number, title, subtitle, done, locked }) {
       </div>
       {locked && (
         <span className="ml-auto flex items-center gap-1 text-xs text-gray-300 mt-0.5 shrink-0">
-          <IconLock /> Disponível após etapa anterior
+          <IconLock /> {t("step.lockedHint")}
         </span>
       )}
     </div>
@@ -174,17 +157,18 @@ function StepHeader({ number, title, subtitle, done, locked }) {
 // ── Tabelas mapeadas (Firebird) ───────────────────────────────────────────────
 
 const TABELAS = [
-  { key: "empresas",           label: "Empresas",            desc: "Razão social, CNPJ, endereço, regime tributário",       d: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" },
-  { key: "produto",            label: "Produto",             desc: "Código, descrição, NCM, preços, unidades",              d: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" },
-  { key: "clientes",           label: "Clientes",            desc: "Cadastro de clientes, endereços, contatos",             d: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" },
-  { key: "perfilclientes",     label: "Perfil Clientes",     desc: "Perfis e categorias de clientes",                       d: "M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2" },
-  { key: "admcartao",          label: "Adm. Cartão",         desc: "Administradoras de cartão de crédito e débito",         d: "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" },
-  { key: "aliquotas",          label: "Alíquotas",           desc: "Tabela de alíquotas fiscais e tributações",             d: "M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" },
-  { key: "certificado_digital",label: "Certificado Digital", desc: "Arquivo .pfx / .p12 e configurações de assinatura",     d: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
-  { key: "formaspagamento",    label: "Formas de Pagamento", desc: "Meios de pagamento aceitos e configurações",            d: "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" },
+  { key: "empresas",            d: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" },
+  { key: "produto",             d: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" },
+  { key: "clientes",            d: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" },
+  { key: "perfilclientes",      d: "M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2" },
+  { key: "admcartao",           d: "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" },
+  { key: "aliquotas",           d: "M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" },
+  { key: "certificado_digital", d: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
+  { key: "formaspagamento",     d: "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" },
 ];
 
 function TabelaCard({ tabela, contagem, locked }) {
+  const { t, i18n } = useTranslation("bdRestore");
   const isObj      = contagem !== null && typeof contagem === "object";
   const totalCount = isObj ? contagem.total    : contagem;
   const distintos  = isObj ? contagem.distintos : null;
@@ -219,7 +203,7 @@ function TabelaCard({ tabela, contagem, locked }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
           <p className={`text-sm font-semibold ${locked ? "text-gray-400" : "text-gray-800"}`}>
-            {tabela.label}
+            {t(`tabela.items.${tabela.key}.label`)}
           </p>
           <div className="flex items-center gap-1.5 shrink-0">
             {analisado ? (
@@ -228,30 +212,28 @@ function TabelaCard({ tabela, contagem, locked }) {
                   ? "text-green-700 bg-green-50 border-green-100"
                   : "text-gray-400 bg-gray-50 border-gray-200"
               }`}>
-                {(totalCount ?? 0).toLocaleString("pt-BR")} reg.
+                {t("tabela.records", { count: totalCount ?? 0 })}
               </span>
             ) : !locked ? (
-              <span className="text-xs text-gray-300">aguardando…</span>
+              <span className="text-xs text-gray-300">{t("tabela.waiting")}</span>
             ) : null}
             {analisado && temDistinto && (
               <InfoTooltip>
-                <p className="font-semibold text-white mb-1">Por que dois números?</p>
+                <p className="font-semibold text-white mb-1">{t("tabela.tooltip.title")}</p>
                 <p className="text-gray-300">
-                  <span className="text-white font-semibold">{(totalCount ?? 0).toLocaleString("pt-BR")} linhas</span> na tabela —
-                  cada produto pode ter mais de um código de barras, gerando múltiplas linhas.
+                  <span className="text-white font-semibold">{(totalCount ?? 0).toLocaleString(i18n.language)} {t("tabela.tooltip.rowsPrefix")}</span> {t("tabela.tooltip.rowsExplanation")}
                 </p>
                 <p className="text-gray-300 mt-1">
-                  <span className="text-white font-semibold">{(distintos ?? 0).toLocaleString("pt-BR")} cadastros únicos</span> ao
-                  agrupar pelo ID — este é o número real de itens do cliente.
+                  <span className="text-white font-semibold">{(distintos ?? 0).toLocaleString(i18n.language)} {t("tabela.tooltip.uniquePrefix")}</span> {t("tabela.tooltip.uniqueExplanation")}
                 </p>
               </InfoTooltip>
             )}
           </div>
         </div>
-        <p className="text-xs text-gray-400 mt-0.5">{tabela.desc}</p>
+        <p className="text-xs text-gray-400 mt-0.5">{t(`tabela.items.${tabela.key}.desc`)}</p>
         {analisado && temDistinto && (
           <p className="text-[11px] text-indigo-500 font-medium mt-1">
-            {(distintos ?? 0).toLocaleString("pt-BR")} cadastros únicos
+            {t("tabela.uniqueRecords", { count: distintos ?? 0 })}
           </p>
         )}
       </div>
@@ -262,6 +244,7 @@ function TabelaCard({ tabela, contagem, locked }) {
 // ── Conteúdo Firebird ─────────────────────────────────────────────────────────
 
 function FirebirdContent({ state }) {
+  const { t } = useTranslation("bdRestore");
   const {
     file, dragging, setDragging, analisando, analise, gerando, geradoOk, erroGeral,
     fileRef, handleDrop, handleFileInput, removerArquivo, analisar, gerarBase,
@@ -275,8 +258,8 @@ function FirebirdContent({ state }) {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <StepHeader
           number="1"
-          title="Base de Origem — Firebird"
-          subtitle="Selecione o arquivo .fdb ou .gdb da base que deseja migrar"
+          title={t("firebird.step1.title")}
+          subtitle={t("firebird.step1.subtitle")}
           done={step1Done}
         />
 
@@ -295,9 +278,9 @@ function FirebirdContent({ state }) {
             <IconUpload />
             <div className="text-center">
               <p className="text-sm font-semibold text-gray-700">
-                {dragging ? "Solte o arquivo aqui" : "Arraste o arquivo ou clique para selecionar"}
+                {dragging ? t("firebird.step1.dropHere") : t("firebird.step1.dragOrClick")}
               </p>
-              <p className="text-xs text-gray-400 mt-1">Suporta .fdb · .gdb · .ib</p>
+              <p className="text-xs text-gray-400 mt-1">{t("firebird.step1.supportedFormats")}</p>
             </div>
             <input
               ref={fileRef}
@@ -316,7 +299,7 @@ function FirebirdContent({ state }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-gray-800 truncate">{file.name}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{formatBytes(file.size)} · Firebird Database</p>
+              <p className="text-xs text-gray-500 mt-0.5">{formatBytes(file.size)} · {t("firebird.step1.fileTypeLabel")}</p>
             </div>
             <button onClick={removerArquivo}
               className="shrink-0 text-gray-400 hover:text-red-500 transition-colors p-1.5 rounded-lg hover:bg-red-50">
@@ -345,21 +328,21 @@ function FirebirdContent({ state }) {
             {analisando ? (
               <>
                 <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
-                Analisando base…
+                {t("firebird.step1.analyzing")}
               </>
             ) : analise ? (
               <>
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                Reanalisar Base
+                {t("firebird.step1.reanalyze")}
               </>
             ) : (
               <>
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                 </svg>
-                Analisar Base Firebird
+                {t("firebird.step1.analyzeButton")}
               </>
             )}
           </button>
@@ -373,18 +356,18 @@ function FirebirdContent({ state }) {
       >
         <StepHeader
           number="2"
-          title="Tabelas Encontradas"
-          subtitle="Resumo dos dados lidos da base Firebird — serão mapeados para a base padrão"
+          title={t("firebird.step2.title")}
+          subtitle={t("firebird.step2.subtitle")}
           done={step2Done}
           locked={step2Locked}
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {TABELAS.map((t) => (
+          {TABELAS.map((tb) => (
             <TabelaCard
-              key={t.key}
-              tabela={t}
-              contagem={analise ? (analise[t.key] ?? null) : null}
+              key={tb.key}
+              tabela={tb}
+              contagem={analise ? (analise[tb.key] ?? null) : null}
               locked={step2Locked}
             />
           ))}
@@ -398,12 +381,12 @@ function FirebirdContent({ state }) {
               </svg>
               <div>
                 <p className="text-xs font-semibold text-amber-700">
-                  {orphanedPerfil.length} ID_PERFIL sem correspondente em PERFILCLIENTES
+                  {t("firebird.step2.orphanedTitle", { count: orphanedPerfil.length })}
                 </p>
                 <p className="text-xs text-amber-600 mt-0.5 leading-relaxed">
-                  IDs encontrados em CLIENTES mas ausentes em PERFILCLIENTES:{" "}
+                  {t("firebird.step2.orphanedDetailPrefix")}{" "}
                   <span className="font-mono font-semibold">[{orphanedPerfil.join(", ")}]</span>.
-                  No script gerado esses clientes terão <span className="font-semibold">ID_PERFIL = NULL</span> para evitar violação de chave estrangeira.
+                  {" "}{t("firebird.step2.orphanedDetailSuffix")} <span className="font-semibold">{t("firebird.step2.orphanedNullNote")}</span> {t("firebird.step2.orphanedNullReason")}
                 </p>
               </div>
             </div>
@@ -417,7 +400,7 @@ function FirebirdContent({ state }) {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <p className="text-xs font-semibold text-red-700">
-                Falha ao ler dados de CLIENTES — o SQL será gerado sem clientes. Verifique os logs do servidor.
+                {t("firebird.step2.clientesFailure")}
               </p>
             </div>
           </div>
@@ -429,7 +412,7 @@ function FirebirdContent({ state }) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <p className="text-xs text-green-700 font-medium">
-              Base analisada com sucesso. Prossiga para gerar o script SQL.
+              {t("firebird.step2.successMessage")}
             </p>
           </div>
         )}
@@ -442,8 +425,8 @@ function FirebirdContent({ state }) {
       >
         <StepHeader
           number="3"
-          title="Gerar Base de Dados"
-          subtitle="Combina os dados migrados com a base_zerada.sql e gera o script final"
+          title={t("firebird.step3.title")}
+          subtitle={t("firebird.step3.subtitle")}
           done={geradoOk}
           locked={step3Locked}
         />
@@ -461,8 +444,8 @@ function FirebirdContent({ state }) {
                 </svg>
               </div>
               <div className="text-center">
-                <p className="text-sm font-semibold text-gray-800">Produção</p>
-                <p className="text-xs text-gray-400 mt-0.5">Ambiente live</p>
+                <p className="text-sm font-semibold text-gray-800">{t("firebird.step3.production")}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{t("firebird.step3.productionDesc")}</p>
               </div>
             </button>
 
@@ -477,8 +460,8 @@ function FirebirdContent({ state }) {
                 </svg>
               </div>
               <div className="text-center">
-                <p className="text-sm font-semibold text-gray-800">Homologação</p>
-                <p className="text-xs text-gray-400 mt-0.5">Ambiente de testes</p>
+                <p className="text-sm font-semibold text-gray-800">{t("firebird.step3.homolog")}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{t("firebird.step3.homologDesc")}</p>
               </div>
             </button>
           </div>
@@ -496,7 +479,7 @@ function FirebirdContent({ state }) {
         {gerando && (
           <div className="flex items-center justify-center gap-3 py-8">
             <span className="w-5 h-5 rounded-full border-2 border-orange-300 border-t-orange-500 animate-spin" />
-            <p className="text-sm text-gray-500">Gerando script SQL…</p>
+            <p className="text-sm text-gray-500">{t("firebird.step3.generating")}</p>
           </div>
         )}
 
@@ -508,12 +491,12 @@ function FirebirdContent({ state }) {
               </svg>
             </div>
             <div>
-              <p className="text-sm font-semibold text-green-800">Script gerado com sucesso!</p>
-              <p className="text-xs text-green-600 mt-0.5">O download iniciou automaticamente.</p>
+              <p className="text-sm font-semibold text-green-800">{t("firebird.step3.successTitle")}</p>
+              <p className="text-xs text-green-600 mt-0.5">{t("firebird.step3.successSubtitle")}</p>
             </div>
             <button onClick={() => state.setGeradoOk(false)}
               className="ml-auto text-xs text-green-600 hover:text-green-800 underline shrink-0">
-              Gerar novamente
+              {t("firebird.step3.generateAgain")}
             </button>
           </div>
         )}
@@ -525,24 +508,15 @@ function FirebirdContent({ state }) {
 // ── Conteúdo Em breve ─────────────────────────────────────────────────────────
 
 function ComingSoonContent({ tab }) {
-  const stepDescs = {
-    excel: [
-      "Faça upload da planilha .xlsx com os dados do cliente",
-      "O sistema detecta as colunas e mapeia para os campos do sistema",
-      "Escolha Produção ou Homologação e baixe o script .sql",
-    ],
-    sql: [
-      "Faça upload do arquivo bdsia.sql gerado pelo sistema legado",
-      "Análise automática identifica diferenças e conflitos com o PAF",
-      "Script mesclado gerado com resolução de conflitos aplicada",
-    ],
-  };
-  const descs = stepDescs[tab.id] || tab.steps.map(() => "");
+  const { t } = useTranslation("bdRestore");
+  const steps = t(`tabs.${tab.id}.steps`, { returnObjects: true });
+  const descs = t(`comingSoon.stepDescs.${tab.id}`, { returnObjects: true, defaultValue: steps.map(() => "") });
+  const desc = t(`tabs.${tab.id}.desc`, { defaultValue: "" });
 
   return (
     <div className="space-y-5">
       {/* Preview dos passos (desabilitados) */}
-      {tab.steps.map((stepLabel, i) => (
+      {steps.map((stepLabel, i) => (
         <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 opacity-70">
           <div className="flex items-start gap-3 mb-4">
             <div className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-xs font-bold mt-0.5 bg-gray-100 text-gray-400">
@@ -554,7 +528,7 @@ function ComingSoonContent({ tab }) {
             </div>
           </div>
           <div className="h-14 rounded-xl bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center">
-            <p className="text-[11px] text-gray-300 font-medium tracking-wide uppercase">Em desenvolvimento</p>
+            <p className="text-[11px] text-gray-300 font-medium tracking-wide uppercase">{t("comingSoon.inDevelopment")}</p>
           </div>
         </div>
       ))}
@@ -567,11 +541,11 @@ function ComingSoonContent({ tab }) {
           </div>
           <div>
             <p className="text-sm font-semibold text-indigo-800 mb-1">
-              {tab.id === "excel" ? "Importação via Planilha Excel" : "Comparativo BDsia SQL"}
+              {t(`comingSoon.bannerTitle.${tab.id}`)}
             </p>
-            <p className="text-xs text-indigo-600 leading-relaxed">{tab.desc}</p>
+            <p className="text-xs text-indigo-600 leading-relaxed">{desc}</p>
             <p className="text-xs text-indigo-400 mt-2 font-medium">
-              Esta funcionalidade está prevista para uma próxima versão.
+              {t("comingSoon.bannerFooter")}
             </p>
           </div>
         </div>
@@ -582,73 +556,21 @@ function ComingSoonContent({ tab }) {
 
 // ── Sidebar por aba ───────────────────────────────────────────────────────────
 
-const SIDEBAR_INFO = {
-  firebird: {
-    title: "O que é migrado",
-    items: [
-      ["Empresas",            "CNPJ, endereço, regime fiscal e dados cadastrais"],
-      ["Produto",             "Código, descrição, NCM, preços e unidades"],
-      ["Clientes",            "Cadastro, endereços e contatos"],
-      ["Perfil Clientes",     "Perfis e categorias de clientes"],
-      ["Adm. Cartão",         "Administradoras de crédito e débito"],
-      ["Alíquotas",           "Tabela de alíquotas fiscais e tributações"],
-      ["Certificado Digital", "Arquivo .pfx / .p12 e configurações NF-e"],
-      ["Formas de Pagamento", "Meios de pagamento aceitos e configurações"],
-    ],
-    howTitle: "Como funciona",
-    how: [
-      ["1", "Carregue o .fdb da base Firebird do cliente"],
-      ["2", "O sistema lê as tabelas e mapeia os registros"],
-      ["3", "A base_zerada.sql é usada como estrutura padrão"],
-      ["4", "Os dados migrados são inseridos via UPDATE/INSERT"],
-      ["5", "O script .sql final é gerado para download"],
-    ],
-  },
-  excel: {
-    title: "Colunas esperadas",
-    items: [
-      ["Produtos",   "Código, descrição, NCM, preço, unidade, estoque"],
-      ["Clientes",   "Nome, CPF/CNPJ, endereço, telefone, e-mail"],
-      ["Fornecedores","Razão social, CNPJ, contato"],
-      ["Financeiro", "Contas a pagar/receber e categorias"],
-    ],
-    howTitle: "Como preparar",
-    how: [
-      ["1", "Baixe o modelo .xlsx disponível na documentação"],
-      ["2", "Preencha com os dados do cliente nas abas corretas"],
-      ["3", "Faça upload da planilha nesta tela"],
-      ["4", "Mapeie as colunas e confirme o mapeamento"],
-      ["5", "Gere e baixe o script SQL final"],
-    ],
-  },
-  sql: {
-    title: "O que é comparado",
-    items: [
-      ["Estrutura",   "Tabelas e colunas presentes no bdsia.sql"],
-      ["Dados",       "Registros em conflito com a base PAF"],
-      ["Resolução",   "Merge automático com prioridade configurável"],
-      ["Diferenças",  "Relatório de divergências antes de gerar"],
-    ],
-    howTitle: "Como funciona",
-    how: [
-      ["1", "Carregue o bdsia.sql gerado pelo sistema legado"],
-      ["2", "Carregue a base PAF importada previamente"],
-      ["3", "Sistema compara estrutura e identifica conflitos"],
-      ["4", "Visualize e resolva conflitos manualmente se necessário"],
-      ["5", "Gere o script mesclado para download"],
-    ],
-  },
-};
-
 function Sidebar({ activeTab }) {
-  const info = SIDEBAR_INFO[activeTab] || SIDEBAR_INFO.firebird;
+  const { t } = useTranslation("bdRestore");
+  const tabId = ["firebird", "excel", "sql"].includes(activeTab) ? activeTab : "firebird";
+  const title    = t(`sidebar.${tabId}.title`);
+  const items    = t(`sidebar.${tabId}.items`, { returnObjects: true });
+  const howTitle = t(`sidebar.${tabId}.howTitle`);
+  const how      = t(`sidebar.${tabId}.how`, { returnObjects: true });
+
   return (
     <div className="space-y-5">
       {/* O que é migrado / variante */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">{info.title}</p>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">{title}</p>
         <div className="space-y-3">
-          {info.items.map(([titulo, desc]) => (
+          {items.map(([titulo, desc]) => (
             <div key={titulo} className="flex items-start gap-2.5">
               <span className="w-1.5 h-1.5 rounded-full bg-orange-400 mt-1.5 shrink-0" />
               <div>
@@ -662,9 +584,9 @@ function Sidebar({ activeTab }) {
 
       {/* Como funciona / variante */}
       <div className="bg-indigo-50 rounded-2xl border border-indigo-100 p-5">
-        <p className="text-xs font-semibold text-indigo-400 uppercase tracking-widest mb-3">{info.howTitle}</p>
+        <p className="text-xs font-semibold text-indigo-400 uppercase tracking-widest mb-3">{howTitle}</p>
         <div className="space-y-3">
-          {info.how.map(([n, txt]) => (
+          {how.map(([n, txt]) => (
             <div key={n} className="flex items-start gap-2.5">
               <span className="w-5 h-5 rounded-full bg-indigo-200 text-indigo-700 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                 {n}
@@ -682,9 +604,9 @@ function Sidebar({ activeTab }) {
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
           <div>
-            <p className="text-xs font-semibold text-amber-700 mb-1">Atenção</p>
+            <p className="text-xs font-semibold text-amber-700 mb-1">{t("sidebar.warningTitle")}</p>
             <p className="text-xs text-amber-600 leading-relaxed">
-              O script gerado substitui os dados da empresa de destino. Faça um backup antes de executar em ambiente de produção.
+              {t("sidebar.warningText")}
             </p>
           </div>
         </div>
@@ -704,6 +626,7 @@ function formatBytes(bytes) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function BdRestore() {
+  const { t } = useTranslation("bdRestore");
   const [activeTab, setActiveTab] = useState("firebird");
 
   // ── Estado do Firebird (preservado integralmente) ──────────────────────────
@@ -735,7 +658,7 @@ export default function BdRestore() {
   function pickFile(f) {
     const ext = f.name.split(".").pop().toLowerCase();
     if (!["fdb", "gdb", "ib"].includes(ext)) {
-      setErroGeral("Formato inválido. Selecione um arquivo .fdb, .gdb ou .ib");
+      setErroGeral(t("firebird.errors.invalidFormat"));
       return;
     }
     setErroGeral(null);
@@ -778,7 +701,7 @@ export default function BdRestore() {
       setAnalise(contagens);
     } catch (err) {
       if (analysisGenRef.current !== myGen) return;  // X foi clicado — descarta
-      setErroGeral(err.message || "Erro ao analisar o arquivo");
+      setErroGeral(err.message || t("firebird.errors.analyzeFailed"));
     } finally {
       if (analysisGenRef.current === myGen) setAnalisando(false);
     }
@@ -787,7 +710,7 @@ export default function BdRestore() {
   async function gerarBase(ambiente) {
     console.log("[BD-RESTORE] gerarBase chamado — sessionId:", sessionId, "ambiente:", ambiente);
     if (!sessionId) {
-      setErroGeral("Sessão expirada. Repita o Passo 2 (Analisar) antes de gerar.");
+      setErroGeral(t("firebird.errors.sessionExpired"));
       return;
     }
     setGerando(true);
@@ -810,7 +733,7 @@ export default function BdRestore() {
       setGeradoOk(true);
     } catch (err) {
       // Com responseType:"blob", erros do servidor chegam como Blob — ler como texto
-      let msg = err.message || "Erro ao gerar base de dados";
+      let msg = err.message || t("firebird.errors.generateFailed");
       try {
         if (err.response?.data instanceof Blob) {
           const text = await err.response.data.text();
@@ -837,7 +760,8 @@ export default function BdRestore() {
   const step3Locked = !step2Done;
 
   // ── Derivados para o flow header ───────────────────────────────────────────
-  const currentTab  = TABS.find((t) => t.id === activeTab);
+  const currentTab  = TABS.find((tb) => tb.id === activeTab);
+  const currentSteps = t(`tabs.${currentTab.id}.steps`, { returnObjects: true });
   const flowDone    = activeTab === "firebird"
     ? [step1Done, step2Done, geradoOk]
     : [false, false, false];
@@ -857,15 +781,15 @@ export default function BdRestore() {
           <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
             <IconDatabase />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">BD Restore</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t("page.title")}</h1>
         </div>
         <p className="text-sm text-gray-500 ml-12">
-          Migração de base de dados para o padrão do sistema — importa tabelas e gera o script SQL pronto para carga.
+          {t("page.subtitle")}
         </p>
 
         {/* Flow pills adaptativo à aba ativa */}
         <div className="flex items-center gap-2 mt-4 ml-12 flex-wrap">
-          {currentTab.steps.map((s, i) => (
+          {currentSteps.map((s, i) => (
             <span key={s} className="flex items-center gap-2">
               <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
                 flowDone[i]
@@ -875,7 +799,7 @@ export default function BdRestore() {
                 <span className={`w-1.5 h-1.5 rounded-full ${flowDone[i] ? "bg-green-500" : "bg-gray-300"}`} />
                 {s}
               </span>
-              {i < currentTab.steps.length - 1 && <span className="text-gray-300 text-xs">→</span>}
+              {i < currentSteps.length - 1 && <span className="text-gray-300 text-xs">→</span>}
             </span>
           ))}
         </div>

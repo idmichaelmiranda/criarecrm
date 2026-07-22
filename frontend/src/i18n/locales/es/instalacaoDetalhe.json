@@ -1,0 +1,168 @@
+{
+  "units": {
+    "hour": "h",
+    "minute": "min",
+    "second": "s"
+  },
+  "modalFinalizar": {
+    "title": "Finalizar Instalación",
+    "elapsedLabel": "Tiempo total transcurrido",
+    "obsLabel": "Observación final (opcional)",
+    "obsPlaceholder": "Ej: Caja probada, TEF activado. Quedó pendiente llamar a Digimaq...",
+    "back": "Volver",
+    "finishing": "Finalizando…",
+    "confirm": "Confirmar Finalización"
+  },
+  "modalPausar": {
+    "title": "Pausar cronómetro",
+    "elapsedLabel": "Tiempo transcurrido hasta ahora",
+    "reasonLabel": "Motivo de la pausa",
+    "optional": "(opcional)",
+    "otherPlaceholder": "Describe el motivo…",
+    "cancel": "Cancelar",
+    "pausing": "Pausando…",
+    "pause": "Pausar",
+    "reasons": {
+      "intervalo": "Descanso",
+      "aguardando_cliente": "Esperando al cliente",
+      "problema_tecnico": "Problema técnico",
+      "deslocamento": "Traslado",
+      "outro": "Otro"
+    }
+  },
+  "checklist": {
+    "title": "Checklist",
+    "finalized": "Finalizada",
+    "empty": "Ningún ítem en el checklist.",
+    "addPlaceholder": "Agregar ítem al checklist…",
+    "add": "+ Agregar",
+    "optional": "(opcional)",
+    "noteView": "Ver/editar nota",
+    "noteAdd": "Agregar nota",
+    "notePlaceholder": "Agrega una observación sobre este ítem…",
+    "noteSaving": "Guardando…",
+    "noteSave": "Guardar nota",
+    "noteClear": "Limpiar",
+    "noteCancel": "Cancelar"
+  },
+  "comments": {
+    "title": "Comentarios",
+    "empty": "Ningún comentario todavía.",
+    "placeholder": "Escribe un comentario…",
+    "send": "Enviar"
+  },
+  "editModal": {
+    "title": "Editar Instalación",
+    "produtos": "Productos",
+    "produtosWarning": "Cambiar los productos regenerará el checklist. Los ítems ya marcados se perderán.",
+    "quantidade": "Cantidad",
+    "prioridade": "Prioridad",
+    "responsavel": "Responsable",
+    "dataAgendada": "Fecha Programada",
+    "contatoLocal": "Contacto en el lugar",
+    "contatoNomePlaceholder": "Nombre del contacto",
+    "telefone": "Teléfono",
+    "telefonePlaceholder": "(00) 00000-0000",
+    "observacoes": "Observaciones",
+    "observacoesPlaceholder": "Observaciones adicionales…",
+    "cancel": "Cancelar",
+    "saving": "Guardando…",
+    "save": "Guardar cambios",
+    "errorDefault": "Error al guardar los cambios."
+  },
+  "priorityOptions": {
+    "normal": "Normal",
+    "alta": "Alta",
+    "urgente": "Urgente"
+  },
+  "semResponsavel": "Sin responsable",
+  "notFound": "Instalación no encontrada.",
+  "attachments": {
+    "title": "Adjuntos",
+    "upload": "Adjuntar archivo",
+    "uploading": "Subiendo…",
+    "empty": "Ningún archivo adjunto.",
+    "download": "Descargar",
+    "remove": "Quitar",
+    "uploadError": "Error al subir el archivo.",
+    "confirmDelete": "¿Eliminar \"{{filename}}\"?"
+  },
+  "breadcrumb": "Instalaciones",
+  "edit": {
+    "button": "Editar",
+    "cancelButton": "Cancelar edición",
+    "dropdown": {
+      "config": { "title": "Configuración", "subtitle": "Tipo, fecha, responsable" },
+      "fields": { "titleClose": "Cerrar edición", "titleOpen": "Editar campos", "subtitle": "Estado, observaciones" }
+    }
+  },
+  "tipos": {
+    "pdv": "POS Adicional",
+    "coletor": "Colector Móvil",
+    "forca_vendas": "Fuerza de Ventas",
+    "impressora": "Impresora",
+    "outro": "Otro"
+  },
+  "card": {
+    "popGeralTitle": "Ver POE general de este tipo de instalación",
+    "popGeral": "POE General",
+    "units_one": "{{count}} unidad",
+    "units_other": "{{count}} unidades",
+    "progress": "Progreso",
+    "itemsCompleted": "{{done}} de {{total}} ítems completados"
+  },
+  "status": {
+    "agendada": "Programada",
+    "em_execucao": "En Ejecución",
+    "concluida": "Finalizada",
+    "cancelada": "Cancelada"
+  },
+  "priorityBadge": {
+    "urgent": "Urgente",
+    "high": "Alta prioridad"
+  },
+  "timer": {
+    "start": "Iniciar Instalación",
+    "paused": "Pausada",
+    "inProgress": "En curso",
+    "resume": "Reanudar cronómetro",
+    "pause": "Pausar cronómetro",
+    "finishDisabledPaused": "Reanuda el cronómetro antes de finalizar",
+    "finishDisabledPending": "Completa todos los ítems del checklist primero",
+    "finishTitle": "Finalizar instalación",
+    "finish": "Finalizar Instalación",
+    "finishWithCount": "Finalizar ({{done}}/{{total}} ítems)",
+    "effectiveTime": "Tiempo efectivo"
+  },
+  "responsaveis": {
+    "title": "Responsables",
+    "add": "Agregar",
+    "searchPlaceholder": "Buscar usuario...",
+    "noneAvailable": "Ningún usuario disponible",
+    "principal": "Principal",
+    "colaborador": "Colaborador",
+    "changeMainTitle": "Cambiar responsable principal",
+    "removeTitle": "Quitar colaborador",
+    "assignPrompt": "Asignar responsable…"
+  },
+  "createdBy": "Creado por",
+  "dates": {
+    "createdAt": "Creado el",
+    "scheduledFor": "Programado para",
+    "completedAt": "Finalizado el"
+  },
+  "observacoes": "Observaciones",
+  "observacaoConclusao": "Observaciones de Finalización",
+  "editInline": {
+    "title": "Editar instalación",
+    "status": "Estado",
+    "priority": "Prioridad",
+    "responsavel": "Responsable",
+    "dataAgendada": "Fecha Programada",
+    "observacoes": "Observaciones",
+    "observacaoConclusao": "Observaciones de Finalización",
+    "observacaoConclusaoPlaceholder": "Se completa al finalizar la instalación…",
+    "saving": "Guardando…",
+    "save": "Guardar cambios"
+  }
+}

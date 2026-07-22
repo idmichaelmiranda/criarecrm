@@ -1,0 +1,160 @@
+{
+  "greeting": { "night": "Buenas noches", "morning": "Buenos días", "afternoon": "Buenas tardes" },
+  "header": {
+    "subtitleLoading": "Cargando datos operativos…",
+    "subtitleLoaded": "Centro Operativo · {{refresh}}",
+    "refreshing": "Actualizando",
+    "refresh": "Actualizar",
+    "newTriage": "Nuevo Triaje"
+  },
+  "time": {
+    "now": "ahora",
+    "minutesAgo": "{{count}}min",
+    "hoursAgo": "{{count}}h",
+    "daysAgo": "{{count}}d",
+    "refreshedNow": "actualizado ahora",
+    "refreshedInstant": "actualizado hace instantes",
+    "refreshedMinutesAgo": "actualizado hace {{count}}min",
+    "refreshedHoursAgo": "actualizado hace {{count}}h",
+    "today": "Hoy",
+    "yesterday": "Ayer"
+  },
+  "kpi": {
+    "activeImplantacoes": "Implementaciones Activas",
+    "newThisWeek_one": "+{{count}} nueva esta sem.",
+    "newThisWeek_other": "+{{count}} nuevas esta sem.",
+    "slaOverdue": "SLA Vencido",
+    "immediateAction": "Acción inmediata",
+    "overdueThisWeek_one": "+{{count}} venció esta sem.",
+    "overdueThisWeek_other": "+{{count}} vencieron esta sem.",
+    "slaCritical": "SLA Crítico",
+    "lessThan3Days": "< 3 días",
+    "goLivesWeek": "Go Lives esta semana",
+    "viewDetails": "Ver detalles →",
+    "completionRate": "Tasa de Finalización",
+    "completedCount_one": "{{count}} finalizada",
+    "completedCount_other": "{{count}} finalizadas",
+    "thisWeek_one": "+{{count}} esta sem.",
+    "thisWeek_other": "+{{count}} esta sem.",
+    "pendingTriage": "Triaje Pendiente",
+    "newPlusAnalyzing": "Nuevas + en análisis",
+    "overdueTasks": "Tareas Vencidas",
+    "expiredDeadline": "Plazo vencido",
+    "installationsNoResp": "Instalaciones S/ Resp.",
+    "awaitingAssignment": "Esperando asignación",
+    "overdue_one": "{{count}} vencida",
+    "overdue_other": "{{count}} vencidas",
+    "todayCount": "{{count}} hoy",
+    "future_one": "{{count}} futura",
+    "future_other": "{{count}} futuras"
+  },
+  "alert": {
+    "overdue_one": "{{count}} implementación con SLA vencido",
+    "overdue_other": "{{count}} implementaciones con SLA vencido",
+    "immediateActionNeeded": "Acción inmediata necesaria",
+    "criticalRisk": "{{count}} en riesgo de SLA",
+    "lessThan3Days": "Menos de 3 días para el vencimiento",
+    "tasksOverdue_one": "{{count}} tarea con plazo vencido",
+    "tasksOverdue_other": "{{count}} tareas con plazo vencido",
+    "inActiveImplantacoes": "En implementaciones activas",
+    "pendingTriage_one": "{{count}} solicitud esperando triaje",
+    "pendingTriage_other": "{{count}} solicitudes esperando triaje",
+    "inQueue": "En la cola de entrada",
+    "installationsOverdue_one": "{{count}} instalación vencida sin responsable",
+    "installationsOverdue_other": "{{count}} instalaciones vencidas sin responsable",
+    "installationsToday_one": "{{count}} instalación HOY sin responsable",
+    "installationsToday_other": "{{count}} instalaciones HOY sin responsable",
+    "installationsTotal_one": "{{count}} instalación sin responsable",
+    "installationsTotal_other": "{{count}} instalaciones sin responsable",
+    "waiting": "Esperando asignación",
+    "viewMore": "Ver →"
+  },
+  "pipeline": {
+    "title": "Pipeline Operativo",
+    "subtitle_one": "{{count}} implementación activa",
+    "subtitle_other": "{{count}} implementaciones activas",
+    "filtering": "· Filtrando: {{stage}}",
+    "clear": "✕ Limpiar",
+    "viewAll": "Ver todas →",
+    "close": "Cerrar",
+    "expand": "Expandir a pantalla completa",
+    "more": "+{{count}} más",
+    "empty": "vacío"
+  },
+  "fila": {
+    "title": "Cola Operativa",
+    "filteredSubtitle": "{{count}} en \"{{stage}}\" — haz clic en la etapa para limpiar el filtro",
+    "topSubtitle": "Top {{count}}",
+    "ofTotal": " de {{total}}",
+    "sortedBy": " · ordenado por urgencia · SLA · Prioridad",
+    "emptyInStage": "Ninguna implementación en \"{{stage}}\"",
+    "headers": {
+      "company": "Empresa",
+      "stage": "Etapa",
+      "bottleneck": "Cuello de botella",
+      "sla": "SLA",
+      "progress": "Progreso",
+      "responsible": "Responsable",
+      "priority": "Prioridad"
+    },
+    "unassigned": "Sin asignar",
+    "daysInStage": "{{count}}d"
+  },
+  "sla": {
+    "ok": "En Plazo",
+    "critico": "Crítico",
+    "atrasada": "Vencido",
+    "em_risco": "En Riesgo",
+    "overdueDays": "{{count}}d vencido",
+    "dueToday": "Vence hoy",
+    "daysLeft": "{{count}}d restantes"
+  },
+  "prio": { "critica": "Crítica", "alta": "Alta", "normal": "Normal", "baixa": "Baja" },
+  "timeline": {
+    "title": "Timeline Operativa",
+    "subtitle": "Últimos 30 eventos · filtra por tipo",
+    "filters": { "all": "Todos", "stages": "Etapas", "tasks": "Tareas", "goLives": "Go Lives", "comments": "Comentarios" },
+    "empty": "No se encontraron eventos.",
+    "by": "por {{name}}"
+  },
+  "chart": {
+    "title": "Finalizaciones por Mes",
+    "subtitle": "Últimos 6 meses",
+    "legendImplantacoes": "Implementaciones",
+    "legendInstalacoes": "Instalaciones",
+    "tooltipInstalacoes": "{{label}} — Instalaciones: {{count}}",
+    "tooltipImplantacoes": "{{label}} — Implementaciones: {{count}}"
+  },
+  "workload": {
+    "title": "Carga por Consultor",
+    "subtitle_one": "{{count}} consultor",
+    "subtitle_other": "{{count}} consultores",
+    "implCount": "{{count}} impl.",
+    "avgProgress": "{{pct}}% progreso promedio",
+    "overdueCount_one": "{{count}} vencida",
+    "overdueCount_other": "{{count}} vencidas"
+  },
+  "funnel": {
+    "title": "Embudo y SLA",
+    "labels": {
+      "requests": "Solicitudes",
+      "approved": "Aprobadas",
+      "rejected": "Rechazadas",
+      "inProgress": "En Curso",
+      "completed": "Finalizadas"
+    },
+    "rejectionRate": "{{pct}}% de rechazo",
+    "slaHealth_one": "Salud SLA · {{count}} activa",
+    "slaHealth_other": "Salud SLA · {{count}} activas",
+    "noneActive": "Ninguna implementación activa"
+  },
+  "goLives": {
+    "title": "Go Lives esta semana 🚀",
+    "subtitle_one": "{{count}} implementación finalizada",
+    "subtitle_other": "{{count}} implementaciones finalizadas"
+  },
+  "empty": {
+    "title": "Ninguna implementación activa",
+    "subtitle": "Aprueba una solicitud para empezar"
+  }
+}

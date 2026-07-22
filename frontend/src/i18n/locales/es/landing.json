@@ -1,0 +1,72 @@
+{
+  "toast": {
+    "title": "¡Solicitud enviada!",
+    "desc": "Nuestro equipo se pondrá en contacto pronto."
+  },
+  "scrollNav": {
+    "backToTop": "Volver arriba",
+    "nextSection": "Siguiente sección"
+  },
+  "header": {
+    "brand": "Criare TI",
+    "logoAlt": "CriareTI",
+    "navComoFunciona": "Cómo funciona",
+    "navOQueFazemos": "Qué hacemos",
+    "cta": "Solicitar Implementación"
+  },
+  "hero": {
+    "logoAlt": "Criare ERP",
+    "badge": "ERP especializado para el retail",
+    "headline1": "Tu ERP completo para una gestión",
+    "headlineHighlight": "más segura y ágil",
+    "subtitle": "El ERP Criare fue desarrollado para simplificar tu operación, reducir riesgos y dar visibilidad total de tu negocio.",
+    "cta": "Solicitar Implementación",
+    "ctaSecondary": "Hablar con un especialista",
+    "trust": {
+      "steps": "Implementación en 4 etapas",
+      "support": "Soporte post go-live",
+      "secure": "Entorno seguro",
+      "roi": "Retorno rápido y medible"
+    }
+  },
+  "modules": {
+    "sectionLabel": "Qué configuramos",
+    "vendas": { "title": "Gestión de Ventas", "b1": "POS integrado y ágil", "b2": "Pedidos, presupuestos y facturación electrónica", "b3": "Comisión de vendedores" },
+    "estoque": { "title": "Inventario Inteligente", "b1": "Inventario en tiempo real", "b2": "Reposición automática por mínimo", "b3": "Rastreo por lote y vencimiento" },
+    "financeiro": { "title": "Finanzas Integradas", "b1": "Flujo de caja en tiempo real", "b2": "Cuentas por pagar y cobrar", "b3": "Conciliación bancaria automática" },
+    "fiscal": { "title": "Fiscal y Tributario", "b1": "Emisión de comprobantes electrónicos", "b2": "Cálculo automático de impuestos", "b3": "Obligaciones fiscales accesorias" },
+    "relatorios": { "title": "Informes y BI", "b1": "Paneles de ventas e inventario", "b2": "Indicadores de rendimiento (KPIs)", "b3": "Exportación a Excel y PDF" },
+    "seguranca": { "title": "Seguridad y Permisos", "b1": "Perfiles de acceso por usuario", "b2": "Registro de auditoría completo", "b3": "Copia de seguridad automática y cifrada" }
+  },
+  "comoFunciona": {
+    "eyebrow": "Cómo funciona",
+    "title": "Cuatro etapas hasta el sistema en marcha",
+    "subtitle": "Un proceso simple y guiado — desde el primer contacto hasta el go-live, con soporte en cada etapa.",
+    "step1": { "title": "Completa el formulario", "desc": "Indica los datos de la empresa, régimen tributario y configuraciones fiscales en un formulario guiado — toma menos de 10 minutos.", "time": "~10 min" },
+    "step2": { "title": "Nuestro equipo analiza", "desc": "Especialistas revisan cada dato y preparan el entorno del sistema personalizado para tu negocio.", "time": "1–2 días hábiles" },
+    "step3": { "title": "Implementación y homologación", "desc": "Instalamos y configuramos todo el sistema, ejecutamos pruebas y validaciones en entorno de homologación antes del go-live.", "time": "3–5 días hábiles" },
+    "step4": { "title": "Sistema en producción", "desc": "Go-live con acompañamiento total, capacitación del equipo y soporte dedicado en los primeros días de operación.", "time": "¡Go Live! 🚀" }
+  },
+  "trust": {
+    "eyebrow": "Seguro y confiable",
+    "title1": "Tus datos tratados con",
+    "title2": "total confidencialidad.",
+    "desc": "Toda la información enviada en el formulario se trata con absoluto sigilo, utilizada exclusivamente para la configuración de tu sistema de gestión.",
+    "cta": "Empezar ahora",
+    "lgpd": { "title": "Conforme a LGPD", "desc": "Datos protegidos conforme a la Ley General de Protección de Datos de Brasil" },
+    "conexao": { "title": "Conexión segura", "desc": "Transmisión cifrada SSL/TLS en todo el formulario" },
+    "equipe": { "title": "Equipo certificado", "desc": "Especialistas con experiencia en ERP de retail" },
+    "suporte": { "title": "Soporte dedicado", "desc": "Canal directo con el equipo durante toda la implementación" }
+  },
+  "cta": {
+    "logoAlt": "CriareTI",
+    "title": "¿Listo para empezar?",
+    "subtitle": "Completa el formulario en pocos minutos y nuestro equipo se pondrá en contacto para iniciar la implementación de tu sistema.",
+    "button": "Solicitar Implementación",
+    "responseTime": "Respuesta en hasta 2 días hábiles"
+  },
+  "footer": {
+    "logoAlt": "CriareTI",
+    "copyright": "© {{year}} Criare TI. Todos los derechos reservados."
+  }
+}

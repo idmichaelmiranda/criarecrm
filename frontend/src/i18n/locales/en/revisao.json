@@ -1,0 +1,209 @@
+{
+  "header": {
+    "brand": "CriareCRM",
+    "pageLabel": "Request review"
+  },
+  "loading": {
+    "message": "Loading your request..."
+  },
+  "error": {
+    "expiredTitle": "Link expired",
+    "invalidTitle": "Invalid link",
+    "contactSupport": "Contact our team if you need help."
+  },
+  "success": {
+    "title": "Data submitted!",
+    "prefix": "The information for",
+    "suffix": "was updated successfully. Our team will review it again and you will be notified shortly."
+  },
+  "rejectionBanner": {
+    "title": "Your request needs adjustments",
+    "reasonPrefix": "Reason:",
+    "instructionPrefix": "Fix the fields indicated below and click",
+    "instructionButton": "Submit correction",
+    "instructionSuffix": "Our team will be notified automatically."
+  },
+  "options": {
+    "ramo": { "comercio": "Retail", "industria": "Manufacturing" },
+    "crt": {
+      "1": "1 - Simples Nacional",
+      "2": "2 - Simples Nacional - Sublimit exceeded",
+      "3": "3 - Standard Regime"
+    },
+    "regime": {
+      "1": "Simples Nacional",
+      "2": "Deemed Profit",
+      "3": "Actual Profit"
+    },
+    "st": {
+      "1": "Substitute Filer",
+      "2": "Substituted Filer"
+    },
+    "conta": {
+      "corrente": "Checking Account",
+      "poupanca": "Savings Account",
+      "pagamento": "Payment Account"
+    }
+  },
+  "cep": {
+    "required": "Postal code is required",
+    "searching": "Looking up...",
+    "placeholder": "00000-000"
+  },
+  "section": {
+    "readOnlyBadge": "No changes needed"
+  },
+  "sections": {
+    "empresa": {
+      "title": "Company Information",
+      "cnpjLabel": "Tax ID (CNPJ) *",
+      "cnpjPlaceholder": "00.000.000/0001-00",
+      "cnpjRequired": "Tax ID is required",
+      "ieLabel": "State Registration",
+      "ieOptional": "Optional",
+      "ramoLabel": "Business Segment",
+      "razaoSocialLabel": "Legal Name *",
+      "razaoSocialPlaceholder": "E.g.: Company Trading LLC",
+      "razaoSocialRequired": "Legal name is required",
+      "nomeFantasiaLabel": "Trade Name",
+      "nomeFantasiaPlaceholder": "How it's known",
+      "responsavelLabel": "Contact Person",
+      "responsavelPlaceholder": "Name of the contact person"
+    },
+    "contato": {
+      "title": "Contact",
+      "emailLabel": "Email *",
+      "emailPlaceholder": "contact@company.com",
+      "emailRequired": "Email is required",
+      "emailInvalid": "Invalid email",
+      "celularLabel": "Mobile Phone *",
+      "celularPlaceholder": "(11) 99999-9999",
+      "celularRequired": "Mobile phone is required",
+      "telefoneFixoLabel": "Landline",
+      "telefoneFixoPlaceholder": "(11) 3333-3333"
+    },
+    "endereco": {
+      "title": "Address",
+      "cepLabel": "Postal Code *",
+      "numeroLabel": "Number *",
+      "numeroPlaceholder": "E.g.: 123",
+      "numeroRequired": "Number is required",
+      "enderecoLabel": "Address *",
+      "enderecoPlaceholder": "Street, Avenue...",
+      "enderecoRequired": "Address is required",
+      "bairroLabel": "Neighborhood *",
+      "bairroPlaceholder": "E.g.: Downtown",
+      "bairroRequired": "Neighborhood is required",
+      "cidadeLabel": "City *",
+      "cidadePlaceholder": "E.g.: São Paulo",
+      "cidadeRequired": "City is required",
+      "estadoLabel": "State *",
+      "estadoPlaceholder": "SP",
+      "estadoRequired": "State is required"
+    },
+    "contabilidade": {
+      "title": "Accounting",
+      "nomeContadorLabel": "Accountant's Name *",
+      "nomeContadorPlaceholder": "Full name",
+      "nomeContadorRequired": "Name is required",
+      "cpfLabel": "Tax ID (CPF) *",
+      "cpfPlaceholder": "000.000.000-00",
+      "cpfRequired": "Tax ID is required",
+      "crcLabel": "Accountant License (CRC)",
+      "crcPlaceholder": "CRC-SP 123456",
+      "cnpjEscritorioLabel": "Firm's Tax ID (CNPJ)",
+      "cnpjEscritorioPlaceholder": "00.000.000/0001-00",
+      "emailContadorLabel": "Accountant's Email",
+      "telefoneFixoLabel": "Landline",
+      "telefoneFixoPlaceholder": "(11) 3333-3333",
+      "celularLabel": "Mobile Phone",
+      "celularPlaceholder": "(11) 99999-9999",
+      "cepEscritorioLabel": "Firm's Postal Code",
+      "numeroLabel": "Number",
+      "numeroPlaceholder": "E.g.: 100",
+      "enderecoLabel": "Address",
+      "enderecoPlaceholder": "Street, Avenue...",
+      "bairroLabel": "Neighborhood",
+      "cidadeLabel": "City",
+      "estadoLabel": "State"
+    },
+    "banco": {
+      "title": "Bank Details",
+      "nomeBancoLabel": "Bank Name",
+      "nomeBancoPlaceholder": "E.g.: Bank of Brazil",
+      "cnpjBancoLabel": "Bank's Tax ID (CNPJ)",
+      "cnpjBancoPlaceholder": "00.000.000/0001-00",
+      "tipoContaLabel": "Account Type",
+      "agenciaLabel": "Branch",
+      "agenciaPlaceholder": "1234",
+      "dvAgenciaLabel": "Branch Check Digit",
+      "dvAgenciaPlaceholder": "5",
+      "contaLabel": "Account",
+      "contaPlaceholder": "12345",
+      "dvContaLabel": "Account Check Digit",
+      "dvContaPlaceholder": "6"
+    },
+    "regime": {
+      "title": "Tax Regime",
+      "crtLabel": "CRT — Tax Regime Code",
+      "regimeLabel": "Regime",
+      "condicaoStLabel": "ST Condition",
+      "aliqSimplesLabel": "Simples Nacional Rate (%)",
+      "aliqSimplesPlaceholder": "E.g.: 4.00",
+      "receitaBrutaLabel": "Gross Revenue ($)",
+      "receitaBrutaPlaceholder": "E.g.: 360000.00"
+    },
+    "pagamento": {
+      "title": "Payment Methods",
+      "dinheiro": "Cash",
+      "chequeVista": "Sight Check",
+      "chequePrazo": "Deferred Check",
+      "cartaoCredito": "Credit Card",
+      "cartaoDebito": "Debit Card",
+      "alimentacao": "Meal Voucher",
+      "cartaoRefeicao": "Food Voucher Card",
+      "pix": "PIX (Tax ID)",
+      "aPrazo": "Deferred Payment",
+      "possuiTef": "Has TEF?",
+      "integradoraPlaceholder": "Provider name (e.g. Sitef)"
+    },
+    "fiscal": {
+      "title": "NFe / NFCe Data",
+      "cscLabel": "CSC",
+      "cscPlaceholder": "Security code",
+      "tokenLabel": "NFCe Token",
+      "tokenPlaceholder": "SEFAZ token",
+      "ultimaSerieLabel": "Last NFCe Series",
+      "ultimaSeriePlaceholder": "E.g.: 001",
+      "serieNfeLabel": "NF-e Series",
+      "serieNfePlaceholder": "E.g.: 1",
+      "ultimaNfeLabel": "Last NF-e Issued",
+      "ultimaNfePlaceholder": "E.g.: 000001"
+    },
+    "certificado": {
+      "title": "Digital Certificate",
+      "currentPrefix": "Current certificate:",
+      "selectCertificado": "Select A1 certificate",
+      "replaceCertificado": "Replace A1 certificate",
+      "certExtensions": ".pfx or .p12",
+      "change": "Change",
+      "choose": "Choose",
+      "senhaLabel": "Certificate Password",
+      "senhaPlaceholder": "Password for the .pfx / .p12 file"
+    },
+    "adquirentes": {
+      "title": "Acquirers / Payment Processors",
+      "nome": "Name",
+      "cnpj": "Tax ID",
+      "ie": "State Reg.",
+      "nomePlaceholder": "E.g.: Cielo",
+      "cnpjPlaceholder": "00.000.000/0001-00",
+      "iePlaceholder": "Optional"
+    }
+  },
+  "submit": {
+    "error": "Error sending. Please try again.",
+    "sending": "Sending...",
+    "button": "Submit correction"
+  }
+}

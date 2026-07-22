@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, Fragment } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Layout } from "../components/layout/Layout";
 import { solicitacoesInstaladorApi } from "../services/api";
 import { fmtDateTime, timeAgoFromUTC, parseUTC } from "../utils/dateUtils";
@@ -8,11 +9,11 @@ const POLL_MS = 5000;
 const PAGE_SIZE = 20;
 
 const STATUS_HISTORICO = [
-  { value: "", label: "Todos" },
-  { value: "aprovada", label: "Aprovada" },
-  { value: "recusada", label: "Recusada" },
-  { value: "expirada", label: "Expirada" },
-  { value: "cancelada", label: "Cancelada" },
+  { value: "", labelKey: "all" },
+  { value: "aprovada", labelKey: "aprovada" },
+  { value: "recusada", labelKey: "recusada" },
+  { value: "expirada", labelKey: "expirada" },
+  { value: "cancelada", labelKey: "cancelada" },
 ];
 
 function formatCnpj(digits) {
@@ -47,20 +48,14 @@ const STATUS_STYLE = {
   expirada: { badge: "bg-gray-100 text-gray-500 border-gray-200", accent: "bg-gray-300" },
   cancelada: { badge: "bg-gray-100 text-gray-500 border-gray-200", accent: "bg-gray-300" },
 };
-const STATUS_LABEL = {
-  pendente: "Pendente",
-  aprovada: "Aprovada",
-  recusada: "Recusada",
-  expirada: "Expirada",
-  cancelada: "Cancelada pelo instalador",
-};
 
 function StatusBadge({ status }) {
+  const { t } = useTranslation("assistenteCriare");
   const style = STATUS_STYLE[status] || STATUS_STYLE.expirada;
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border whitespace-nowrap ${style.badge}`}>
       {status === "pendente" && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0" />}
-      {STATUS_LABEL[status] || status}
+      {t(`status.${status}`, { defaultValue: status })}
     </span>
   );
 }
@@ -70,6 +65,7 @@ function decisaoDe(sol) {
 }
 
 function ClienteCell({ sol, navigate }) {
+  const { t } = useTranslation("assistenteCriare");
   return (
     <div className="min-w-0">
       {sol.clienteId ? (
@@ -80,7 +76,7 @@ function ClienteCell({ sol, navigate }) {
           {sol.clienteNome}
         </button>
       ) : (
-        <p className="text-sm font-semibold text-gray-400 italic truncate">CNPJ novo, sem cadastro</p>
+        <p className="text-sm font-semibold text-gray-400 italic truncate">{t("clientCell.noRecord")}</p>
       )}
       <p className="text-xs text-gray-400 mt-0.5 font-mono">{formatCnpj(sol.cnpj)}</p>
     </div>
@@ -98,6 +94,7 @@ function ResponsavelCell({ sol, size }) {
 }
 
 export default function AssistenteCriare() {
+  const { t } = useTranslation("assistenteCriare");
   const navigate = useNavigate();
   const [solicitacoes, setSolicitacoes] = useState([]);
   const [loading, setLoading]           = useState(true);
@@ -116,7 +113,7 @@ export default function AssistenteCriare() {
       const { data } = await solicitacoesInstaladorApi.listar();
       setSolicitacoes(data);
     } catch {
-      if (!silent) setToast({ type: "error", text: "Erro ao carregar solicitações." });
+      if (!silent) setToast({ type: "error", text: t("toast.loadError") });
     } finally {
       if (!silent) setLoading(false);
     }
@@ -138,13 +135,13 @@ export default function AssistenteCriare() {
     });
   }
 
-  function tratarErro(err, acaoLabel) {
+  function tratarErro(err, errorKey) {
     const msg = err.message || "";
     if (msg.includes("não está mais pendente")) {
-      setToast({ type: "info", text: "Essa solicitação já foi respondida por outra pessoa — a lista foi atualizada." });
+      setToast({ type: "info", text: t("toast.alreadyAnswered") });
       load(true);
     } else {
-      setToast({ type: "error", text: msg || `Erro ao ${acaoLabel}.` });
+      setToast({ type: "error", text: msg || t(`toast.${errorKey}`) });
     }
   }
 
@@ -152,10 +149,10 @@ export default function AssistenteCriare() {
     setActingId(sol.id);
     try {
       await solicitacoesInstaladorApi.aprovar(sol.id);
-      setToast({ type: "success", text: `Instalação aprovada para ${sol.clienteNome || formatCnpj(sol.cnpj)}.` });
+      setToast({ type: "success", text: t("toast.approveSuccess", { nome: sol.clienteNome || formatCnpj(sol.cnpj) }) });
       await load(true);
     } catch (err) {
-      tratarErro(err, "aprovar");
+      tratarErro(err, "errorApprove");
     } finally {
       setActingId(null);
       setTimeout(() => setToast(null), 5000);
@@ -166,10 +163,10 @@ export default function AssistenteCriare() {
     setActingId(sol.id);
     try {
       await solicitacoesInstaladorApi.recusar(sol.id);
-      setToast({ type: "info", text: `Solicitação de ${sol.clienteNome || formatCnpj(sol.cnpj)} recusada.` });
+      setToast({ type: "info", text: t("toast.rejectSuccess", { nome: sol.clienteNome || formatCnpj(sol.cnpj) }) });
       await load(true);
     } catch (err) {
-      tratarErro(err, "recusar");
+      tratarErro(err, "errorReject");
     } finally {
       setActingId(null);
       setTimeout(() => setToast(null), 5000);
@@ -217,13 +214,13 @@ export default function AssistenteCriare() {
     <Layout>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Assistente Criare</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Aprovação de instalações solicitadas pelo instalador do ERP</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t("header.title")}</h1>
+          <p className="text-sm text-gray-500 mt-0.5">{t("header.subtitle")}</p>
         </div>
         {pendentes.length > 0 && (
           <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-sm font-semibold">
             <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-            {pendentes.length} aguardando resposta
+            {t("header.pendingBadge", { count: pendentes.length })}
           </div>
         )}
       </div>
@@ -233,7 +230,7 @@ export default function AssistenteCriare() {
         <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
           <button onClick={() => setTab("pendentes")}
             className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${tab === "pendentes" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
-            Pendentes
+            {t("tabs.pending")}
             {pendentes.length > 0 && (
               <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-amber-500 text-white text-[10px] font-bold">
                 {pendentes.length}
@@ -242,7 +239,7 @@ export default function AssistenteCriare() {
           </button>
           <button onClick={() => setTab("historico")}
             className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${tab === "historico" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
-            Histórico
+            {t("tabs.history")}
           </button>
         </div>
 
@@ -250,7 +247,7 @@ export default function AssistenteCriare() {
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome ou CNPJ..."
+          <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("search.placeholder")}
             className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 bg-white shadow-sm" />
           {search && (
             <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -264,14 +261,14 @@ export default function AssistenteCriare() {
         {tab === "historico" && (
           <select value={statusFiltro} onChange={(e) => setStatusFiltro(e.target.value)}
             className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400">
-            {STATUS_HISTORICO.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+            {STATUS_HISTORICO.map((s) => <option key={s.value} value={s.value}>{t(`statusHistorico.${s.labelKey}`)}</option>)}
           </select>
         )}
 
         <span className="text-xs text-gray-400 ml-auto">
           {agrupar
-            ? `${grupos.length} cliente${grupos.length !== 1 ? "s" : ""} · ${lista.length} solicitaç${lista.length !== 1 ? "ões" : "ão"}`
-            : `${lista.length} solicitaç${lista.length !== 1 ? "ões" : "ão"}`}
+            ? `${t("counter.clients", { count: grupos.length })} · ${t("counter.requests", { count: lista.length })}`
+            : t("counter.requests", { count: lista.length })}
         </span>
       </div>
 
@@ -290,8 +287,8 @@ export default function AssistenteCriare() {
             </div>
             <p className="text-sm font-semibold text-gray-700">
               {search || statusFiltro
-                ? "Nenhuma solicitação encontrada para esse filtro"
-                : tab === "pendentes" ? "Nenhuma solicitação pendente" : "Nenhum histórico ainda"}
+                ? t("empty.noneForFilter")
+                : tab === "pendentes" ? t("empty.nonePending") : t("empty.noneHistory")}
             </p>
           </div>
         ) : (
@@ -300,13 +297,13 @@ export default function AssistenteCriare() {
               <thead>
                 <tr className="border-b-2 border-gray-100 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
                   <th className="p-0 w-1" />
-                  <th className="text-left px-5 py-3">Cliente</th>
-                  <th className="text-left px-4 py-3 hidden sm:table-cell">Criada em</th>
+                  <th className="text-left px-5 py-3">{t("table.client")}</th>
+                  <th className="text-left px-4 py-3 hidden sm:table-cell">{t("table.createdAt")}</th>
                   <th className="text-left px-4 py-3 hidden sm:table-cell">
-                    {tab === "pendentes" ? "Expira em" : "Decisão em"}
+                    {tab === "pendentes" ? t("table.expiresAt") : t("table.decidedAt")}
                   </th>
-                  <th className="text-left px-4 py-3 hidden md:table-cell">Responsável</th>
-                  <th className="text-left px-4 py-3">Status</th>
+                  <th className="text-left px-4 py-3 hidden md:table-cell">{t("table.responsible")}</th>
+                  <th className="text-left px-4 py-3">{t("table.status")}</th>
                   <th className="px-4 py-3 w-52" />
                 </tr>
               </thead>
@@ -350,7 +347,7 @@ export default function AssistenteCriare() {
                             <StatusBadge status={sol.status} />
                             {temAnteriores && (
                               <span className="text-[11px] font-semibold text-gray-400 whitespace-nowrap">
-                                +{grupo.anteriores.length} anterior{grupo.anteriores.length !== 1 ? "es" : ""}
+                                {t("group.previousCount", { count: grupo.anteriores.length })}
                               </span>
                             )}
                           </div>
@@ -361,7 +358,7 @@ export default function AssistenteCriare() {
                         <tr key={prev.id} className="bg-gray-50/60">
                           <td className="p-0" style={{ width: "4px", minWidth: "4px" }} />
                           <td className="pl-14 pr-5 py-2.5">
-                            <span className="text-xs text-gray-400 italic">tentativa anterior</span>
+                            <span className="text-xs text-gray-400 italic">{t("table.previousAttempt")}</span>
                           </td>
                           <td className="px-4 py-2.5 hidden sm:table-cell text-xs text-gray-500 whitespace-nowrap" title={fmtDateTime(prev.criadoEm)}>
                             {timeAgoFromUTC(prev.criadoEm)}
@@ -391,7 +388,7 @@ export default function AssistenteCriare() {
                       </td>
                       <td className="px-4 py-4 hidden sm:table-cell text-xs text-gray-500 whitespace-nowrap">
                         {isPendente ? (
-                          <span title={fmtDateTime(sol.expiraEm)}>expira {timeAgoFromUTC(sol.expiraEm)}</span>
+                          <span title={fmtDateTime(sol.expiraEm)}>{t("table.expiresPrefix", { time: timeAgoFromUTC(sol.expiraEm) })}</span>
                         ) : decisaoDe(sol) ? (
                           <span title={timeAgoFromUTC(decisaoDe(sol))}>{fmtDateTime(decisaoDe(sol))}</span>
                         ) : (
@@ -409,11 +406,11 @@ export default function AssistenteCriare() {
                           <div className="flex items-center gap-2 justify-end">
                             <button onClick={() => handleRecusar(sol)} disabled={actingId === sol.id}
                               className="px-3 py-1.5 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 transition-colors disabled:opacity-50">
-                              Recusar
+                              {t("actions.reject")}
                             </button>
                             <button onClick={() => handleAprovar(sol)} disabled={actingId === sol.id}
                               className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-green-600 hover:bg-green-700 transition-colors disabled:opacity-50 shadow-sm">
-                              {actingId === sol.id ? "Aguarde…" : "Aprovar"}
+                              {actingId === sol.id ? t("actions.waiting") : t("actions.approve")}
                             </button>
                           </div>
                         )}
@@ -430,7 +427,7 @@ export default function AssistenteCriare() {
           <div className="flex justify-center py-4 border-t border-gray-100">
             <button onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
               className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 border border-gray-200 transition-colors">
-              Carregar mais ({itens.length - visiveis.length} restantes)
+              {t("loadMore.button", { count: itens.length - visiveis.length })}
             </button>
           </div>
         )}

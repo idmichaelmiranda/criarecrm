@@ -1,0 +1,348 @@
+{
+  "page": {
+    "title": "Triage",
+    "subtitle": "Review and approve incoming requests.",
+    "searchPlaceholder": "Search company, tax ID...",
+    "kpi": {
+      "total": "Total",
+      "cancelledSub_one": "{{count}} cancelled",
+      "cancelledSub_other": "{{count}} cancelled",
+      "pending": "Pending",
+      "inTriage": "In Triage",
+      "awaitingCorrection": "Awaiting Correction",
+      "dueIn24h": "Due in 24h"
+    },
+    "tabs": { "active": "Active", "history": "History", "all": "All" },
+    "table": {
+      "headers": {
+        "company": "Company",
+        "cnpj": "Tax ID",
+        "status": "Status",
+        "responsible": "Owner",
+        "sla": "SLA",
+        "received": "Received"
+      },
+      "correctionReceived": "Correction received",
+      "slaClosed": "Closed",
+      "emptyTitle": "No requests found",
+      "emptySearchHint": "Try another search term.",
+      "emptyFilterHint": "Change the filter to see other requests."
+    }
+  },
+  "sla": {
+    "linkExpired": "Link expired",
+    "overdueDays": "Overdue {{count}}d",
+    "overdueHours": "Overdue {{count}}h",
+    "clientToday": "Client: today",
+    "clientTomorrow": "Client: tomorrow",
+    "clientDays": "Client: {{count}}d",
+    "dueToday": "Due today",
+    "tomorrow": "Tomorrow",
+    "daysLeft": "{{count}} days"
+  },
+  "priority": {
+    "baixa": "Low",
+    "normal": "Normal",
+    "alta": "High",
+    "critica": "Critical"
+  },
+  "correctionSections": {
+    "empresa": "Company Data",
+    "contato": "Contact",
+    "endereco": "Address",
+    "contabilidade": "Accounting",
+    "banco": "Bank Details",
+    "regime": "Tax Regime",
+    "pagamento": "Payment Methods",
+    "fiscal": "NF-e / NFC-e Data",
+    "certificado": "Digital Certificate",
+    "adquirentes": "Card Acquirers"
+  },
+  "approveModal": {
+    "title": "Approve Request",
+    "modulesTitle": "Implementation Modules",
+    "modulesSelectedCount_one": "({{count}} selected)",
+    "modulesSelectedCount_other": "({{count}} selected)",
+    "loadingModules": "Loading modules...",
+    "slaDaysSuffix": "{{count}}d",
+    "kanbanColumnsTitle": "Kanban Columns",
+    "noModuleSelected": "No module selected",
+    "consultorLabel": "Consultant",
+    "consultorPlaceholder": "Consultant name",
+    "slaDaysLabel": "SLA (days)",
+    "priorityLabel": "Priority",
+    "dataConversionTitle": "Data conversion",
+    "dataConversionDesc": "Migration of data from the previous system",
+    "notesLabel": "Internal notes",
+    "notesPlaceholder": "Optional...",
+    "errorNoModule": "Select at least one module.",
+    "cancel": "Cancel",
+    "checking": "Checking...",
+    "approving": "Approving...",
+    "confirmButton": "Confirm Approval",
+    "cnpjExistsTitle": "Tax ID already registered",
+    "cnpjExistsDesc": "This request's tax ID already belongs to a client in the database. Do you want to link the new implementation to this existing client?",
+    "existingClientLabel": "Registered client",
+    "cnpjLabel": "Tax ID",
+    "emailLabel": "Email",
+    "back": "Back",
+    "useExistingClient": "Use existing client"
+  },
+  "refuseModal": {
+    "title": "Reject Request",
+    "reasonLabel": "Reason for rejection *",
+    "reasonPlaceholder": "Describe what needs to be corrected...",
+    "sectionsLabel": "Sections the client must correct *",
+    "sectionsHint": "(only these will become editable)",
+    "errorReasonRequired": "Enter the reason for rejection.",
+    "errorSectionsRequired": "Select at least one section to correct.",
+    "back": "Back",
+    "sending": "Sending...",
+    "confirmButton": "Reject and Notify"
+  },
+  "cancelModal": {
+    "title": "Cancel Request",
+    "warningPart1": "Cancelling is a",
+    "warningStrong": "final",
+    "warningPart2": " action. The request cannot be resumed. Use this only when the client has given up or the request is invalid.",
+    "reasonLabel": "Reason (optional)",
+    "reasonPlaceholder": "E.g.: Client gave up, duplicate...",
+    "back": "Back",
+    "cancelling": "Cancelling...",
+    "confirmButton": "Confirm Cancellation"
+  },
+  "editModal": {
+    "title": "Edit Request",
+    "tabs": {
+      "empresa": "Company",
+      "endereco": "Address",
+      "contabilidade": "Accounting",
+      "bancario": "Banking",
+      "regime": "Tax Regime",
+      "pagamentos": "Payments",
+      "fiscal": "Fiscal"
+    },
+    "bank": {
+      "change": "Change",
+      "label": "Bank",
+      "searchPlaceholder": "Search by name or code — e.g. Bradesco or 237",
+      "notFound": "No bank found for \"{{query}}\""
+    },
+    "empresa": {
+      "razaoSocial": "Legal Name *",
+      "nomeFantasia": "Trade Name",
+      "cnpj": "Tax ID *",
+      "ie": "State Registration",
+      "email": "Email *",
+      "responsavel": "Contact Person",
+      "celular": "Mobile *",
+      "telefoneFixo": "Landline"
+    },
+    "endereco": {
+      "cep": "ZIP Code",
+      "numero": "Number",
+      "endereco": "Address",
+      "bairro": "Neighborhood",
+      "cidade": "City",
+      "estado": "State"
+    },
+    "contabilidade": {
+      "nomeContador": "Accountant Name",
+      "cpf": "National ID (CPF)",
+      "crc": "Accountant License (CRC)",
+      "cnpjEscritorio": "Accounting Firm Tax ID",
+      "email": "Email",
+      "telFixo": "Landline",
+      "celular": "Mobile",
+      "enderecoContadorTitle": "Accountant Address",
+      "cep": "ZIP Code",
+      "numero": "Number",
+      "endereco": "Address",
+      "bairro": "Neighborhood",
+      "cidade": "City",
+      "estado": "State"
+    },
+    "bancario": {
+      "tipoConta": "Account Type",
+      "selecione": "Select...",
+      "contaCorrente": "Checking Account",
+      "contaPoupanca": "Savings Account",
+      "contaPagamento": "Payment Account",
+      "agencia": "Branch",
+      "agenciaPlaceholder": "1234",
+      "dvPlaceholder": "DV",
+      "conta": "Account",
+      "contaPlaceholder": "12345"
+    },
+    "regime": {
+      "crt": "Tax Regime Code (CRT)",
+      "selecione": "Select...",
+      "crt1": "1 — Simplified Tax Regime",
+      "crt2": "2 — Simplified Tax Regime - Sublimit exceeded",
+      "crt3": "3 — Standard Regime",
+      "regimeTributario": "Tax Regime",
+      "regime1": "Simplified Tax Regime",
+      "regime2": "Presumed Profit",
+      "regime3": "Actual Profit",
+      "condicaoSt": "Tax Substitution Status",
+      "condicaoSt1": "Substitute Filer",
+      "condicaoSt2": "Substituted Filer",
+      "aliqSimples": "Simplified Tax Rate (%)",
+      "aliqSimplesPlaceholder": "E.g.: 4.00",
+      "receitaBruta": "Gross Revenue (R$)",
+      "receitaBrutaPlaceholder": "E.g.: 360000.00"
+    },
+    "pagamentos": {
+      "sectionTitle": "Accepted payment methods",
+      "dinheiro": "Cash",
+      "cheque": "Check",
+      "cartaoPos": "POS Card (credit and debit)",
+      "prazo": "Term / Installments",
+      "pix": "PIX",
+      "cartaoTef": "TEF Card (credit and debit)",
+      "integradoraLabel": "TEF Integrator",
+      "integradoraPlaceholder": "E.g.: Sitef, Tef Dedicado, PayGo..."
+    },
+    "fiscal": {
+      "csc": "CSC",
+      "token": "NFCe Token",
+      "serieNfe": "NF-e Series",
+      "ultimaSerieNfce": "Last NFCe Series",
+      "ultimaNfeEmitida": "Last NF-e Issued",
+      "senhaCertificado": "Certificate Password",
+      "certificadoTitle": "A1 Digital Certificate",
+      "arquivoAtual": "Current file",
+      "remover": "Remove",
+      "trocarNovamente": "Change again",
+      "substituirCertificado": "Replace certificate",
+      "selecionarCertificado": "Select A1 certificate",
+      "formatoHint": ".pfx or .p12"
+    },
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "saveButton": "Save Changes",
+    "errorRequiredFields": "Legal name, tax ID, email and mobile are required.",
+    "errorEmailInUse": "This email is already registered to client \"{{nome}}\" (Tax ID {{cnpj}}). Use a different email."
+  },
+  "respPicker": {
+    "searchPlaceholder": "Search user…",
+    "noResponsible": "No owner",
+    "noUserFound": "No user found"
+  },
+  "drawer": {
+    "receivedOn": "Received {{date}}",
+    "savingEllipsis": "Saving…",
+    "responsibleLabel": "Owner: {{name}}",
+    "assignResponsible": "Assign owner",
+    "actions": {
+      "startTriage": "Start Triage",
+      "startingTriage": "Starting...",
+      "approve": "Approve",
+      "refuse": "Reject",
+      "cancel": "Cancel",
+      "edit": "Edit"
+    },
+    "banners": {
+      "approved": {
+        "title": "Request approved",
+        "desc": "The implementation was created automatically.",
+        "link": "View Implementations →"
+      },
+      "awaitingCorrection": {
+        "title": "Correction email sent",
+        "desc": "Waiting for the client to correct and resubmit the data.",
+        "resend": "Resend",
+        "resending": "Sending…"
+      },
+      "cancelled": {
+        "title": "Request cancelled."
+      }
+    },
+    "resendSuccess": "Email resent successfully. Deadline renewed for 7 days.",
+    "resendError": "Failed to resend. Please try again.",
+    "history": {
+      "title": "Rejection History"
+    },
+    "tabs": {
+      "dados": "Data",
+      "endereco": "Address",
+      "contabilidade": "Accounting",
+      "bancario": "Banking",
+      "regime": "Tax Regime",
+      "fiscal": "Fiscal"
+    },
+    "sections": {
+      "empresa": "Company",
+      "pagamentos": "Payments",
+      "endereco": "Address",
+      "contador": "Accountant",
+      "enderecoContador": "Accountant Address",
+      "dadosBancarios": "Bank Details",
+      "regimeTributario": "Tax Regime",
+      "nfe": "NFC-e / NF-e",
+      "certificadoDigital": "Digital Certificate"
+    },
+    "fields": {
+      "razaoSocial": "Legal Name",
+      "nomeFantasia": "Trade Name",
+      "cnpj": "Tax ID",
+      "ie": "State Reg.",
+      "email": "Email",
+      "responsavel": "Contact Person",
+      "telFixo": "Landline",
+      "celular": "Mobile",
+      "cep": "ZIP Code",
+      "endereco": "Address",
+      "numero": "Number",
+      "bairro": "Neighborhood",
+      "cidade": "City",
+      "estado": "State",
+      "nome": "Name",
+      "cpf": "National ID (CPF)",
+      "crc": "Accountant License (CRC)",
+      "cidadeUf": "City/State",
+      "codBanco": "Bank Code",
+      "banco": "Bank",
+      "cnpjBanco": "Bank Tax ID",
+      "tipoConta": "Account Type",
+      "agencia": "Branch",
+      "conta": "Account",
+      "crt": "Tax Regime Code (CRT)",
+      "regime": "Regime",
+      "condicaoSt": "Tax Substitution Status",
+      "aliqSimples": "Simplified Tax Rate",
+      "receitaBruta": "Gross Revenue",
+      "csc": "CSC",
+      "token": "Token",
+      "serieNfe": "NF-e Series",
+      "ultimaNfe": "Last NF-e",
+      "ultimaSerieNfce": "Last NFC-e Series",
+      "arquivo": "File",
+      "senha": "Password"
+    },
+    "paymentLabels": {
+      "dinheiro": "Cash",
+      "cheque": "Check",
+      "cartaoPos": "POS Card",
+      "prazo": "Term",
+      "pix": "PIX",
+      "cartaoTef": "TEF Card"
+    },
+    "tefPrefix": "TEF: {{name}}",
+    "regimeLabels": {
+      "crt": {
+        "1": "1 — Simplified Tax Regime",
+        "2": "2 — Simplified Tax Regime - Gross revenue sublimit exceeded",
+        "3": "3 — Standard Regime"
+      },
+      "tributario": {
+        "1": "Simplified Tax Regime",
+        "2": "Presumed Profit",
+        "3": "Actual Profit",
+        "simples_nacional": "Simplified Tax Regime",
+        "lucro_presumido": "Presumed Profit",
+        "lucro_real": "Actual Profit"
+      }
+    }
+  }
+}

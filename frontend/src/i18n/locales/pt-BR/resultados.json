@@ -1,0 +1,107 @@
+{
+  "header": {
+    "title": "Resultados",
+    "subtitle": "Centro de inteligência operacional",
+    "filters": "Filtros",
+    "clearFilters": "Limpar filtros",
+    "presentation": "Apresentação",
+    "presentationMinimize": "Minimizar",
+    "presentationEnter": "Modo apresentação — tela cheia",
+    "presentationExit": "Sair da apresentação"
+  },
+  "filtersPanel": {
+    "period": "Período",
+    "state": "Estado",
+    "allStates": "Todos os estados"
+  },
+  "periods": {
+    "30": "Últimos 30 dias",
+    "90": "Últimos 90 dias",
+    "180": "Últimos 6 meses",
+    "365": "Último ano"
+  },
+  "tabs": {
+    "visaoGeral": "Visão Geral",
+    "mapa": "Mapa",
+    "equipe": "Equipe",
+    "produtos": "Produtos",
+    "regioes": "Regiões"
+  },
+  "presentationHud": {
+    "exit": "✕ Sair",
+    "navigateHint": "← → para navegar · ESC para sair",
+    "allBrazil": " · Todo o Brasil"
+  },
+  "visaoGeral": {
+    "kpis": {
+      "totalClientes": "Total de Clientes",
+      "implantacoesConcluidas": "Implantações Concluídas",
+      "emAndamento": "Em Andamento",
+      "taxaConclusao": "Taxa de Conclusão",
+      "instalacoesConcluidas": "Instalações Concluídas",
+      "instalacoesPendentes": "Instalações Pendentes",
+      "implantacoesPausadas": "Implantações Pausadas",
+      "crescimentoMensal": "Crescimento Mensal",
+      "crescimentoSub": "{{value}}% vs mês anterior"
+    },
+    "charts": {
+      "novosPorMes": "Novos por Mês",
+      "novosPorMesDesc": "Registros criados no mês (excl. cancelados)",
+      "concluidasPorMes": "Concluídas por Mês",
+      "concluidasPorMesDesc": "Pela data real de conclusão, separadas por tipo",
+      "produtosMaisImplantados": "Produtos Mais Implantados",
+      "implantacoesPorConsultor": "Implantações por Consultor",
+      "seriesImplantacoes": "Implantações",
+      "seriesInstalacoes": "Instalações",
+      "seriesTotal": "Total",
+      "seriesConcluidas": "Concluídas"
+    }
+  },
+  "equipe": {
+    "empty": "Nenhum dado de equipe no período selecionado.",
+    "conclusion": "{{value}}% conclusão",
+    "principal": "{{count}} principal",
+    "colaborador": "{{count}} colaborador",
+    "stats": {
+      "total": "Total",
+      "concluidas": "Concluídas",
+      "tempoMedio": "Tempo médio"
+    },
+    "chartTitle": "Instalações por Técnico",
+    "seriesTotal": "Total",
+    "seriesConcluidas": "Concluídas",
+    "seriesEmExecucao": "Em execução"
+  },
+  "produtos": {
+    "volumePorProduto": "Volume por Produto",
+    "taxaConclusaoPorProduto": "Taxa de Conclusão por Produto",
+    "seriesTotal": "Total",
+    "seriesTaxa": "Taxa (%)",
+    "table": {
+      "produto": "Produto",
+      "total": "Total",
+      "concluidas": "Concluídas",
+      "taxa": "Taxa",
+      "tempoMedio": "Tempo médio"
+    }
+  },
+  "regioes": {
+    "clientesPorEstado": "Clientes por Estado (Top 10)",
+    "volumeConclusoes": "Volume x Conclusões por Estado (Top 10)",
+    "volumeConclusoesDesc": "Excluindo cancelados · ordenado por total de operações",
+    "seriesClientes": "Clientes",
+    "seriesTotalAtivas": "Total (ativas)",
+    "seriesConcluidas": "Concluídas",
+    "rankingTitle": "Ranking completo por estado",
+    "rankingSubtitle": "Ordenado por total de operações · excl. cancelados",
+    "table": {
+      "estado": "Estado",
+      "clientes": "Clientes",
+      "implantacoes": "Implantações",
+      "instalacoes": "Instalações",
+      "concluidas": "Concluídas",
+      "taxa": "Taxa",
+      "participacao": "Participação"
+    }
+  }
+}

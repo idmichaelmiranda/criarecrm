@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Sidebar } from "./Sidebar";
 import { usePresentationMode } from "../../contexts/PresentationContext";
 
 export function Layout({ children }) {
+  const { t } = useTranslation("sidebar");
   const { on: presentationMode } = usePresentationMode();
   const [collapsed, setCollapsed] = useState(
     () => localStorage.getItem("sidebar_collapsed") === "true"
@@ -58,7 +60,7 @@ export function Layout({ children }) {
             <button
               onClick={() => setMobileOpen(true)}
               className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
-              aria-label="Abrir menu"
+              aria-label={t("openMenu")}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 6h16M4 12h16M4 18h16" />
@@ -66,9 +68,9 @@ export function Layout({ children }) {
             </button>
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg overflow-hidden">
-                <img src="/logo.jpg" alt="CriareTI" className="w-full h-full object-cover" />
+                <img src="/logo.jpg" alt={t("brand.logoAlt")} className="w-full h-full object-cover" />
               </div>
-              <span className="font-bold text-gray-800 text-sm">CriareTI</span>
+              <span className="font-bold text-gray-800 text-sm">{t("brand.name")}</span>
             </div>
           </div>
         )}

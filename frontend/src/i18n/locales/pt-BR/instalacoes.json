@@ -1,0 +1,126 @@
+{
+  "semResponsavel": "Sem responsável",
+  "tipos": {
+    "pdv": "PDV Adicional",
+    "coletor": "Coletor Mobile",
+    "forca_vendas": "Força de Vendas",
+    "impressora": "Impressora",
+    "outro": "Outro"
+  },
+  "status": {
+    "agendada": "Agendada",
+    "em_execucao": "Em Execução",
+    "concluida": "Concluída",
+    "cancelada": "Cancelada"
+  },
+  "priorityOptions": {
+    "normal": "Normal",
+    "alta": "Alta",
+    "urgente": "Urgente"
+  },
+  "tabs": {
+    "ativas": "Ativas",
+    "historico": "Histórico"
+  },
+  "legend": {
+    "title": "Legenda:",
+    "atrasada": "Atrasada"
+  },
+  "dateRelative": {
+    "overdue_one": "{{count}}d atraso",
+    "overdue_other": "{{count}}d atraso",
+    "today": "Hoje",
+    "tomorrow": "Amanhã",
+    "daysShort": "{{count}}d"
+  },
+  "header": {
+    "title": "Instalações",
+    "subtitle": "PDVs adicionais, coletores, força de vendas e mais",
+    "newButton": "Nova Instalação"
+  },
+  "kpi": {
+    "agendadas": "Agendadas",
+    "emExecucao": "Em Execução",
+    "concluidas": "Concluídas",
+    "atrasadas": "Atrasadas"
+  },
+  "filters": {
+    "searchPlaceholder": "Buscar cliente ou código…",
+    "allTypes": "Todos os tipos",
+    "period": "Período",
+    "periodPopover": {
+      "title": "Filtrar por período",
+      "toggleAgendamento": "Agendamento",
+      "toggleConclusao": "Conclusão",
+      "presets": {
+        "hoje": "Hoje",
+        "semana": "Esta semana",
+        "mes": "Este mês",
+        "mesPassado": "Mês passado"
+      },
+      "custom": "Personalizado",
+      "from": "De",
+      "to": "Até",
+      "clear": "Limpar filtro de período"
+    },
+    "meusInstalacoes": "Minhas instalações"
+  },
+  "periodChip": {
+    "range": ": {{start}} → {{end}}",
+    "from": ": a partir de {{start}}",
+    "to": ": até {{end}}"
+  },
+  "resultsFound_one": "{{count}} instalação encontrada",
+  "resultsFound_other": "{{count}} instalações encontradas",
+  "table": {
+    "empty": "Nenhuma instalação encontrada.",
+    "headers": {
+      "cliente": "Cliente",
+      "tipo": "Tipo",
+      "status": "Status",
+      "progresso": "Progresso",
+      "responsavel": "Responsável",
+      "agendado": "Agendado",
+      "concluido": "Concluído"
+    },
+    "overdueBadge": "ATRASADA",
+    "priorityUrgent": "URGENTE",
+    "priorityHigh": "ALTA"
+  },
+  "modal": {
+    "title": "Nova Instalação",
+    "subtitle": "Preencha os dados e selecione os produtos",
+    "clienteSection": "Cliente",
+    "trocar": "Trocar",
+    "cnpjPlaceholder": "Digite o CNPJ do cliente…",
+    "buscar": "Buscar",
+    "selecionar": "Selecionar",
+    "cnpjHint": "Digite o CNPJ e clique em Buscar para consultar o ERP.",
+    "cnpjNotFound": "CNPJ não encontrado ou cliente inativo no ERP.",
+    "erpError": "Erro ao consultar ERP.",
+    "errorSelectCliente": "Selecione o cliente.",
+    "errorSelectTipo": "Selecione ao menos um tipo de produto.",
+    "contatoSection": "Contato da Visita",
+    "nome": "Nome",
+    "quemVaiReceber": "Quem vai receber",
+    "telefone": "Telefone",
+    "telefonePlaceholder": "(00) 00000-0000",
+    "agendamentoSection": "Agendamento",
+    "dataAgendada": "Data Agendada",
+    "prioridade": "Prioridade",
+    "responsavelExecucao": "Responsável pela execução",
+    "observacoesSection": "Observações",
+    "observacoesPlaceholder": "Informações adicionais sobre a instalação…",
+    "produtosSection": "Produtos",
+    "unitsBadge": "{{count}} un.",
+    "loadingProdutos": "Carregando produtos…",
+    "noProdutosAtivos": "Nenhum produto ativo. Configure em Configurações.",
+    "summary_one": "{{totalQty}} un. · {{count}} tipo",
+    "summary_other": "{{totalQty}} un. · {{count}} tipos",
+    "checklistsPerProduct": " · checklists por produto",
+    "cancelar": "Cancelar",
+    "criando": "Criando…",
+    "criarInstalacao": "Criar Instalação",
+    "criarInstalacaoComQty": "Criar Instalação ({{count}} un.)"
+  }
+}

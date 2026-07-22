@@ -1,0 +1,84 @@
+{
+  "prio": {
+    "baixa": "Baja",
+    "alta": "Alta",
+    "critica": "Crítica"
+  },
+  "slaRelativo": {
+    "overdue": "Vencido {{count}}d",
+    "dueToday": "Vence hoy",
+    "tomorrow": "Mañana",
+    "daysLeft_one": "{{count}} día",
+    "daysLeft_other": "{{count}} días"
+  },
+  "common": {
+    "clear": "Limpiar ✕",
+    "close": "Cerrar ✕"
+  },
+  "contextBanner": {
+    "overdueTitle_one": "{{count}} implementación con SLA vencido",
+    "overdueTitle_other": "{{count}} implementaciones con SLA vencido",
+    "overdueDesc": "Revisa los plazos, actualiza el estado o negocia una nueva fecha con el cliente — se requiere acción inmediata.",
+    "criticalTitle_one": "{{count}} implementación en riesgo de SLA",
+    "criticalTitle_other": "{{count}} implementaciones en riesgo de SLA",
+    "criticalDesc": "Menos de 3 días para el vencimiento — prioriza estas implementaciones hoy.",
+    "tasksTitle": "Tareas con plazo vencido detectadas",
+    "tasksDesc": "Las implementaciones con SLA más crítico se listaron primero. Abre cada una para identificar qué tareas están atrasadas y asignar responsables."
+  },
+  "tabs": {
+    "emAndamento": "En Curso",
+    "todas": "Todas"
+  },
+  "statusSubfilters": {
+    "all": "Todos los estados",
+    "emAndamento": "En Curso",
+    "pausada": "Pausadas",
+    "concluida": "Finalizadas",
+    "cancelada": "Canceladas"
+  },
+  "slaFilters": {
+    "any": "Cualquier SLA",
+    "atrasada": "🔴 Vencidas",
+    "critico": "🟡 Crítico",
+    "ok": "🟢 En Plazo"
+  },
+  "prioridadeFilters": {
+    "any": "Cualquier Prioridad",
+    "critica": "Crítica",
+    "alta": "Alta",
+    "normal": "Normal",
+    "baixa": "Baja"
+  },
+  "page": {
+    "title": "Implementaciones",
+    "subtitleFiltered": "{{filtered}} de {{total}} implementaciones",
+    "subtitleTotal_one": "{{count}} implementación",
+    "subtitleTotal_other": "{{count}} implementaciones",
+    "kpi": {
+      "inProgress": "En Curso",
+      "slaOverdue": "SLA Vencido",
+      "requiresAttention": "requiere atención",
+      "onSchedule": "todo en plazo",
+      "withConversion": "Con Conversión",
+      "ofData": "de datos",
+      "completed": "Finalizadas"
+    },
+    "searchPlaceholder": "Buscar empresa, código...",
+    "clearFilters": "Limpiar ✕",
+    "headers": {
+      "client": "Cliente",
+      "status": "Estado",
+      "progress": "Progreso",
+      "responsible": "Responsable",
+      "sla": "SLA"
+    },
+    "emptyTitle": "Ninguna implementación encontrada",
+    "emptyFiltered": "Intenta ajustar los filtros.",
+    "emptyDefault": "Las implementaciones se crean al aprobar una solicitud en Triaje.",
+    "slaOverdueBadge": "SLA VENCIDO",
+    "slaCriticalBadge": "⚠ EN RIESGO",
+    "overdueTasksBadge_one": "{{count}} tarea vencida",
+    "overdueTasksBadge_other": "{{count}} tareas vencidas",
+    "dataConversionBadge": "Conversión de datos"
+  }
+}

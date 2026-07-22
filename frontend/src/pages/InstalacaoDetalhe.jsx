@@ -1,20 +1,14 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Layout } from "../components/layout/Layout";
 import { instalacaosApi, clientesApi, usuariosApi, templatesApi } from "../services/api";
 import { fmtDate, fmtDateTime, fmtDateOnly } from "../utils/dateUtils";
+import i18n from "../i18n";
 
 function normalizeTipo(t) {
   return t?.startsWith("instalacao_") ? t : `instalacao_${t}`;
 }
-
-const TIPO_LABEL = {
-  pdv:          "PDV Adicional",
-  coletor:      "Coletor Mobile",
-  forca_vendas: "Força de Vendas",
-  impressora:   "Impressora",
-  outro:        "Outro",
-};
 
 const TIPO_COLOR = {
   pdv:          "bg-blue-100 text-blue-700 border-blue-200",
@@ -22,13 +16,6 @@ const TIPO_COLOR = {
   forca_vendas: "bg-orange-100 text-orange-700 border-orange-200",
   impressora:   "bg-teal-100 text-teal-700 border-teal-200",
   outro:        "bg-gray-100 text-gray-600 border-gray-200",
-};
-
-const STATUS_LABEL = {
-  agendada:    "Agendada",
-  em_execucao: "Em Execução",
-  concluida:   "Concluída",
-  cancelada:   "Cancelada",
 };
 
 const STATUS_COLOR = {
@@ -107,17 +94,22 @@ function formatDuration(seconds) {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
-  if (h > 0) return `${h}h ${String(m).padStart(2, "0")}min ${String(s).padStart(2, "0")}s`;
-  if (m > 0) return `${m}min ${String(s).padStart(2, "0")}s`;
-  return `${s}s`;
+  const hu = i18n.t("instalacaoDetalhe:units.hour");
+  const mu = i18n.t("instalacaoDetalhe:units.minute");
+  const su = i18n.t("instalacaoDetalhe:units.second");
+  if (h > 0) return `${h}${hu} ${String(m).padStart(2, "0")}${mu} ${String(s).padStart(2, "0")}${su}`;
+  if (m > 0) return `${m}${mu} ${String(s).padStart(2, "0")}${su}`;
+  return `${s}${su}`;
 }
 
 function formatMinutes(min) {
   if (!min) return "—";
   const h = Math.floor(min / 60);
   const m = min % 60;
-  if (h > 0) return `${h}h ${m > 0 ? `${m}min` : ""}`.trim();
-  return `${m}min`;
+  const hu = i18n.t("instalacaoDetalhe:units.hour");
+  const mu = i18n.t("instalacaoDetalhe:units.minute");
+  if (h > 0) return `${h}${hu} ${m > 0 ? `${m}${mu}` : ""}`.trim();
+  return `${m}${mu}`;
 }
 
 function fmtBytes(bytes) {
@@ -140,6 +132,7 @@ function fileIcon(contentType) {
 // ── Modal de Finalização ──────────────────────────────────────────────────────
 
 function ModalFinalizar({ elapsed, onConfirm, onClose, saving }) {
+  const { t } = useTranslation("instalacaoDetalhe");
   const [obs, setObs] = useState("");
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
@@ -150,18 +143,18 @@ function ModalFinalizar({ elapsed, onConfirm, onClose, saving }) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h2 className="text-lg font-bold text-gray-900 mb-1">Concluir Instalação</h2>
-          <p className="text-sm text-gray-500 mb-1">Tempo total decorrido</p>
+          <h2 className="text-lg font-bold text-gray-900 mb-1">{t("modalFinalizar.title")}</h2>
+          <p className="text-sm text-gray-500 mb-1">{t("modalFinalizar.elapsedLabel")}</p>
           <p className="text-3xl font-bold text-orange-500 mb-4">{formatDuration(elapsed)}</p>
         </div>
         <div className="px-6 pb-6 space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Observação final (opcional)</label>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("modalFinalizar.obsLabel")}</label>
             <textarea
               value={obs}
               onChange={(e) => setObs(e.target.value)}
               rows={3}
-              placeholder="Ex: Caixa testado, TEF ativado. Ficou pendente ligar para a Digimaq..."
+              placeholder={t("modalFinalizar.obsPlaceholder")}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-orange-400 transition resize-none"
             />
           </div>
@@ -171,7 +164,7 @@ function ModalFinalizar({ elapsed, onConfirm, onClose, saving }) {
               onClick={onClose}
               className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
             >
-              Voltar
+              {t("modalFinalizar.back")}
             </button>
             <button
               type="button"
@@ -179,7 +172,7 @@ function ModalFinalizar({ elapsed, onConfirm, onClose, saving }) {
               disabled={saving}
               className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 transition-colors"
             >
-              {saving ? "Finalizando…" : "Confirmar Conclusão"}
+              {saving ? t("modalFinalizar.finishing") : t("modalFinalizar.confirm")}
             </button>
           </div>
         </div>
@@ -190,24 +183,19 @@ function ModalFinalizar({ elapsed, onConfirm, onClose, saving }) {
 
 // ── Modal de Pausa ────────────────────────────────────────────────────────────
 
-const MOTIVOS_PAUSA = [
-  { value: "intervalo",          label: "Intervalo" },
-  { value: "aguardando_cliente", label: "Aguardando cliente" },
-  { value: "problema_tecnico",   label: "Problema técnico" },
-  { value: "deslocamento",       label: "Deslocamento" },
-  { value: "outro",              label: "Outro" },
-];
+const MOTIVOS_PAUSA = ["intervalo", "aguardando_cliente", "problema_tecnico", "deslocamento", "outro"];
 
 function ModalPausar({ elapsed, onConfirm, onClose, saving }) {
+  const { t } = useTranslation("instalacaoDetalhe");
   const [selecionado, setSelecionado] = useState("");
   const [textoOutro, setTextoOutro] = useState("");
 
   const isOutro = selecionado === "outro";
 
-  // O motivo gravado é o texto livre quando "Outro", senão o label do item selecionado
+  // O motivo gravado é o texto livre quando "Outro", senão o label traduzido do item selecionado
   const motivoFinal = isOutro
     ? (textoOutro.trim() || null)
-    : (MOTIVOS_PAUSA.find((m) => m.value === selecionado)?.label || null);
+    : (selecionado ? t(`modalPausar.reasons.${selecionado}`) : null);
 
   function handleSelect(value) {
     setSelecionado((v) => v === value ? "" : value);
@@ -223,28 +211,28 @@ function ModalPausar({ elapsed, onConfirm, onClose, saving }) {
               <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
             </svg>
           </div>
-          <h2 className="text-base font-bold text-gray-900 mb-0.5">Pausar cronômetro</h2>
-          <p className="text-sm text-gray-400 mb-1">Tempo decorrido até agora</p>
+          <h2 className="text-base font-bold text-gray-900 mb-0.5">{t("modalPausar.title")}</h2>
+          <p className="text-sm text-gray-400 mb-1">{t("modalPausar.elapsedLabel")}</p>
           <p className="text-2xl font-bold text-orange-500 mb-4">{formatDuration(elapsed)}</p>
         </div>
         <div className="px-6 pb-6 space-y-4">
           <div>
             <label className="block text-xs font-semibold text-gray-500 mb-1.5">
-              Motivo da pausa <span className="font-normal text-gray-400">(opcional)</span>
+              {t("modalPausar.reasonLabel")} <span className="font-normal text-gray-400">{t("modalPausar.optional")}</span>
             </label>
             <div className="grid grid-cols-1 gap-1.5">
-              {MOTIVOS_PAUSA.map((m) => (
+              {MOTIVOS_PAUSA.map((value) => (
                 <button
-                  key={m.value}
+                  key={value}
                   type="button"
-                  onClick={() => handleSelect(m.value)}
+                  onClick={() => handleSelect(value)}
                   className={`w-full text-left px-3 py-2 rounded-lg text-sm border transition-colors ${
-                    selecionado === m.value
+                    selecionado === value
                       ? "bg-amber-50 border-amber-400 text-amber-800 font-medium"
                       : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
                   }`}
                 >
-                  {m.label}
+                  {t(`modalPausar.reasons.${value}`)}
                 </button>
               ))}
             </div>
@@ -255,7 +243,7 @@ function ModalPausar({ elapsed, onConfirm, onClose, saving }) {
                 maxLength={50}
                 value={textoOutro}
                 onChange={(e) => setTextoOutro(e.target.value)}
-                placeholder="Descreva o motivo…"
+                placeholder={t("modalPausar.otherPlaceholder")}
                 className="mt-2 w-full border border-amber-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-amber-500 transition"
               />
             )}
@@ -266,7 +254,7 @@ function ModalPausar({ elapsed, onConfirm, onClose, saving }) {
               onClick={onClose}
               className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
             >
-              Cancelar
+              {t("modalPausar.cancel")}
             </button>
             <button
               type="button"
@@ -274,7 +262,7 @@ function ModalPausar({ elapsed, onConfirm, onClose, saving }) {
               disabled={saving}
               className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 disabled:opacity-50 transition-colors"
             >
-              {saving ? "Pausando…" : "Pausar"}
+              {saving ? t("modalPausar.pausing") : t("modalPausar.pause")}
             </button>
           </div>
         </div>
@@ -295,6 +283,7 @@ function ProgBar({ value }) {
 // ── Checklist item ────────────────────────────────────────────────────────────
 
 function ChecklistItem({ item, instId, onUpdated, onDeleted, locked }) {
+  const { t } = useTranslation("instalacaoDetalhe");
   const [loading, setLoading] = useState(false);
   const [localStatus, setLocalStatus] = useState(item.status);
   const [showNota, setShowNota] = useState(false);
@@ -358,7 +347,7 @@ function ChecklistItem({ item, instId, onUpdated, onDeleted, locked }) {
         </button>
         <span className={`flex-1 text-sm ${isConcluido ? "line-through text-gray-400" : "text-gray-700"}`}>
           {item.titulo}
-          {!item.obrigatoria && <span className="ml-1.5 text-[10px] text-gray-300">(opcional)</span>}
+          {!item.obrigatoria && <span className="ml-1.5 text-[10px] text-gray-300">{t("checklist.optional")}</span>}
         </span>
         {item.data_conclusao && isConcluido && (
           <span className="text-[10px] text-gray-300 shrink-0">
@@ -369,7 +358,7 @@ function ChecklistItem({ item, instId, onUpdated, onDeleted, locked }) {
         {!locked && (
           <button
             onClick={() => { setShowNota((v) => !v); setNotaEdit(item.nota || ""); }}
-            title={temNota ? "Ver/editar nota" : "Adicionar nota"}
+            title={temNota ? t("checklist.noteView") : t("checklist.noteAdd")}
             className={`opacity-0 group-hover:opacity-100 ${temNota ? "!opacity-100" : ""} w-5 h-5 flex items-center justify-center rounded transition-all ${
               temNota ? "text-amber-500 hover:text-amber-600" : "text-gray-300 hover:text-amber-400"
             }`}
@@ -409,7 +398,7 @@ function ChecklistItem({ item, instId, onUpdated, onDeleted, locked }) {
             autoFocus
             value={notaEdit}
             onChange={(e) => setNotaEdit(e.target.value)}
-            placeholder="Adicione uma observação sobre este item…"
+            placeholder={t("checklist.notePlaceholder")}
             rows={2}
             className="w-full text-xs border border-amber-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-400 bg-amber-50 text-amber-900 placeholder-amber-300 resize-none transition"
           />
@@ -419,21 +408,21 @@ function ChecklistItem({ item, instId, onUpdated, onDeleted, locked }) {
               disabled={savingNota}
               className="px-3 py-1 rounded-lg text-[11px] font-semibold text-white bg-amber-500 hover:bg-amber-600 disabled:opacity-50 transition-colors"
             >
-              {savingNota ? "Salvando…" : "Salvar nota"}
+              {savingNota ? t("checklist.noteSaving") : t("checklist.noteSave")}
             </button>
             {notaEdit && (
               <button
                 onClick={() => { setNotaEdit(""); }}
                 className="px-3 py-1 rounded-lg text-[11px] font-medium text-amber-600 hover:bg-amber-50 transition-colors"
               >
-                Limpar
+                {t("checklist.noteClear")}
               </button>
             )}
             <button
               onClick={() => setShowNota(false)}
               className="ml-auto text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
             >
-              Cancelar
+              {t("checklist.noteCancel")}
             </button>
           </div>
         </div>
@@ -445,6 +434,7 @@ function ChecklistItem({ item, instId, onUpdated, onDeleted, locked }) {
 // ── Modal Editar (antes de iniciar) ──────────────────────────────────────────
 
 function EditarInstalacaoModal({ inst, tiposConfig, usuarios, onSave, onClose, saving, error }) {
+  const { t } = useTranslation("instalacaoDetalhe");
   const tiposAtuais = (inst.tipos?.length > 0 ? inst.tipos : [inst.tipo].filter(Boolean))
     .map((t) => t.replace(/^instalacao_/, ""));
 
@@ -484,7 +474,7 @@ function EditarInstalacaoModal({ inst, tiposConfig, usuarios, onSave, onClose, s
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
-          <h2 className="text-base font-bold text-gray-900">Editar Instalação</h2>
+          <h2 className="text-base font-bold text-gray-900">{t("editModal.title")}</h2>
           <button onClick={onClose} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -495,23 +485,23 @@ function EditarInstalacaoModal({ inst, tiposConfig, usuarios, onSave, onClose, s
         <div className="overflow-y-auto px-6 py-5 space-y-5 flex-1">
           {/* Produtos */}
           <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Produtos</label>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">{t("editModal.produtos")}</label>
             <div className="flex flex-wrap gap-2">
-              {tiposConfig.filter((t) => t.ativo).map((t) => {
-                const slug = t.tipo.replace(/^instalacao_/, "");
+              {tiposConfig.filter((tc) => tc.ativo).map((tc) => {
+                const slug = tc.tipo.replace(/^instalacao_/, "");
                 const sel = tiposSel.includes(slug);
                 return (
-                  <button key={t.id} type="button" onClick={() => toggleTipo(slug)}
+                  <button key={tc.id} type="button" onClick={() => toggleTipo(slug)}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all ${
                       sel ? "border-transparent text-white shadow-sm" : "border-gray-200 text-gray-500 hover:border-gray-300 bg-white"
                     }`}
-                    style={sel ? { background: t.cor || "#6366f1" } : undefined}>
+                    style={sel ? { background: tc.cor || "#6366f1" } : undefined}>
                     {sel && (
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     )}
-                    {t.nome}
+                    {tc.nome}
                   </button>
                 );
               })}
@@ -521,7 +511,7 @@ function EditarInstalacaoModal({ inst, tiposConfig, usuarios, onSave, onClose, s
                 <svg className="w-3.5 h-3.5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
-                <span>Alterar os produtos irá regenerar o checklist. Itens já marcados serão perdidos.</span>
+                <span>{t("editModal.produtosWarning")}</span>
               </div>
             )}
           </div>
@@ -529,19 +519,19 @@ function EditarInstalacaoModal({ inst, tiposConfig, usuarios, onSave, onClose, s
           {/* Quantidade + Prioridade */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1.5">Quantidade</label>
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("editModal.quantidade")}</label>
               <input type="number" min={1} value={form.quantidade}
                 onChange={(e) => setForm((f) => ({ ...f, quantidade: e.target.value }))}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 transition" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1.5">Prioridade</label>
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("editModal.prioridade")}</label>
               <select value={form.prioridade}
                 onChange={(e) => setForm((f) => ({ ...f, prioridade: e.target.value }))}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 transition bg-white">
-                <option value="normal">Normal</option>
-                <option value="alta">Alta</option>
-                <option value="urgente">Urgente</option>
+                <option value="normal">{t("priorityOptions.normal")}</option>
+                <option value="alta">{t("priorityOptions.alta")}</option>
+                <option value="urgente">{t("priorityOptions.urgente")}</option>
               </select>
             </div>
           </div>
@@ -549,16 +539,16 @@ function EditarInstalacaoModal({ inst, tiposConfig, usuarios, onSave, onClose, s
           {/* Responsável + Data */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1.5">Responsável</label>
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("editModal.responsavel")}</label>
               <select value={form.responsavel_id}
                 onChange={(e) => setForm((f) => ({ ...f, responsavel_id: e.target.value }))}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 transition bg-white">
-                <option value="">Sem responsável</option>
+                <option value="">{t("semResponsavel")}</option>
                 {usuarios.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1.5">Data Agendada</label>
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("editModal.dataAgendada")}</label>
               <input type="date" value={form.data_agendada}
                 onChange={(e) => setForm((f) => ({ ...f, data_agendada: e.target.value }))}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 transition" />
@@ -568,14 +558,14 @@ function EditarInstalacaoModal({ inst, tiposConfig, usuarios, onSave, onClose, s
           {/* Contato */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1.5">Contato no local</label>
-              <input type="text" value={form.contato_nome} placeholder="Nome do contato"
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("editModal.contatoLocal")}</label>
+              <input type="text" value={form.contato_nome} placeholder={t("editModal.contatoNomePlaceholder")}
                 onChange={(e) => setForm((f) => ({ ...f, contato_nome: e.target.value }))}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 transition" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1.5">Telefone</label>
-              <input type="text" value={form.contato_telefone} placeholder="(00) 00000-0000"
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("editModal.telefone")}</label>
+              <input type="text" value={form.contato_telefone} placeholder={t("editModal.telefonePlaceholder")}
                 onChange={(e) => setForm((f) => ({ ...f, contato_telefone: e.target.value }))}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 transition" />
             </div>
@@ -583,10 +573,10 @@ function EditarInstalacaoModal({ inst, tiposConfig, usuarios, onSave, onClose, s
 
           {/* Observações */}
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Observações</label>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("editModal.observacoes")}</label>
             <textarea value={form.observacoes} rows={3}
               onChange={(e) => setForm((f) => ({ ...f, observacoes: e.target.value }))}
-              placeholder="Observações adicionais…"
+              placeholder={t("editModal.observacoesPlaceholder")}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 transition resize-none" />
           </div>
 
@@ -598,11 +588,11 @@ function EditarInstalacaoModal({ inst, tiposConfig, usuarios, onSave, onClose, s
         <div className="flex gap-3 px-6 py-4 border-t border-gray-100 shrink-0">
           <button type="button" onClick={onClose}
             className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
-            Cancelar
+            {t("editModal.cancel")}
           </button>
           <button type="button" onClick={handleSubmit} disabled={saving || tiposSel.length === 0}
             className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50 transition-colors">
-            {saving ? "Salvando…" : "Salvar alterações"}
+            {saving ? t("editModal.saving") : t("editModal.save")}
           </button>
         </div>
       </div>
@@ -613,6 +603,7 @@ function EditarInstalacaoModal({ inst, tiposConfig, usuarios, onSave, onClose, s
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function InstalacaoDetalhe() {
+  const { t } = useTranslation("instalacaoDetalhe");
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -665,7 +656,7 @@ export default function InstalacaoDetalhe() {
       });
       clientesApi.obter(data.cliente_id).then(({ data: c }) => setCliente(c)).catch(() => {});
     } catch {
-      setError("Instalação não encontrada.");
+      setError(t("notFound"));
     } finally {
       setLoading(false);
     }
@@ -828,7 +819,7 @@ export default function InstalacaoDetalhe() {
       setInst(data);
       setShowEditarModal(false);
     } catch (err) {
-      setEditarError(err.message || "Erro ao salvar alterações.");
+      setEditarError(err.message || t("editModal.errorDefault"));
     } finally {
       setEditarSaving(false);
     }
@@ -844,7 +835,7 @@ export default function InstalacaoDetalhe() {
       const { data } = await instalacaosApi.uploadAnexo(id, file);
       setInst(data);
     } catch (err) {
-      const msg = err?.response?.data?.detail || err?.message || "Erro ao enviar arquivo.";
+      const msg = err?.response?.data?.detail || err?.message || t("attachments.uploadError");
       setUploadError(typeof msg === "string" ? msg : JSON.stringify(msg));
     } finally {
       setUploading(false);
@@ -852,7 +843,7 @@ export default function InstalacaoDetalhe() {
   }
 
   async function handleDeleteAnexo(anexo) {
-    if (!window.confirm(`Remover "${anexo.filename}"?`)) return;
+    if (!window.confirm(t("attachments.confirmDelete", { filename: anexo.filename }))) return;
     try {
       const { data } = await instalacaosApi.deletarAnexo(id, anexo.id);
       setInst(data);
@@ -884,7 +875,7 @@ export default function InstalacaoDetalhe() {
   if (!inst || error) {
     return (
       <Layout>
-        <div className="py-20 text-center text-gray-400 text-sm">{error || "Instalação não encontrada."}</div>
+        <div className="py-20 text-center text-gray-400 text-sm">{error || t("notFound")}</div>
       </Layout>
     );
   }
@@ -939,7 +930,7 @@ export default function InstalacaoDetalhe() {
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
-            Instalações
+            {t("breadcrumb")}
           </button>
           <span className="text-gray-300">/</span>
           <span className="text-gray-700 font-medium">{inst.codigo}</span>
@@ -959,7 +950,7 @@ export default function InstalacaoDetalhe() {
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
-                Editar
+                {t("edit.button")}
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className={`transition-transform ${editDropdownOpen ? "rotate-180" : ""}`}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
@@ -978,8 +969,8 @@ export default function InstalacaoDetalhe() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-gray-800">Configuração</p>
-                      <p className="text-xs text-gray-400 mt-0.5">Tipo, data, responsável</p>
+                      <p className="text-sm font-semibold text-gray-800">{t("edit.dropdown.config.title")}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{t("edit.dropdown.config.subtitle")}</p>
                     </div>
                   </button>
                   <div className="border-t border-gray-50" />
@@ -993,8 +984,8 @@ export default function InstalacaoDetalhe() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-gray-800">{editando ? "Fechar edição" : "Editar campos"}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">Status, observações</p>
+                      <p className="text-sm font-semibold text-gray-800">{editando ? t("edit.dropdown.fields.titleClose") : t("edit.dropdown.fields.titleOpen")}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{t("edit.dropdown.fields.subtitle")}</p>
                     </div>
                   </button>
                 </div>
@@ -1011,7 +1002,7 @@ export default function InstalacaoDetalhe() {
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
-              {editando ? "Cancelar edição" : "Editar"}
+              {editando ? t("edit.cancelButton") : t("edit.button")}
             </button>
           )}
         </div>
@@ -1051,13 +1042,13 @@ export default function InstalacaoDetalhe() {
               <div className="flex flex-col items-end gap-1.5 shrink-0">
                 {/* Multi-type badges */}
                 <div className="flex flex-col items-end gap-1">
-                  {(inst.tipos?.length > 0 ? inst.tipos : [inst.tipo]).map((t) => {
-                    const td = tiposMap[normalizeTipo(t)];
+                  {(inst.tipos?.length > 0 ? inst.tipos : [inst.tipo]).map((tipoKey) => {
+                    const td = tiposMap[normalizeTipo(tipoKey)];
                     const cor = td?.cor;
-                    const label = (inst.tipos_nomes || {})[t] || td?.nome || TIPO_LABEL[t] || t;
+                    const label = (inst.tipos_nomes || {})[tipoKey] || td?.nome || (TIPO_COLOR[tipoKey] ? t(`tipos.${tipoKey}`) : tipoKey);
                     return (
-                      <span key={t}
-                        className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${cor ? "" : (TIPO_COLOR[t] || "bg-gray-100 text-gray-600 border-gray-200")}`}
+                      <span key={tipoKey}
+                        className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${cor ? "" : (TIPO_COLOR[tipoKey] || "bg-gray-100 text-gray-600 border-gray-200")}`}
                         style={cor ? { background: `${cor}22`, color: cor, borderColor: `${cor}55` } : undefined}>
                         {label}
                       </span>
@@ -1075,13 +1066,13 @@ export default function InstalacaoDetalhe() {
                         setTimeout(() => URL.revokeObjectURL(url), 60000);
                       } catch {}
                     }}
-                    title="Ver POP geral deste tipo de instalação"
+                    title={t("card.popGeralTitle")}
                     className="flex items-center gap-1 text-[10px] font-semibold text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 px-2 py-0.5 rounded-full transition-colors"
                   >
                     <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    POP Geral
+                    {t("card.popGeral")}
                   </button>
                 )}
               </div>
@@ -1089,18 +1080,18 @@ export default function InstalacaoDetalhe() {
 
             <div className="flex flex-wrap gap-2 mb-4">
               <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${STATUS_COLOR[inst.status]}`}>
-                {STATUS_LABEL[inst.status]}
+                {STATUS_COLOR[inst.status] ? t(`status.${inst.status}`) : inst.status}
               </span>
               {inst.prioridade !== "normal" && (
                 <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
                   inst.prioridade === "urgente" ? "bg-red-100 text-red-700" : "bg-orange-100 text-orange-700"
                 }`}>
-                  {inst.prioridade === "urgente" ? "Urgente" : "Alta prioridade"}
+                  {inst.prioridade === "urgente" ? t("priorityBadge.urgent") : t("priorityBadge.high")}
                 </span>
               )}
               {inst.quantidade > 1 && (
                 <span className="text-[11px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-                  {inst.quantidade} unidades
+                  {t("card.units", { count: inst.quantidade })}
                 </span>
               )}
             </div>
@@ -1108,11 +1099,11 @@ export default function InstalacaoDetalhe() {
             {/* Progresso */}
             <div className="mb-4">
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs text-gray-500 font-medium">Progresso</span>
+                <span className="text-xs text-gray-500 font-medium">{t("card.progress")}</span>
                 <span className="text-xs font-bold text-gray-700">{progresso}%</span>
               </div>
               <ProgBar value={progresso} />
-              <p className="text-[11px] text-gray-400 mt-1">{concluidos} de {checklist.length} itens concluídos</p>
+              <p className="text-[11px] text-gray-400 mt-1">{t("card.itemsCompleted", { done: concluidos, total: checklist.length })}</p>
             </div>
 
             {/* Timer */}
@@ -1131,7 +1122,7 @@ export default function InstalacaoDetalhe() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   )}
-                  Iniciar Instalação
+                  {t("timer.start")}
                 </button>
               )}
 
@@ -1149,12 +1140,12 @@ export default function InstalacaoDetalhe() {
                           <svg className="w-3.5 h-3.5 text-amber-500" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
                           </svg>
-                          <span className="text-xs font-semibold text-amber-700">Pausada</span>
+                          <span className="text-xs font-semibold text-amber-700">{t("timer.paused")}</span>
                         </>
                       ) : (
                         <>
                           <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
-                          <span className="text-xs font-semibold text-orange-700">Em andamento</span>
+                          <span className="text-xs font-semibold text-orange-700">{t("timer.inProgress")}</span>
                         </>
                       )}
                     </div>
@@ -1179,7 +1170,7 @@ export default function InstalacaoDetalhe() {
                           <path d="M8 5v14l11-7z" />
                         </svg>
                       )}
-                      Retomar cronômetro
+                      {t("timer.resume")}
                     </button>
                   ) : (
                     <button
@@ -1189,7 +1180,7 @@ export default function InstalacaoDetalhe() {
                       <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
                       </svg>
-                      Pausar cronômetro
+                      {t("timer.pause")}
                     </button>
                   )}
 
@@ -1199,17 +1190,17 @@ export default function InstalacaoDetalhe() {
                     disabled={!todasConcluidas || estaPausada}
                     title={
                       estaPausada
-                        ? "Retome o cronômetro antes de finalizar"
+                        ? t("timer.finishDisabledPaused")
                         : !todasConcluidas
-                          ? "Conclua todos os itens do checklist primeiro"
-                          : "Finalizar instalação"
+                          ? t("timer.finishDisabledPending")
+                          : t("timer.finishTitle")
                     }
                     className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white bg-green-600 hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    {todasConcluidas ? "Finalizar Instalação" : `Finalizar (${concluidos}/${checklist.length} itens)`}
+                    {todasConcluidas ? t("timer.finish") : t("timer.finishWithCount", { done: concluidos, total: checklist.length })}
                   </button>
                 </div>
               )}
@@ -1220,7 +1211,7 @@ export default function InstalacaoDetalhe() {
                     <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span className="text-xs font-semibold text-green-700">Tempo efetivo</span>
+                    <span className="text-xs font-semibold text-green-700">{t("timer.effectiveTime")}</span>
                   </div>
                   <span className="text-sm font-bold text-green-700">
                     {inst.duracao_segundos
@@ -1234,7 +1225,7 @@ export default function InstalacaoDetalhe() {
             {/* Responsáveis — lista com principal + colaboradores */}
             <div className="pt-3 border-t border-gray-100">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Responsáveis</p>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">{t("responsaveis.title")}</p>
                 {!inst.finalizado_em && (
                   <div className="relative" data-add-resp-picker>
                     <button
@@ -1250,7 +1241,7 @@ export default function InstalacaoDetalhe() {
                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                         </svg>
                       )}
-                      Adicionar
+                      {t("responsaveis.add")}
                     </button>
                     {showAddResp && (
                       <div className="absolute right-0 top-full mt-1 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-30 overflow-hidden">
@@ -1258,7 +1249,7 @@ export default function InstalacaoDetalhe() {
                           <input
                             autoFocus
                             type="text"
-                            placeholder="Buscar usuário..."
+                            placeholder={t("responsaveis.searchPlaceholder")}
                             value={addRespBusca}
                             onChange={(e) => setAddRespBusca(e.target.value)}
                             className="w-full text-xs px-2 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-400"
@@ -1272,7 +1263,7 @@ export default function InstalacaoDetalhe() {
                               (!addRespBusca || u.nome.toLowerCase().includes(addRespBusca.toLowerCase()))
                             );
                             return disponiveis.length === 0 ? (
-                              <p className="text-xs text-gray-400 text-center py-3">Nenhum usuário disponível</p>
+                              <p className="text-xs text-gray-400 text-center py-3">{t("responsaveis.noneAvailable")}</p>
                             ) : disponiveis.map((u) => (
                               <button
                                 key={u.id}
@@ -1308,7 +1299,7 @@ export default function InstalacaoDetalhe() {
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold text-gray-800 truncate leading-tight">{r.nome}</p>
                         <span className={`inline-block text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full mt-0.5 ${r.papel === "principal" ? "bg-indigo-100 text-indigo-600" : "bg-gray-100 text-gray-500"}`}>
-                          {r.papel === "principal" ? "Principal" : "Colaborador"}
+                          {r.papel === "principal" ? t("responsaveis.principal") : t("responsaveis.colaborador")}
                         </span>
                       </div>
                       {r.papel === "principal" && !inst.finalizado_em && (
@@ -1316,7 +1307,7 @@ export default function InstalacaoDetalhe() {
                           type="button"
                           onClick={() => setEditandoResp(true)}
                           className="p-1 rounded text-gray-300 hover:text-orange-500 hover:bg-orange-50 transition-colors opacity-0 group-hover:opacity-100"
-                          title="Alterar responsável principal"
+                          title={t("responsaveis.changeMainTitle")}
                         >
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -1329,7 +1320,7 @@ export default function InstalacaoDetalhe() {
                           onClick={() => handleRemoverResp(r.id)}
                           disabled={removingRespId === r.id}
                           className="p-1 rounded text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
-                          title="Remover colaborador"
+                          title={t("responsaveis.removeTitle")}
                         >
                           {removingRespId === r.id ? (
                             <div className="w-3.5 h-3.5 rounded-full border-2 border-red-400 border-t-transparent animate-spin" />
@@ -1352,7 +1343,7 @@ export default function InstalacaoDetalhe() {
                         onBlur={() => !savingResp && setEditandoResp(false)}
                         className="flex-1 text-sm border border-orange-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-400/20 bg-white"
                       >
-                        <option value="">Sem responsável</option>
+                        <option value="">{t("semResponsavel")}</option>
                         {usuarios.map((u) => (
                           <option key={u.id} value={u.id}>{u.nome}</option>
                         ))}
@@ -1371,7 +1362,7 @@ export default function InstalacaoDetalhe() {
                     onBlur={() => !savingResp && setEditandoResp(false)}
                     className="flex-1 text-sm border border-orange-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-400/20 bg-white"
                   >
-                    <option value="">Sem responsável</option>
+                    <option value="">{t("semResponsavel")}</option>
                     {usuarios.map((u) => (
                       <option key={u.id} value={u.id}>{u.nome}</option>
                     ))}
@@ -1389,7 +1380,7 @@ export default function InstalacaoDetalhe() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
-                  <p className="text-sm text-gray-400 group-hover:text-orange-500 italic transition-colors">Atribuir responsável…</p>
+                  <p className="text-sm text-gray-400 group-hover:text-orange-500 italic transition-colors">{t("responsaveis.assignPrompt")}</p>
                 </button>
               )}
             </div>
@@ -1397,7 +1388,7 @@ export default function InstalacaoDetalhe() {
             {/* Criado por */}
             {inst.criado_por_nome && (
               <div className="pt-3 border-t border-gray-100">
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">Criado por</p>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">{t("createdBy")}</p>
                 <div className="flex items-center gap-2.5 bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100">
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 ${avatarColor(inst.criado_por_nome)}`}>
                     {initials(inst.criado_por_nome)}
@@ -1410,9 +1401,9 @@ export default function InstalacaoDetalhe() {
             {/* Datas */}
             <div className="space-y-2 pt-3 border-t border-gray-100">
               {[
-                { label: "Criado em",     value: fmtDateTime(inst.created_at) },
-                { label: "Agendado para", value: inst.data_agendada ? fmtDateOnly(inst.data_agendada) : null },
-                { label: "Concluído em",  value: inst.finalizado_em
+                { label: t("dates.createdAt"),     value: fmtDateTime(inst.created_at) },
+                { label: t("dates.scheduledFor"), value: inst.data_agendada ? fmtDateOnly(inst.data_agendada) : null },
+                { label: t("dates.completedAt"),  value: inst.finalizado_em
                     ? fmtDateTime(inst.finalizado_em)
                     : inst.data_conclusao
                       ? fmtDateOnly(inst.data_conclusao)
@@ -1427,7 +1418,7 @@ export default function InstalacaoDetalhe() {
 
             {inst.observacoes && (
               <div className="mt-3 pt-3 border-t border-gray-100">
-                <p className="text-xs text-gray-400 mb-1">Observações</p>
+                <p className="text-xs text-gray-400 mb-1">{t("observacoes")}</p>
                 <p className="text-sm text-gray-600 whitespace-pre-line">{inst.observacoes}</p>
               </div>
             )}
@@ -1438,7 +1429,7 @@ export default function InstalacaoDetalhe() {
                   <svg className="w-3.5 h-3.5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <p className="text-xs font-semibold text-green-700">Observações de Conclusão</p>
+                  <p className="text-xs font-semibold text-green-700">{t("observacaoConclusao")}</p>
                 </div>
                 <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2">
                   <p className="text-sm text-green-900 whitespace-pre-line">{inst.observacao_conclusao}</p>
@@ -1450,50 +1441,50 @@ export default function InstalacaoDetalhe() {
           {/* Editar */}
           {editando && (
             <div className="bg-white rounded-xl border border-orange-200 shadow-sm p-5">
-              <h3 className="text-sm font-bold text-gray-800 mb-3">Editar instalação</h3>
+              <h3 className="text-sm font-bold text-gray-800 mb-3">{t("editInline.title")}</h3>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">Status</label>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("editInline.status")}</label>
                   <select value={formEdit.status} onChange={(e) => setFormEdit((f) => ({ ...f, status: e.target.value }))} className={inputCls}>
-                    <option value="agendada">Agendada</option>
-                    <option value="em_execucao">Em Execução</option>
-                    <option value="concluida">Concluída</option>
-                    <option value="cancelada">Cancelada</option>
+                    <option value="agendada">{t("status.agendada")}</option>
+                    <option value="em_execucao">{t("status.em_execucao")}</option>
+                    <option value="concluida">{t("status.concluida")}</option>
+                    <option value="cancelada">{t("status.cancelada")}</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">Prioridade</label>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("editInline.priority")}</label>
                   <select value={formEdit.prioridade} onChange={(e) => setFormEdit((f) => ({ ...f, prioridade: e.target.value }))} className={inputCls}>
-                    <option value="normal">Normal</option>
-                    <option value="alta">Alta</option>
-                    <option value="urgente">Urgente</option>
+                    <option value="normal">{t("priorityOptions.normal")}</option>
+                    <option value="alta">{t("priorityOptions.alta")}</option>
+                    <option value="urgente">{t("priorityOptions.urgente")}</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">Responsável</label>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("editInline.responsavel")}</label>
                   <select value={formEdit.responsavel_id} onChange={(e) => setFormEdit((f) => ({ ...f, responsavel_id: e.target.value }))} className={inputCls}>
-                    <option value="">Sem responsável</option>
+                    <option value="">{t("semResponsavel")}</option>
                     {usuarios.map((u) => (
                       <option key={u.id} value={u.id}>{u.nome}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">Data Agendada</label>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("editInline.dataAgendada")}</label>
                   <input type="date" value={formEdit.data_agendada} onChange={(e) => setFormEdit((f) => ({ ...f, data_agendada: e.target.value }))} className={inputCls} />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">Observações</label>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("editInline.observacoes")}</label>
                   <textarea value={formEdit.observacoes} rows={3} onChange={(e) => setFormEdit((f) => ({ ...f, observacoes: e.target.value }))} className={`${inputCls} resize-none`} />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-green-700 mb-1.5">Observações de Conclusão</label>
-                  <textarea value={formEdit.observacao_conclusao} rows={3} onChange={(e) => setFormEdit((f) => ({ ...f, observacao_conclusao: e.target.value }))} placeholder="Preenchido ao finalizar a instalação…" className={`${inputCls} resize-none border-green-200 focus:border-green-500`} />
+                  <label className="block text-xs font-semibold text-green-700 mb-1.5">{t("editInline.observacaoConclusao")}</label>
+                  <textarea value={formEdit.observacao_conclusao} rows={3} onChange={(e) => setFormEdit((f) => ({ ...f, observacao_conclusao: e.target.value }))} placeholder={t("editInline.observacaoConclusaoPlaceholder")} className={`${inputCls} resize-none border-green-200 focus:border-green-500`} />
                 </div>
                 {error && <p className="text-xs text-red-600">{error}</p>}
                 <button onClick={handleSaveEdit} disabled={saving}
                   className="w-full py-2 rounded-lg text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50 transition-colors">
-                  {saving ? "Salvando…" : "Salvar alterações"}
+                  {saving ? t("editInline.saving") : t("editInline.save")}
                 </button>
               </div>
             </div>
@@ -1505,14 +1496,14 @@ export default function InstalacaoDetalhe() {
           {/* Checklist */}
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-bold text-gray-800">Checklist</h2>
+              <h2 className="text-sm font-bold text-gray-800">{t("checklist.title")}</h2>
               <div className="flex items-center gap-2">
                 {inst.finalizado_em && (
                   <span className="flex items-center gap-1 text-[10px] font-semibold text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
                     <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
-                    Finalizada
+                    {t("checklist.finalized")}
                   </span>
                 )}
                 <span className="text-xs text-gray-400">{concluidos}/{checklist.length}</span>
@@ -1520,7 +1511,7 @@ export default function InstalacaoDetalhe() {
             </div>
 
             {checklist.length === 0 ? (
-              <p className="text-sm text-gray-400 py-4 text-center">Nenhum item no checklist.</p>
+              <p className="text-sm text-gray-400 py-4 text-center">{t("checklist.empty")}</p>
             ) : (() => {
               const tipos = inst.tipos?.length > 0 ? inst.tipos : [inst.tipo];
               const isMulti = tipos.length > 1 && checklist.some((i) => i.tipo);
@@ -1536,27 +1527,27 @@ export default function InstalacaoDetalhe() {
                 );
               }
               // Group by tipo, maintaining the order from tipos array
-              const grouped = tipos.reduce((acc, t) => {
-                acc[t] = checklist.filter((i) => i.tipo === t);
+              const grouped = tipos.reduce((acc, tipoKey) => {
+                acc[tipoKey] = checklist.filter((i) => i.tipo === tipoKey);
                 return acc;
               }, {});
               const ungrouped = checklist.filter((i) => !i.tipo);
               return (
                 <div className="space-y-4">
-                  {tipos.map((t) => {
-                    const items = grouped[t] || [];
+                  {tipos.map((tipoKey) => {
+                    const items = grouped[tipoKey] || [];
                     if (items.length === 0) return null;
                     const done = items.filter((i) => i.status === "concluido").length;
                     const allDone = done === items.length;
                     return (
-                      <div key={t}>
+                      <div key={tipoKey}>
                         <div className={`flex items-center gap-2 mb-2 px-1 pb-1.5 border-b ${allDone ? "border-green-100" : "border-gray-100"}`}>
                           {(() => {
-                            const td2 = tiposMap[normalizeTipo(t)];
+                            const td2 = tiposMap[normalizeTipo(tipoKey)];
                             const cor2 = td2?.cor;
-                            const label2 = (inst.tipos_nomes || {})[t] || td2?.nome || TIPO_LABEL[t] || t;
+                            const label2 = (inst.tipos_nomes || {})[tipoKey] || td2?.nome || (TIPO_COLOR[tipoKey] ? t(`tipos.${tipoKey}`) : tipoKey);
                             return (
-                              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${cor2 ? "" : (TIPO_COLOR[t] || "bg-gray-100 text-gray-600 border-gray-200")}`}
+                              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${cor2 ? "" : (TIPO_COLOR[tipoKey] || "bg-gray-100 text-gray-600 border-gray-200")}`}
                                 style={cor2 ? { background: `${cor2}22`, color: cor2, borderColor: `${cor2}55` } : undefined}>
                                 {label2}
                               </span>
@@ -1599,12 +1590,12 @@ export default function InstalacaoDetalhe() {
                   type="text"
                   value={novoItem}
                   onChange={(e) => setNovoItem(e.target.value)}
-                  placeholder="Adicionar item ao checklist…"
+                  placeholder={t("checklist.addPlaceholder")}
                   className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-orange-400 transition"
                 />
                 <button type="submit" disabled={addingItem || !novoItem.trim()}
                   className="px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-40 transition-colors">
-                  {addingItem ? "…" : "+ Adicionar"}
+                  {addingItem ? "…" : t("checklist.add")}
                 </button>
               </form>
             )}
@@ -1612,10 +1603,10 @@ export default function InstalacaoDetalhe() {
 
           {/* Comentários */}
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-            <h2 className="text-sm font-bold text-gray-800 mb-4">Comentários</h2>
+            <h2 className="text-sm font-bold text-gray-800 mb-4">{t("comments.title")}</h2>
 
             {(inst.comentarios || []).length === 0 ? (
-              <p className="text-sm text-gray-400 mb-4">Nenhum comentário ainda.</p>
+              <p className="text-sm text-gray-400 mb-4">{t("comments.empty")}</p>
             ) : (
               <div className="space-y-3 mb-4">
                 {inst.comentarios.map((c) => (
@@ -1641,13 +1632,13 @@ export default function InstalacaoDetalhe() {
               <textarea
                 value={novoComentario}
                 onChange={(e) => setNovoComentario(e.target.value)}
-                placeholder="Escreva um comentário…"
+                placeholder={t("comments.placeholder")}
                 rows={2}
                 className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-orange-400 transition resize-none"
               />
               <button type="submit" disabled={sendingComentario || !novoComentario.trim()}
                 className="px-3 py-2 rounded-lg text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-40 transition-colors">
-                {sendingComentario ? "…" : "Enviar"}
+                {sendingComentario ? "…" : t("comments.send")}
               </button>
             </form>
           </div>
@@ -1656,7 +1647,7 @@ export default function InstalacaoDetalhe() {
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-bold text-gray-800">Anexos</h2>
+                <h2 className="text-sm font-bold text-gray-800">{t("attachments.title")}</h2>
                 {(inst.anexos || []).length > 0 && (
                   <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">
                     {inst.anexos.length}
@@ -1676,7 +1667,7 @@ export default function InstalacaoDetalhe() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                   </svg>
                 )}
-                {uploading ? "Enviando…" : "Anexar arquivo"}
+                {uploading ? t("attachments.uploading") : t("attachments.upload")}
               </button>
               <input
                 ref={fileInputRef}
@@ -1691,7 +1682,7 @@ export default function InstalacaoDetalhe() {
             )}
 
             {(inst.anexos || []).length === 0 ? (
-              <p className="text-sm text-gray-400 py-2 text-center">Nenhum arquivo anexado.</p>
+              <p className="text-sm text-gray-400 py-2 text-center">{t("attachments.empty")}</p>
             ) : (
               <div className="space-y-2">
                 {inst.anexos.map((anexo) => (
@@ -1710,7 +1701,7 @@ export default function InstalacaoDetalhe() {
                       <button
                         type="button"
                         onClick={() => handleDownloadAnexo(anexo)}
-                        title="Baixar"
+                        title={t("attachments.download")}
                         className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -1720,7 +1711,7 @@ export default function InstalacaoDetalhe() {
                       <button
                         type="button"
                         onClick={() => handleDeleteAnexo(anexo)}
-                        title="Remover"
+                        title={t("attachments.remove")}
                         className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>

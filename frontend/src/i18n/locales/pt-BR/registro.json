@@ -1,0 +1,31 @@
+{
+  "leftPanel": {
+    "logoAlt": "CriareTI",
+    "brand": "CriareTI",
+    "tagline": "Plataforma de Implantação",
+    "headline": "Solicite seu acesso à plataforma.",
+    "subtext": "Após o envio, um administrador irá analisar sua solicitação e você receberá um e-mail com o link de acesso.",
+    "footer": "© {{year}} CriareTI. Todos os direitos reservados."
+  },
+  "form": {
+    "logoAlt": "CriareTI",
+    "brand": "CriareTI",
+    "title": "Solicitar acesso",
+    "subtitle": "Preencha os dados abaixo para solicitar seu cadastro",
+    "nameLabel": "Nome completo",
+    "namePlaceholder": "Seu nome",
+    "emailLabel": "E-mail corporativo",
+    "emailPlaceholder": "seu@email.com",
+    "errorRequired": "Preencha nome e e-mail.",
+    "errorDefault": "Erro ao enviar solicitação.",
+    "submit": "Solicitar acesso",
+    "submitting": "Enviando...",
+    "loginPrompt": "Já tem acesso?",
+    "loginLink": "Fazer login"
+  },
+  "success": {
+    "title": "Solicitação enviada!",
+    "message": "Sua solicitação de acesso foi recebida. Assim que um administrador aprovar seu cadastro, você receberá um e-mail com o link para definir sua senha.",
+    "backToLogin": "Voltar ao login"
+  }
+}

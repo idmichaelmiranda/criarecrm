@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { authApi } from "../services/api";
 
 export default function DefinirSenha() {
+  const { t } = useTranslation("definirSenha");
   const { token }             = useParams();
   const [senha, setSenha]     = useState("");
   const [confirma, setConfirma] = useState("");
@@ -14,11 +16,11 @@ export default function DefinirSenha() {
   async function handleSubmit(e) {
     e.preventDefault();
     if (senha.length < 6) {
-      setError("A senha deve ter pelo menos 6 caracteres.");
+      setError(t("form.errorMinLength"));
       return;
     }
     if (senha !== confirma) {
-      setError("As senhas não coincidem.");
+      setError(t("form.errorMismatch"));
       return;
     }
     setLoading(true);
@@ -27,7 +29,7 @@ export default function DefinirSenha() {
       await authApi.definirSenha(token, senha);
       setSuccess(true);
     } catch (err) {
-      setError(err.message || "Erro ao definir senha.");
+      setError(err.message || t("form.errorDefault"));
     } finally {
       setLoading(false);
     }
@@ -57,20 +59,20 @@ export default function DefinirSenha() {
                 style={{ background: "linear-gradient(135deg, #F56316, #d94f0d)", filter: "blur(12px)" }} />
               <div className="relative w-28 h-28 rounded-3xl overflow-hidden shadow-2xl"
                 style={{ boxShadow: "0 0 0 1px rgba(245,99,22,0.25), 0 20px 60px rgba(245,99,22,0.18)" }}>
-                <img src="/logo.jpg" alt="CriareTI" className="w-full h-full object-cover" />
+                <img src="/logo.jpg" alt={t("leftPanel.logoAlt")} className="w-full h-full object-cover" />
               </div>
             </div>
-            <h1 className="text-4xl font-extrabold text-white tracking-tight mb-2">CriareTI</h1>
-            <p className="text-base text-slate-400 font-medium mb-12">Plataforma de Implantação</p>
+            <h1 className="text-4xl font-extrabold text-white tracking-tight mb-2">{t("leftPanel.brand")}</h1>
+            <p className="text-base text-slate-400 font-medium mb-12">{t("leftPanel.tagline")}</p>
             <p className="text-xl font-semibold text-white leading-snug mb-3 max-w-xs">
-              Defina sua senha de acesso.
+              {t("leftPanel.headline")}
             </p>
             <p className="text-sm text-slate-500 leading-relaxed max-w-xs">
-              Escolha uma senha segura. Você usará ela para acessar a plataforma nas próximas vezes.
+              {t("leftPanel.subtext")}
             </p>
           </div>
           <p className="text-xs text-slate-700 text-center">
-            © {new Date().getFullYear()} CriareTI. Todos os direitos reservados.
+            {t("leftPanel.footer", { year: new Date().getFullYear() })}
           </p>
         </div>
       </div>
@@ -83,9 +85,9 @@ export default function DefinirSenha() {
           <div className="flex items-center gap-3 mb-10 lg:hidden">
             <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg shrink-0"
               style={{ boxShadow: "0 0 0 1px rgba(245,99,22,0.2)" }}>
-              <img src="/logo.jpg" alt="CriareTI" className="w-full h-full object-cover" />
+              <img src="/logo.jpg" alt={t("form.logoAlt")} className="w-full h-full object-cover" />
             </div>
-            <p className="text-white font-bold text-lg">CriareTI</p>
+            <p className="text-white font-bold text-lg">{t("form.brand")}</p>
           </div>
 
           {success ? (
@@ -96,34 +98,34 @@ export default function DefinirSenha() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h1 className="text-2xl font-bold text-white mb-2">Senha definida!</h1>
+              <h1 className="text-2xl font-bold text-white mb-2">{t("success.title")}</h1>
               <p className="text-sm text-slate-400 mb-8 leading-relaxed">
-                Sua senha foi criada com sucesso. Agora você já pode fazer login na plataforma.
+                {t("success.message")}
               </p>
               <Link to="/login"
                 className="block text-center w-full py-3 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
                 style={{ background: "linear-gradient(135deg, #F56316, #d94f0d)" }}>
-                Ir para o login
+                {t("success.goToLogin")}
               </Link>
             </div>
           ) : (
             <>
-              <h1 className="text-2xl font-bold text-white mb-1">Defina sua senha</h1>
+              <h1 className="text-2xl font-bold text-white mb-1">{t("form.title")}</h1>
               <p className="text-sm text-slate-500 mb-8">
-                Escolha uma senha para acessar a plataforma
+                {t("form.subtitle")}
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">
-                    Nova senha
+                    {t("form.newPasswordLabel")}
                   </label>
                   <div className="relative">
                     <input
                       type={showPass ? "text" : "password"}
                       value={senha}
                       onChange={(e) => { setSenha(e.target.value); setError(""); }}
-                      placeholder="Mínimo 6 caracteres"
+                      placeholder={t("form.newPasswordPlaceholder")}
                       className="w-full px-4 py-3 pr-11 rounded-xl text-sm text-white placeholder-slate-600 outline-none transition-all"
                       style={inputStyle}
                       onFocus={(e) => e.target.style.borderColor = "#F56316"}
@@ -147,13 +149,13 @@ export default function DefinirSenha() {
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">
-                    Confirmar senha
+                    {t("form.confirmPasswordLabel")}
                   </label>
                   <input
                     type="password"
                     value={confirma}
                     onChange={(e) => { setConfirma(e.target.value); setError(""); }}
-                    placeholder="Repita a senha"
+                    placeholder={t("form.confirmPasswordPlaceholder")}
                     className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-slate-600 outline-none transition-all"
                     style={inputStyle}
                     onFocus={(e) => e.target.style.borderColor = "#F56316"}
@@ -180,9 +182,9 @@ export default function DefinirSenha() {
                   {loading ? (
                     <span className="flex items-center justify-center gap-2">
                       <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                      Salvando...
+                      {t("form.submitting")}
                     </span>
-                  ) : "Definir senha e acessar"}
+                  ) : t("form.submit")}
                 </button>
               </form>
             </>

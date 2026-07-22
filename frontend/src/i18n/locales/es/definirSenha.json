@@ -1,0 +1,30 @@
+{
+  "leftPanel": {
+    "logoAlt": "CriareTI",
+    "brand": "CriareTI",
+    "tagline": "Plataforma de Implementación",
+    "headline": "Define tu contraseña de acceso.",
+    "subtext": "Elige una contraseña segura. La usarás para acceder a la plataforma en las próximas ocasiones.",
+    "footer": "© {{year}} CriareTI. Todos los derechos reservados."
+  },
+  "form": {
+    "logoAlt": "CriareTI",
+    "brand": "CriareTI",
+    "title": "Define tu contraseña",
+    "subtitle": "Elige una contraseña para acceder a la plataforma",
+    "newPasswordLabel": "Nueva contraseña",
+    "newPasswordPlaceholder": "Mínimo 6 caracteres",
+    "confirmPasswordLabel": "Confirmar contraseña",
+    "confirmPasswordPlaceholder": "Repite la contraseña",
+    "errorMinLength": "La contraseña debe tener al menos 6 caracteres.",
+    "errorMismatch": "Las contraseñas no coinciden.",
+    "errorDefault": "Error al definir la contraseña.",
+    "submit": "Definir contraseña y acceder",
+    "submitting": "Guardando..."
+  },
+  "success": {
+    "title": "¡Contraseña definida!",
+    "message": "Tu contraseña se creó con éxito. Ahora ya puedes iniciar sesión en la plataforma.",
+    "goToLogin": "Ir al inicio de sesión"
+  }
+}

@@ -1,38 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { solicitacoesApi } from "../services/api";
 import { useCep } from "../hooks/useCep";
 import { useCnpj } from "../hooks/useCnpj";
 import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
 import { Checkbox } from "../components/ui/Checkbox";
-
-// ── Opções ────────────────────────────────────────────────────────────────────
-
-const RAMO_OPTIONS = [
-  { value: "comercio", label: "Comércio" },
-  { value: "industria", label: "Indústria" },
-];
-const CRT_OPTIONS = [
-  { value: "1", label: "1 - Simples Nacional" },
-  { value: "2", label: "2 - Simples Nacional - Excesso de sublimite" },
-  { value: "3", label: "3 - Regime Normal" },
-];
-const REGIME_OPTIONS = [
-  { value: "1", label: "Simples Nacional" },
-  { value: "2", label: "Lucro Presumido" },
-  { value: "3", label: "Lucro Real" },
-];
-const ST_OPTIONS = [
-  { value: "1", label: "Informante Substituto" },
-  { value: "2", label: "Informante Substituído" },
-];
-const CONTA_OPTIONS = [
-  { value: "corrente", label: "Conta Corrente" },
-  { value: "poupanca", label: "Conta Poupança" },
-  { value: "pagamento", label: "Conta Pagamento" },
-];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -141,6 +116,7 @@ function buildPayload(d) {
 // ── Sub-componentes de form ───────────────────────────────────────────────────
 
 function SectionCard({ id, title, children, disabled = false }) {
+  const { t } = useTranslation("revisao");
   return (
     <div id={id} className={`rounded-2xl border shadow-sm overflow-hidden transition-opacity ${
       disabled ? "border-gray-100 bg-gray-50 opacity-55" : "bg-white border-gray-100"
@@ -154,7 +130,7 @@ function SectionCard({ id, title, children, disabled = false }) {
             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
-            Não precisa alterar
+            {t("section.readOnlyBadge")}
           </span>
         )}
       </div>
@@ -164,15 +140,16 @@ function SectionCard({ id, title, children, disabled = false }) {
 }
 
 function CepField({ name, label, register, errors, setValue, fieldMap, required }) {
+  const { t } = useTranslation("revisao");
   const { fetchCep, loading } = useCep();
-  const { ref, onChange: regOnChange, ...rest } = register(name, required ? { required: "CEP obrigatório" } : {});
+  const { ref, onChange: regOnChange, ...rest } = register(name, required ? { required: t("cep.required") } : {});
   return (
     <div className="relative">
-      <Input ref={ref} label={label} placeholder="00000-000" maxLength={9}
+      <Input ref={ref} label={label} placeholder={t("cep.placeholder")} maxLength={9}
         error={errors[name]?.message}
         onChange={(e) => { regOnChange(e); fetchCep(e.target.value, setValue, fieldMap); }}
         {...rest} />
-      {loading && <span className="absolute right-3 top-8 text-[11px] text-orange-500 animate-pulse">Buscando...</span>}
+      {loading && <span className="absolute right-3 top-8 text-[11px] text-orange-500 animate-pulse">{t("cep.searching")}</span>}
     </div>
   );
 }
@@ -180,6 +157,7 @@ function CepField({ name, label, register, errors, setValue, fieldMap, required 
 // ── Telas de estado ───────────────────────────────────────────────────────────
 
 function PageShell({ children }) {
+  const { t } = useTranslation("revisao");
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-10">
@@ -188,9 +166,9 @@ function PageShell({ children }) {
             style={{ background: "#F56316" }}>
             <span className="text-white text-xs font-black">C</span>
           </div>
-          <span className="font-bold text-gray-900 text-sm">CriareCRM</span>
+          <span className="font-bold text-gray-900 text-sm">{t("header.brand")}</span>
           <span className="text-gray-300 text-xs">•</span>
-          <span className="text-gray-500 text-xs">Revisão de solicitação</span>
+          <span className="text-gray-500 text-xs">{t("header.pageLabel")}</span>
         </div>
       </header>
       <main className="max-w-4xl mx-auto px-6 py-8">{children}</main>
@@ -199,17 +177,19 @@ function PageShell({ children }) {
 }
 
 function LoadingScreen() {
+  const { t } = useTranslation("revisao");
   return (
     <PageShell>
       <div className="flex flex-col items-center justify-center py-32 text-gray-400">
         <div className="w-8 h-8 rounded-full border-2 border-orange-400 border-t-transparent animate-spin mb-4" />
-        <p className="text-sm">Carregando sua solicitação...</p>
+        <p className="text-sm">{t("loading.message")}</p>
       </div>
     </PageShell>
   );
 }
 
 function ErrorScreen({ code, message }) {
+  const { t } = useTranslation("revisao");
   return (
     <PageShell>
       <div className="flex flex-col items-center justify-center py-32 text-center">
@@ -220,11 +200,11 @@ function ErrorScreen({ code, message }) {
           </svg>
         </div>
         <h2 className="text-lg font-bold text-gray-900 mb-2">
-          {code === 410 ? "Link expirado" : "Link inválido"}
+          {code === 410 ? t("error.expiredTitle") : t("error.invalidTitle")}
         </h2>
         <p className="text-sm text-gray-500 max-w-sm">{message}</p>
         <p className="text-xs text-gray-400 mt-4">
-          Entre em contato com nossa equipe se precisar de ajuda.
+          {t("error.contactSupport")}
         </p>
       </div>
     </PageShell>
@@ -232,6 +212,7 @@ function ErrorScreen({ code, message }) {
 }
 
 function SuccessScreen({ razaoSocial }) {
+  const { t } = useTranslation("revisao");
   return (
     <PageShell>
       <div className="flex flex-col items-center justify-center py-32 text-center">
@@ -240,10 +221,9 @@ function SuccessScreen({ razaoSocial }) {
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h2 className="text-lg font-bold text-gray-900 mb-2">Dados enviados!</h2>
+        <h2 className="text-lg font-bold text-gray-900 mb-2">{t("success.title")}</h2>
         <p className="text-sm text-gray-500 max-w-sm">
-          As informações de <strong>{razaoSocial}</strong> foram atualizadas com sucesso.
-          Nossa equipe irá analisar novamente e você será notificado em breve.
+          {t("success.prefix")} <strong>{razaoSocial}</strong> {t("success.suffix")}
         </p>
       </div>
     </PageShell>
@@ -253,6 +233,7 @@ function SuccessScreen({ razaoSocial }) {
 // ── Página principal ──────────────────────────────────────────────────────────
 
 export default function Revisao() {
+  const { t } = useTranslation("revisao");
   const { token } = useParams();
   const [loadState, setLoadState] = useState("loading"); // loading | error | ready | success
   const [errorInfo, setErrorInfo] = useState({ code: 404, message: "" });
@@ -262,6 +243,30 @@ export default function Revisao() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const certInputRef = useRef(null);
+
+  const RAMO_OPTIONS = [
+    { value: "comercio", label: t("options.ramo.comercio") },
+    { value: "industria", label: t("options.ramo.industria") },
+  ];
+  const CRT_OPTIONS = [
+    { value: "1", label: t("options.crt.1") },
+    { value: "2", label: t("options.crt.2") },
+    { value: "3", label: t("options.crt.3") },
+  ];
+  const REGIME_OPTIONS = [
+    { value: "1", label: t("options.regime.1") },
+    { value: "2", label: t("options.regime.2") },
+    { value: "3", label: t("options.regime.3") },
+  ];
+  const ST_OPTIONS = [
+    { value: "1", label: t("options.st.1") },
+    { value: "2", label: t("options.st.2") },
+  ];
+  const CONTA_OPTIONS = [
+    { value: "corrente", label: t("options.conta.corrente") },
+    { value: "poupanca", label: t("options.conta.poupanca") },
+    { value: "pagamento", label: t("options.conta.pagamento") },
+  ];
 
   const {
     register, handleSubmit, watch, setValue,
@@ -313,7 +318,7 @@ export default function Revisao() {
       await solicitacoesApi.submitRevisao(token, buildPayload(data));
       setLoadState("success");
     } catch (err) {
-      setSubmitError(err.message || "Erro ao enviar. Tente novamente.");
+      setSubmitError(err.message || t("submit.error"));
     } finally {
       setSubmitting(false);
     }
@@ -335,13 +340,13 @@ export default function Revisao() {
             </svg>
           </div>
           <div>
-            <p className="text-sm font-bold text-red-700 mb-1">Sua solicitação precisa de ajustes</p>
+            <p className="text-sm font-bold text-red-700 mb-1">{t("rejectionBanner.title")}</p>
             <p className="text-xs text-red-600 leading-relaxed font-medium">
-              Motivo: {solicitacao?.motivo_recusa}
+              {t("rejectionBanner.reasonPrefix")} {solicitacao?.motivo_recusa}
             </p>
             <p className="text-xs text-red-500 mt-2">
-              Corrija os campos indicados abaixo e clique em <strong>Enviar correção</strong>.
-              Nossa equipe será notificada automaticamente.
+              {t("rejectionBanner.instructionPrefix")} <strong>{t("rejectionBanner.instructionButton")}</strong>.
+              {" "}{t("rejectionBanner.instructionSuffix")}
             </p>
           </div>
         </div>
@@ -350,158 +355,158 @@ export default function Revisao() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 
         {/* Empresa */}
-        <SectionCard id="empresa" title="Dados da Empresa" disabled={!secaoEditavel("empresa")}>
+        <SectionCard id="empresa" title={t("sections.empresa.title")} disabled={!secaoEditavel("empresa")}>
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
-              <Input label="CNPJ *" placeholder="00.000.000/0001-00"
-                error={e.cnpj?.message} {...r("cnpj", { required: "CNPJ obrigatório" })} />
+              <Input label={t("sections.empresa.cnpjLabel")} placeholder={t("sections.empresa.cnpjPlaceholder")}
+                error={e.cnpj?.message} {...r("cnpj", { required: t("sections.empresa.cnpjRequired") })} />
             </div>
-            <Input label="Inscrição Estadual" placeholder="Opcional" {...r("ie")} />
-            <Select label="Ramo de Atividade" options={RAMO_OPTIONS} {...r("ramo_atividade")} />
+            <Input label={t("sections.empresa.ieLabel")} placeholder={t("sections.empresa.ieOptional")} {...r("ie")} />
+            <Select label={t("sections.empresa.ramoLabel")} options={RAMO_OPTIONS} {...r("ramo_atividade")} />
             <div className="col-span-2">
-              <Input label="Razão Social *" placeholder="Ex: Empresa Comércio LTDA"
-                error={e.razao_social?.message} {...r("razao_social", { required: "Razão social obrigatória" })} />
+              <Input label={t("sections.empresa.razaoSocialLabel")} placeholder={t("sections.empresa.razaoSocialPlaceholder")}
+                error={e.razao_social?.message} {...r("razao_social", { required: t("sections.empresa.razaoSocialRequired") })} />
             </div>
-            <Input label="Nome Fantasia" placeholder="Como é conhecido" {...r("nome_fantasia")} />
-            <Input label="Responsável" placeholder="Nome do responsável" {...r("responsavel")} />
+            <Input label={t("sections.empresa.nomeFantasiaLabel")} placeholder={t("sections.empresa.nomeFantasiaPlaceholder")} {...r("nome_fantasia")} />
+            <Input label={t("sections.empresa.responsavelLabel")} placeholder={t("sections.empresa.responsavelPlaceholder")} {...r("responsavel")} />
           </div>
         </SectionCard>
 
         {/* Contato */}
-        <SectionCard id="contato" title="Contato" disabled={!secaoEditavel("contato")}>
+        <SectionCard id="contato" title={t("sections.contato.title")} disabled={!secaoEditavel("contato")}>
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
-              <Input label="E-mail *" type="email" placeholder="contato@empresa.com.br"
+              <Input label={t("sections.contato.emailLabel")} type="email" placeholder={t("sections.contato.emailPlaceholder")}
                 error={e.email?.message}
-                {...r("email", { required: "E-mail obrigatório", pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/, message: "E-mail inválido" } })} />
+                {...r("email", { required: t("sections.contato.emailRequired"), pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/, message: t("sections.contato.emailInvalid") } })} />
             </div>
-            <Input label="Celular *" placeholder="(11) 99999-9999"
-              error={e.telefone_celular?.message} {...r("telefone_celular", { required: "Celular obrigatório" })} />
-            <Input label="Telefone Fixo" placeholder="(11) 3333-3333" {...r("telefone_fixo")} />
+            <Input label={t("sections.contato.celularLabel")} placeholder={t("sections.contato.celularPlaceholder")}
+              error={e.telefone_celular?.message} {...r("telefone_celular", { required: t("sections.contato.celularRequired") })} />
+            <Input label={t("sections.contato.telefoneFixoLabel")} placeholder={t("sections.contato.telefoneFixoPlaceholder")} {...r("telefone_fixo")} />
           </div>
         </SectionCard>
 
         {/* Endereço */}
-        <SectionCard id="endereco" title="Endereço" disabled={!secaoEditavel("endereco")}>
+        <SectionCard id="endereco" title={t("sections.endereco.title")} disabled={!secaoEditavel("endereco")}>
           <div className="grid grid-cols-2 gap-3">
-            <CepField name="cep" label="CEP *" register={register} errors={e} setValue={sv} required
+            <CepField name="cep" label={t("sections.endereco.cepLabel")} register={register} errors={e} setValue={sv} required
               fieldMap={{ logradouro: "endereco", bairro: "bairro", cidade: "cidade", estado: "estado" }} />
-            <Input label="Número *" placeholder="Ex: 123" error={e.numero?.message}
-              {...r("numero", { required: "Número obrigatório" })} />
+            <Input label={t("sections.endereco.numeroLabel")} placeholder={t("sections.endereco.numeroPlaceholder")} error={e.numero?.message}
+              {...r("numero", { required: t("sections.endereco.numeroRequired") })} />
             <div className="col-span-2">
-              <Input label="Endereço *" placeholder="Rua, Avenida..." error={e.endereco?.message}
-                {...r("endereco", { required: "Endereço obrigatório" })} />
+              <Input label={t("sections.endereco.enderecoLabel")} placeholder={t("sections.endereco.enderecoPlaceholder")} error={e.endereco?.message}
+                {...r("endereco", { required: t("sections.endereco.enderecoRequired") })} />
             </div>
-            <Input label="Bairro *" placeholder="Ex: Centro" error={e.bairro?.message}
-              {...r("bairro", { required: "Bairro obrigatório" })} />
-            <Input label="Cidade *" placeholder="Ex: São Paulo" error={e.cidade?.message}
-              {...r("cidade", { required: "Cidade obrigatória" })} />
-            <Input label="Estado (UF) *" placeholder="SP" maxLength={2} error={e.estado?.message}
-              {...r("estado", { required: "Estado obrigatório" })} />
+            <Input label={t("sections.endereco.bairroLabel")} placeholder={t("sections.endereco.bairroPlaceholder")} error={e.bairro?.message}
+              {...r("bairro", { required: t("sections.endereco.bairroRequired") })} />
+            <Input label={t("sections.endereco.cidadeLabel")} placeholder={t("sections.endereco.cidadePlaceholder")} error={e.cidade?.message}
+              {...r("cidade", { required: t("sections.endereco.cidadeRequired") })} />
+            <Input label={t("sections.endereco.estadoLabel")} placeholder={t("sections.endereco.estadoPlaceholder")} maxLength={2} error={e.estado?.message}
+              {...r("estado", { required: t("sections.endereco.estadoRequired") })} />
           </div>
         </SectionCard>
 
         {/* Contabilidade */}
-        <SectionCard id="contabilidade" title="Contabilidade" disabled={!secaoEditavel("contabilidade")}>
+        <SectionCard id="contabilidade" title={t("sections.contabilidade.title")} disabled={!secaoEditavel("contabilidade")}>
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
-              <Input label="Nome do Contador *" placeholder="Nome completo"
-                error={e.nome_contador?.message} {...r("nome_contador", { required: "Nome obrigatório" })} />
+              <Input label={t("sections.contabilidade.nomeContadorLabel")} placeholder={t("sections.contabilidade.nomeContadorPlaceholder")}
+                error={e.nome_contador?.message} {...r("nome_contador", { required: t("sections.contabilidade.nomeContadorRequired") })} />
             </div>
-            <Input label="CPF *" placeholder="000.000.000-00"
-              error={e.cpf_contador?.message} {...r("cpf_contador", { required: "CPF obrigatório" })} />
-            <Input label="CRC" placeholder="CRC-SP 123456" {...r("crc")} />
-            <Input label="CNPJ do Escritório" placeholder="00.000.000/0001-00" {...r("cnpj_contador")} />
-            <Input label="E-mail do Contador" type="email" {...r("email_contador")} />
-            <Input label="Telefone Fixo" placeholder="(11) 3333-3333" {...r("tel_fixo_contador")} />
-            <Input label="Celular" placeholder="(11) 99999-9999" {...r("tel_cel_contador")} />
-            <CepField name="cep_contador" label="CEP do Escritório" register={register} errors={e} setValue={sv}
+            <Input label={t("sections.contabilidade.cpfLabel")} placeholder={t("sections.contabilidade.cpfPlaceholder")}
+              error={e.cpf_contador?.message} {...r("cpf_contador", { required: t("sections.contabilidade.cpfRequired") })} />
+            <Input label={t("sections.contabilidade.crcLabel")} placeholder={t("sections.contabilidade.crcPlaceholder")} {...r("crc")} />
+            <Input label={t("sections.contabilidade.cnpjEscritorioLabel")} placeholder={t("sections.contabilidade.cnpjEscritorioPlaceholder")} {...r("cnpj_contador")} />
+            <Input label={t("sections.contabilidade.emailContadorLabel")} type="email" {...r("email_contador")} />
+            <Input label={t("sections.contabilidade.telefoneFixoLabel")} placeholder={t("sections.contabilidade.telefoneFixoPlaceholder")} {...r("tel_fixo_contador")} />
+            <Input label={t("sections.contabilidade.celularLabel")} placeholder={t("sections.contabilidade.celularPlaceholder")} {...r("tel_cel_contador")} />
+            <CepField name="cep_contador" label={t("sections.contabilidade.cepEscritorioLabel")} register={register} errors={e} setValue={sv}
               fieldMap={{ logradouro: "end_contador", bairro: "bairro_contador", cidade: "cidade_contador", estado: "estado_contador" }} />
-            <Input label="Número" placeholder="Ex: 100" {...r("num_contador")} />
+            <Input label={t("sections.contabilidade.numeroLabel")} placeholder={t("sections.contabilidade.numeroPlaceholder")} {...r("num_contador")} />
             <div className="col-span-2">
-              <Input label="Endereço" placeholder="Rua, Avenida..." {...r("end_contador")} />
+              <Input label={t("sections.contabilidade.enderecoLabel")} placeholder={t("sections.contabilidade.enderecoPlaceholder")} {...r("end_contador")} />
             </div>
-            <Input label="Bairro" {...r("bairro_contador")} />
-            <Input label="Cidade" {...r("cidade_contador")} />
-            <Input label="Estado (UF)" maxLength={2} {...r("estado_contador")} />
+            <Input label={t("sections.contabilidade.bairroLabel")} {...r("bairro_contador")} />
+            <Input label={t("sections.contabilidade.cidadeLabel")} {...r("cidade_contador")} />
+            <Input label={t("sections.contabilidade.estadoLabel")} maxLength={2} {...r("estado_contador")} />
           </div>
         </SectionCard>
 
         {/* Dados Bancários */}
-        <SectionCard id="banco" title="Dados Bancários" disabled={!secaoEditavel("banco")}>
+        <SectionCard id="banco" title={t("sections.banco.title")} disabled={!secaoEditavel("banco")}>
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
-              <Input label="Nome do Banco" placeholder="Ex: Banco do Brasil" {...r("nome_banco")} />
+              <Input label={t("sections.banco.nomeBancoLabel")} placeholder={t("sections.banco.nomeBancoPlaceholder")} {...r("nome_banco")} />
             </div>
-            <Input label="CNPJ do Banco" placeholder="00.000.000/0001-00" {...r("cnpj_banco")} />
-            <Select label="Tipo de Conta" options={CONTA_OPTIONS} {...r("tipo_conta")} />
-            <Input label="Agência" placeholder="1234" {...r("agencia")} />
-            <Input label="DV Agência" placeholder="5" {...r("dv_agencia")} />
-            <Input label="Conta" placeholder="12345" {...r("conta")} />
-            <Input label="DV Conta" placeholder="6" {...r("dv_conta")} />
+            <Input label={t("sections.banco.cnpjBancoLabel")} placeholder={t("sections.banco.cnpjBancoPlaceholder")} {...r("cnpj_banco")} />
+            <Select label={t("sections.banco.tipoContaLabel")} options={CONTA_OPTIONS} {...r("tipo_conta")} />
+            <Input label={t("sections.banco.agenciaLabel")} placeholder={t("sections.banco.agenciaPlaceholder")} {...r("agencia")} />
+            <Input label={t("sections.banco.dvAgenciaLabel")} placeholder={t("sections.banco.dvAgenciaPlaceholder")} {...r("dv_agencia")} />
+            <Input label={t("sections.banco.contaLabel")} placeholder={t("sections.banco.contaPlaceholder")} {...r("conta")} />
+            <Input label={t("sections.banco.dvContaLabel")} placeholder={t("sections.banco.dvContaPlaceholder")} {...r("dv_conta")} />
           </div>
         </SectionCard>
 
         {/* Regime Tributário */}
-        <SectionCard id="regime" title="Regime Tributário" disabled={!secaoEditavel("regime")}>
+        <SectionCard id="regime" title={t("sections.regime.title")} disabled={!secaoEditavel("regime")}>
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
-              <Select label="CRT — Código de Regime Tributário" options={CRT_OPTIONS} {...r("crt")} />
+              <Select label={t("sections.regime.crtLabel")} options={CRT_OPTIONS} {...r("crt")} />
             </div>
-            <Select label="Regime" options={REGIME_OPTIONS} {...r("regime_tributario")} />
-            <Select label="Condição ST" options={ST_OPTIONS} {...r("condicao_st")} />
+            <Select label={t("sections.regime.regimeLabel")} options={REGIME_OPTIONS} {...r("regime_tributario")} />
+            <Select label={t("sections.regime.condicaoStLabel")} options={ST_OPTIONS} {...r("condicao_st")} />
             {isSimples && (
               <>
-                <Input label="Alíq. do Simples Nacional (%)" placeholder="Ex: 4,00" {...r("aliq_simples")} />
-                <Input label="Receita Bruta (R$)" placeholder="Ex: 360000,00" {...r("receita_bruta")} />
+                <Input label={t("sections.regime.aliqSimplesLabel")} placeholder={t("sections.regime.aliqSimplesPlaceholder")} {...r("aliq_simples")} />
+                <Input label={t("sections.regime.receitaBrutaLabel")} placeholder={t("sections.regime.receitaBrutaPlaceholder")} {...r("receita_bruta")} />
               </>
             )}
           </div>
         </SectionCard>
 
         {/* Formas de Pagamento */}
-        <SectionCard id="pagamento" title="Formas de Pagamento" disabled={!secaoEditavel("pagamento")}>
+        <SectionCard id="pagamento" title={t("sections.pagamento.title")} disabled={!secaoEditavel("pagamento")}>
           <div className="grid grid-cols-3 gap-2.5 p-4 bg-gray-50 rounded-xl border border-gray-100 mb-4">
-            <Checkbox label="Dinheiro" {...r("dinheiro")} />
-            <Checkbox label="Cheque à Vista" {...r("cheque_vista")} />
-            <Checkbox label="Cheque a Prazo" {...r("cheque_prazo")} />
-            <Checkbox label="Cartão de Crédito" {...r("cartao_credito")} />
-            <Checkbox label="Cartão de Débito" {...r("cartao_debito")} />
-            <Checkbox label="Alimentação" {...r("cartao_alimentacao")} />
-            <Checkbox label="Cartão Refeição" {...r("cartao_refeicao")} />
-            <Checkbox label="Pix (CNPJ)" {...r("pix")} />
-            <Checkbox label="A Prazo" {...r("pagamento_prazo")} />
+            <Checkbox label={t("sections.pagamento.dinheiro")} {...r("dinheiro")} />
+            <Checkbox label={t("sections.pagamento.chequeVista")} {...r("cheque_vista")} />
+            <Checkbox label={t("sections.pagamento.chequePrazo")} {...r("cheque_prazo")} />
+            <Checkbox label={t("sections.pagamento.cartaoCredito")} {...r("cartao_credito")} />
+            <Checkbox label={t("sections.pagamento.cartaoDebito")} {...r("cartao_debito")} />
+            <Checkbox label={t("sections.pagamento.alimentacao")} {...r("cartao_alimentacao")} />
+            <Checkbox label={t("sections.pagamento.cartaoRefeicao")} {...r("cartao_refeicao")} />
+            <Checkbox label={t("sections.pagamento.pix")} {...r("pix")} />
+            <Checkbox label={t("sections.pagamento.aPrazo")} {...r("pagamento_prazo")} />
           </div>
           <div className="flex items-center gap-4">
-            <Checkbox label="Possui TEF?" {...r("possui_tef")} />
+            <Checkbox label={t("sections.pagamento.possuiTef")} {...r("possui_tef")} />
             {possuiTef && (
               <div className="flex-1">
-                <Input label="" placeholder="Nome da integradora (ex: Sitef)" {...r("integradora")} />
+                <Input label="" placeholder={t("sections.pagamento.integradoraPlaceholder")} {...r("integradora")} />
               </div>
             )}
           </div>
         </SectionCard>
 
         {/* Dados NFe / NFCe */}
-        <SectionCard id="fiscal" title="Dados NFe / NFCe" disabled={!secaoEditavel("fiscal")}>
+        <SectionCard id="fiscal" title={t("sections.fiscal.title")} disabled={!secaoEditavel("fiscal")}>
           <div className="grid grid-cols-2 gap-3">
-            <Input label="CSC" placeholder="Código de segurança" {...r("csc")} />
-            <Input label="Token NFCe" placeholder="Token da SEFAZ" {...r("token")} />
-            <Input label="Última Série NFCe" placeholder="Ex: 001" {...r("ultima_serie_nfce")} />
-            <Input label="Série NF-e" placeholder="Ex: 1" {...r("serie_nfe")} />
-            <Input label="Última NF-e Emitida" placeholder="Ex: 000001" {...r("ultima_nfe_emitida")} />
+            <Input label={t("sections.fiscal.cscLabel")} placeholder={t("sections.fiscal.cscPlaceholder")} {...r("csc")} />
+            <Input label={t("sections.fiscal.tokenLabel")} placeholder={t("sections.fiscal.tokenPlaceholder")} {...r("token")} />
+            <Input label={t("sections.fiscal.ultimaSerieLabel")} placeholder={t("sections.fiscal.ultimaSeriePlaceholder")} {...r("ultima_serie_nfce")} />
+            <Input label={t("sections.fiscal.serieNfeLabel")} placeholder={t("sections.fiscal.serieNfePlaceholder")} {...r("serie_nfe")} />
+            <Input label={t("sections.fiscal.ultimaNfeLabel")} placeholder={t("sections.fiscal.ultimaNfePlaceholder")} {...r("ultima_nfe_emitida")} />
           </div>
         </SectionCard>
 
         {/* Certificado Digital */}
-        <SectionCard id="certificado" title="Certificado Digital" disabled={!secaoEditavel("certificado")}>
+        <SectionCard id="certificado" title={t("sections.certificado.title")} disabled={!secaoEditavel("certificado")}>
           {certCurrentName && !certFile && (
             <div className="flex items-center gap-2 p-3 mb-3 bg-blue-50 border border-blue-100 rounded-xl">
               <svg className="w-4 h-4 text-blue-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round"
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <span className="text-xs text-blue-700 truncate">Certificado atual: <strong>{certCurrentName}</strong></span>
+              <span className="text-xs text-blue-700 truncate">{t("sections.certificado.currentPrefix")} <strong>{certCurrentName}</strong></span>
             </div>
           )}
           <label className="flex items-center gap-4 p-4 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-orange-400 transition-colors group">
@@ -514,33 +519,33 @@ export default function Revisao() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-700 truncate">
-                {certFile ? certFile.name : certCurrentName ? "Substituir certificado A1" : "Selecionar certificado A1"}
+                {certFile ? certFile.name : certCurrentName ? t("sections.certificado.replaceCertificado") : t("sections.certificado.selectCertificado")}
               </p>
-              <p className="text-xs text-gray-400 mt-0.5">.pfx ou .p12</p>
+              <p className="text-xs text-gray-400 mt-0.5">{t("sections.certificado.certExtensions")}</p>
             </div>
             <span className="text-xs text-gray-400 group-hover:text-orange-500 font-medium shrink-0 transition-colors">
-              {certFile ? "Trocar" : "Escolher"}
+              {certFile ? t("sections.certificado.change") : t("sections.certificado.choose")}
             </span>
             <input ref={certInputRef} type="file" accept=".pfx,.p12,.cer,.crt" className="hidden"
               onChange={(e) => setCertFile(e.target.files?.[0] || null)} />
           </label>
           <div className="mt-3">
-            <Input label="Senha do Certificado" type="password"
-              placeholder="Senha do arquivo .pfx / .p12" {...r("senha_certificado")} />
+            <Input label={t("sections.certificado.senhaLabel")} type="password"
+              placeholder={t("sections.certificado.senhaPlaceholder")} {...r("senha_certificado")} />
           </div>
         </SectionCard>
 
         {/* Adquirentes */}
-        <SectionCard id="adquirentes" title="Adquirentes / Credenciadoras" disabled={!secaoEditavel("adquirentes")}>
+        <SectionCard id="adquirentes" title={t("sections.adquirentes.title")} disabled={!secaoEditavel("adquirentes")}>
           <div className="border border-gray-100 rounded-xl overflow-hidden">
             <div className="grid grid-cols-3 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-              <span>Nome</span><span>CNPJ</span><span>Insc. Estadual</span>
+              <span>{t("sections.adquirentes.nome")}</span><span>{t("sections.adquirentes.cnpj")}</span><span>{t("sections.adquirentes.ie")}</span>
             </div>
             {[1, 2, 3].map((n) => (
               <div key={n} className="grid grid-cols-3 gap-2 px-3 py-2 border-t border-gray-100">
-                <input placeholder="Ex: Cielo" className="input-field py-1.5 text-sm" {...r(`adq${n}_nome`)} />
-                <input placeholder="00.000.000/0001-00" className="input-field py-1.5 text-sm" {...r(`adq${n}_cnpj`)} />
-                <input placeholder="Opcional" className="input-field py-1.5 text-sm" {...r(`adq${n}_ie`)} />
+                <input placeholder={t("sections.adquirentes.nomePlaceholder")} className="input-field py-1.5 text-sm" {...r(`adq${n}_nome`)} />
+                <input placeholder={t("sections.adquirentes.cnpjPlaceholder")} className="input-field py-1.5 text-sm" {...r(`adq${n}_cnpj`)} />
+                <input placeholder={t("sections.adquirentes.iePlaceholder")} className="input-field py-1.5 text-sm" {...r(`adq${n}_ie`)} />
               </div>
             ))}
           </div>
@@ -561,7 +566,7 @@ export default function Revisao() {
             {submitting && (
               <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
             )}
-            {submitting ? "Enviando..." : "Enviar correção"}
+            {submitting ? t("submit.sending") : t("submit.button")}
           </button>
         </div>
       </form>

@@ -1,0 +1,348 @@
+{
+  "page": {
+    "title": "Triaje",
+    "subtitle": "Analiza y aprueba las solicitudes recibidas.",
+    "searchPlaceholder": "Buscar empresa, CNPJ...",
+    "kpi": {
+      "total": "Total",
+      "cancelledSub_one": "{{count}} cancelada",
+      "cancelledSub_other": "{{count}} canceladas",
+      "pending": "Pendientes",
+      "inTriage": "En Triaje",
+      "awaitingCorrection": "Esperando Corrección",
+      "dueIn24h": "Vence en 24h"
+    },
+    "tabs": { "active": "Activas", "history": "Historial", "all": "Todas" },
+    "table": {
+      "headers": {
+        "company": "Empresa",
+        "cnpj": "CNPJ",
+        "status": "Estado",
+        "responsible": "Responsable",
+        "sla": "SLA",
+        "received": "Recibida"
+      },
+      "correctionReceived": "Corrección recibida",
+      "slaClosed": "Cerrada",
+      "emptyTitle": "No se encontraron solicitudes",
+      "emptySearchHint": "Prueba con otro término de búsqueda.",
+      "emptyFilterHint": "Cambia el filtro para ver otras solicitudes."
+    }
+  },
+  "sla": {
+    "linkExpired": "Enlace vencido",
+    "overdueDays": "Vencido hace {{count}}d",
+    "overdueHours": "Vencido hace {{count}}h",
+    "clientToday": "Cliente: hoy",
+    "clientTomorrow": "Cliente: mañana",
+    "clientDays": "Cliente: {{count}}d",
+    "dueToday": "Vence hoy",
+    "tomorrow": "Mañana",
+    "daysLeft": "{{count}} días"
+  },
+  "priority": {
+    "baixa": "Baja",
+    "normal": "Normal",
+    "alta": "Alta",
+    "critica": "Crítica"
+  },
+  "correctionSections": {
+    "empresa": "Datos de la Empresa",
+    "contato": "Contacto",
+    "endereco": "Dirección",
+    "contabilidade": "Contabilidad",
+    "banco": "Datos Bancarios",
+    "regime": "Régimen Tributario",
+    "pagamento": "Formas de Pago",
+    "fiscal": "Datos NF-e / NFC-e",
+    "certificado": "Certificado Digital",
+    "adquirentes": "Adquirentes"
+  },
+  "approveModal": {
+    "title": "Aprobar Solicitud",
+    "modulesTitle": "Módulos de Implementación",
+    "modulesSelectedCount_one": "({{count}} seleccionado)",
+    "modulesSelectedCount_other": "({{count}} seleccionados)",
+    "loadingModules": "Cargando módulos...",
+    "slaDaysSuffix": "{{count}}d",
+    "kanbanColumnsTitle": "Columnas del Kanban",
+    "noModuleSelected": "Ningún módulo seleccionado",
+    "consultorLabel": "Consultor",
+    "consultorPlaceholder": "Nombre del consultor",
+    "slaDaysLabel": "SLA (días)",
+    "priorityLabel": "Prioridad",
+    "dataConversionTitle": "Conversión de datos",
+    "dataConversionDesc": "Migración de datos del sistema anterior",
+    "notesLabel": "Observaciones internas",
+    "notesPlaceholder": "Opcional...",
+    "errorNoModule": "Selecciona al menos un módulo.",
+    "cancel": "Cancelar",
+    "checking": "Verificando...",
+    "approving": "Aprobando...",
+    "confirmButton": "Confirmar Aprobación",
+    "cnpjExistsTitle": "CNPJ ya registrado",
+    "cnpjExistsDesc": "El CNPJ de esta solicitud ya pertenece a un cliente en la base de datos. ¿Deseas vincular la nueva implementación a este cliente existente?",
+    "existingClientLabel": "Cliente registrado",
+    "cnpjLabel": "CNPJ",
+    "emailLabel": "Correo electrónico",
+    "back": "Volver",
+    "useExistingClient": "Usar cliente existente"
+  },
+  "refuseModal": {
+    "title": "Rechazar Solicitud",
+    "reasonLabel": "Motivo del rechazo *",
+    "reasonPlaceholder": "Describe lo que debe corregirse...",
+    "sectionsLabel": "Secciones que el cliente debe corregir *",
+    "sectionsHint": "(solo estas quedarán editables)",
+    "errorReasonRequired": "Indica el motivo del rechazo.",
+    "errorSectionsRequired": "Selecciona al menos una sección para corregir.",
+    "back": "Volver",
+    "sending": "Enviando...",
+    "confirmButton": "Rechazar y Notificar"
+  },
+  "cancelModal": {
+    "title": "Cancelar Solicitud",
+    "warningPart1": "Cancelar es una acción",
+    "warningStrong": "definitiva",
+    "warningPart2": ". La solicitud no podrá reanudarse. Úsalo solo cuando el cliente haya desistido o la solicitud sea inválida.",
+    "reasonLabel": "Motivo (opcional)",
+    "reasonPlaceholder": "Ej.: Cliente desistió, duplicidad...",
+    "back": "Volver",
+    "cancelling": "Cancelando...",
+    "confirmButton": "Confirmar Cancelación"
+  },
+  "editModal": {
+    "title": "Editar Solicitud",
+    "tabs": {
+      "empresa": "Empresa",
+      "endereco": "Dirección",
+      "contabilidade": "Contabilidad",
+      "bancario": "Bancario",
+      "regime": "Régimen",
+      "pagamentos": "Pagos",
+      "fiscal": "Fiscal"
+    },
+    "bank": {
+      "change": "Cambiar",
+      "label": "Banco",
+      "searchPlaceholder": "Buscar por nombre o código — ej: Bradesco o 237",
+      "notFound": "No se encontró ningún banco para \"{{query}}\""
+    },
+    "empresa": {
+      "razaoSocial": "Razón Social *",
+      "nomeFantasia": "Nombre Comercial",
+      "cnpj": "CNPJ *",
+      "ie": "Inscripción Estatal",
+      "email": "Correo electrónico *",
+      "responsavel": "Responsable",
+      "celular": "Celular *",
+      "telefoneFixo": "Teléfono Fijo"
+    },
+    "endereco": {
+      "cep": "Código Postal",
+      "numero": "Número",
+      "endereco": "Dirección",
+      "bairro": "Barrio",
+      "cidade": "Ciudad",
+      "estado": "Estado (provincia)"
+    },
+    "contabilidade": {
+      "nomeContador": "Nombre del Contador",
+      "cpf": "CPF",
+      "crc": "CRC",
+      "cnpjEscritorio": "CNPJ del Despacho Contable",
+      "email": "Correo electrónico",
+      "telFixo": "Tel. Fijo",
+      "celular": "Celular",
+      "enderecoContadorTitle": "Dirección del Contador",
+      "cep": "Código Postal",
+      "numero": "Número",
+      "endereco": "Dirección",
+      "bairro": "Barrio",
+      "cidade": "Ciudad",
+      "estado": "Estado (provincia)"
+    },
+    "bancario": {
+      "tipoConta": "Tipo de Cuenta",
+      "selecione": "Selecciona...",
+      "contaCorrente": "Cuenta Corriente",
+      "contaPoupanca": "Cuenta de Ahorros",
+      "contaPagamento": "Cuenta de Pago",
+      "agencia": "Agencia",
+      "agenciaPlaceholder": "1234",
+      "dvPlaceholder": "DV",
+      "conta": "Cuenta",
+      "contaPlaceholder": "12345"
+    },
+    "regime": {
+      "crt": "CRT",
+      "selecione": "Selecciona...",
+      "crt1": "1 — Régimen Simplificado Nacional",
+      "crt2": "2 — Régimen Simplificado Nacional - Sublímite excedido",
+      "crt3": "3 — Régimen Normal",
+      "regimeTributario": "Régimen Tributario",
+      "regime1": "Régimen Simplificado Nacional",
+      "regime2": "Utilidad Presunta",
+      "regime3": "Utilidad Real",
+      "condicaoSt": "Condición de Sustitución Tributaria",
+      "condicaoSt1": "Sustituto Informante",
+      "condicaoSt2": "Sustituido Informante",
+      "aliqSimples": "Alícuota Régimen Simplificado (%)",
+      "aliqSimplesPlaceholder": "Ej.: 4,00",
+      "receitaBruta": "Ingresos Brutos (R$)",
+      "receitaBrutaPlaceholder": "Ej.: 360000,00"
+    },
+    "pagamentos": {
+      "sectionTitle": "Formas de pago aceptadas",
+      "dinheiro": "Efectivo",
+      "cheque": "Cheque",
+      "cartaoPos": "Tarjeta-POS (crédito y débito)",
+      "prazo": "A plazo",
+      "pix": "PIX",
+      "cartaoTef": "Tarjeta-TEF (crédito y débito)",
+      "integradoraLabel": "Integradora TEF",
+      "integradoraPlaceholder": "Ej.: Sitef, Tef Dedicado, PayGo..."
+    },
+    "fiscal": {
+      "csc": "CSC",
+      "token": "Token NFCe",
+      "serieNfe": "Serie NF-e",
+      "ultimaSerieNfce": "Última Serie NFCe",
+      "ultimaNfeEmitida": "Última NF-e Emitida",
+      "senhaCertificado": "Contraseña del Certificado",
+      "certificadoTitle": "Certificado Digital A1",
+      "arquivoAtual": "Archivo actual",
+      "remover": "Eliminar",
+      "trocarNovamente": "Cambiar de nuevo",
+      "substituirCertificado": "Sustituir certificado",
+      "selecionarCertificado": "Seleccionar certificado A1",
+      "formatoHint": ".pfx o .p12"
+    },
+    "cancel": "Cancelar",
+    "saving": "Guardando...",
+    "saveButton": "Guardar Cambios",
+    "errorRequiredFields": "Razón social, CNPJ, correo electrónico y celular son obligatorios.",
+    "errorEmailInUse": "Este correo ya está registrado para el cliente \"{{nome}}\" (CNPJ {{cnpj}}). Usa un correo diferente."
+  },
+  "respPicker": {
+    "searchPlaceholder": "Buscar usuario…",
+    "noResponsible": "Sin responsable",
+    "noUserFound": "Ningún usuario encontrado"
+  },
+  "drawer": {
+    "receivedOn": "Recibida {{date}}",
+    "savingEllipsis": "Guardando…",
+    "responsibleLabel": "Responsable: {{name}}",
+    "assignResponsible": "Asignar responsable",
+    "actions": {
+      "startTriage": "Iniciar Triaje",
+      "startingTriage": "Iniciando...",
+      "approve": "Aprobar",
+      "refuse": "Rechazar",
+      "cancel": "Cancelar",
+      "edit": "Editar"
+    },
+    "banners": {
+      "approved": {
+        "title": "Solicitud aprobada",
+        "desc": "La implementación se creó automáticamente.",
+        "link": "Ver Implementaciones →"
+      },
+      "awaitingCorrection": {
+        "title": "Correo de corrección enviado",
+        "desc": "Esperando que el cliente corrija y reenvíe los datos.",
+        "resend": "Reenviar",
+        "resending": "Enviando…"
+      },
+      "cancelled": {
+        "title": "Solicitud cancelada."
+      }
+    },
+    "resendSuccess": "Correo reenviado con éxito. Plazo renovado por 7 días.",
+    "resendError": "Error al reenviar. Inténtalo de nuevo.",
+    "history": {
+      "title": "Historial de Rechazos"
+    },
+    "tabs": {
+      "dados": "Datos",
+      "endereco": "Dirección",
+      "contabilidade": "Contabilidad",
+      "bancario": "Bancario",
+      "regime": "Régimen",
+      "fiscal": "Fiscal"
+    },
+    "sections": {
+      "empresa": "Empresa",
+      "pagamentos": "Pagos",
+      "endereco": "Dirección",
+      "contador": "Contador",
+      "enderecoContador": "Dirección del Contador",
+      "dadosBancarios": "Datos Bancarios",
+      "regimeTributario": "Régimen Tributario",
+      "nfe": "NFC-e / NF-e",
+      "certificadoDigital": "Certificado Digital"
+    },
+    "fields": {
+      "razaoSocial": "Razón Social",
+      "nomeFantasia": "Nombre Comercial",
+      "cnpj": "CNPJ",
+      "ie": "Insc. Estatal",
+      "email": "Correo electrónico",
+      "responsavel": "Responsable",
+      "telFixo": "Tel. Fijo",
+      "celular": "Celular",
+      "cep": "Código Postal",
+      "endereco": "Dirección",
+      "numero": "Número",
+      "bairro": "Barrio",
+      "cidade": "Ciudad",
+      "estado": "Estado",
+      "nome": "Nombre",
+      "cpf": "CPF",
+      "crc": "CRC",
+      "cidadeUf": "Ciudad/Estado",
+      "codBanco": "Cód. Banco",
+      "banco": "Banco",
+      "cnpjBanco": "CNPJ del Banco",
+      "tipoConta": "Tipo de Cuenta",
+      "agencia": "Agencia",
+      "conta": "Cuenta",
+      "crt": "CRT",
+      "regime": "Régimen",
+      "condicaoSt": "Condición de Sustitución Tributaria",
+      "aliqSimples": "Alícuota Régimen Simplificado",
+      "receitaBruta": "Ingresos Brutos",
+      "csc": "CSC",
+      "token": "Token",
+      "serieNfe": "Serie NF-e",
+      "ultimaNfe": "Última NF-e",
+      "ultimaSerieNfce": "Última Serie NFC-e",
+      "arquivo": "Archivo",
+      "senha": "Contraseña"
+    },
+    "paymentLabels": {
+      "dinheiro": "Efectivo",
+      "cheque": "Cheque",
+      "cartaoPos": "Tarjeta-POS",
+      "prazo": "A plazo",
+      "pix": "PIX",
+      "cartaoTef": "Tarjeta-TEF"
+    },
+    "tefPrefix": "TEF: {{name}}",
+    "regimeLabels": {
+      "crt": {
+        "1": "1 — Régimen Simplificado Nacional",
+        "2": "2 — Régimen Simplificado Nacional - Sublímite de ingresos brutos excedido",
+        "3": "3 — Régimen Normal"
+      },
+      "tributario": {
+        "1": "Régimen Simplificado Nacional",
+        "2": "Utilidad Presunta",
+        "3": "Utilidad Real",
+        "simples_nacional": "Régimen Simplificado Nacional",
+        "lucro_presumido": "Utilidad Presunta",
+        "lucro_real": "Utilidad Real"
+      }
+    }
+  }
+}

@@ -1,8 +1,10 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Layout } from "../components/layout/Layout";
 import { dashboardApi } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
+import i18n from "../i18n";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -14,23 +16,23 @@ function parseUTC(s) {
 
 function timeAgo(iso, now = new Date()) {
   const diff = (now - parseUTC(iso)) / 1000;
-  if (diff < 60) return "agora";
-  if (diff < 3600) return `${Math.floor(diff / 60)}min`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
-  return `${Math.floor(diff / 86400)}d`;
+  if (diff < 60) return i18n.t("dashboard:time.now");
+  if (diff < 3600) return i18n.t("dashboard:time.minutesAgo", { count: Math.floor(diff / 60) });
+  if (diff < 86400) return i18n.t("dashboard:time.hoursAgo", { count: Math.floor(diff / 3600) });
+  return i18n.t("dashboard:time.daysAgo", { count: Math.floor(diff / 86400) });
 }
 
 function refreshLabel(lastRefresh, now) {
   const diff = (now - lastRefresh) / 1000;
-  if (diff < 10)   return "atualizado agora";
-  if (diff < 60)   return "atualizado há instantes";
-  if (diff < 3600) return `atualizado há ${Math.floor(diff / 60)}min`;
-  return `atualizado há ${Math.floor(diff / 3600)}h`;
+  if (diff < 10)   return i18n.t("dashboard:time.refreshedNow");
+  if (diff < 60)   return i18n.t("dashboard:time.refreshedInstant");
+  if (diff < 3600) return i18n.t("dashboard:time.refreshedMinutesAgo", { count: Math.floor(diff / 60) });
+  return i18n.t("dashboard:time.refreshedHoursAgo", { count: Math.floor(diff / 3600) });
 }
 
 function fmtDate(iso) {
   if (!iso) return "—";
-  return new Date(iso + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+  return new Date(iso + "T00:00:00").toLocaleDateString(i18n.language, { day: "2-digit", month: "short" });
 }
 
 function dayLabel(iso) {
@@ -38,9 +40,9 @@ function dayLabel(iso) {
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const t = new Date(d); t.setHours(0, 0, 0, 0);
   const diff = Math.round((today - t) / 86400000);
-  if (diff === 0) return "Hoje";
-  if (diff === 1) return "Ontem";
-  return d.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" });
+  if (diff === 0) return i18n.t("dashboard:time.today");
+  if (diff === 1) return i18n.t("dashboard:time.yesterday");
+  return d.toLocaleDateString(i18n.language, { weekday: "short", day: "2-digit", month: "short" });
 }
 
 function initials(nome) {
@@ -51,17 +53,17 @@ function initials(nome) {
 // ── Design tokens ──────────────────────────────────────────────────────────────
 
 const SLA_CFG = {
-  ok:       { label: "No Prazo",  bg: "bg-green-100",  text: "text-green-700",  dot: "bg-green-500"  },
-  critico:  { label: "Crítico",   bg: "bg-amber-100",  text: "text-amber-700",  dot: "bg-amber-500"  },
-  atrasada: { label: "Atrasado",  bg: "bg-red-100",    text: "text-red-700",    dot: "bg-red-500"    },
-  em_risco: { label: "Em Risco",  bg: "bg-orange-100", text: "text-orange-700", dot: "bg-orange-500" },
+  ok:       { bg: "bg-green-100",  text: "text-green-700",  dot: "bg-green-500"  },
+  critico:  { bg: "bg-amber-100",  text: "text-amber-700",  dot: "bg-amber-500"  },
+  atrasada: { bg: "bg-red-100",    text: "text-red-700",    dot: "bg-red-500"    },
+  em_risco: { bg: "bg-orange-100", text: "text-orange-700", dot: "bg-orange-500" },
 };
 
 const PRIO_CFG = {
-  critica: { label: "Crítica", bg: "bg-red-100",    text: "text-red-700",    border: "border-red-200"    },
-  alta:    { label: "Alta",    bg: "bg-orange-100", text: "text-orange-700", border: "border-orange-200" },
-  normal:  { label: "Normal",  bg: "bg-blue-50",    text: "text-blue-600",   border: "border-blue-100"   },
-  baixa:   { label: "Baixa",   bg: "bg-gray-100",   text: "text-gray-500",   border: "border-gray-200"   },
+  critica: { bg: "bg-red-100",    text: "text-red-700",    border: "border-red-200"    },
+  alta:    { bg: "bg-orange-100", text: "text-orange-700", border: "border-orange-200" },
+  normal:  { bg: "bg-blue-50",    text: "text-blue-600",   border: "border-blue-100"   },
+  baixa:   { bg: "bg-gray-100",   text: "text-gray-500",   border: "border-gray-200"   },
 };
 
 function stageStyle(hex) {
@@ -94,11 +96,11 @@ const TIMELINE_CFG = {
 };
 
 const TIMELINE_FILTERS = [
-  { key: "todos",                 label: "Todos"       },
-  { key: "etapa_concluida",       label: "Etapas"      },
-  { key: "checklist_concluido",   label: "Tarefas"     },
-  { key: "implantacao_concluida", label: "Go Lives"    },
-  { key: "comentario",            label: "Comentários" },
+  { key: "todos",                 labelKey: "all"      },
+  { key: "etapa_concluida",       labelKey: "stages"   },
+  { key: "checklist_concluido",   labelKey: "tasks"    },
+  { key: "implantacao_concluida", labelKey: "goLives"  },
+  { key: "comentario",            labelKey: "comments" },
 ];
 
 const FLASH_FIELDS = [
@@ -169,14 +171,15 @@ function KpiCard({ label, value, sub, icon, color, to, urgent, onClick, deltaLab
 // ── 2. Go Lives Modal ──────────────────────────────────────────────────────────
 
 function GoLivesModal({ lista, onClose }) {
+  const { t } = useTranslation("dashboard");
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20" onClick={onClose}>
       <div className="bg-white rounded-xl shadow-2xl border border-gray-100 p-5 min-w-[300px] max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-sm font-bold text-gray-800">Go Lives esta semana 🚀</h3>
+            <h3 className="text-sm font-bold text-gray-800">{t("goLives.title")}</h3>
             <p className="text-xs text-gray-400 mt-0.5">
-              {lista.length} implantaç{lista.length !== 1 ? "ões" : "ão"} concluída{lista.length !== 1 ? "s" : ""}
+              {t("goLives.subtitle", { count: lista.length })}
             </p>
           </div>
           <button onClick={onClose} className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded">✕</button>
@@ -205,12 +208,13 @@ function GoLivesModal({ lista, onClose }) {
 // ── 3. Alertas Operacionais ────────────────────────────────────────────────────
 
 function AlertStrip({ data }) {
+  const { t } = useTranslation("dashboard");
   const alerts = [];
   if ((data.implantacoes_atrasadas ?? 0) > 0) {
     alerts.push({
       key: "atrasadas", icon: "🔴",
-      title: `${data.implantacoes_atrasadas} implantaç${data.implantacoes_atrasadas > 1 ? "ões" : "ão"} com SLA vencido`,
-      desc: "Ação imediata necessária",
+      title: t("alert.overdue", { count: data.implantacoes_atrasadas }),
+      desc: t("alert.immediateActionNeeded"),
       bg: "bg-red-50 border-red-200", titleColor: "text-red-800", descColor: "text-red-600",
       btnBg: "bg-red-100 hover:bg-red-200 text-red-700",
       to: "/admin/implantacoes?sla_status=atrasada",
@@ -219,8 +223,8 @@ function AlertStrip({ data }) {
   if ((data.implantacoes_critico ?? 0) > 0) {
     alerts.push({
       key: "critico", icon: "🟡",
-      title: `${data.implantacoes_critico} em risco de SLA`,
-      desc: "Menos de 3 dias para vencimento",
+      title: t("alert.criticalRisk", { count: data.implantacoes_critico }),
+      desc: t("alert.lessThan3Days"),
       bg: "bg-amber-50 border-amber-200", titleColor: "text-amber-800", descColor: "text-amber-600",
       btnBg: "bg-amber-100 hover:bg-amber-200 text-amber-700",
       to: "/admin/implantacoes?sla_status=critico",
@@ -229,8 +233,8 @@ function AlertStrip({ data }) {
   if ((data.tarefas_vencidas ?? 0) > 0) {
     alerts.push({
       key: "tarefas", icon: "📋",
-      title: `${data.tarefas_vencidas} tarefa${data.tarefas_vencidas > 1 ? "s" : ""} com prazo vencido`,
-      desc: "Em implantações ativas",
+      title: t("alert.tasksOverdue", { count: data.tarefas_vencidas }),
+      desc: t("alert.inActiveImplantacoes"),
       bg: "bg-orange-50 border-orange-200", titleColor: "text-orange-800", descColor: "text-orange-600",
       btnBg: "bg-orange-100 hover:bg-orange-200 text-orange-700",
       to: "/admin/implantacoes?highlight=tarefas",
@@ -239,8 +243,8 @@ function AlertStrip({ data }) {
   if ((data.solicitacoes_novas ?? 0) > 0) {
     alerts.push({
       key: "triagem", icon: "📥",
-      title: `${data.solicitacoes_novas} solicitaç${data.solicitacoes_novas > 1 ? "ões" : "ão"} aguardando triagem`,
-      desc: "Na fila de entrada",
+      title: t("alert.pendingTriage", { count: data.solicitacoes_novas }),
+      desc: t("alert.inQueue"),
       bg: "bg-indigo-50 border-indigo-200", titleColor: "text-indigo-800", descColor: "text-indigo-600",
       btnBg: "bg-indigo-100 hover:bg-indigo-200 text-indigo-700",
       to: "/admin/triagem",
@@ -252,10 +256,10 @@ function AlertStrip({ data }) {
   if (_instVenc > 0 || _instHoje > 0 || _instTotal > 0) {
     // Monta descrição com breakdown dos casos mais críticos
     const parts = [];
-    if (_instVenc > 0) parts.push(`${_instVenc} vencida${_instVenc > 1 ? "s" : ""}`);
-    if (_instHoje > 0) parts.push(`${_instHoje} hoje`);
+    if (_instVenc > 0) parts.push(t("kpi.overdue", { count: _instVenc }));
+    if (_instHoje > 0) parts.push(t("kpi.todayCount", { count: _instHoje }));
     const future = _instTotal - _instVenc - _instHoje;
-    if (future > 0) parts.push(`${future} futura${future > 1 ? "s" : ""}`);
+    if (future > 0) parts.push(t("kpi.future", { count: future }));
 
     const isCritico = _instVenc > 0;
     const isUrgente = !isCritico && _instHoje > 0;
@@ -264,11 +268,11 @@ function AlertStrip({ data }) {
       key: "instalacoes",
       icon: isCritico ? "🚨" : isUrgente ? "🚨" : "📦",
       title: isCritico
-        ? `${_instVenc} instalaç${_instVenc > 1 ? "ões" : "ão"} vencida${_instVenc > 1 ? "s" : ""} sem responsável`
+        ? t("alert.installationsOverdue", { count: _instVenc })
         : isUrgente
-          ? `${_instHoje} instalaç${_instHoje > 1 ? "ões" : "ão"} HOJE sem responsável`
-          : `${_instTotal} instalaç${_instTotal > 1 ? "ões" : "ão"} sem responsável`,
-      desc: parts.join(" · ") || "Aguardando direcionamento",
+          ? t("alert.installationsToday", { count: _instHoje })
+          : t("alert.installationsTotal", { count: _instTotal }),
+      desc: parts.join(" · ") || t("alert.waiting"),
       bg:        isCritico ? "bg-red-50 border-red-300"         : isUrgente ? "bg-red-50 border-red-300"         : "bg-orange-50 border-orange-200",
       titleColor:isCritico ? "text-red-800"                     : isUrgente ? "text-red-800"                     : "text-orange-800",
       descColor: isCritico ? "text-red-600"                     : isUrgente ? "text-red-600"                     : "text-orange-600",
@@ -293,7 +297,7 @@ function AlertStrip({ data }) {
               <p className={`text-xs mt-0.5 ${a.descColor}`}>{a.desc}</p>
             </div>
           </div>
-          <Link to={a.to} className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors shrink-0 ${a.btnBg}`}>Ver →</Link>
+          <Link to={a.to} className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors shrink-0 ${a.btnBg}`}>{t("alert.viewMore")}</Link>
         </div>
       ))}
     </div>
@@ -328,6 +332,7 @@ function PipelineMiniCard({ item }) {
 }
 
 function PipelineBoard({ pipeline, selectedStage, onSelectStage, fullscreen = false }) {
+  const { t } = useTranslation("dashboard");
   const colW = fullscreen ? "w-56" : "w-44";
   const minH = fullscreen ? "min-h-[calc(100vh-140px)]" : "min-h-[120px]";
   // Oculta colunas sem cards — pipeline mostra só onde há trabalho ativo
@@ -363,13 +368,13 @@ function PipelineBoard({ pipeline, selectedStage, onSelectStage, fullscreen = fa
                 {stage.count > stage.items.length && (
                   <Link to="/admin/implantacoes">
                     <p className="text-[10px] text-gray-400 text-center py-1 hover:text-orange-500 transition-colors cursor-pointer">
-                      +{stage.count - stage.items.length} mais
+                      {t("pipeline.more", { count: stage.count - stage.items.length })}
                     </p>
                   </Link>
                 )}
                 {stage.count === 0 && (
                   <div className="flex items-center justify-center h-16">
-                    <p className="text-[10px] text-gray-300">vazio</p>
+                    <p className="text-[10px] text-gray-300">{t("pipeline.empty")}</p>
                   </div>
                 )}
               </div>
@@ -382,6 +387,7 @@ function PipelineBoard({ pipeline, selectedStage, onSelectStage, fullscreen = fa
 }
 
 function PipelineKanban({ pipeline, pipelineTotal, selectedStage, onSelectStage }) {
+  const { t } = useTranslation("dashboard");
   const [fullscreen, setFullscreen] = useState(false);
   // Use backend-provided total (unique implantações) to avoid double-counting parallel stages
   const total = pipelineTotal ?? pipeline.reduce((acc, s) => acc + s.count, 0);
@@ -390,24 +396,24 @@ function PipelineKanban({ pipeline, pipelineTotal, selectedStage, onSelectStage 
   const Header = ({ isFullscreen }) => (
     <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between shrink-0">
       <div>
-        <h2 className="text-sm font-semibold text-gray-800">Pipeline Operacional</h2>
+        <h2 className="text-sm font-semibold text-gray-800">{t("pipeline.title")}</h2>
         <p className="text-xs text-gray-400 mt-0.5">
-          {total} implantaç{total !== 1 ? "ões" : "ão"} ativa{total !== 1 ? "s" : ""}
-          {selectedStage && <span className="ml-2 text-orange-600 font-medium">· Filtrando: {selectedStage}</span>}
+          {t("pipeline.subtitle", { count: total })}
+          {selectedStage && <span className="ml-2 text-orange-600 font-medium">{t("pipeline.filtering", { stage: selectedStage })}</span>}
         </p>
       </div>
       <div className="flex items-center gap-3">
         {selectedStage && (
           <button onClick={() => onSelectStage(null)} className="text-xs text-gray-400 hover:text-gray-600">
-            ✕ Limpar
+            {t("pipeline.clear")}
           </button>
         )}
         {!isFullscreen && (
-          <Link to="/admin/implantacoes" className="text-xs font-medium text-orange-600 hover:text-orange-700">Ver todas →</Link>
+          <Link to="/admin/implantacoes" className="text-xs font-medium text-orange-600 hover:text-orange-700">{t("pipeline.viewAll")}</Link>
         )}
         <button
           onClick={() => setFullscreen(!isFullscreen)}
-          title={isFullscreen ? "Fechar" : "Expandir tela inteira"}
+          title={isFullscreen ? t("pipeline.close") : t("pipeline.expand")}
           className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
         >
           {isFullscreen ? (
@@ -448,16 +454,18 @@ function PipelineKanban({ pipeline, pipelineTotal, selectedStage, onSelectStage 
 // ── 5. Fila Operacional ────────────────────────────────────────────────────────
 
 function SlaChip({ status, dias }) {
-  const cfg = SLA_CFG[status] || SLA_CFG.ok;
+  const { t } = useTranslation("dashboard");
+  const slaKey = SLA_CFG[status] ? status : "ok";
+  const cfg = SLA_CFG[slaKey];
   return (
     <div className="flex flex-col items-start gap-0.5">
       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${cfg.bg} ${cfg.text}`}>
         <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-        {cfg.label}
+        {t(`sla.${slaKey}`)}
       </span>
       {dias !== null && dias !== undefined && (
         <span className="text-[10px] text-gray-400 pl-1">
-          {dias < 0 ? `${Math.abs(dias)}d vencido` : dias === 0 ? "Vence hoje" : `${dias}d restantes`}
+          {dias < 0 ? t("sla.overdueDays", { count: Math.abs(dias) }) : dias === 0 ? t("sla.dueToday") : t("sla.daysLeft", { count: dias })}
         </span>
       )}
     </div>
@@ -465,10 +473,12 @@ function SlaChip({ status, dias }) {
 }
 
 function PrioChip({ prioridade }) {
-  const cfg = PRIO_CFG[prioridade] || PRIO_CFG.normal;
+  const { t } = useTranslation("dashboard");
+  const prioKey = PRIO_CFG[prioridade] ? prioridade : "normal";
+  const cfg = PRIO_CFG[prioKey];
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${cfg.bg} ${cfg.text} ${cfg.border}`}>
-      {cfg.label}
+      {t(`prio.${prioKey}`)}
     </span>
   );
 }
@@ -486,36 +496,41 @@ function ProgressBar({ value }) {
 }
 
 function FilaOperacional({ fila, filaTotal, stageFilter, stageColorMap = {} }) {
+  const { t } = useTranslation("dashboard");
   const navigate = useNavigate();
   const filtered = stageFilter ? fila.filter((i) => i.etapa_atual === stageFilter) : fila;
   if (!fila || fila.length === 0) return null;
   const sc = (s) => stageStyle(stageColorMap[s] || "#6366f1");
+  const headers = [
+    t("fila.headers.company"), t("fila.headers.stage"), t("fila.headers.bottleneck"), t("fila.headers.sla"),
+    t("fila.headers.progress"), t("fila.headers.responsible"), t("fila.headers.priority"), "",
+  ];
 
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
         <div>
-          <h2 className="text-sm font-semibold text-gray-800">Fila Operacional</h2>
+          <h2 className="text-sm font-semibold text-gray-800">{t("fila.title")}</h2>
           <p className="text-xs text-gray-400 mt-0.5">
             {stageFilter
-              ? `${filtered.length} em "${stageFilter}" — clique na etapa para limpar filtro`
-              : `Top ${fila.length}${filaTotal && filaTotal > fila.length ? ` de ${filaTotal}` : ""} · ordenado por urgência · SLA · Prioridade`
+              ? t("fila.filteredSubtitle", { count: filtered.length, stage: stageFilter })
+              : `${t("fila.topSubtitle", { count: fila.length })}${filaTotal && filaTotal > fila.length ? t("fila.ofTotal", { total: filaTotal }) : ""}${t("fila.sortedBy")}`
             }
           </p>
         </div>
-        <Link to="/admin/implantacoes" className="text-xs font-medium text-orange-600 hover:text-orange-700">Ver todas →</Link>
+        <Link to="/admin/implantacoes" className="text-xs font-medium text-orange-600 hover:text-orange-700">{t("pipeline.viewAll")}</Link>
       </div>
       {filtered.length === 0 ? (
         <div className="px-5 py-8 text-center">
-          <p className="text-sm text-gray-400">Nenhuma implantação em "{stageFilter}"</p>
+          <p className="text-sm text-gray-400">{t("fila.emptyInStage", { stage: stageFilter })}</p>
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[780px]">
             <thead>
               <tr className="border-b border-gray-50 bg-gray-50/60">
-                {["Empresa", "Etapa", "Gargalo", "SLA", "Progresso", "Responsável", "Prioridade", ""].map((h) => (
-                  <th key={h} className="text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-4 py-2.5">{h}</th>
+                {headers.map((h, i) => (
+                  <th key={i} className="text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-4 py-2.5">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -540,7 +555,7 @@ function FilaOperacional({ fila, filaTotal, stageFilter, stageColorMap = {} }) {
                   <td className="px-4 py-3">
                     {item.dias_na_etapa !== null && item.dias_na_etapa !== undefined ? (
                       <span className={`text-xs font-semibold tabular-nums ${item.dias_na_etapa > 5 ? "text-red-500" : item.dias_na_etapa > 3 ? "text-amber-500" : "text-gray-400"}`}>
-                        {item.dias_na_etapa}d
+                        {t("fila.daysInStage", { count: item.dias_na_etapa })}
                       </span>
                     ) : (
                       <span className="text-xs text-gray-300">—</span>
@@ -564,7 +579,7 @@ function FilaOperacional({ fila, filaTotal, stageFilter, stageColorMap = {} }) {
                         <span className="text-xs text-gray-600 truncate max-w-[80px]">{item.responsavel_nome}</span>
                       </div>
                     ) : (
-                      <span className="text-xs text-gray-300 italic">Não atribuído</span>
+                      <span className="text-xs text-gray-300 italic">{t("fila.unassigned")}</span>
                     )}
                   </td>
                   <td className="px-4 py-3">
@@ -590,6 +605,7 @@ function FilaOperacional({ fila, filaTotal, stageFilter, stageColorMap = {} }) {
 // ── 6. Timeline Inteligente ────────────────────────────────────────────────────
 
 function TimelineIntelligente({ items }) {
+  const { t } = useTranslation("dashboard");
   const [filter, setFilter] = useState("todos");
   const TAREFAS_TIPOS = new Set(["checklist_concluido", "checklist_desmarcado", "tarefa_adicionada"]);
   const filtered = filter === "todos"
@@ -620,7 +636,7 @@ function TimelineIntelligente({ items }) {
               filter === f.key ? "bg-orange-500 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
             }`}
           >
-            {f.label}
+            {t(`timeline.filters.${f.labelKey}`)}
           </button>
         ))}
       </div>
@@ -628,7 +644,7 @@ function TimelineIntelligente({ items }) {
         {groups.length === 0 ? (
           <div className="py-10 text-center">
             <p className="text-2xl mb-2">📭</p>
-            <p className="text-sm text-gray-400">Nenhum evento encontrado.</p>
+            <p className="text-sm text-gray-400">{t("timeline.empty")}</p>
           </div>
         ) : (
           <div className="space-y-3 px-4 py-3">
@@ -653,7 +669,7 @@ function TimelineIntelligente({ items }) {
                               <span className="text-[10px] text-gray-300">·</span>
                             )}
                             {temUsuario && (
-                              <p className="text-[10px] text-gray-400 shrink-0">por {ev.usuario}</p>
+                              <p className="text-[10px] text-gray-400 shrink-0">{t("timeline.by", { name: ev.usuario })}</p>
                             )}
                           </div>
                         </div>
@@ -674,14 +690,15 @@ function TimelineIntelligente({ items }) {
 // ── 7. Gráfico Mensal ──────────────────────────────────────────────────────────
 
 function GraficoMensal({ dados }) {
+  const { t } = useTranslation("dashboard");
   if (!dados || dados.length === 0) return null;
   const max = Math.max(...dados.map((m) => (m.implantacoes ?? m.total ?? 0) + (m.instalacoes ?? 0)), 1);
 
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
       <div className="mb-4">
-        <h2 className="text-sm font-semibold text-gray-800">Conclusões por Mês</h2>
-        <p className="text-xs text-gray-400 mt-0.5">Últimos 6 meses</p>
+        <h2 className="text-sm font-semibold text-gray-800">{t("chart.title")}</h2>
+        <p className="text-xs text-gray-400 mt-0.5">{t("chart.subtitle")}</p>
       </div>
       <div className="flex items-end gap-2" style={{ height: "96px" }}>
         {dados.map((m) => {
@@ -706,14 +723,14 @@ function GraficoMensal({ dados }) {
                   <div
                     className={`w-full transition-all ${m.is_current ? "bg-emerald-500" : "bg-emerald-400 group-hover:bg-emerald-500"}`}
                     style={{ height: `${instH}px` }}
-                    title={`${m.label} — Instalações: ${inst}`}
+                    title={t("chart.tooltipInstalacoes", { label: m.label, count: inst })}
                   />
                 )}
                 {implH > 0 && (
                   <div
                     className={`w-full rounded-b-sm transition-all ${instH === 0 ? "rounded-t-md" : ""} ${m.is_current ? "bg-blue-600" : "bg-blue-400 group-hover:bg-blue-500"}`}
                     style={{ height: `${implH}px` }}
-                    title={`${m.label} — Implantações: ${impl}`}
+                    title={t("chart.tooltipImplantacoes", { label: m.label, count: impl })}
                   />
                 )}
                 {total === 0 && <div className="w-full rounded-t-md bg-gray-100" style={{ height: "4px" }} />}
@@ -724,8 +741,8 @@ function GraficoMensal({ dados }) {
         })}
       </div>
       <div className="mt-3 pt-3 border-t border-gray-50 flex items-center gap-4 text-[10px] text-gray-400">
-        <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-blue-400 inline-block" />Implantações</div>
-        <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />Instalações</div>
+        <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-blue-400 inline-block" />{t("chart.legendImplantacoes")}</div>
+        <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" />{t("chart.legendInstalacoes")}</div>
       </div>
     </div>
   );
@@ -734,14 +751,15 @@ function GraficoMensal({ dados }) {
 // ── 8. Workload Consultores ────────────────────────────────────────────────────
 
 function WorkloadConsultores({ dados }) {
+  const { t } = useTranslation("dashboard");
   if (!dados || dados.length === 0) return null;
   const maxTotal = Math.max(...dados.map((c) => c.total), 1);
 
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
       <div className="mb-4">
-        <h2 className="text-sm font-semibold text-gray-800">Carga por Consultor</h2>
-        <p className="text-xs text-gray-400 mt-0.5">{dados.length} consultor{dados.length !== 1 ? "es" : ""}</p>
+        <h2 className="text-sm font-semibold text-gray-800">{t("workload.title")}</h2>
+        <p className="text-xs text-gray-400 mt-0.5">{t("workload.subtitle", { count: dados.length })}</p>
       </div>
       <div className="space-y-3.5">
         {dados.map((c) => {
@@ -756,7 +774,7 @@ function WorkloadConsultores({ dados }) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1">
                   <span className={`text-xs font-medium truncate ${isNA ? "text-gray-400 italic" : "text-gray-700"}`}>{c.consultor}</span>
-                  <span className="text-[10px] text-gray-400 tabular-nums shrink-0 ml-2">{c.total} impl.</span>
+                  <span className="text-[10px] text-gray-400 tabular-nums shrink-0 ml-2">{t("workload.implCount", { count: c.total })}</span>
                 </div>
                 <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                   <div
@@ -765,9 +783,9 @@ function WorkloadConsultores({ dados }) {
                   />
                 </div>
                 <div className="flex items-center justify-between mt-0.5">
-                  <span className="text-[9px] text-gray-400">{c.progresso_medio}% progresso médio</span>
+                  <span className="text-[9px] text-gray-400">{t("workload.avgProgress", { pct: c.progresso_medio })}</span>
                   {c.atrasadas > 0 && (
-                    <span className="text-[9px] font-bold text-red-600">{c.atrasadas} atrasada{c.atrasadas > 1 ? "s" : ""}</span>
+                    <span className="text-[9px] font-bold text-red-600">{t("workload.overdueCount", { count: c.atrasadas })}</span>
                   )}
                 </div>
               </div>
@@ -782,25 +800,28 @@ function WorkloadConsultores({ dados }) {
 // ── 9. Funil Compacto ──────────────────────────────────────────────────────────
 
 function FunilCompacto({ funil, sla_health }) {
+  const { t } = useTranslation("dashboard");
   const pct = (a, b) => (b > 0 ? Math.round((a / b) * 100) : 0);
   const total = (sla_health.ok || 0) + (sla_health.critico || 0) + (sla_health.atrasada || 0);
   const taxaRecusa = (funil.solicitacoes ?? 0) > 0 ? Math.round(((funil.recusadas ?? 0) / funil.solicitacoes) * 100) : 0;
 
+  const rows = [
+    { labelKey: "requests", value: funil.solicitacoes ?? 0,  color: "bg-indigo-400" },
+    { labelKey: "approved", value: funil.aprovadas ?? 0,     color: "bg-blue-500"   },
+    { labelKey: "rejected", value: funil.recusadas ?? 0,     color: "bg-red-400",   sub: taxaRecusa > 0 ? t("funnel.rejectionRate", { pct: taxaRecusa }) : null },
+    { labelKey: "inProgress", value: funil.em_andamento ?? 0,  color: "bg-orange-400" },
+    { labelKey: "completed", value: funil.concluidas ?? 0,    color: "bg-green-500"  },
+  ];
+
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-      <h2 className="text-sm font-semibold text-gray-800 mb-4">Funil & SLA</h2>
+      <h2 className="text-sm font-semibold text-gray-800 mb-4">{t("funnel.title")}</h2>
       <div className="space-y-2.5 mb-5">
-        {[
-          { label: "Solicitações", value: funil.solicitacoes ?? 0,  color: "bg-indigo-400" },
-          { label: "Aprovadas",    value: funil.aprovadas ?? 0,     color: "bg-blue-500"   },
-          { label: "Recusadas",    value: funil.recusadas ?? 0,     color: "bg-red-400",   sub: taxaRecusa > 0 ? `${taxaRecusa}% de recusa` : null },
-          { label: "Em Andamento", value: funil.em_andamento ?? 0,  color: "bg-orange-400" },
-          { label: "Concluídas",   value: funil.concluidas ?? 0,    color: "bg-green-500"  },
-        ].map((s) => (
-          <div key={s.label}>
+        {rows.map((s) => (
+          <div key={s.labelKey}>
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-1.5">
-                <span className="text-xs text-gray-500">{s.label}</span>
+                <span className="text-xs text-gray-500">{t(`funnel.labels.${s.labelKey}`)}</span>
                 {s.sub && <span className="text-[9px] text-red-500 font-medium">({s.sub})</span>}
               </div>
               <span className="text-xs font-bold text-gray-700 tabular-nums">{s.value}</span>
@@ -812,9 +833,9 @@ function FunilCompacto({ funil, sla_health }) {
         ))}
       </div>
       <div className="border-t border-gray-100 pt-4">
-        <p className="text-xs font-semibold text-gray-500 mb-3">Saúde SLA · {total} ativas</p>
+        <p className="text-xs font-semibold text-gray-500 mb-3">{t("funnel.slaHealth", { count: total })}</p>
         {total === 0 ? (
-          <p className="text-xs text-gray-400 text-center py-2">Nenhuma implantação ativa</p>
+          <p className="text-xs text-gray-400 text-center py-2">{t("funnel.noneActive")}</p>
         ) : (
           <>
             <div className="flex h-2 rounded-full overflow-hidden gap-0.5 mb-3">
@@ -828,14 +849,14 @@ function FunilCompacto({ funil, sla_health }) {
             </div>
             <div className="space-y-1.5">
               {[
-                { label: "No Prazo",  value: sla_health.ok,       dot: "bg-green-500", text: "text-green-700" },
-                { label: "Crítico",   value: sla_health.critico,   dot: "bg-amber-400", text: "text-amber-700" },
-                { label: "Atrasado",  value: sla_health.atrasada,  dot: "bg-red-500",   text: "text-red-700"   },
+                { labelKey: "ok",       value: sla_health.ok,       dot: "bg-green-500", text: "text-green-700" },
+                { labelKey: "critico",  value: sla_health.critico,   dot: "bg-amber-400", text: "text-amber-700" },
+                { labelKey: "atrasada", value: sla_health.atrasada,  dot: "bg-red-500",   text: "text-red-700"   },
               ].map((r) => (
-                <div key={r.label} className="flex items-center justify-between">
+                <div key={r.labelKey} className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <span className={`w-1.5 h-1.5 rounded-full ${r.dot}`} />
-                    <span className="text-xs text-gray-500">{r.label}</span>
+                    <span className="text-xs text-gray-500">{t(`sla.${r.labelKey}`)}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`text-xs font-bold ${r.text}`}>{r.value}</span>
@@ -854,6 +875,7 @@ function FunilCompacto({ funil, sla_health }) {
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
+  const { t } = useTranslation("dashboard");
   const { user } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -902,7 +924,7 @@ export default function Dashboard() {
   }, [load]);
 
   const hour = now.getHours();
-  const greeting = hour < 6 ? "Boa noite" : hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
+  const greeting = hour < 6 ? t("greeting.night") : hour < 12 ? t("greeting.morning") : hour < 18 ? t("greeting.afternoon") : t("greeting.night");
 
   return (
     <Layout>
@@ -914,8 +936,8 @@ export default function Dashboard() {
           </h1>
           <p className="text-sm text-gray-400 mt-0.5">
             {lastRefresh
-              ? `Central Operacional · ${refreshLabel(lastRefresh, now)}`
-              : "Carregando dados operacionais…"}
+              ? t("header.subtitleLoaded", { refresh: refreshLabel(lastRefresh, now) })
+              : t("header.subtitleLoading")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -924,7 +946,7 @@ export default function Dashboard() {
               <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              Atualizando
+              {t("header.refreshing")}
             </span>
           )}
           <button
@@ -935,7 +957,7 @@ export default function Dashboard() {
             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            Atualizar
+            {t("header.refresh")}
           </button>
           <Link
             to="/admin/triagem"
@@ -945,7 +967,7 @@ export default function Dashboard() {
             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
             </svg>
-            Nova Triagem
+            {t("header.newTriage")}
           </Link>
         </div>
       </div>
@@ -958,62 +980,62 @@ export default function Dashboard() {
           {/* ── 8 KPI Cards ── */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <KpiCard
-              label="Implantações Ativas"
+              label={t("kpi.activeImplantacoes")}
               value={data.implantacoes_em_andamento}
               icon="⚙️" color="text-blue-700"
               to="/admin/implantacoes?status=em_andamento"
-              deltaLabel={data.novas_semana > 0 ? `+${data.novas_semana} novas esta sem.` : null}
+              deltaLabel={data.novas_semana > 0 ? t("kpi.newThisWeek", { count: data.novas_semana }) : null}
               flashing={flashKeys.has("implantacoes_em_andamento")}
             />
             <KpiCard
-              label="SLA Vencido"
+              label={t("kpi.slaOverdue")}
               value={data.implantacoes_atrasadas}
-              sub="Ação imediata"
+              sub={t("kpi.immediateAction")}
               icon="🚨" color={data.implantacoes_atrasadas > 0 ? "text-red-700" : "text-gray-400"}
               to="/admin/implantacoes?sla_status=atrasada"
               urgent
-              deltaLabel={data.atrasadas_novas_semana > 0 ? `+${data.atrasadas_novas_semana} venceram esta sem.` : null}
+              deltaLabel={data.atrasadas_novas_semana > 0 ? t("kpi.overdueThisWeek", { count: data.atrasadas_novas_semana }) : null}
               deltaGood={false}
               flashing={flashKeys.has("implantacoes_atrasadas")}
             />
             <KpiCard
-              label="SLA Crítico"
+              label={t("kpi.slaCritical")}
               value={data.implantacoes_critico}
-              sub="< 3 dias"
+              sub={t("kpi.lessThan3Days")}
               icon="⚠️" color={data.implantacoes_critico > 0 ? "text-amber-700" : "text-gray-400"}
               to="/admin/implantacoes?sla_status=critico"
               flashing={flashKeys.has("implantacoes_critico")}
             />
             <KpiCard
-              label="Go Lives esta semana"
+              label={t("kpi.goLivesWeek")}
               value={data.go_lives_semana ?? 0}
               icon="🚀" color="text-green-700"
               onClick={data.go_lives_lista?.length > 0 ? () => setShowGoLives(true) : undefined}
-              deltaLabel={data.go_lives_semana > 0 ? "Ver detalhes →" : null}
+              deltaLabel={data.go_lives_semana > 0 ? t("kpi.viewDetails") : null}
               deltaGood={true}
               flashing={flashKeys.has("go_lives_semana")}
             />
             <KpiCard
-              label="Taxa de Conclusão"
+              label={t("kpi.completionRate")}
               value={`${data.taxa_conclusao}%`}
-              sub={`${data.implantacoes_concluidas} concluídas`}
+              sub={t("kpi.completedCount", { count: data.implantacoes_concluidas })}
               icon="✅" color="text-emerald-700"
-              deltaLabel={data.concluidas_semana > 0 ? `+${data.concluidas_semana} esta sem.` : null}
+              deltaLabel={data.concluidas_semana > 0 ? t("kpi.thisWeek", { count: data.concluidas_semana }) : null}
               deltaGood={true}
               flashing={flashKeys.has("taxa_conclusao")}
             />
             <KpiCard
-              label="Triagem Pendente"
+              label={t("kpi.pendingTriage")}
               value={(data.solicitacoes_novas || 0) + (data.solicitacoes_em_triagem || 0)}
-              sub="Novas + em análise"
+              sub={t("kpi.newPlusAnalyzing")}
               icon="📥" color="text-indigo-700"
               to="/admin/triagem"
               flashing={flashKeys.has("solicitacoes_novas")}
             />
             <KpiCard
-              label="Tarefas Vencidas"
+              label={t("kpi.overdueTasks")}
               value={data.tarefas_vencidas ?? 0}
-              sub="Prazo expirado"
+              sub={t("kpi.expiredDeadline")}
               icon="📋" color={data.tarefas_vencidas > 0 ? "text-red-700" : "text-gray-400"}
               to={data.tarefas_vencidas > 0 ? "/admin/implantacoes?highlight=tarefas" : "/admin/implantacoes"}
               urgent={data.tarefas_vencidas > 0}
@@ -1025,16 +1047,16 @@ export default function Dashboard() {
               const total = data.instalacoes_sem_responsavel          ?? 0;
               const future = total - venc - hoje;
               const subParts = [];
-              if (venc   > 0) subParts.push(`${venc} vencida${venc > 1 ? "s" : ""}`);
-              if (hoje   > 0) subParts.push(`${hoje} hoje`);
-              if (future > 0) subParts.push(`${future} futura${future > 1 ? "s" : ""}`);
+              if (venc   > 0) subParts.push(t("kpi.overdue", { count: venc }));
+              if (hoje   > 0) subParts.push(t("kpi.todayCount", { count: hoje }));
+              if (future > 0) subParts.push(t("kpi.future", { count: future }));
               const isCritico = venc > 0;
               const isUrgente = !isCritico && hoje > 0;
               return (
                 <KpiCard
-                  label="Instalações S/ Resp."
+                  label={t("kpi.installationsNoResp")}
                   value={total}
-                  sub={subParts.length > 0 ? subParts.join(" · ") : "Aguardando direcionamento"}
+                  sub={subParts.length > 0 ? subParts.join(" · ") : t("kpi.awaitingAssignment")}
                   icon={isCritico || isUrgente ? "🚨" : "📦"}
                   color={isCritico ? "text-red-700" : isUrgente ? "text-red-600" : total > 0 ? "text-orange-700" : "text-gray-400"}
                   to="/instalacoes?sem_responsavel=1"
@@ -1069,8 +1091,8 @@ export default function Dashboard() {
           ) : (
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-10 text-center">
               <p className="text-3xl mb-3">🎉</p>
-              <p className="text-sm font-semibold text-gray-600">Nenhuma implantação ativa</p>
-              <p className="text-xs text-gray-400 mt-1">Aprove uma solicitação para iniciar</p>
+              <p className="text-sm font-semibold text-gray-600">{t("empty.title")}</p>
+              <p className="text-xs text-gray-400 mt-1">{t("empty.subtitle")}</p>
             </div>
           )}
 
@@ -1080,8 +1102,8 @@ export default function Dashboard() {
             {/* Timeline com filtros */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
               <div className="px-5 py-3.5 border-b border-gray-100">
-                <h2 className="text-sm font-semibold text-gray-800">Timeline Operacional</h2>
-                <p className="text-xs text-gray-400 mt-0.5">Últimos 30 eventos · filtre por tipo</p>
+                <h2 className="text-sm font-semibold text-gray-800">{t("timeline.title")}</h2>
+                <p className="text-xs text-gray-400 mt-0.5">{t("timeline.subtitle")}</p>
               </div>
               <TimelineIntelligente items={data.atividade_recente || []} />
             </div>

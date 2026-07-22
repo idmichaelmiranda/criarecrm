@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../contexts/AuthContext";
+import { LanguageSwitcher } from "../components/LanguageSwitcher";
 
 export default function Login() {
+  const { t } = useTranslation("login");
   const navigate  = useNavigate();
   const location  = useLocation();
   const { login } = useAuth();
@@ -16,18 +19,24 @@ export default function Login() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!email || !senha) { setError("Preencha e-mail e senha."); return; }
+    if (!email || !senha) { setError(t("form.errorRequired")); return; }
     setLoading(true);
     setError("");
     try {
       await login(email, senha);
       navigate(from, { replace: true });
     } catch (err) {
-      setError(err.message || "E-mail ou senha incorretos. Verifique suas credenciais e tente novamente.");
+      setError(err.message || t("form.errorDefault"));
     } finally {
       setLoading(false);
     }
   }
+
+  const FEATURES = [
+    { key: "triagem" },
+    { key: "rbac" },
+    { key: "sla" },
+  ];
 
   return (
     <div className="min-h-screen flex" style={{ background: "#F8F9FC" }}>
@@ -65,7 +74,7 @@ export default function Login() {
                 style={{ background: "linear-gradient(135deg, #F56316, #d94f0d)", filter: "blur(16px)" }} />
               <img
                 src="/logo3dhero.png"
-                alt="CriareTI"
+                alt={t("leftPanel.logoAlt")}
                 style={{
                   width: 112,
                   height: "auto",
@@ -75,15 +84,15 @@ export default function Login() {
             </div>
 
             {/* Nome da empresa */}
-            <h1 className="text-4xl font-extrabold tracking-tight mb-1.5" style={{ color: "#111827" }}>CriareTI</h1>
-            <p className="text-base font-medium mb-12" style={{ color: "#9CA3AF" }}>Plataforma de Implantação</p>
+            <h1 className="text-4xl font-extrabold tracking-tight mb-1.5" style={{ color: "#111827" }}>{t("leftPanel.brand")}</h1>
+            <p className="text-base font-medium mb-12" style={{ color: "#9CA3AF" }}>{t("leftPanel.tagline")}</p>
 
             {/* Headline */}
             <p className="text-xl font-semibold leading-snug mb-3 max-w-xs" style={{ color: "#1F2937" }}>
-              Gerencie implantações com eficiência e controle.
+              {t("leftPanel.headline")}
             </p>
             <p className="text-sm leading-relaxed max-w-xs" style={{ color: "#9CA3AF" }}>
-              Triagem, gestão de clientes, controle de etapas e muito mais — tudo em um único painel operacional.
+              {t("leftPanel.subtext")}
             </p>
 
             {/* Divisor */}
@@ -91,12 +100,8 @@ export default function Login() {
 
             {/* Features */}
             <div className="space-y-4 w-full max-w-xs text-left">
-              {[
-                ["Triagem inteligente",  "Receba e processe solicitações em tempo real"],
-                ["RBAC completo",        "Controle de acesso por perfis e permissões"],
-                ["Rastreamento de SLA",  "Monitore prazos e riscos automaticamente"],
-              ].map(([title, desc]) => (
-                <div key={title} className="flex items-start gap-3">
+              {FEATURES.map(({ key }) => (
+                <div key={key} className="flex items-start gap-3">
                   <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
                     style={{ background: "rgba(245,99,22,0.10)", border: "1px solid rgba(245,99,22,0.22)" }}>
                     <svg className="w-3 h-3" style={{ color: "#F56316" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -104,8 +109,8 @@ export default function Login() {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold" style={{ color: "#374151" }}>{title}</p>
-                    <p className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>{desc}</p>
+                    <p className="text-sm font-semibold" style={{ color: "#374151" }}>{t(`leftPanel.features.${key}.title`)}</p>
+                    <p className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>{t(`leftPanel.features.${key}.desc`)}</p>
                   </div>
                 </div>
               ))}
@@ -114,7 +119,7 @@ export default function Login() {
 
           {/* Rodapé */}
           <p className="text-xs text-center" style={{ color: "#D1D5DB" }}>
-            © {new Date().getFullYear()} CriareTI. Todos os direitos reservados.
+            {t("leftPanel.footer", { year: new Date().getFullYear() })}
           </p>
         </div>
       </div>
@@ -123,36 +128,41 @@ export default function Login() {
       <div className="flex-1 flex items-center justify-center px-6 py-12" style={{ background: "#ffffff" }}>
         <div className="w-full max-w-sm">
 
-          {/* Logo mobile */}
-          <div className="flex items-center gap-3 mb-10 lg:hidden">
-            <img
-              src="/logo3dhero.png"
-              alt="CriareTI"
-              style={{
-                width: 40,
-                height: "auto",
-                filter: "drop-shadow(0 2px 6px rgba(30,45,78,0.15))",
-              }}
-            />
-            <p className="font-bold text-lg" style={{ color: "#111827" }}>CriareTI</p>
+          {/* Logo mobile + seletor de idioma */}
+          <div className="flex items-center justify-between gap-3 mb-10">
+            <div className="flex items-center gap-3 lg:hidden">
+              <img
+                src="/logo3dhero.png"
+                alt={t("form.logoAlt")}
+                style={{
+                  width: 40,
+                  height: "auto",
+                  filter: "drop-shadow(0 2px 6px rgba(30,45,78,0.15))",
+                }}
+              />
+              <p className="font-bold text-lg" style={{ color: "#111827" }}>{t("form.brand")}</p>
+            </div>
+            <div className="ml-auto">
+              <LanguageSwitcher />
+            </div>
           </div>
 
-          <h1 className="text-2xl font-bold mb-1" style={{ color: "#111827" }}>Entrar na plataforma</h1>
-          <p className="text-sm mb-8" style={{ color: "#6B7280" }}>Acesse com suas credenciais corporativas</p>
+          <h1 className="text-2xl font-bold mb-1" style={{ color: "#111827" }}>{t("form.title")}</h1>
+          <p className="text-sm mb-8" style={{ color: "#6B7280" }}>{t("form.subtitle")}</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
 
             {/* Email */}
             <div>
               <label className="block text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "#6B7280" }}>
-                E-mail
+                {t("form.emailLabel")}
               </label>
               <input
                 type="email"
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="seu@email.com"
+                placeholder={t("form.emailPlaceholder")}
                 className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
                 style={{
                   background: "#F8F9FC",
@@ -167,7 +177,7 @@ export default function Login() {
             {/* Senha */}
             <div>
               <label className="block text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "#6B7280" }}>
-                Senha
+                {t("form.passwordLabel")}
               </label>
               <div className="relative">
                 <input
@@ -234,9 +244,9 @@ export default function Login() {
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
                   <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                  Entrando...
+                  {t("form.submitting")}
                 </span>
-              ) : "Entrar"}
+              ) : t("form.submit")}
             </button>
           </form>
 
@@ -247,10 +257,10 @@ export default function Login() {
               onMouseEnter={(e) => e.currentTarget.style.color = "#d94f0d"}
               onMouseLeave={(e) => e.currentTarget.style.color = "#F56316"}
             >
-              Primeiro acesso? Solicite seu cadastro
+              {t("form.registerLink")}
             </Link>
             <p className="text-xs" style={{ color: "#D1D5DB" }}>
-              Problemas para acessar? Contate o administrador.
+              {t("form.troubleAccessing")}
             </p>
           </div>
         </div>

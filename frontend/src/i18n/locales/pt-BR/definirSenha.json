@@ -1,0 +1,30 @@
+{
+  "leftPanel": {
+    "logoAlt": "CriareTI",
+    "brand": "CriareTI",
+    "tagline": "Plataforma de Implantação",
+    "headline": "Defina sua senha de acesso.",
+    "subtext": "Escolha uma senha segura. Você usará ela para acessar a plataforma nas próximas vezes.",
+    "footer": "© {{year}} CriareTI. Todos os direitos reservados."
+  },
+  "form": {
+    "logoAlt": "CriareTI",
+    "brand": "CriareTI",
+    "title": "Defina sua senha",
+    "subtitle": "Escolha uma senha para acessar a plataforma",
+    "newPasswordLabel": "Nova senha",
+    "newPasswordPlaceholder": "Mínimo 6 caracteres",
+    "confirmPasswordLabel": "Confirmar senha",
+    "confirmPasswordPlaceholder": "Repita a senha",
+    "errorMinLength": "A senha deve ter pelo menos 6 caracteres.",
+    "errorMismatch": "As senhas não coincidem.",
+    "errorDefault": "Erro ao definir senha.",
+    "submit": "Definir senha e acessar",
+    "submitting": "Salvando..."
+  },
+  "success": {
+    "title": "Senha definida!",
+    "message": "Sua senha foi criada com sucesso. Agora você já pode fazer login na plataforma.",
+    "goToLogin": "Ir para o login"
+  }
+}

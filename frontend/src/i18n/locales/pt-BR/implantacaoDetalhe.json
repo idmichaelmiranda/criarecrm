@@ -1,0 +1,187 @@
+{
+  "prazo": {
+    "overdue": "{{count}}d atr.",
+    "today": "Hoje",
+    "tomorrow": "Amanhã",
+    "days": "{{count}}d"
+  },
+  "common": {
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "saving": "Salvando...",
+    "color": "Cor",
+    "loading": "...",
+    "ok": "OK"
+  },
+  "pipeline": {
+    "etapaTooltip": "{{nome}} — {{done}}/{{total}} tarefas",
+    "renameTooltip": "{{nome}} · Duplo clique para renomear",
+    "addEtapaTooltip": "Adicionar nova etapa",
+    "new": "Nova"
+  },
+  "etapaDropdown": {
+    "start": "▶  Iniciar",
+    "markCompleted": "✓  Marcar como Concluída",
+    "skip": "→  Pular Etapa",
+    "reopen": "↺  Reabrir",
+    "edit": "✏️  Editar etapa",
+    "moveLeft": "← Mover para esquerda",
+    "moveRight": "→ Mover para direita",
+    "remove": "🗑  Remover etapa"
+  },
+  "editEtapaModal": {
+    "title": "Editar Etapa",
+    "nameLabel": "Nome da etapa",
+    "slaLabel": "SLA da etapa (dias)"
+  },
+  "subItem": {
+    "confirmRemove": "Remover \"{{titulo}}\"?",
+    "dblClickRename": "Duplo clique para renomear",
+    "archive": "Arquivar",
+    "unarchive": "Desarquivar"
+  },
+  "kanbanCard": {
+    "confirmRemove": "Remover \"{{titulo}}\"?",
+    "viewPop": "Ver POP (PDF de referência)",
+    "pop": "POP",
+    "required": "Obrigatória",
+    "customTask": "Tarefa personalizada",
+    "dblClickRename": "Duplo clique para renomear",
+    "responsibleTooltip": "Responsável: {{nome}}",
+    "assignResponsible": "Atribuir responsável",
+    "respShort": "resp.",
+    "removeResponsible": "Remover responsável",
+    "noUsers": "Nenhum usuário",
+    "deadlineTooltip": "Prazo: {{date}}",
+    "addDeadline": "prazo",
+    "addDeadlineTooltip": "Adicionar prazo",
+    "subItemsProgress_one": "{{done}}/{{count}} sub-item",
+    "subItemsProgress_other": "{{done}}/{{count}} sub-itens",
+    "notApplicable": "⊘ Não aplicável",
+    "editNote": "Editar nota",
+    "addNote": "Adicionar nota",
+    "subItemsTooltip": "Sub-itens",
+    "reactivateTask": "Reativar tarefa",
+    "markNotApplicable": "Marcar como Não Aplicável",
+    "moveUp": "Mover para cima",
+    "moveDown": "Mover para baixo",
+    "unarchiveTask": "Desarquivar tarefa",
+    "archiveTask": "Arquivar tarefa",
+    "removeTask": "Remover tarefa",
+    "archivedSubItems_one": "{{count}} sub-item arquivado",
+    "archivedSubItems_other": "{{count}} sub-itens arquivados",
+    "subItemPlaceholder": "Nome do sub-item...",
+    "addSubItem": "sub-item",
+    "notePlaceholder": "Nota, instrução ou detalhe para essa tarefa...",
+    "saveNote": "Salvar nota"
+  },
+  "kanbanColumn": {
+    "reorderTooltip": "Reordenar via menu ⋮",
+    "slaTooltip": "SLA da etapa: {{dias}} dias",
+    "slaOverdue": "{{count}}d atr.",
+    "slaDaysLeft": "{{count}}d SLA",
+    "noTasksFiltered": "Nenhuma tarefa neste filtro",
+    "noTasks": "Sem tarefas",
+    "dropHere": "Soltar aqui",
+    "archivedCount_one": "{{count}} arquivado",
+    "archivedCount_other": "{{count}} arquivados",
+    "taskNamePlaceholder": "Nome da tarefa...",
+    "addTask": "Adicionar tarefa",
+    "confirmDeleteEtapa": "Remover a etapa \"{{nome}}\"? As tarefas desta etapa serão mantidas sem etapa."
+  },
+  "kanbanTab": {
+    "searchPlaceholder": "Buscar tarefa...",
+    "allResponsibles": "Todos responsáveis",
+    "allStatuses": "Todos status",
+    "statusPending": "Pendentes",
+    "statusBlocked": "Bloqueados",
+    "statusNotApplicable": "Não aplicáveis",
+    "clearFilters": "✕ Limpar filtros",
+    "newEtapaPlaceholder": "Nome da nova etapa...",
+    "slaDaysLabel": "SLA (dias)",
+    "create": "Criar",
+    "newEtapa": "Nova etapa"
+  },
+  "timelineTab": {
+    "empty": "Nenhum evento na timeline.",
+    "by": "por {{nome}}"
+  },
+  "comentariosTab": {
+    "placeholder": "Escreva um comentário interno...",
+    "send": "Enviar",
+    "empty": "Nenhum comentário ainda."
+  },
+  "clienteTab": {
+    "notFound": "Cliente não encontrado.",
+    "viewFull": "Ver ficha completa →",
+    "fields": {
+      "email": "E-mail",
+      "cellphone": "Celular",
+      "responsible": "Responsável",
+      "phone": "Tel. Fixo",
+      "cityState": "Cidade/UF",
+      "zip": "CEP"
+    }
+  },
+  "responsavelModal": {
+    "title": "Definir Responsável",
+    "userLabel": "Usuário",
+    "selectPlaceholder": "Selecione um usuário…",
+    "confirm": "Confirmar"
+  },
+  "editPanel": {
+    "title": "Editar Implantação",
+    "statusLabel": "Status",
+    "status": {
+      "em_andamento": "Em Andamento",
+      "pausada": "Pausada",
+      "concluida": "Concluída",
+      "cancelada": "Cancelada"
+    },
+    "responsibleLabel": "Responsável",
+    "noResponsible": "Sem responsável",
+    "consultantLabel": "Consultor",
+    "consultantPlaceholder": "Nome do consultor",
+    "expectedDateLabel": "Data Prevista",
+    "priorityLabel": "Prioridade",
+    "priority": {
+      "baixa": "Baixa",
+      "normal": "Normal",
+      "alta": "Alta",
+      "critica": "Crítica"
+    },
+    "notesLabel": "Observações",
+    "notesPlaceholder": "Notas internas..."
+  },
+  "tabs": {
+    "checklist": "Kanban",
+    "timeline": "Timeline",
+    "comentarios": "Comentários",
+    "cliente": "Cliente"
+  },
+  "page": {
+    "breadcrumb": "Implantações",
+    "back": "← Voltar",
+    "dataConversion": "Conversão de dados",
+    "goLiveLabel": "🚀 Go Live: {{date}}",
+    "confirmRemoveGoLive": "Remover o registro de Go Live?",
+    "removeGoLiveTooltip": "Remover Go Live",
+    "registerGoLive": "🚀 Registrar Go Live",
+    "change": "Trocar",
+    "noResponsible": "Sem responsável",
+    "consultantLabel": "Consultor: {{nome}}",
+    "slaLabel": "SLA: {{date}}",
+    "startLabel": "Início: {{date}}",
+    "edit": "Editar",
+    "overallProgress": "Progresso geral",
+    "pendingCount_one": "{{count}} pendente",
+    "pendingCount_other": "{{count}} pendentes",
+    "newEtapa": "Nova Etapa",
+    "onlyPending": "Só pendentes",
+    "expandTooltip": "Expandir tela cheia",
+    "expand": "Expandir",
+    "minimizeTooltip": "Minimizar (Esc)",
+    "minimize": "Minimizar",
+    "escKey": "Esc"
+  }
+}

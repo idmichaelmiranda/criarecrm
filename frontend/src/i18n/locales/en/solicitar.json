@@ -1,0 +1,240 @@
+{
+  "steps": {
+    "meta": [
+      { "title": "Company Information", "subtitle": "Business identification" },
+      { "title": "Contact",             "subtitle": "Contact person and channels" },
+      { "title": "Address",             "subtitle": "Business location" },
+      { "title": "Accounting",          "subtitle": "Accounting firm details" },
+      { "title": "Accountant's Address","subtitle": "Accounting firm location" },
+      { "title": "Bank Details",        "subtitle": "Checking account for operations" },
+      { "title": "Tax Regime",          "subtitle": "Tax and accounting settings" },
+      { "title": "Payment Methods",     "subtitle": "Accepted methods and TEF integration" },
+      { "title": "NFe / NFCe Data",     "subtitle": "Tax document issuance and digital certificate" }
+    ],
+    "stepLabel": "Step {{n}}",
+    "finalStepLabel": "Final step",
+    "confirmationTitle": "Confirmation",
+    "confirmationSubtitle": "Review the details before submitting"
+  },
+  "header": {
+    "brand": "CriareTI",
+    "logoAlt": "CriareTI",
+    "cancel": "Cancel"
+  },
+  "footer": {
+    "back": "Back",
+    "continue": "Continue",
+    "submit": "Submit Request",
+    "submitting": "Submitting..."
+  },
+  "options": {
+    "ramo": { "comercio": "Retail", "industria": "Manufacturing" },
+    "crt": {
+      "1": "1 - Simples Nacional",
+      "2": "2 - Simples Nacional - Revenue sublimit exceeded",
+      "3": "3 - Standard Regime"
+    },
+    "regime": {
+      "1": "Simples Nacional",
+      "2": "Deemed Profit",
+      "3": "Actual Profit"
+    },
+    "st": {
+      "1": "Substitute Filer",
+      "2": "Substituted Filer"
+    },
+    "conta": {
+      "corrente": "Checking Account",
+      "poupanca": "Savings Account",
+      "pagamento": "Payment Account"
+    }
+  },
+  "cnpj": {
+    "label": "Tax ID (CNPJ) *",
+    "placeholder": "00.000.000/0001-00",
+    "required": "Tax ID is required",
+    "invalid": "Invalid tax ID",
+    "consulting": "Looking up...",
+    "foundMessage": "Data auto-filled from the Federal Revenue registry",
+    "notFoundMessage": "Tax ID not found in the Federal Revenue registry"
+  },
+  "phone": {
+    "requiredTemplate": "{{label}} is required",
+    "placeholder": "(11) 99999-9999"
+  },
+  "cep": {
+    "required": "Postal code is required",
+    "searching": "Looking up...",
+    "placeholder": "00000-000"
+  },
+  "bank": {
+    "label": "Bank",
+    "searchPlaceholder": "Search by name or code — e.g. Bradesco or 237",
+    "change": "Change",
+    "noneFound": "No bank found for \"{{query}}\""
+  },
+  "step0": {
+    "ieLabel": "State Registration",
+    "ieOptional": "Optional",
+    "ramoLabel": "Business Segment",
+    "razaoSocialLabel": "Legal Name *",
+    "razaoSocialPlaceholder": "E.g.: Company Trading LLC",
+    "razaoSocialRequired": "Legal name is required",
+    "nomeFantasiaLabel": "Trade Name",
+    "nomeFantasiaPlaceholder": "How it's known",
+    "responsavelLabel": "Contact Person",
+    "responsavelPlaceholder": "Name of the contact person"
+  },
+  "step1": {
+    "emailLabel": "Email *",
+    "emailPlaceholder": "contact@company.com",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Enter a valid email",
+    "celularLabel": "Mobile Phone *",
+    "telefoneFixoLabel": "Landline"
+  },
+  "step2": {
+    "cepLabel": "Postal Code *",
+    "numeroLabel": "Number *",
+    "numeroPlaceholder": "E.g.: 123",
+    "numeroRequired": "Number is required",
+    "enderecoLabel": "Address *",
+    "enderecoPlaceholder": "Street, Avenue...",
+    "enderecoRequired": "Address is required",
+    "bairroLabel": "Neighborhood *",
+    "bairroPlaceholder": "E.g.: Downtown",
+    "bairroRequired": "Neighborhood is required",
+    "cidadeLabel": "City *",
+    "cidadePlaceholder": "E.g.: São Paulo",
+    "cidadeRequired": "City is required",
+    "estadoLabel": "State *",
+    "estadoPlaceholder": "SP",
+    "estadoRequired": "State is required"
+  },
+  "step3": {
+    "infoBanner": "Request this information directly from the company's accounting firm before proceeding.",
+    "nomeContadorLabel": "Accountant's Name *",
+    "nomeContadorPlaceholder": "Full name",
+    "nomeContadorRequired": "Name is required",
+    "cpfLabel": "Tax ID (CPF) *",
+    "cpfPlaceholder": "000.000.000-00",
+    "cpfRequired": "Tax ID is required",
+    "crcLabel": "Accountant License (CRC)",
+    "crcPlaceholder": "CRC-SP 123456",
+    "cnpjEscritorioLabel": "Firm's Tax ID (CNPJ)",
+    "cnpjEscritorioPlaceholder": "00.000.000/0001-00",
+    "emailContadorLabel": "Accountant's Email",
+    "emailContadorPlaceholder": "accountant@firm.com",
+    "telefoneFixoLabel": "Landline",
+    "telefoneFixoPlaceholder": "(11) 3333-3333",
+    "celularLabel": "Mobile Phone"
+  },
+  "step4": {
+    "cepLabel": "Postal Code",
+    "numeroLabel": "Number",
+    "numeroPlaceholder": "E.g.: 123",
+    "enderecoLabel": "Address",
+    "enderecoPlaceholder": "Street, Avenue...",
+    "bairroLabel": "Neighborhood",
+    "bairroPlaceholder": "E.g.: Downtown",
+    "cidadeLabel": "City",
+    "cidadePlaceholder": "E.g.: São Paulo",
+    "estadoLabel": "State",
+    "estadoPlaceholder": "SP"
+  },
+  "step5": {
+    "tipoContaLabel": "Account Type",
+    "agenciaLabel": "Branch",
+    "agenciaPlaceholder": "1234",
+    "dvPlaceholder": "Check digit",
+    "contaLabel": "Account",
+    "contaPlaceholder": "12345"
+  },
+  "step6": {
+    "infoBanner": "If you have questions about this information, consult the company's accountant before filling it in.",
+    "crtLabel": "CRT — Tax Regime Code",
+    "regimeLabel": "Regime",
+    "condicaoStLabel": "ST Condition",
+    "aliqSimplesLabel": "Simples Nacional Rate (%)",
+    "aliqSimplesPlaceholder": "E.g.: 4.00",
+    "receitaBrutaLabel": "Gross Revenue ($)",
+    "receitaBrutaPlaceholder": "E.g.: 360000.00"
+  },
+  "step7": {
+    "heading": "Select the accepted payment methods",
+    "methods": {
+      "dinheiro": { "label": "Cash" },
+      "cheque": { "label": "Check" },
+      "cartao_pos": {
+        "label": "Card-POS",
+        "info": "Physical terminal (card reader). Accepts credit and debit for card brands registered with the acquirer."
+      },
+      "pagamento_prazo": { "label": "Deferred payment" },
+      "pix": { "label": "PIX" },
+      "cartao_tef": {
+        "label": "Card-TEF",
+        "info": "Software integration with the processor (e.g. Sitef). Accepts credit and debit without a separate card reader — the system communicates directly with the processor."
+      }
+    },
+    "integradoraLabel": "TEF Provider",
+    "integradoraPlaceholder": "E.g.: Sitef, Tef Dedicado, PayGo..."
+  },
+  "step8": {
+    "cscLabel": "CSC",
+    "cscPlaceholder": "Security code",
+    "tokenLabel": "NFCe Token",
+    "tokenPlaceholder": "SEFAZ token",
+    "ultimaSerieLabel": "Last NFCe Series",
+    "ultimaSeriePlaceholder": "E.g.: 001",
+    "serieNfeLabel": "NF-e Series",
+    "serieNfePlaceholder": "E.g.: 1",
+    "ultimaNfeLabel": "Last NF-e Issued",
+    "ultimaNfePlaceholder": "E.g.: 000001",
+    "certificadoHeading": "Digital Certificate",
+    "selectCertificado": "Select A1 certificate",
+    "certExtensions": ".pfx or .p12",
+    "change": "Change",
+    "choose": "Choose",
+    "senhaLabel": "Certificate Password",
+    "senhaPlaceholder": "Password for the .pfx / .p12 file"
+  },
+  "confirmation": {
+    "sections": {
+      "empresa": "Company",
+      "endereco": "Address",
+      "contabilidade": "Accounting",
+      "banco": "Bank",
+      "fiscal": "Tax"
+    },
+    "fields": {
+      "razaoSocial": "Legal Name",
+      "cnpj": "Tax ID",
+      "email": "Email",
+      "celular": "Mobile Phone",
+      "responsavel": "Contact Person",
+      "cep": "Postal Code",
+      "endereco": "Address",
+      "cidadeUf": "City/State",
+      "contador": "Accountant",
+      "cpf": "Tax ID (CPF)",
+      "banco": "Bank",
+      "agConta": "Branch / Account",
+      "tipo": "Type",
+      "regime": "Regime",
+      "icms": "State Tax (ICMS)",
+      "condSt": "ST Condition"
+    }
+  },
+  "precheck": {
+    "checklist": {
+      "certificado": { "label": "A1 Digital Certificate", "detail": ".pfx or .p12 file and its access password" },
+      "csc": { "label": "CSC and NFCe TOKEN", "detail": "Taxpayer Security Code and SEFAZ Token" },
+      "series": { "label": "Tax Document Series", "detail": "NF-e series and the last NFCe series used" },
+      "contabilidade": { "label": "Accounting Details", "detail": "Accountant's name, tax ID, firm tax ID, license, email, phone, and full address" }
+    },
+    "title": "Before you start",
+    "subtitle": "Have the information below on hand to fill out the form quickly and without interruptions.",
+    "tipPrefix": "You can skip optional fields and come back later. Required fields are marked with",
+    "cta": "I'm ready — start filling out →"
+  }
+}

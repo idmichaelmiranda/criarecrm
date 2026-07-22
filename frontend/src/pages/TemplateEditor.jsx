@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Layout } from "../components/layout/Layout";
 import { templatesApi } from "../services/api";
 
@@ -59,6 +60,7 @@ function GripIcon() {
 // ── POP Geral ─────────────────────────────────────────────────────────────────
 
 function PopGeral({ templateId, popPath, onUpdated }) {
+  const { t } = useTranslation("templateEditor");
   const fileRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [removing,  setRemoving]  = useState(false);
@@ -75,7 +77,7 @@ function PopGeral({ templateId, popPath, onUpdated }) {
       const { data } = await templatesApi.uploadPopTemplate(templateId, file);
       onUpdated(data.pop_pdf_path);
     } catch (err) {
-      setError(err.message || "Erro ao enviar POP");
+      setError(err.message || t("popGeral.errorUpload"));
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -97,7 +99,7 @@ function PopGeral({ templateId, popPath, onUpdated }) {
       await templatesApi.deletarPopTemplate(templateId);
       onUpdated(null);
     } catch (err) {
-      setError(err.message || "Erro ao remover POP");
+      setError(err.message || t("popGeral.errorRemove"));
     } finally {
       setRemoving(false);
     }
@@ -105,10 +107,10 @@ function PopGeral({ templateId, popPath, onUpdated }) {
 
   return (
     <div>
-      <label className="block text-xs font-semibold text-gray-500 mb-2">POP Geral</label>
+      <label className="block text-xs font-semibold text-gray-500 mb-2">{t("popGeral.label")}</label>
       {hasPop ? (
         <div className="flex items-center gap-2">
-          <button type="button" onClick={handleView} title={`Ver POP: ${fileName}`}
+          <button type="button" onClick={handleView} title={t("popGeral.viewTitle", { fileName })}
             className="flex items-center gap-1.5 text-xs text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg font-semibold transition-colors">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -130,7 +132,7 @@ function PopGeral({ templateId, popPath, onUpdated }) {
             ? <span className="w-3.5 h-3.5 rounded-full border border-blue-300 border-t-transparent animate-spin block" />
             : <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
           }
-          Anexar POP geral
+          {t("popGeral.attach")}
         </button>
       )}
       {error && <p className="text-[10px] text-red-500 mt-1">{error}</p>}
@@ -142,6 +144,7 @@ function PopGeral({ templateId, popPath, onUpdated }) {
 // ── Tarefa row ────────────────────────────────────────────────────────────────
 
 function TarefaRow({ tarefa, index, total, onUpdate, onDelete, onMoveUp, onMoveDown }) {
+  const { t } = useTranslation("templateEditor");
   const fileRef                   = useRef(null);
   const textareaRef               = useRef(null);
   const [uploading, setUploading] = useState(false);
@@ -188,7 +191,7 @@ function TarefaRow({ tarefa, index, total, onUpdate, onDelete, onMoveUp, onMoveD
       const { data } = await templatesApi.uploadPop(tarefa.id, file);
       onUpdate({ ...tarefa, pop_pdf_path: data.pop_pdf_path });
     } catch (err) {
-      setPopError(err.message || "Erro ao enviar POP");
+      setPopError(err.message || t("tarefa.errorUpload"));
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -210,7 +213,7 @@ function TarefaRow({ tarefa, index, total, onUpdate, onDelete, onMoveUp, onMoveD
       await templatesApi.deletarPop(tarefa.id);
       onUpdate({ ...tarefa, pop_pdf_path: null });
     } catch (err) {
-      setPopError(err.message || "Erro ao remover POP");
+      setPopError(err.message || t("tarefa.errorRemove"));
     } finally {
       setRemoving(false);
     }
@@ -231,7 +234,7 @@ function TarefaRow({ tarefa, index, total, onUpdate, onDelete, onMoveUp, onMoveD
           checked={tarefa.obrigatoria}
           onChange={(e) => onUpdate({ ...tarefa, obrigatoria: e.target.checked })}
           className="w-3.5 h-3.5 accent-orange-500 shrink-0 cursor-pointer"
-          title="Tarefa obrigatória"
+          title={t("tarefa.requiredTitle")}
         />
 
         {/* Título */}
@@ -240,7 +243,7 @@ function TarefaRow({ tarefa, index, total, onUpdate, onDelete, onMoveUp, onMoveD
           value={tarefa.titulo}
           onChange={(e) => onUpdate({ ...tarefa, titulo: e.target.value })}
           onInput={(e) => { e.target.style.height = "auto"; e.target.style.height = e.target.scrollHeight + "px"; }}
-          placeholder="Descreva a tarefa..."
+          placeholder={t("tarefa.placeholder")}
           rows={1}
           className="flex-1 text-sm bg-transparent border-b border-transparent hover:border-gray-200 focus:border-orange-400 focus:outline-none py-0.5 text-gray-800 placeholder-gray-300 transition-colors resize-none overflow-hidden leading-snug"
         />
@@ -249,7 +252,7 @@ function TarefaRow({ tarefa, index, total, onUpdate, onDelete, onMoveUp, onMoveD
         <button
           type="button"
           onClick={() => setShowSubs((v) => !v)}
-          title="Sub-itens"
+          title={t("tarefa.subitemsTitle")}
           className={`shrink-0 flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded transition-colors
             ${(tarefa.subitens || []).length > 0
               ? "bg-indigo-50 text-indigo-500 hover:bg-indigo-100"
@@ -262,14 +265,14 @@ function TarefaRow({ tarefa, index, total, onUpdate, onDelete, onMoveUp, onMoveD
         {/* Reorder buttons — aparecem no hover */}
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
           <button type="button" onClick={onMoveUp} disabled={index === 0}
-            title="Mover para cima"
+            title={t("tarefa.moveUp")}
             className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-gray-700 hover:bg-gray-200 disabled:opacity-20 disabled:cursor-not-allowed transition-all">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
             </svg>
           </button>
           <button type="button" onClick={onMoveDown} disabled={index === total - 1}
-            title="Mover para baixo"
+            title={t("tarefa.moveDown")}
             className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-gray-700 hover:bg-gray-200 disabled:opacity-20 disabled:cursor-not-allowed transition-all">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -281,14 +284,14 @@ function TarefaRow({ tarefa, index, total, onUpdate, onDelete, onMoveUp, onMoveD
         {isSaved && (
           hasPop ? (
             <div className="flex items-center gap-0.5 shrink-0">
-              <button type="button" onClick={handleViewPop} title={`Ver: ${fileName}`}
+              <button type="button" onClick={handleViewPop} title={t("tarefa.viewPopTitle", { fileName })}
                 className="text-[10px] text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 px-1.5 py-0.5 rounded font-semibold flex items-center gap-0.5 transition-colors">
                 <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                POP
+                {t("tarefa.pop")}
               </button>
-              <button type="button" onClick={handleRemovePop} disabled={removing} title="Remover POP"
+              <button type="button" onClick={handleRemovePop} disabled={removing} title={t("tarefa.removePopTitle")}
                 className="opacity-0 group-hover:opacity-100 w-4 h-4 flex items-center justify-center text-gray-300 hover:text-red-500 transition-all">
                 {removing
                   ? <span className="w-3 h-3 rounded-full border border-gray-300 border-t-transparent animate-spin block" />
@@ -298,20 +301,20 @@ function TarefaRow({ tarefa, index, total, onUpdate, onDelete, onMoveUp, onMoveD
             </div>
           ) : (
             <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
-              title="Anexar POP (PDF)"
+              title={t("tarefa.attachPopTitle")}
               className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 text-[10px] text-gray-400 hover:text-blue-500 transition-all shrink-0">
               {uploading
                 ? <span className="w-3 h-3 rounded-full border border-blue-300 border-t-transparent animate-spin block" />
                 : <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
               }
-              POP
+              {t("tarefa.pop")}
             </button>
           )
         )}
 
         {/* Delete */}
         <button type="button" onClick={onDelete}
-          title="Remover tarefa"
+          title={t("tarefa.removeTitle")}
           className="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all shrink-0">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -326,7 +329,7 @@ function TarefaRow({ tarefa, index, total, onUpdate, onDelete, onMoveUp, onMoveD
       {showSubs && (
         <div className="ml-8 mt-1 mb-1 rounded-lg border border-gray-100 bg-gray-50/60 overflow-hidden">
           {(tarefa.subitens || []).length === 0 && (
-            <p className="text-[11px] text-gray-300 italic px-3 py-2">Nenhum sub-item. Adicione abaixo.</p>
+            <p className="text-[11px] text-gray-300 italic px-3 py-2">{t("tarefa.noSubitems")}</p>
           )}
           {(tarefa.subitens || []).map((sub, si) => (
             <div key={sub._key ?? sub.id}
@@ -337,14 +340,14 @@ function TarefaRow({ tarefa, index, total, onUpdate, onDelete, onMoveUp, onMoveD
                 checked={sub.obrigatoria ?? false}
                 onChange={(e) => updateSubitem(si, { obrigatoria: e.target.checked })}
                 className="w-3 h-3 accent-orange-400 shrink-0 cursor-pointer"
-                title="Sub-item obrigatório"
+                title={t("tarefa.subitemRequiredTitle")}
               />
               {/* Título */}
               <input
                 type="text"
                 value={sub.titulo}
                 onChange={(e) => updateSubitem(si, { titulo: e.target.value })}
-                placeholder="Descrição do sub-item..."
+                placeholder={t("tarefa.subitemPlaceholder")}
                 className="flex-1 text-xs bg-transparent border-b border-transparent hover:border-gray-200 focus:border-orange-400 focus:outline-none py-0.5 text-gray-700 placeholder-gray-300 transition-colors"
               />
               {/* Delete */}
@@ -368,7 +371,7 @@ function TarefaRow({ tarefa, index, total, onUpdate, onDelete, onMoveUp, onMoveD
             <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
             </svg>
-            Adicionar sub-item
+            {t("tarefa.addSubitem")}
           </button>
         </div>
       )}
@@ -379,6 +382,7 @@ function TarefaRow({ tarefa, index, total, onUpdate, onDelete, onMoveUp, onMoveD
 // ── Etapa card ────────────────────────────────────────────────────────────────
 
 function EtapaCard({ etapa, index, total, onUpdate, onDelete, onMoveUp, onMoveDown }) {
+  const { t } = useTranslation("templateEditor");
   const [open, setOpen] = useState(true);
 
   function addTarefa() {
@@ -434,7 +438,7 @@ function EtapaCard({ etapa, index, total, onUpdate, onDelete, onMoveUp, onMoveDo
           value={etapa.nome}
           onChange={(e) => onUpdate({ ...etapa, nome: e.target.value })}
           onClick={(e) => e.stopPropagation()}
-          placeholder="Nome da etapa..."
+          placeholder={t("etapa.namePlaceholder")}
           className="flex-1 font-semibold text-sm bg-transparent border-b border-transparent hover:border-gray-300 focus:border-orange-400 focus:outline-none text-gray-800 placeholder-gray-400 transition-colors"
         />
 
@@ -442,13 +446,13 @@ function EtapaCard({ etapa, index, total, onUpdate, onDelete, onMoveUp, onMoveDo
         {tarefaCount > 0 && (
           <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0"
             style={{ background: `${cor}20`, color: cor }}>
-            {tarefaCount} tarefa{tarefaCount !== 1 ? "s" : ""}
+            {t("etapa.tasksCount", { count: tarefaCount })}
           </span>
         )}
 
         {/* SLA */}
         <div className="flex items-center gap-1 shrink-0">
-          <span className="text-xs text-gray-400">SLA</span>
+          <span className="text-xs text-gray-400">{t("etapa.sla")}</span>
           <input
             type="number" min={1} max={90}
             value={etapa.sla_dias}
@@ -462,28 +466,28 @@ function EtapaCard({ etapa, index, total, onUpdate, onDelete, onMoveUp, onMoveDo
         {/* Actions */}
         <div className="flex items-center gap-0.5 shrink-0">
           <button type="button" onClick={onMoveUp} disabled={index === 0}
-            title="Mover etapa para cima"
+            title={t("etapa.moveUp")}
             className="w-6 h-6 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-700 hover:bg-white/70 disabled:opacity-25 disabled:cursor-not-allowed transition-all">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
             </svg>
           </button>
           <button type="button" onClick={onMoveDown} disabled={index === total - 1}
-            title="Mover etapa para baixo"
+            title={t("etapa.moveDown")}
             className="w-6 h-6 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-700 hover:bg-white/70 disabled:opacity-25 disabled:cursor-not-allowed transition-all">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
           <button type="button" onClick={onDelete}
-            title="Remover etapa"
+            title={t("etapa.remove")}
             className="w-6 h-6 flex items-center justify-center rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
           </button>
           <button type="button" onClick={() => setOpen((v) => !v)}
-            title={open ? "Recolher" : "Expandir"}
+            title={open ? t("etapa.collapse") : t("etapa.expand")}
             className="w-6 h-6 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-white/70 transition-all">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}
               className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`}>
@@ -499,13 +503,13 @@ function EtapaCard({ etapa, index, total, onUpdate, onDelete, onMoveUp, onMoveDo
 
           {/* Color picker — dentro do corpo, clara e acessível */}
           <div className="mb-3 pb-3 border-b border-gray-100">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">Cor da etapa</p>
+            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">{t("etapa.colorLabel")}</p>
             <ColorPicker value={etapa.cor} onChange={(c) => onUpdate({ ...etapa, cor: c })} />
           </div>
 
           {/* Tarefas */}
           {tarefaCount === 0 ? (
-            <p className="text-xs text-gray-300 italic py-1 mb-2">Nenhuma tarefa. Adicione abaixo.</p>
+            <p className="text-xs text-gray-300 italic py-1 mb-2">{t("etapa.noTasks")}</p>
           ) : (
             <div className="space-y-0.5 mb-1">
               {etapa.tarefas.map((t, ti) => (
@@ -528,7 +532,7 @@ function EtapaCard({ etapa, index, total, onUpdate, onDelete, onMoveUp, onMoveDo
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
             </svg>
-            Adicionar tarefa
+            {t("etapa.addTask")}
           </button>
         </div>
       )}
@@ -543,6 +547,7 @@ const DEFAULT_TEMPLATE = {
 };
 
 export default function TemplateEditor() {
+  const { t } = useTranslation("templateEditor");
   const { id } = useParams();
   const navigate = useNavigate();
   const isNew = !id || id === "novo";
@@ -574,7 +579,7 @@ export default function TemplateEditor() {
           })),
         })));
       })
-      .catch(() => setError("Erro ao carregar template."))
+      .catch(() => setError(t("page.errorLoad")))
       .finally(() => setLoading(false));
   }, [id, isNew]);
 
@@ -611,7 +616,7 @@ export default function TemplateEditor() {
   }
 
   async function handleSave() {
-    if (!header.nome.trim()) { setError("Informe o nome do template."); return; }
+    if (!header.nome.trim()) { setError(t("page.errorNameRequired")); return; }
     setSaving(true); setError("");
     try {
       let templateId = isNew ? null : parseInt(id);
@@ -637,7 +642,7 @@ export default function TemplateEditor() {
 
         if (!etapaId) {
           const { data: e } = await templatesApi.adicionarEtapa(templateId, {
-            nome: etapa.nome || "Nova Etapa", ordem: etapa.ordem, sla_dias: etapa.sla_dias, cor: etapa.cor,
+            nome: etapa.nome || t("page.defaultStageName"), ordem: etapa.ordem, sla_dias: etapa.sla_dias, cor: etapa.cor,
           });
           etapaId = e.id;
         } else {
@@ -713,21 +718,21 @@ export default function TemplateEditor() {
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
-            Templates
+            {t("page.breadcrumb")}
           </button>
           <span className="text-gray-300">/</span>
-          <span className="text-gray-700 font-semibold">{isNew ? "Novo Template" : (header.nome || "Editar Template")}</span>
+          <span className="text-gray-700 font-semibold">{isNew ? t("page.newTemplate") : (header.nome || t("page.editTemplate"))}</span>
         </div>
 
         <div className="flex items-center gap-3">
           <button onClick={() => navigate("/admin/templates")}
             className="px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-            Cancelar
+            {t("page.cancel")}
           </button>
           <button onClick={handleSave} disabled={saving}
             className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50 transition-colors shadow-sm">
             {saving && <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />}
-            {saving ? "Salvando…" : isNew ? "Criar Template" : "Salvar Alterações"}
+            {saving ? t("page.saving") : isNew ? t("page.createTemplate") : t("page.saveChanges")}
           </button>
         </div>
       </div>
@@ -746,42 +751,42 @@ export default function TemplateEditor() {
         {/* ── Painel esquerdo: informações ── */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 sticky top-6 space-y-4">
           <div>
-            <h2 className="text-sm font-bold text-gray-800 mb-4">Informações do Template</h2>
+            <h2 className="text-sm font-bold text-gray-800 mb-4">{t("page.infoTitle")}</h2>
 
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1.5">Nome *</label>
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("page.nameLabel")}</label>
                 <input type="text" value={header.nome}
                   onChange={(e) => setHeader((h) => ({ ...h, nome: e.target.value }))}
-                  placeholder="Ex: ERP Varejo"
+                  placeholder={t("page.namePlaceholder")}
                   className={inputCls} />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1.5">Descrição</label>
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("page.descriptionLabel")}</label>
                 <textarea value={header.descricao}
                   onChange={(e) => setHeader((h) => ({ ...h, descricao: e.target.value }))}
-                  rows={2} placeholder="Descreva o template…"
+                  rows={2} placeholder={t("page.descriptionPlaceholder")}
                   className={`${inputCls} resize-none`} />
               </div>
 
               {/* Tipo — read-only para instalação */}
               <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1.5">Tipo</label>
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("page.typeLabel")}</label>
                 {isInstalacaoTemplate ? (
                   <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-orange-50 border border-orange-100">
-                    <span className="text-[11px] px-1.5 py-0.5 rounded bg-orange-100 text-orange-600 font-bold shrink-0">Instalação</span>
+                    <span className="text-[11px] px-1.5 py-0.5 rounded bg-orange-100 text-orange-600 font-bold shrink-0">{t("page.installationType")}</span>
                     <span className="text-xs text-gray-500 font-mono truncate">{header.tipo}</span>
                   </div>
                 ) : (
                   <input type="text" value={header.tipo}
                     onChange={(e) => setHeader((h) => ({ ...h, tipo: e.target.value }))}
-                    placeholder="Ex: erp, restaurante, industria"
+                    placeholder={t("page.typePlaceholder")}
                     className={inputCls} />
                 )}
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1.5">SLA Total (dias)</label>
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("page.slaTotalLabel")}</label>
                 <input type="number" min={1} max={365} value={header.sla_total_dias}
                   onChange={(e) => setHeader((h) => ({ ...h, sla_total_dias: parseInt(e.target.value) || 30 }))}
                   className={inputCls} />
@@ -791,7 +796,7 @@ export default function TemplateEditor() {
                 <input type="checkbox" checked={header.ativo}
                   onChange={(e) => setHeader((h) => ({ ...h, ativo: e.target.checked }))}
                   className="w-4 h-4 accent-orange-500" />
-                <span className="text-sm text-gray-700">Template ativo</span>
+                <span className="text-sm text-gray-700">{t("page.activeLabel")}</span>
               </label>
 
               {!isNew && (
@@ -812,11 +817,11 @@ export default function TemplateEditor() {
               <svg className="w-3.5 h-3.5 text-orange-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
-              Checkbox marcado = tarefa obrigatória
+              {t("page.legendRequired")}
             </div>
             <div className="flex items-center gap-2 text-xs text-gray-400">
               <GripIcon />
-              Arraste ou use ↑↓ para reordenar
+              {t("page.legendReorder")}
             </div>
           </div>
         </div>
@@ -825,10 +830,10 @@ export default function TemplateEditor() {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h2 className="text-sm font-bold text-gray-800">Pipeline de Etapas</h2>
+              <h2 className="text-sm font-bold text-gray-800">{t("page.pipelineTitle")}</h2>
               <p className="text-xs text-gray-400 mt-0.5">
-                {etapas.length} etapa{etapas.length !== 1 ? "s" : ""}
-                {totalTarefas > 0 && ` · ${totalTarefas} tarefa${totalTarefas !== 1 ? "s" : ""}`}
+                {t("page.stagesCount", { count: etapas.length })}
+                {totalTarefas > 0 && ` · ${t("page.tasksCount", { count: totalTarefas })}`}
               </p>
             </div>
           </div>
@@ -840,8 +845,8 @@ export default function TemplateEditor() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
               </div>
-              <p className="text-sm font-medium text-gray-600">Nenhuma etapa configurada</p>
-              <p className="text-xs text-gray-400 mt-1">Clique em Adicionar Etapa para começar.</p>
+              <p className="text-sm font-medium text-gray-600">{t("page.emptyTitle")}</p>
+              <p className="text-xs text-gray-400 mt-1">{t("page.emptySubtitle")}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -865,7 +870,7 @@ export default function TemplateEditor() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
             </svg>
-            Adicionar Etapa
+            {t("page.addStage")}
           </button>
         </div>
       </div>

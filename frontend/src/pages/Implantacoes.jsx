@@ -1,9 +1,11 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Layout } from "../components/layout/Layout";
 import { Badge } from "../components/ui/Badge";
 import { implantacoesApi } from "../services/api";
 import { fmtDate } from "../utils/dateUtils";
+import i18n from "../i18n";
 
 function slaRelativo(impl) {
   if (impl.status === "concluida" || impl.status === "cancelada") {
@@ -15,10 +17,10 @@ function slaRelativo(impl) {
   const slaLocal = new Date(y, mo - 1, dy);
   const todayLocal = new Date(); todayLocal.setHours(0, 0, 0, 0);
   const d = Math.round((slaLocal - todayLocal) / 86400000);
-  if (d < 0)  return { label: `Vencido ${-d}d`, level: "expired" };
-  if (d === 0) return { label: "Vence hoje",    level: "urgent" };
-  if (d === 1) return { label: "Amanhã",        level: "warning" };
-  return             { label: `${d} dias`,       level: "ok" };
+  if (d < 0)  return { label: i18n.t("implantacoes:slaRelativo.overdue", { count: -d }), level: "expired" };
+  if (d === 0) return { label: i18n.t("implantacoes:slaRelativo.dueToday"), level: "urgent" };
+  if (d === 1) return { label: i18n.t("implantacoes:slaRelativo.tomorrow"), level: "warning" };
+  return             { label: i18n.t("implantacoes:slaRelativo.daysLeft", { count: d }), level: "ok" };
 }
 
 const SLA_PILL = {
@@ -67,15 +69,15 @@ function KpiCard({ label, value, sub, accent, onClick }) {
 }
 
 function PrioridadePill({ prioridade }) {
+  const { t } = useTranslation("implantacoes");
   const cfg = {
     baixa:   "bg-gray-100 text-gray-500",
     alta:    "bg-orange-100 text-orange-700",
     critica: "bg-red-100 text-red-700",
   };
-  const labels = { baixa: "Baixa", alta: "Alta", critica: "Crítica" };
   return (
     <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${cfg[prioridade] || "bg-gray-100 text-gray-500"}`}>
-      {labels[prioridade] || prioridade}
+      {cfg[prioridade] ? t(`prio.${prioridade}`) : prioridade}
     </span>
   );
 }
@@ -99,19 +101,20 @@ function ProgressBar({ value, status }) {
 }
 
 function ContextBanner({ filterSla, filterHighlight, count, onClear }) {
+  const { t } = useTranslation("implantacoes");
   if (filterSla === "atrasada") return (
     <div className="flex items-start gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-xl">
       <span className="text-lg shrink-0 mt-0.5">🚨</span>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-bold text-red-800">
-          {count} implantaç{count !== 1 ? "ões" : "ão"} com SLA vencido
+          {t("contextBanner.overdueTitle", { count })}
         </p>
         <p className="text-xs text-red-600 mt-0.5">
-          Revise os prazos, atualize o status ou negocie nova data com o cliente — ação imediata necessária.
+          {t("contextBanner.overdueDesc")}
         </p>
       </div>
       <button onClick={onClear} className="shrink-0 text-xs font-semibold text-red-600 hover:text-red-800 px-2.5 py-1.5 rounded-lg hover:bg-red-100 transition-colors whitespace-nowrap">
-        Limpar ✕
+        {t("common.clear")}
       </button>
     </div>
   );
@@ -120,14 +123,14 @@ function ContextBanner({ filterSla, filterHighlight, count, onClear }) {
       <span className="text-lg shrink-0 mt-0.5">⚠️</span>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-bold text-amber-800">
-          {count} implantaç{count !== 1 ? "ões" : "ão"} em risco de SLA
+          {t("contextBanner.criticalTitle", { count })}
         </p>
         <p className="text-xs text-amber-700 mt-0.5">
-          Menos de 3 dias para vencimento — priorize essas implantações hoje.
+          {t("contextBanner.criticalDesc")}
         </p>
       </div>
       <button onClick={onClear} className="shrink-0 text-xs font-semibold text-amber-700 hover:text-amber-900 px-2.5 py-1.5 rounded-lg hover:bg-amber-100 transition-colors whitespace-nowrap">
-        Limpar ✕
+        {t("common.clear")}
       </button>
     </div>
   );
@@ -135,13 +138,13 @@ function ContextBanner({ filterSla, filterHighlight, count, onClear }) {
     <div className="flex items-start gap-3 px-4 py-3 bg-orange-50 border border-orange-200 rounded-xl">
       <span className="text-lg shrink-0 mt-0.5">📋</span>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold text-orange-800">Tarefas com prazo vencido detectadas</p>
+        <p className="text-sm font-bold text-orange-800">{t("contextBanner.tasksTitle")}</p>
         <p className="text-xs text-orange-700 mt-0.5">
-          As implantações com SLA mais crítico foram listadas primeiro. Abra cada uma para identificar quais tarefas estão atrasadas e atribuir responsáveis.
+          {t("contextBanner.tasksDesc")}
         </p>
       </div>
       <button onClick={onClear} className="shrink-0 text-xs font-semibold text-orange-700 hover:text-orange-900 px-2.5 py-1.5 rounded-lg hover:bg-orange-100 transition-colors whitespace-nowrap">
-        Fechar ✕
+        {t("common.close")}
       </button>
     </div>
   );
@@ -151,36 +154,37 @@ function ContextBanner({ filterSla, filterHighlight, count, onClear }) {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const TABS = [
-  { key: "em_andamento", label: "Em Andamento" },
-  { key: "todas",        label: "Todas"        },
+  { key: "em_andamento", labelKey: "emAndamento" },
+  { key: "todas",        labelKey: "todas"       },
 ];
 
 const STATUS_SUBFILTERS = [
-  { key: "",             label: "Todos os status" },
-  { key: "em_andamento", label: "Em Andamento"    },
-  { key: "pausada",      label: "Pausadas"        },
-  { key: "concluida",    label: "Concluídas"      },
-  { key: "cancelada",    label: "Canceladas"      },
+  { key: "",             labelKey: "all"         },
+  { key: "em_andamento", labelKey: "emAndamento" },
+  { key: "pausada",      labelKey: "pausada"     },
+  { key: "concluida",    labelKey: "concluida"   },
+  { key: "cancelada",    labelKey: "cancelada"   },
 ];
 
 const SLA_FILTERS = [
-  { key: "",         label: "Qualquer SLA" },
-  { key: "atrasada", label: "🔴 Atrasadas" },
-  { key: "critico",  label: "🟡 Crítico"   },
-  { key: "ok",       label: "🟢 No Prazo"  },
+  { key: "",         labelKey: "any"      },
+  { key: "atrasada", labelKey: "atrasada" },
+  { key: "critico",  labelKey: "critico"  },
+  { key: "ok",       labelKey: "ok"       },
 ];
 
 const PRIORIDADE_FILTERS = [
-  { key: "",        label: "Qualquer Prioridade" },
-  { key: "critica", label: "Crítica"             },
-  { key: "alta",    label: "Alta"                },
-  { key: "normal",  label: "Normal"              },
-  { key: "baixa",   label: "Baixa"               },
+  { key: "",        labelKey: "any"     },
+  { key: "critica", labelKey: "critica" },
+  { key: "alta",    labelKey: "alta"    },
+  { key: "normal",  labelKey: "normal"  },
+  { key: "baixa",   labelKey: "baixa"   },
 ];
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Implantacoes() {
+  const { t } = useTranslation("implantacoes");
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -260,11 +264,11 @@ export default function Implantacoes() {
     <Layout>
       {/* Header */}
       <div className="mb-5">
-        <h1 className="text-2xl font-bold text-gray-900">Implantações</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t("page.title")}</h1>
         <p className="text-sm text-gray-400 mt-0.5">
           {filtered.length !== items.length
-            ? `${filtered.length} de ${items.length} implantações`
-            : `${items.length} implantaç${items.length !== 1 ? "ões" : "ão"}`}
+            ? t("page.subtitleFiltered", { filtered: filtered.length, total: items.length })
+            : t("page.subtitleTotal", { count: items.length })}
         </p>
       </div>
 
@@ -288,26 +292,26 @@ export default function Implantacoes() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
         <KpiCard
-          label="Em Andamento"
+          label={t("page.kpi.inProgress")}
           value={kpiEmAndamento}
           accent="orange"
           onClick={() => setTab("em_andamento")}
         />
         <KpiCard
-          label="SLA Vencido"
+          label={t("page.kpi.slaOverdue")}
           value={kpiSlaVencido}
-          sub={kpiSlaVencido > 0 ? "requer atenção" : "tudo no prazo"}
+          sub={kpiSlaVencido > 0 ? t("page.kpi.requiresAttention") : t("page.kpi.onSchedule")}
           accent={kpiSlaVencido > 0 ? "red" : "gray"}
           onClick={kpiSlaVencido > 0 ? () => setParam("sla_status", filterSla === "atrasada" ? "" : "atrasada") : undefined}
         />
         <KpiCard
-          label="Com Conversão"
+          label={t("page.kpi.withConversion")}
           value={kpiConversao}
-          sub="de dados"
+          sub={t("page.kpi.ofData")}
           accent={kpiConversao > 0 ? "blue" : "gray"}
         />
         <KpiCard
-          label="Concluídas"
+          label={t("page.kpi.completed")}
           value={kpiConcluidas}
           accent="green"
           onClick={() => {
@@ -327,21 +331,21 @@ export default function Implantacoes() {
       <div className="space-y-3 mb-5">
         {/* Status tabs */}
         <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
-          {TABS.map((t) => {
-            const cnt = tabCount(t.key);
+          {TABS.map((tb) => {
+            const cnt = tabCount(tb.key);
             return (
               <button
-                key={t.key}
-                onClick={() => setTab(t.key)}
+                key={tb.key}
+                onClick={() => setTab(tb.key)}
                 className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-                  activeTab === t.key
+                  activeTab === tb.key
                     ? "bg-white text-gray-900 shadow-sm"
                     : "text-gray-500 hover:text-gray-700"
                 }`}
               >
-                {t.label}
+                {t(`tabs.${tb.labelKey}`)}
                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
-                  activeTab === t.key
+                  activeTab === tb.key
                     ? "bg-orange-100 text-orange-600"
                     : "bg-gray-200 text-gray-500"
                 }`}>
@@ -363,7 +367,7 @@ export default function Implantacoes() {
                 filterStatus ? "border-orange-400 text-orange-700 bg-orange-50" : "border-gray-200 text-gray-600 bg-white"
               }`}
             >
-              {STATUS_SUBFILTERS.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}
+              {STATUS_SUBFILTERS.map((f) => <option key={f.key} value={f.key}>{t(`statusSubfilters.${f.labelKey}`)}</option>)}
             </select>
           )}
 
@@ -374,7 +378,7 @@ export default function Implantacoes() {
               filterSla ? "border-orange-400 text-orange-700 bg-orange-50" : "border-gray-200 text-gray-600 bg-white"
             }`}
           >
-            {SLA_FILTERS.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}
+            {SLA_FILTERS.map((f) => <option key={f.key} value={f.key}>{t(`slaFilters.${f.labelKey}`)}</option>)}
           </select>
 
           <select
@@ -384,7 +388,7 @@ export default function Implantacoes() {
               filterPrioridade ? "border-orange-400 text-orange-700 bg-orange-50" : "border-gray-200 text-gray-600 bg-white"
             }`}
           >
-            {PRIORIDADE_FILTERS.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}
+            {PRIORIDADE_FILTERS.map((f) => <option key={f.key} value={f.key}>{t(`prioridadeFilters.${f.labelKey}`)}</option>)}
           </select>
 
           <div className="relative flex-1 min-w-[180px] max-w-xs">
@@ -393,7 +397,7 @@ export default function Implantacoes() {
             </svg>
             <input
               type="text"
-              placeholder="Buscar empresa, código..."
+              placeholder={t("page.searchPlaceholder")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-8 w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 transition bg-white"
@@ -405,7 +409,7 @@ export default function Implantacoes() {
               onClick={() => { setSearchParams({ tab: activeTab }); setSearch(""); }}
               className="text-xs font-medium text-gray-400 hover:text-red-500 transition-colors px-2 py-1.5 rounded-lg hover:bg-red-50"
             >
-              Limpar ✕
+              {t("page.clearFilters")}
             </button>
           )}
         </div>
@@ -420,11 +424,11 @@ export default function Implantacoes() {
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center">
             <p className="text-3xl mb-3">⚙️</p>
-            <p className="text-sm font-medium text-gray-700">Nenhuma implantação encontrada</p>
+            <p className="text-sm font-medium text-gray-700">{t("page.emptyTitle")}</p>
             <p className="text-xs text-gray-400 mt-1">
               {search || hasActiveFilters
-                ? "Tente ajustar os filtros."
-                : "As implantações são criadas ao aprovar uma solicitação na Triagem."}
+                ? t("page.emptyFiltered")
+                : t("page.emptyDefault")}
             </p>
           </div>
         ) : (
@@ -433,11 +437,11 @@ export default function Implantacoes() {
               <thead>
                 <tr className="bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-100">
                   <th className="p-0 w-1" />
-                  <th className="px-6 py-3">Cliente</th>
-                  <th className="px-6 py-3">Status</th>
-                  <th className="px-6 py-3 min-w-[150px]">Progresso</th>
-                  <th className="px-6 py-3">Responsável</th>
-                  <th className="px-6 py-3">SLA</th>
+                  <th className="px-6 py-3">{t("page.headers.client")}</th>
+                  <th className="px-6 py-3">{t("page.headers.status")}</th>
+                  <th className="px-6 py-3 min-w-[150px]">{t("page.headers.progress")}</th>
+                  <th className="px-6 py-3">{t("page.headers.responsible")}</th>
+                  <th className="px-6 py-3">{t("page.headers.sla")}</th>
                   <th className="px-2 py-3 w-8"></th>
                 </tr>
               </thead>
@@ -483,12 +487,12 @@ export default function Implantacoes() {
                           {isAtrasada && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500 text-white">
                               <span className="w-1.5 h-1.5 rounded-full bg-white/70 animate-pulse shrink-0" />
-                              SLA VENCIDO
+                              {t("page.slaOverdueBadge")}
                             </span>
                           )}
                           {isCritico && !isAtrasada && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-white">
-                              ⚠ EM RISCO
+                              {t("page.slaCriticalBadge")}
                             </span>
                           )}
                           {(impl.tarefas_vencidas ?? 0) > 0 && (
@@ -496,7 +500,7 @@ export default function Implantacoes() {
                               <svg className="w-2.5 h-2.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
-                              {impl.tarefas_vencidas} tarefa{impl.tarefas_vencidas > 1 ? "s" : ""} vencida{impl.tarefas_vencidas > 1 ? "s" : ""}
+                              {t("page.overdueTasksBadge", { count: impl.tarefas_vencidas })}
                             </span>
                           )}
                           {impl.conversao_dados && (
@@ -504,7 +508,7 @@ export default function Implantacoes() {
                               <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M4 12h16M4 17h7" />
                               </svg>
-                              Conversão de dados
+                              {t("page.dataConversionBadge")}
                             </span>
                           )}
                         </div>

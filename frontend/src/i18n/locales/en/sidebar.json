@@ -1,0 +1,73 @@
+{
+  "alterarSenha": {
+    "title": "Change password",
+    "currentPasswordLabel": "Current password",
+    "newPasswordLabel": "New password",
+    "confirmPasswordLabel": "Confirm new password",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "successMessage": "Password changed successfully!",
+    "errorCurrentRequired": "Enter your current password.",
+    "errorMinLength": "The new password must be at least 8 characters.",
+    "errorMismatch": "Passwords don't match.",
+    "errorDefault": "Error changing password.",
+    "strength": {
+      "weak": "Weak",
+      "fair": "Fair",
+      "good": "Good",
+      "strong": "Strong"
+    }
+  },
+  "nav": {
+    "groups": {
+      "operacional": "Operations",
+      "configuracao": "Configuration",
+      "administracao": "Administration"
+    },
+    "dashboard": "Dashboard",
+    "triagem": "Triage",
+    "implantacoes": "Implementations",
+    "instalacoes": "Installations",
+    "clientes": "Clients",
+    "assistenteCriare": "Criare Assistant",
+    "templates": "Templates",
+    "bdRestore": "DB Restore",
+    "usuarios": "Users",
+    "gruposPermissao": "Permission Groups",
+    "resultados": "Results",
+    "beta": "Beta"
+  },
+  "notif": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "allCaughtUp": "All caught up",
+    "noneAtMoment": "No notifications right now.",
+    "unread": "Unread",
+    "previous": "Earlier"
+  },
+  "senhaDia": {
+    "title": "Password of the day",
+    "hide": "Hide",
+    "reveal": "Reveal",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "loading": "loading...",
+    "unavailable": "unavailable"
+  },
+  "user": {
+    "noGroup": "No group",
+    "changePhoto": "Change photo"
+  },
+  "brand": {
+    "name": "CriareTI",
+    "tagline": "Implementations",
+    "logoAlt": "CriareTI"
+  },
+  "settings": "Settings",
+  "logout": "Log out",
+  "openMenu": "Open menu",
+  "toggle": {
+    "expand": "Expand menu",
+    "collapse": "Collapse menu"
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "alterarSenha": {
+    "title": "Cambiar contraseña",
+    "currentPasswordLabel": "Contraseña actual",
+    "newPasswordLabel": "Nueva contraseña",
+    "confirmPasswordLabel": "Confirmar nueva contraseña",
+    "cancel": "Cancelar",
+    "saving": "Guardando...",
+    "successMessage": "¡Contraseña cambiada con éxito!",
+    "errorCurrentRequired": "Indica tu contraseña actual.",
+    "errorMinLength": "La nueva contraseña debe tener al menos 8 caracteres.",
+    "errorMismatch": "Las contraseñas no coinciden.",
+    "errorDefault": "Error al cambiar la contraseña.",
+    "strength": {
+      "weak": "Débil",
+      "fair": "Regular",
+      "good": "Buena",
+      "strong": "Fuerte"
+    }
+  },
+  "nav": {
+    "groups": {
+      "operacional": "Operativo",
+      "configuracao": "Configuración",
+      "administracao": "Administración"
+    },
+    "dashboard": "Panel",
+    "triagem": "Triaje",
+    "implantacoes": "Implementaciones",
+    "instalacoes": "Instalaciones",
+    "clientes": "Clientes",
+    "assistenteCriare": "Asistente Criare",
+    "templates": "Plantillas",
+    "bdRestore": "Restaurar BD",
+    "usuarios": "Usuarios",
+    "gruposPermissao": "Grupos de Permisos",
+    "resultados": "Resultados",
+    "beta": "Beta"
+  },
+  "notif": {
+    "title": "Notificaciones",
+    "markAllRead": "Marcar todas como leídas",
+    "allCaughtUp": "Todo al día",
+    "noneAtMoment": "No hay notificaciones por ahora.",
+    "unread": "No leídas",
+    "previous": "Anteriores"
+  },
+  "senhaDia": {
+    "title": "Contraseña del día",
+    "hide": "Ocultar",
+    "reveal": "Revelar",
+    "copy": "Copiar",
+    "copied": "¡Copiado!",
+    "loading": "cargando...",
+    "unavailable": "no disponible"
+  },
+  "user": {
+    "noGroup": "Sin grupo",
+    "changePhoto": "Cambiar foto"
+  },
+  "brand": {
+    "name": "CriareTI",
+    "tagline": "Implementaciones",
+    "logoAlt": "CriareTI"
+  },
+  "settings": "Configuración",
+  "logout": "Salir",
+  "openMenu": "Abrir menú",
+  "toggle": {
+    "expand": "Expandir menú",
+    "collapse": "Colapsar menú"
+  }
+}

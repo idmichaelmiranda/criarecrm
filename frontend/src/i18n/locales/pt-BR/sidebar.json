@@ -1,0 +1,73 @@
+{
+  "alterarSenha": {
+    "title": "Alterar senha",
+    "currentPasswordLabel": "Senha atual",
+    "newPasswordLabel": "Nova senha",
+    "confirmPasswordLabel": "Confirmar nova senha",
+    "cancel": "Cancelar",
+    "saving": "Salvando...",
+    "successMessage": "Senha alterada com sucesso!",
+    "errorCurrentRequired": "Informe a senha atual.",
+    "errorMinLength": "A nova senha deve ter no mínimo 8 caracteres.",
+    "errorMismatch": "As senhas não coincidem.",
+    "errorDefault": "Erro ao alterar senha.",
+    "strength": {
+      "weak": "Fraca",
+      "fair": "Regular",
+      "good": "Boa",
+      "strong": "Forte"
+    }
+  },
+  "nav": {
+    "groups": {
+      "operacional": "Operacional",
+      "configuracao": "Configuração",
+      "administracao": "Administração"
+    },
+    "dashboard": "Dashboard",
+    "triagem": "Triagem",
+    "implantacoes": "Implantações",
+    "instalacoes": "Instalações",
+    "clientes": "Clientes",
+    "assistenteCriare": "Assistente Criare",
+    "templates": "Templates",
+    "bdRestore": "BD Restore",
+    "usuarios": "Usuários",
+    "gruposPermissao": "Grupos de Permissão",
+    "resultados": "Resultados",
+    "beta": "Beta"
+  },
+  "notif": {
+    "title": "Notificações",
+    "markAllRead": "Marcar todas como lidas",
+    "allCaughtUp": "Tudo em dia",
+    "noneAtMoment": "Nenhuma notificação no momento.",
+    "unread": "Não lidas",
+    "previous": "Anteriores"
+  },
+  "senhaDia": {
+    "title": "Senha do dia",
+    "hide": "Ocultar",
+    "reveal": "Revelar",
+    "copy": "Copiar",
+    "copied": "Copiado!",
+    "loading": "carregando...",
+    "unavailable": "indisponível"
+  },
+  "user": {
+    "noGroup": "Sem grupo",
+    "changePhoto": "Alterar foto"
+  },
+  "brand": {
+    "name": "CriareTI",
+    "tagline": "Implantações",
+    "logoAlt": "CriareTI"
+  },
+  "settings": "Configurações",
+  "logout": "Sair",
+  "openMenu": "Abrir menu",
+  "toggle": {
+    "expand": "Expandir menu",
+    "collapse": "Recolher menu"
+  }
+}

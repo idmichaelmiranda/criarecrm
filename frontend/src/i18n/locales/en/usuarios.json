@@ -1,0 +1,86 @@
+{
+  "header": {
+    "title": "Users",
+    "subtitle": "Manage access to the platform",
+    "newUser": "New User"
+  },
+  "stats": {
+    "total": "Total",
+    "active": "Active",
+    "inactive": "Inactive",
+    "pending": "Pending"
+  },
+  "errors": {
+    "loadFailed": "Failed to load users.",
+    "nameEmailRequired": "Name and email are required.",
+    "passwordRequired": "Password is required for a new user.",
+    "selectGroup": "Select a group.",
+    "selectPermissionGroup": "Select a permission group."
+  },
+  "tabs": {
+    "active": "Active",
+    "pending": "Pending"
+  },
+  "search": {
+    "placeholder": "Search by name or email..."
+  },
+  "count_one": "{{count}} user",
+  "count_other": "{{count}} users",
+  "list": {
+    "headers": {
+      "user": "User",
+      "email": "Email",
+      "group": "Group",
+      "status": "Status"
+    },
+    "emptySearch": "No users found for \"{{search}}\"",
+    "emptyPending": "No pending registrations",
+    "emptyActive": "No users registered",
+    "tryOtherTerms": "Try different search terms.",
+    "clickNewUser": "Click New User to get started."
+  },
+  "status": {
+    "pending": "Pending",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "row": {
+    "approve": "Approve",
+    "resendPassword": "Resend password email"
+  },
+  "editModal": {
+    "titleEdit": "Edit User",
+    "titleNew": "New User",
+    "fullName": "Full name",
+    "email": "Email",
+    "emailPlaceholder": "user@company.com",
+    "password": "Password",
+    "resetPasswordHint": "To reset this user's password, use the resend email button in the list.",
+    "group": "Group",
+    "selectGroupPlaceholder": "Select...",
+    "status": "Status",
+    "notifTitle": "Completion notifications",
+    "notifDesc": "Alerts when implementations and installations are completed",
+    "approveInstallerTitle": "Approve installations via Criare Assistant",
+    "approveInstallerDesc": "Allows approving/rejecting ERP installer requests, regardless of group",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "save": "Save"
+  },
+  "approveModal": {
+    "title": "Approve registration",
+    "groupLabel": "Permission group",
+    "selectGroupPlaceholder": "Select the group",
+    "emailNotice": "An email will be sent automatically to the user with a link to set their password.",
+    "cancel": "Cancel",
+    "approving": "Approving...",
+    "approve": "Approve Access"
+  },
+  "deleteConfirm": {
+    "title": "Delete user?",
+    "messageBefore": "Are you sure you want to delete ",
+    "messageAfter": "? This action cannot be undone.",
+    "cancel": "Cancel",
+    "confirm": "Delete"
+  }
+}

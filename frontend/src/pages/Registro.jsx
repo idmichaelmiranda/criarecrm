@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { authApi } from "../services/api";
 
 export default function Registro() {
+  const { t } = useTranslation("registro");
   const [nome, setNome]       = useState("");
   const [email, setEmail]     = useState("");
   const [loading, setLoading] = useState(false);
@@ -12,7 +14,7 @@ export default function Registro() {
   async function handleSubmit(e) {
     e.preventDefault();
     if (!nome.trim() || !email.trim()) {
-      setError("Preencha nome e e-mail.");
+      setError(t("form.errorRequired"));
       return;
     }
     setLoading(true);
@@ -21,7 +23,7 @@ export default function Registro() {
       await authApi.registro({ nome: nome.trim(), email: email.trim() });
       setSuccess(true);
     } catch (err) {
-      setError(err.message || "Erro ao enviar solicitação.");
+      setError(err.message || t("form.errorDefault"));
     } finally {
       setLoading(false);
     }
@@ -51,20 +53,20 @@ export default function Registro() {
                 style={{ background: "linear-gradient(135deg, #F56316, #d94f0d)", filter: "blur(12px)" }} />
               <div className="relative w-28 h-28 rounded-3xl overflow-hidden shadow-2xl"
                 style={{ boxShadow: "0 0 0 1px rgba(245,99,22,0.25), 0 20px 60px rgba(245,99,22,0.18)" }}>
-                <img src="/logo.jpg" alt="CriareTI" className="w-full h-full object-cover" />
+                <img src="/logo.jpg" alt={t("leftPanel.logoAlt")} className="w-full h-full object-cover" />
               </div>
             </div>
-            <h1 className="text-4xl font-extrabold text-white tracking-tight mb-2">CriareTI</h1>
-            <p className="text-base text-slate-400 font-medium mb-12">Plataforma de Implantação</p>
+            <h1 className="text-4xl font-extrabold text-white tracking-tight mb-2">{t("leftPanel.brand")}</h1>
+            <p className="text-base text-slate-400 font-medium mb-12">{t("leftPanel.tagline")}</p>
             <p className="text-xl font-semibold text-white leading-snug mb-3 max-w-xs">
-              Solicite seu acesso à plataforma.
+              {t("leftPanel.headline")}
             </p>
             <p className="text-sm text-slate-500 leading-relaxed max-w-xs">
-              Após o envio, um administrador irá analisar sua solicitação e você receberá um e-mail com o link de acesso.
+              {t("leftPanel.subtext")}
             </p>
           </div>
           <p className="text-xs text-slate-700 text-center">
-            © {new Date().getFullYear()} CriareTI. Todos os direitos reservados.
+            {t("leftPanel.footer", { year: new Date().getFullYear() })}
           </p>
         </div>
       </div>
@@ -77,9 +79,9 @@ export default function Registro() {
           <div className="flex items-center gap-3 mb-10 lg:hidden">
             <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg shrink-0"
               style={{ boxShadow: "0 0 0 1px rgba(245,99,22,0.2)" }}>
-              <img src="/logo.jpg" alt="CriareTI" className="w-full h-full object-cover" />
+              <img src="/logo.jpg" alt={t("form.logoAlt")} className="w-full h-full object-cover" />
             </div>
-            <p className="text-white font-bold text-lg">CriareTI</p>
+            <p className="text-white font-bold text-lg">{t("form.brand")}</p>
           </div>
 
           {success ? (
@@ -90,33 +92,32 @@ export default function Registro() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h1 className="text-2xl font-bold text-white mb-2">Solicitação enviada!</h1>
+              <h1 className="text-2xl font-bold text-white mb-2">{t("success.title")}</h1>
               <p className="text-sm text-slate-400 mb-8 leading-relaxed">
-                Sua solicitação de acesso foi recebida. Assim que um administrador aprovar seu cadastro,
-                você receberá um e-mail com o link para definir sua senha.
+                {t("success.message")}
               </p>
               <Link to="/login"
                 className="block text-center w-full py-3 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
                 style={{ background: "linear-gradient(135deg, #F56316, #d94f0d)" }}>
-                Voltar ao login
+                {t("success.backToLogin")}
               </Link>
             </div>
           ) : (
             <>
-              <h1 className="text-2xl font-bold text-white mb-1">Solicitar acesso</h1>
-              <p className="text-sm text-slate-500 mb-8">Preencha os dados abaixo para solicitar seu cadastro</p>
+              <h1 className="text-2xl font-bold text-white mb-1">{t("form.title")}</h1>
+              <p className="text-sm text-slate-500 mb-8">{t("form.subtitle")}</p>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">
-                    Nome completo
+                    {t("form.nameLabel")}
                   </label>
                   <input
                     type="text"
                     autoComplete="name"
                     value={nome}
                     onChange={(e) => { setNome(e.target.value); setError(""); }}
-                    placeholder="Seu nome"
+                    placeholder={t("form.namePlaceholder")}
                     className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-slate-600 outline-none transition-all"
                     style={inputStyle}
                     onFocus={(e) => e.target.style.borderColor = "#F56316"}
@@ -126,14 +127,14 @@ export default function Registro() {
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">
-                    E-mail corporativo
+                    {t("form.emailLabel")}
                   </label>
                   <input
                     type="email"
                     autoComplete="email"
                     value={email}
                     onChange={(e) => { setEmail(e.target.value); setError(""); }}
-                    placeholder="seu@email.com"
+                    placeholder={t("form.emailPlaceholder")}
                     className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-slate-600 outline-none transition-all"
                     style={inputStyle}
                     onFocus={(e) => e.target.style.borderColor = "#F56316"}
@@ -160,16 +161,16 @@ export default function Registro() {
                   {loading ? (
                     <span className="flex items-center justify-center gap-2">
                       <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                      Enviando...
+                      {t("form.submitting")}
                     </span>
-                  ) : "Solicitar acesso"}
+                  ) : t("form.submit")}
                 </button>
               </form>
 
               <p className="text-center text-xs text-slate-600 mt-8">
-                Já tem acesso?{" "}
+                {t("form.loginPrompt")}{" "}
                 <Link to="/login" className="text-orange-400 hover:text-orange-300 transition-colors font-medium">
-                  Fazer login
+                  {t("form.loginLink")}
                 </Link>
               </p>
             </>

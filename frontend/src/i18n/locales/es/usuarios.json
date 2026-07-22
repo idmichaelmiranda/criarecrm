@@ -1,0 +1,86 @@
+{
+  "header": {
+    "title": "Usuarios",
+    "subtitle": "Gestiona los accesos a la plataforma",
+    "newUser": "Nuevo Usuario"
+  },
+  "stats": {
+    "total": "Total",
+    "active": "Activos",
+    "inactive": "Inactivos",
+    "pending": "Pendientes"
+  },
+  "errors": {
+    "loadFailed": "Error al cargar los usuarios.",
+    "nameEmailRequired": "Nombre y correo electrónico son obligatorios.",
+    "passwordRequired": "La contraseña es obligatoria para un nuevo usuario.",
+    "selectGroup": "Selecciona un grupo.",
+    "selectPermissionGroup": "Selecciona un grupo de permisos."
+  },
+  "tabs": {
+    "active": "Activos",
+    "pending": "Pendientes"
+  },
+  "search": {
+    "placeholder": "Buscar por nombre o correo..."
+  },
+  "count_one": "{{count}} usuario",
+  "count_other": "{{count}} usuarios",
+  "list": {
+    "headers": {
+      "user": "Usuario",
+      "email": "Correo",
+      "group": "Grupo",
+      "status": "Estado"
+    },
+    "emptySearch": "No se encontraron usuarios para \"{{search}}\"",
+    "emptyPending": "No hay registros pendientes",
+    "emptyActive": "No hay usuarios registrados",
+    "tryOtherTerms": "Prueba con otros términos.",
+    "clickNewUser": "Haz clic en Nuevo Usuario para empezar."
+  },
+  "status": {
+    "pending": "Pendiente",
+    "active": "Activo",
+    "inactive": "Inactivo"
+  },
+  "row": {
+    "approve": "Aprobar",
+    "resendPassword": "Reenviar correo de contraseña"
+  },
+  "editModal": {
+    "titleEdit": "Editar Usuario",
+    "titleNew": "Nuevo Usuario",
+    "fullName": "Nombre completo",
+    "email": "Correo electrónico",
+    "emailPlaceholder": "usuario@empresa.com",
+    "password": "Contraseña",
+    "resetPasswordHint": "Para restablecer la contraseña de este usuario, usa el botón de reenviar correo en la lista.",
+    "group": "Grupo",
+    "selectGroupPlaceholder": "Selecciona...",
+    "status": "Estado",
+    "notifTitle": "Notificaciones de finalización",
+    "notifDesc": "Alertas al finalizar implementaciones e instalaciones",
+    "approveInstallerTitle": "Aprobar instalaciones vía Asistente Criare",
+    "approveInstallerDesc": "Permite aprobar/rechazar solicitudes del instalador del ERP, independientemente del grupo",
+    "cancel": "Cancelar",
+    "saving": "Guardando...",
+    "save": "Guardar"
+  },
+  "approveModal": {
+    "title": "Aprobar registro",
+    "groupLabel": "Grupo de permisos",
+    "selectGroupPlaceholder": "Selecciona el grupo",
+    "emailNotice": "Se enviará automáticamente un correo al usuario con el enlace para definir su contraseña.",
+    "cancel": "Cancelar",
+    "approving": "Aprobando...",
+    "approve": "Aprobar Acceso"
+  },
+  "deleteConfirm": {
+    "title": "¿Eliminar usuario?",
+    "messageBefore": "¿Seguro que deseas eliminar a ",
+    "messageAfter": "? Esta acción no se puede deshacer.",
+    "cancel": "Cancelar",
+    "confirm": "Eliminar"
+  }
+}

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Layout } from "../components/layout/Layout";
 import { templatesApi } from "../services/api";
 
@@ -49,6 +50,7 @@ const IconClock = () => (
 
 // ── Menu de ações (3 pontos) ─────────────────────────────────────────────────
 function ActionsMenu({ onEdit, onDelete, deleting, isInstalacao }) {
+  const { t } = useTranslation("templates");
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -75,7 +77,7 @@ function ActionsMenu({ onEdit, onDelete, deleting, isInstalacao }) {
             onClick={(e) => { e.stopPropagation(); setOpen(false); onEdit(); }}
             className="w-full flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
           >
-            <IconEdit /> Editar
+            <IconEdit /> {t("actions.edit")}
           </button>
           {!isInstalacao && (
             <button
@@ -83,11 +85,11 @@ function ActionsMenu({ onEdit, onDelete, deleting, isInstalacao }) {
               disabled={deleting}
               className="w-full flex items-center gap-2.5 px-3 py-2 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40"
             >
-              <IconTrash /> {deleting ? "Excluindo..." : "Excluir"}
+              <IconTrash /> {deleting ? t("actions.deleting") : t("actions.delete")}
             </button>
           )}
           {isInstalacao && (
-            <span className="block px-3 py-2 text-[11px] text-gray-400 italic">Gerenciar em Configurações</span>
+            <span className="block px-3 py-2 text-[11px] text-gray-400 italic">{t("actions.manageInSettings")}</span>
           )}
         </div>
       )}
@@ -96,7 +98,8 @@ function ActionsMenu({ onEdit, onDelete, deleting, isInstalacao }) {
 }
 
 // ── Card de template ──────────────────────────────────────────────────────────
-function TemplateCard({ t, isInstalacao, onDeleted }) {
+function TemplateCard({ t: template, isInstalacao, onDeleted }) {
+  const { t } = useTranslation("templates");
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const [detail, setDetail]     = useState(null);
@@ -107,7 +110,7 @@ function TemplateCard({ t, isInstalacao, onDeleted }) {
     if (!expanded && !detail) {
       setLoading(true);
       try {
-        const { data } = await templatesApi.obter(t.id);
+        const { data } = await templatesApi.obter(template.id);
         setDetail(data);
       } catch { /* */ } finally { setLoading(false); }
     }
@@ -115,11 +118,11 @@ function TemplateCard({ t, isInstalacao, onDeleted }) {
   }
 
   async function handleDelete() {
-    if (!confirm(`Excluir "${t.nome}"? Não é possível desfazer.`)) return;
+    if (!confirm(t("card.confirmDelete", { nome: template.nome }))) return;
     setDeleting(true);
     try {
-      await templatesApi.deletar(t.id);
-      onDeleted(t.id);
+      await templatesApi.deletar(template.id);
+      onDeleted(template.id);
     } catch (err) {
       alert(err.message);
       setDeleting(false);
@@ -130,7 +133,7 @@ function TemplateCard({ t, isInstalacao, onDeleted }) {
   const accentColor  = detail?.etapas?.[0]?.cor || "#6366f1";
 
   return (
-    <div className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all hover:shadow-md ${t.ativo ? "border-gray-100" : "border-gray-200 opacity-60"}`}>
+    <div className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all hover:shadow-md ${template.ativo ? "border-gray-100" : "border-gray-200 opacity-60"}`}>
 
       {/* Barra de cor superior */}
       <div className="h-1 w-full" style={{ backgroundColor: accentColor }} />
@@ -145,19 +148,19 @@ function TemplateCard({ t, isInstalacao, onDeleted }) {
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="font-semibold text-gray-900 text-sm truncate">{t.nome}</p>
-                {!t.ativo && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500 font-semibold shrink-0">Inativo</span>
+                <p className="font-semibold text-gray-900 text-sm truncate">{template.nome}</p>
+                {!template.ativo && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500 font-semibold shrink-0">{t("card.inactive")}</span>
                 )}
-                {t.tipo && !isInstalacao && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 font-semibold shrink-0 border border-blue-100">{t.tipo}</span>
+                {template.tipo && !isInstalacao && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 font-semibold shrink-0 border border-blue-100">{template.tipo}</span>
                 )}
                 {isInstalacao && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 font-semibold shrink-0 border border-emerald-100">Instalação</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 font-semibold shrink-0 border border-emerald-100">{t("card.installation")}</span>
                 )}
               </div>
-              {t.descricao && (
-                <p className="text-xs text-gray-400 mt-0.5 truncate">{t.descricao}</p>
+              {template.descricao && (
+                <p className="text-xs text-gray-400 mt-0.5 truncate">{template.descricao}</p>
               )}
             </div>
           </div>
@@ -166,7 +169,7 @@ function TemplateCard({ t, isInstalacao, onDeleted }) {
               <IconChevron open={expanded} />
             </button>
             <ActionsMenu
-              onEdit={() => navigate(`/admin/templates/${t.id}`)}
+              onEdit={() => navigate(`/admin/templates/${template.id}`)}
               onDelete={handleDelete}
               deleting={deleting}
               isInstalacao={isInstalacao}
@@ -177,15 +180,15 @@ function TemplateCard({ t, isInstalacao, onDeleted }) {
         {/* Stats pills */}
         <div className="flex items-center gap-3 mt-3 ml-11">
           <span className="inline-flex items-center gap-1 text-[11px] text-gray-500">
-            <IconLayers />{detail ? `${detail.etapas?.length ?? 0} etapa${detail.etapas?.length !== 1 ? "s" : ""}` : `${t.sla_total_dias}d SLA`}
+            <IconLayers />{detail ? t("card.stages", { count: detail.etapas?.length ?? 0 }) : t("card.slaDays", { count: template.sla_total_dias })}
           </span>
           {totalTarefas !== null && (
             <span className="inline-flex items-center gap-1 text-[11px] text-gray-500">
-              <IconCheck />{totalTarefas} tarefa{totalTarefas !== 1 ? "s" : ""}
+              <IconCheck />{t("card.tasks", { count: totalTarefas })}
             </span>
           )}
           <span className="inline-flex items-center gap-1 text-[11px] text-gray-500">
-            <IconClock />{t.sla_total_dias}d SLA
+            <IconClock />{t("card.slaDays", { count: template.sla_total_dias })}
           </span>
         </div>
       </div>
@@ -201,28 +204,28 @@ function TemplateCard({ t, isInstalacao, onDeleted }) {
             <div className="space-y-0">
               {detail.pop_pdf_path && (
                 <div className="flex items-center justify-between py-2 mb-2 border-b border-gray-100">
-                  <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">POP Geral</span>
+                  <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">{t("card.popGeral")}</span>
                   <button
                     type="button"
                     onClick={async () => {
                       try {
-                        const res = await templatesApi.visualizarPopTemplate(t.id);
+                        const res = await templatesApi.visualizarPopTemplate(template.id);
                         const url = URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
                         window.open(url, "_blank");
                         setTimeout(() => URL.revokeObjectURL(url), 60000);
-                      } catch { alert("Erro ao abrir POP."); }
+                      } catch { alert(t("card.errorOpenPop")); }
                     }}
                     className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors border border-indigo-100"
                   >
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                       <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    Ver POP Geral
+                    {t("card.viewPopGeral")}
                   </button>
                 </div>
               )}
               {(!detail.etapas || detail.etapas.length === 0) && (
-                <p className="text-xs text-gray-400 italic py-2">Nenhuma etapa cadastrada.</p>
+                <p className="text-xs text-gray-400 italic py-2">{t("card.noStages")}</p>
               )}
               {detail.etapas?.map((etapa, idx) => (
                 <div key={etapa.id} className="flex items-start gap-3 py-3 border-b border-gray-50 last:border-0">
@@ -233,7 +236,7 @@ function TemplateCard({ t, isInstalacao, onDeleted }) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-gray-800">{etapa.nome}</span>
-                      <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">{etapa.sla_dias}d</span>
+                      <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">{t("card.days", { count: etapa.sla_dias })}</span>
                     </div>
                     {etapa.tarefas?.filter(ta => !ta.parent_id).length > 0 && (
                       <ul className="mt-2 space-y-1">
@@ -250,12 +253,12 @@ function TemplateCard({ t, isInstalacao, onDeleted }) {
                       </ul>
                     )}
                   </div>
-                  <span className="text-[11px] text-gray-400 shrink-0 pt-0.5">{etapa.tarefas?.filter(ta => !ta.parent_id).length ?? 0} itens</span>
+                  <span className="text-[11px] text-gray-400 shrink-0 pt-0.5">{t("card.items", { count: etapa.tarefas?.filter(ta => !ta.parent_id).length ?? 0 })}</span>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-gray-400">Erro ao carregar detalhes.</p>
+            <p className="text-sm text-gray-400">{t("card.errorLoadingDetails")}</p>
           )}
         </div>
       )}
@@ -287,6 +290,7 @@ function SkeletonCard() {
 
 // ── Página principal ──────────────────────────────────────────────────────────
 export default function Templates() {
+  const { t } = useTranslation("templates");
   const navigate  = useNavigate();
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading]     = useState(true);
@@ -315,8 +319,8 @@ export default function Templates() {
       {/* Cabeçalho */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Templates</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Pipelines e checklists reutilizáveis para implantação e instalação.</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t("page.title")}</h1>
+          <p className="text-sm text-gray-500 mt-0.5">{t("page.subtitle")}</p>
         </div>
         <button
           onClick={() => navigate("/admin/templates/novo")}
@@ -325,7 +329,7 @@ export default function Templates() {
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 4v16m8-8H4" />
           </svg>
-          Novo Template
+          {t("page.newTemplate")}
         </button>
       </div>
 
@@ -334,8 +338,8 @@ export default function Templates() {
         {/* Tabs */}
         <div className="flex items-center gap-1 bg-white border border-gray-100 rounded-xl px-2 py-1.5 shadow-sm">
           {[
-            { key: "implantacao", label: "Implantação", count: implantacaoTemplates.length },
-            { key: "instalacao",  label: "Instalação",  count: instalacaoTemplates.length },
+            { key: "implantacao", label: t("tabs.implantacao"), count: implantacaoTemplates.length },
+            { key: "instalacao",  label: t("tabs.instalacao"),  count: instalacaoTemplates.length },
           ].map((item) => (
             <button
               key={item.key}
@@ -363,7 +367,7 @@ export default function Templates() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar template..."
+            placeholder={t("search.placeholder")}
             className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 bg-white shadow-sm"
           />
           {search && (
@@ -378,8 +382,8 @@ export default function Templates() {
         {/* Contador */}
         {!loading && (
           <span className="text-xs text-gray-400 ml-auto">
-            {filtered.length} template{filtered.length !== 1 ? "s" : ""}
-            {search && ` para "${search}"`}
+            {t("search.count", { count: filtered.length })}
+            {search && t("search.forQuery", { query: search })}
           </span>
         )}
       </div>
@@ -395,17 +399,17 @@ export default function Templates() {
             <IconTemplate />
           </div>
           <p className="text-sm font-semibold text-gray-700">
-            {search ? `Nenhum template encontrado para "${search}"` : "Nenhum template cadastrado"}
+            {search ? t("empty.noneFound", { query: search }) : t("empty.noneRegistered")}
           </p>
           <p className="text-xs text-gray-400 mt-1">
-            {search ? "Tente outros termos." : "Crie o primeiro template para começar."}
+            {search ? t("empty.tryOtherTerms") : t("empty.createFirst")}
           </p>
           {!search && (
             <button
               onClick={() => navigate("/admin/templates/novo")}
               className="mt-5 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 transition-colors"
             >
-              Criar template
+              {t("empty.createButton")}
             </button>
           )}
         </div>

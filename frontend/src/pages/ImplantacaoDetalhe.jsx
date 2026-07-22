@@ -1,9 +1,11 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Layout } from "../components/layout/Layout";
 import { Badge, PrioridadeBadge } from "../components/ui/Badge";
 import { implantacoesApi, clientesApi, usuariosApi, templatesApi } from "../services/api";
 import { fmtDate, fmtDateTime } from "../utils/dateUtils";
+import i18n from "../i18n";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -61,10 +63,10 @@ function daysDiff(dateStr) {
 
 function prazoLabel(days) {
   if (days === null) return "";
-  if (days < 0) return `${Math.abs(days)}d atr.`;
-  if (days === 0) return "Hoje";
-  if (days === 1) return "Amanhã";
-  return `${days}d`;
+  if (days < 0) return i18n.t("implantacaoDetalhe:prazo.overdue", { count: Math.abs(days) });
+  if (days === 0) return i18n.t("implantacaoDetalhe:prazo.today");
+  if (days === 1) return i18n.t("implantacaoDetalhe:prazo.tomorrow");
+  return i18n.t("implantacaoDetalhe:prazo.days", { count: days });
 }
 
 function prazoClasses(days) {
@@ -154,6 +156,7 @@ function PipelineRing({ etapa, subsIndex }) {
 // ── Pipeline ──────────────────────────────────────────────────────────────────
 
 function Pipeline({ etapas, subsIndex, onEtapaClick, onAddEtapa, onRenameEtapa }) {
+  const { t } = useTranslation("implantacaoDetalhe");
   const sorted = [...etapas].sort((a, b) => a.ordem - b.ordem);
   const [editingId, setEditingId] = useState(null);
   const [editNome, setEditNome]   = useState("");
@@ -186,7 +189,7 @@ function Pipeline({ etapas, subsIndex, onEtapaClick, onAddEtapa, onRenameEtapa }
               <div className="flex flex-col items-center gap-2 min-w-[84px] group">
                 <button
                   onClick={() => !isEditing && onEtapaClick(etapa.id)}
-                  title={`${etapa.nome} — ${done}/${total} tarefas`}
+                  title={t("pipeline.etapaTooltip", { nome: etapa.nome, done, total })}
                   className="transition-transform duration-150 group-hover:scale-110 group-hover:drop-shadow-md focus:outline-none"
                 >
                   <PipelineRing etapa={etapa} subsIndex={subsIndex} />
@@ -207,7 +210,7 @@ function Pipeline({ etapas, subsIndex, onEtapaClick, onAddEtapa, onRenameEtapa }
                   <button
                     onClick={() => onEtapaClick(etapa.id)}
                     onDoubleClick={(e) => startEdit(etapa, e)}
-                    title={`${etapa.nome} · Duplo clique para renomear`}
+                    title={t("pipeline.renameTooltip", { nome: etapa.nome })}
                     className="text-[10px] font-medium text-gray-500 text-center leading-tight max-w-[76px] hover:text-orange-500 transition-colors"
                   >
                     {etapa.nome}
@@ -226,13 +229,13 @@ function Pipeline({ etapas, subsIndex, onEtapaClick, onAddEtapa, onRenameEtapa }
           <div className="w-6 h-0.5 mb-6 shrink-0 bg-gray-100" />
           <button
             onClick={onAddEtapa}
-            title="Adicionar nova etapa"
+            title={t("pipeline.addEtapaTooltip")}
             className="flex flex-col items-center gap-2 min-w-[60px] focus:outline-none group/add mb-4"
           >
             <div className="w-9 h-9 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 group-hover/add:border-orange-400 group-hover/add:text-orange-500 group-hover/add:bg-orange-50 transition-all">
               <span className="text-lg leading-none font-light">+</span>
             </div>
-            <p className="text-[10px] text-gray-400 group-hover/add:text-orange-500 transition-colors">Nova</p>
+            <p className="text-[10px] text-gray-400 group-hover/add:text-orange-500 transition-colors">{t("pipeline.new")}</p>
           </button>
         </div>
       </div>
@@ -243,11 +246,12 @@ function Pipeline({ etapas, subsIndex, onEtapaClick, onAddEtapa, onRenameEtapa }
 // ── Etapa Dropdown ────────────────────────────────────────────────────────────
 
 function EtapaDropdown({ status, onAction, onClose, onEdit, onMoveLeft, onMoveRight, onDelete, isFirst, isLast }) {
+  const { t } = useTranslation("implantacaoDetalhe");
   const statusOpts = [
-    { v: "em_andamento", label: "▶  Iniciar",               show: status !== "em_andamento" },
-    { v: "concluida",    label: "✓  Marcar como Concluída",  show: status !== "concluida"    },
-    { v: "pulada",       label: "→  Pular Etapa",            show: status !== "pulada"       },
-    { v: "pendente",     label: "↺  Reabrir",                show: ["concluida", "pulada", "bloqueada"].includes(status) },
+    { v: "em_andamento", label: t("etapaDropdown.start"),         show: status !== "em_andamento" },
+    { v: "concluida",    label: t("etapaDropdown.markCompleted"), show: status !== "concluida"    },
+    { v: "pulada",       label: t("etapaDropdown.skip"),          show: status !== "pulada"       },
+    { v: "pendente",     label: t("etapaDropdown.reopen"),        show: ["concluida", "pulada", "bloqueada"].includes(status) },
   ].filter((o) => o.show);
 
   return (
@@ -263,24 +267,24 @@ function EtapaDropdown({ status, onAction, onClose, onEdit, onMoveLeft, onMoveRi
         {statusOpts.length > 0 && <div className="my-1 border-t border-gray-100" />}
         <button onClick={() => { onEdit(); onClose(); }}
           className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
-          ✏️  Editar etapa
+          {t("etapaDropdown.edit")}
         </button>
         {!isFirst && (
           <button onClick={() => { onMoveLeft(); onClose(); }}
             className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-            ← Mover para esquerda
+            {t("etapaDropdown.moveLeft")}
           </button>
         )}
         {!isLast && (
           <button onClick={() => { onMoveRight(); onClose(); }}
             className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-            → Mover para direita
+            {t("etapaDropdown.moveRight")}
           </button>
         )}
         <div className="my-1 border-t border-gray-100" />
         <button onClick={() => { onDelete(); onClose(); }}
           className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors">
-          🗑  Remover etapa
+          {t("etapaDropdown.remove")}
         </button>
       </div>
     </>
@@ -296,6 +300,7 @@ const ETAPA_CORES = [
 ];
 
 function EditEtapaModal({ etapa, implId, onClose, onSaved }) {
+  const { t } = useTranslation("implantacaoDetalhe");
   const [nome, setNome]       = useState(etapa.nome);
   const [cor, setCor]         = useState(etapa.cor || "#6366f1");
   const [slaDias, setSlaDias] = useState(etapa.sla_dias || 3);
@@ -314,12 +319,12 @@ function EditEtapaModal({ etapa, implId, onClose, onSaved }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h3 className="font-semibold text-gray-900">Editar Etapa</h3>
+          <h3 className="font-semibold text-gray-900">{t("editEtapaModal.title")}</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-lg">✕</button>
         </div>
         <div className="px-6 py-5 space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Nome da etapa</label>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("editEtapaModal.nameLabel")}</label>
             <input
               autoFocus
               type="text"
@@ -330,7 +335,7 @@ function EditEtapaModal({ etapa, implId, onClose, onSaved }) {
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-2">Cor</label>
+            <label className="block text-xs font-semibold text-gray-500 mb-2">{t("common.color")}</label>
             <div className="flex gap-2 flex-wrap">
               {ETAPA_CORES.map((c) => (
                 <button
@@ -343,7 +348,7 @@ function EditEtapaModal({ etapa, implId, onClose, onSaved }) {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5">SLA da etapa (dias)</label>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("editEtapaModal.slaLabel")}</label>
             <input
               type="number"
               min={1}
@@ -354,9 +359,9 @@ function EditEtapaModal({ etapa, implId, onClose, onSaved }) {
             />
           </div>
           <div className="flex gap-3 pt-1">
-            <button onClick={onClose} className="flex-1 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors">Cancelar</button>
+            <button onClick={onClose} className="flex-1 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors">{t("common.cancel")}</button>
             <button onClick={handleSave} disabled={saving || !nome.trim()} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50 transition-colors">
-              {saving ? "Salvando..." : "Salvar"}
+              {saving ? t("common.saving") : t("common.save")}
             </button>
           </div>
         </div>
@@ -368,6 +373,7 @@ function EditEtapaModal({ etapa, implId, onClose, onSaved }) {
 // ── Sub-item Row ──────────────────────────────────────────────────────────────
 
 function SubItemRow({ sub, implId, onRefresh, onOptimisticToggle }) {
+  const { t } = useTranslation("implantacaoDetalhe");
   const [toggling, setToggling]         = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [editValue, setEditValue]       = useState(sub.titulo);
@@ -394,7 +400,7 @@ function SubItemRow({ sub, implId, onRefresh, onOptimisticToggle }) {
   }
 
   async function handleDelete() {
-    if (!window.confirm(`Remover "${sub.titulo}"?`)) return;
+    if (!window.confirm(t("subItem.confirmRemove", { titulo: sub.titulo }))) return;
     try {
       await implantacoesApi.deletarChecklist(sub.id);
       onRefresh();
@@ -443,7 +449,7 @@ function SubItemRow({ sub, implId, onRefresh, onOptimisticToggle }) {
       ) : (
         <span
           onDoubleClick={() => { if (!isDone) { setEditingTitle(true); setEditValue(sub.titulo); } }}
-          title={!isDone ? "Duplo clique para renomear" : undefined}
+          title={!isDone ? t("subItem.dblClickRename") : undefined}
           className={`flex-1 text-xs leading-snug ${isDone ? "line-through text-gray-400" : "text-gray-600 cursor-text"}`}
         >
           {sub.titulo}
@@ -451,7 +457,7 @@ function SubItemRow({ sub, implId, onRefresh, onOptimisticToggle }) {
       )}
       <button
         onClick={handleArchive}
-        title={sub.arquivado ? "Desarquivar" : "Arquivar"}
+        title={sub.arquivado ? t("subItem.unarchive") : t("subItem.archive")}
         className={`opacity-0 group-hover/sub:opacity-100 w-4 h-4 rounded flex items-center justify-center transition-all text-[10px]
           ${sub.arquivado ? "opacity-100 text-amber-400 hover:bg-amber-50" : "text-gray-400 hover:text-amber-400 hover:bg-amber-50"}`}
       >
@@ -470,6 +476,7 @@ function SubItemRow({ sub, implId, onRefresh, onOptimisticToggle }) {
 // ── Kanban Card ───────────────────────────────────────────────────────────────
 
 function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticToggle, isDragged, onDragStart, onDragEnd, onMoveUp, onMoveDown }) {
+  const { t } = useTranslation("implantacaoDetalhe");
   const [hovered, setHovered]         = useState(false);
   const [showNote, setShowNote]       = useState(false);
   const [noteText, setNoteText]       = useState(item.descricao || "");
@@ -559,7 +566,7 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
   }
 
   async function handleDelete() {
-    if (!window.confirm(`Remover "${item.titulo}"?`)) return;
+    if (!window.confirm(t("kanbanCard.confirmRemove", { titulo: item.titulo }))) return;
     try {
       await implantacoesApi.deletarChecklist(item.id);
       onRefresh();
@@ -662,7 +669,7 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
               ) : (
                 <p
                   onDoubleClick={() => { if (!isDone && !isNA) { setEditingTitle(true); setEditTitleValue(item.titulo); } }}
-                  title={!isDone && !isNA ? "Duplo clique para renomear" : undefined}
+                  title={!isDone && !isNA ? t("kanbanCard.dblClickRename") : undefined}
                   className={`text-sm leading-snug flex-1 break-words ${(isDone || isNA) ? "line-through text-gray-400" : "text-gray-800 cursor-text"}`}
                 >
                   {item.titulo}
@@ -672,20 +679,20 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
                 {item.pop_pdf_path && (
                   <button
                     onClick={handleVerPop}
-                    title="Ver POP (PDF de referência)"
+                    title={t("kanbanCard.viewPop")}
                     className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[9px] font-bold bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-700 border border-blue-100 transition-colors leading-none"
                   >
                     <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    POP
+                    {t("kanbanCard.pop")}
                   </button>
                 )}
                 {item.obrigatoria && !isNA && (
-                  <span className="text-orange-400 text-[10px] font-bold leading-none" title="Obrigatória">•</span>
+                  <span className="text-orange-400 text-[10px] font-bold leading-none" title={t("kanbanCard.required")}>•</span>
                 )}
                 {isCustom && (
-                  <span className="text-[9px] text-indigo-400 font-semibold bg-indigo-50 px-1 py-0.5 rounded leading-none" title="Tarefa personalizada">+</span>
+                  <span className="text-[9px] text-indigo-400 font-semibold bg-indigo-50 px-1 py-0.5 rounded leading-none" title={t("kanbanCard.customTask")}>+</span>
                 )}
               </div>
             </div>
@@ -698,7 +705,7 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
                 <div className="relative">
                   <button
                     onClick={() => setShowRespPicker((v) => !v)}
-                    title={item.responsavel ? `Responsável: ${item.responsavel}` : "Atribuir responsável"}
+                    title={item.responsavel ? t("kanbanCard.responsibleTooltip", { nome: item.responsavel }) : t("kanbanCard.assignResponsible")}
                     className="flex items-center gap-1 group/resp"
                   >
                     {initials ? (
@@ -713,7 +720,7 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
                     ) : (
                       <span className="flex items-center gap-0.5 text-[10px] text-gray-300 hover:text-gray-500 transition-colors">
                         <span className="w-4 h-4 rounded-full border border-dashed border-gray-300 flex items-center justify-center text-[9px] hover:border-gray-400">+</span>
-                        <span>resp.</span>
+                        <span>{t("kanbanCard.respShort")}</span>
                       </span>
                     )}
                   </button>
@@ -729,12 +736,12 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
                             className="w-full text-left px-3 py-2 text-xs text-gray-400 hover:bg-gray-50 flex items-center gap-2 transition-colors"
                           >
                             <span className="w-5 h-5 rounded-full border border-dashed border-gray-300 flex items-center justify-center text-[9px] shrink-0">—</span>
-                            Remover responsável
+                            {t("kanbanCard.removeResponsible")}
                           </button>
                         )}
                         {/* User list */}
                         {usuarios.length === 0 && (
-                          <p className="px-3 py-2 text-xs text-gray-400">Nenhum usuário</p>
+                          <p className="px-3 py-2 text-xs text-gray-400">{t("kanbanCard.noUsers")}</p>
                         )}
                         {usuarios.map((u) => (
                           <button
@@ -774,7 +781,7 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
                 ) : item.data_prazo ? (
                   <button
                     onClick={() => { setEditingPrazo(true); setPrazoInput(item.data_prazo.split("T")[0]); }}
-                    title={`Prazo: ${fmtDate(item.data_prazo)}`}
+                    title={t("kanbanCard.deadlineTooltip", { date: fmtDate(item.data_prazo) })}
                     className={`text-[10px] font-medium px-1.5 py-0.5 rounded border transition-colors ${prazoClasses(days)}`}
                   >
                     📅 {prazoLabel(days)}
@@ -783,9 +790,9 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
                   <button
                     onClick={() => { setEditingPrazo(true); setPrazoInput(""); }}
                     className="flex items-center gap-0.5 text-[10px] text-gray-300 hover:text-gray-500 border border-dashed border-gray-200 hover:border-gray-300 rounded px-1 py-0.5 transition-colors"
-                    title="Adicionar prazo"
+                    title={t("kanbanCard.addDeadlineTooltip")}
                   >
-                    📅 prazo
+                    📅 {t("kanbanCard.addDeadline")}
                   </button>
                 )}
               </div>
@@ -805,7 +812,7 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
                 className="flex items-center gap-1 mt-1.5 text-[10px] text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <span className="w-3 h-3 rounded border border-gray-300 flex items-center justify-center text-[7px] leading-none">✓</span>
-                {subDone}/{subitens.length} sub-itens
+                {t("kanbanCard.subItemsProgress", { done: subDone, count: subitens.length })}
               </button>
             )}
 
@@ -813,14 +820,14 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
             {isDone && item.data_conclusao && (
               <p className="text-[10px] text-green-600 mt-0.5">✅ {fmtDateTime(item.data_conclusao)}</p>
             )}
-            {isNA && <p className="text-[10px] text-gray-400 mt-0.5">⊘ Não aplicável</p>}
+            {isNA && <p className="text-[10px] text-gray-400 mt-0.5">{t("kanbanCard.notApplicable")}</p>}
 
             {/* Action bar — inside content, no longer competes with title width */}
             {(hovered || item.arquivado) && (
               <div className="flex items-center gap-0.5 mt-2 pt-1.5 border-t border-gray-100">
                 <button
                   onClick={() => { setShowNote((v) => !v); setNoteText(item.descricao || ""); }}
-                  title={item.descricao ? "Editar nota" : "Adicionar nota"}
+                  title={item.descricao ? t("kanbanCard.editNote") : t("kanbanCard.addNote")}
                   className={`w-6 h-6 rounded-md flex items-center justify-center text-[11px] transition-colors
                     ${item.descricao ? "text-blue-500 bg-blue-50 hover:bg-blue-100" : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"}`}
                 >
@@ -828,7 +835,7 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
                 </button>
                 <button
                   onClick={() => { setShowSubitens((v) => !v); if (!showSubitens) setShowAddSub(false); }}
-                  title="Sub-itens"
+                  title={t("kanbanCard.subItemsTooltip")}
                   className={`w-6 h-6 rounded-md flex items-center justify-center text-[11px] transition-colors
                     ${subitens.length > 0 ? "text-indigo-500 bg-indigo-50 hover:bg-indigo-100" : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"}`}
                 >
@@ -836,34 +843,34 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
                 </button>
                 <button
                   onClick={handleToggleNA}
-                  title={isNA ? "Reativar tarefa" : "Marcar como Não Aplicável"}
+                  title={isNA ? t("kanbanCard.reactivateTask") : t("kanbanCard.markNotApplicable")}
                   className={`w-6 h-6 rounded-md flex items-center justify-center text-[11px] transition-colors
                     ${isNA ? "text-indigo-500 bg-indigo-50 hover:bg-indigo-100" : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"}`}
                 >
                   ⊘
                 </button>
                 {onMoveUp && (
-                  <button onClick={onMoveUp} title="Mover para cima"
+                  <button onClick={onMoveUp} title={t("kanbanCard.moveUp")}
                     className="w-6 h-6 rounded-md flex items-center justify-center text-[11px] text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
                     ▲
                   </button>
                 )}
                 {onMoveDown && (
-                  <button onClick={onMoveDown} title="Mover para baixo"
+                  <button onClick={onMoveDown} title={t("kanbanCard.moveDown")}
                     className="w-6 h-6 rounded-md flex items-center justify-center text-[11px] text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
                     ▼
                   </button>
                 )}
                 <button
                   onClick={handleArchive}
-                  title={item.arquivado ? "Desarquivar tarefa" : "Arquivar tarefa"}
+                  title={item.arquivado ? t("kanbanCard.unarchiveTask") : t("kanbanCard.archiveTask")}
                   className={`w-6 h-6 rounded-md flex items-center justify-center text-[11px] transition-colors
                     ${item.arquivado ? "text-amber-500 bg-amber-50 hover:bg-amber-100" : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"}`}
                 >
                   📦
                 </button>
                 {isCustom && (
-                  <button onClick={handleDelete} title="Remover tarefa"
+                  <button onClick={handleDelete} title={t("kanbanCard.removeTask")}
                     className="w-6 h-6 rounded-md flex items-center justify-center text-[11px] text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors">
                     🗑
                   </button>
@@ -888,7 +895,7 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
                   className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-gray-600 transition-colors py-0.5"
                 >
                   <span>{showArchivedSubs ? "▾" : "▸"}</span>
-                  {archivedSubs.length} sub-item{archivedSubs.length !== 1 ? "s" : ""} arquivado{archivedSubs.length !== 1 ? "s" : ""}
+                  {t("kanbanCard.archivedSubItems", { count: archivedSubs.length })}
                 </button>
                 {showArchivedSubs && archivedSubs.map((sub) => (
                   <SubItemRow key={sub.id} sub={sub} implId={implId} onRefresh={onRefresh} onOptimisticToggle={onOptimisticToggle} />
@@ -906,12 +913,12 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
                     if (e.key === "Enter") handleAddSub();
                     if (e.key === "Escape") { setShowAddSub(false); setNewSubTitle(""); }
                   }}
-                  placeholder="Nome do sub-item..."
+                  placeholder={t("kanbanCard.subItemPlaceholder")}
                   className="flex-1 border border-gray-200 rounded px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-orange-400 focus:border-orange-400 transition"
                 />
                 <button onClick={handleAddSub} disabled={addingSub || !newSubTitle.trim()}
                   className="px-2 py-1 rounded text-xs font-semibold text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50 transition-colors">
-                  {addingSub ? "..." : "OK"}
+                  {addingSub ? t("common.loading") : t("common.ok")}
                 </button>
                 <button onClick={() => { setShowAddSub(false); setNewSubTitle(""); }}
                   className="px-1 py-1 text-xs text-gray-400 hover:text-gray-600">✕</button>
@@ -921,7 +928,7 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
                 onClick={() => setShowAddSub(true)}
                 className="flex items-center gap-1 mt-1 text-[10px] text-gray-400 hover:text-orange-500 transition-colors"
               >
-                <span className="text-sm leading-none font-light">+</span> sub-item
+                <span className="text-sm leading-none font-light">+</span> {t("kanbanCard.addSubItem")}
               </button>
             )}
           </div>
@@ -937,17 +944,17 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
               value={noteText}
               onChange={(e) => setNoteText(e.target.value)}
               rows={3}
-              placeholder="Nota, instrução ou detalhe para essa tarefa..."
+              placeholder={t("kanbanCard.notePlaceholder")}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-700 resize-none focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 transition"
             />
             <div className="flex gap-1.5 mt-1.5">
               <button onClick={handleSaveNote} disabled={savingNote}
                 className="flex-1 py-1.5 rounded-lg text-xs font-semibold text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50 transition-colors">
-                {savingNote ? "Salvando..." : "Salvar nota"}
+                {savingNote ? t("common.saving") : t("kanbanCard.saveNote")}
               </button>
               <button onClick={() => setShowNote(false)}
                 className="px-3 py-1.5 rounded-lg text-xs text-gray-500 hover:bg-gray-100 transition-colors">
-                Cancelar
+                {t("common.cancel")}
               </button>
             </div>
           </div>
@@ -960,6 +967,7 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
 // ── Kanban Column ─────────────────────────────────────────────────────────────
 
 function KanbanColumn({ etapa, subsIndex, implId, somentePendentes, filterText, filterResp, filterStatus, columnRef, onRefresh, onOptimisticToggle, isExpanded, dragItem, onDragStart, onDragEnd, onMoveItem, usuarios, isFirst, isLast, onMoveLeft, onMoveRight, onDelete }) {
+  const { t } = useTranslation("implantacaoDetalhe");
   const [showAdd, setShowAdd]             = useState(false);
   const [newTitle, setNewTitle]           = useState("");
   const [showMenu, setShowMenu]           = useState(false);
@@ -1028,7 +1036,7 @@ function KanbanColumn({ etapa, subsIndex, implId, somentePendentes, filterText, 
   }
 
   async function handleDeleteEtapa() {
-    if (!window.confirm(`Remover a etapa "${etapa.nome}"? As tarefas desta etapa serão mantidas sem etapa.`)) return;
+    if (!window.confirm(t("kanbanColumn.confirmDeleteEtapa", { nome: etapa.nome }))) return;
     try {
       await implantacoesApi.deletarEtapa(implId, etapa.id);
       onRefresh();
@@ -1088,7 +1096,7 @@ function KanbanColumn({ etapa, subsIndex, implId, somentePendentes, filterText, 
       {/* Column header */}
       <div className="px-3 pt-3 pb-2 shrink-0">
         <div className="flex items-center gap-1.5 mb-1.5">
-          <span className="text-gray-300 text-sm leading-none cursor-grab select-none shrink-0" title="Reordenar via menu ⋮">⠿</span>
+          <span className="text-gray-300 text-sm leading-none cursor-grab select-none shrink-0" title={t("kanbanColumn.reorderTooltip")}>⠿</span>
           <span className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: etapa.cor || "#6366f1" }} />
           <p className="text-sm font-semibold text-gray-800 flex-1 min-w-0 truncate">{etapa.nome}</p>
 
@@ -1098,8 +1106,8 @@ function KanbanColumn({ etapa, subsIndex, implId, somentePendentes, filterText, 
               slaDaysLeft < 0   ? "bg-red-100 text-red-600" :
               slaDaysLeft <= 3  ? "bg-amber-100 text-amber-600" :
                                   "bg-gray-100 text-gray-500"
-            }`} title={`SLA da etapa: ${etapa.sla_dias} dias`}>
-              {slaDaysLeft < 0 ? `${Math.abs(slaDaysLeft)}d atr.` : `${slaDaysLeft}d SLA`}
+            }`} title={t("kanbanColumn.slaTooltip", { dias: etapa.sla_dias })}>
+              {slaDaysLeft < 0 ? t("kanbanColumn.slaOverdue", { count: Math.abs(slaDaysLeft) }) : t("kanbanColumn.slaDaysLeft", { count: slaDaysLeft })}
             </span>
           )}
 
@@ -1160,15 +1168,15 @@ function KanbanColumn({ etapa, subsIndex, implId, somentePendentes, filterText, 
           <div className="py-6 text-center">
             <p className="text-xs text-gray-400">
               {(somentePendentes || filterText || filterResp || filterStatus) && etapa.itens.length > 0
-                ? "Nenhuma tarefa neste filtro"
-                : "Sem tarefas"}
+                ? t("kanbanColumn.noTasksFiltered")
+                : t("kanbanColumn.noTasks")}
             </p>
           </div>
         )}
         {/* Drop target indicator */}
         {isDropTarget && (
           <div className="h-14 rounded-xl border-2 border-dashed border-blue-400 bg-blue-50/60 flex items-center justify-center text-xs text-blue-500 font-medium">
-            Soltar aqui
+            {t("kanbanColumn.dropHere")}
           </div>
         )}
 
@@ -1180,7 +1188,7 @@ function KanbanColumn({ etapa, subsIndex, implId, somentePendentes, filterText, 
               className="w-full flex items-center gap-1.5 px-1 py-1 text-[10px] text-gray-400 hover:text-gray-600 transition-colors"
             >
               <span className="text-[10px]">{showArchived ? "▾" : "▸"}</span>
-              {archivedItems.length} arquivado{archivedItems.length !== 1 ? "s" : ""}
+              {t("kanbanColumn.archivedCount", { count: archivedItems.length })}
             </button>
             {showArchived && (
               <div className="space-y-1.5 mt-0.5">
@@ -1217,13 +1225,13 @@ function KanbanColumn({ etapa, subsIndex, implId, somentePendentes, filterText, 
                 if (e.key === "Enter") handleAdd();
                 if (e.key === "Escape") { setShowAdd(false); setNewTitle(""); }
               }}
-              placeholder="Nome da tarefa..."
+              placeholder={t("kanbanColumn.taskNamePlaceholder")}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 transition bg-white"
             />
             <div className="flex gap-1.5">
               <button onClick={handleAdd} disabled={saving || !newTitle.trim()}
                 className="flex-1 py-1.5 rounded-lg text-xs font-semibold text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50 transition-colors">
-                {saving ? "..." : "Adicionar"}
+                {saving ? t("common.loading") : t("kanbanColumn.addTask")}
               </button>
               <button onClick={() => { setShowAdd(false); setNewTitle(""); }}
                 className="px-3 py-1.5 rounded-lg text-xs text-gray-500 hover:bg-white/80 transition-colors">
@@ -1235,7 +1243,7 @@ function KanbanColumn({ etapa, subsIndex, implId, somentePendentes, filterText, 
           <button onClick={() => setShowAdd(true)}
             className="w-full flex items-center gap-1.5 px-2 py-2 rounded-lg text-xs text-gray-400 hover:text-gray-700 hover:bg-white/70 transition-colors group">
             <span className="text-base leading-none font-light group-hover:text-orange-500">+</span>
-            Adicionar tarefa
+            {t("kanbanColumn.addTask")}
           </button>
         )}
       </div>
@@ -1275,6 +1283,7 @@ function IconCompress() {
 // ── Kanban Tab ────────────────────────────────────────────────────────────────
 
 function KanbanTab({ etapas, subsIndex, implId, somentePendentes, columnRefs, onRefresh, onOptimisticToggle, isExpanded, showAddEtapa: propShowAdd, onSetShowAddEtapa }) {
+  const { t } = useTranslation("implantacaoDetalhe");
   const [filterText, setFilterText]     = useState("");
   const [filterResp, setFilterResp]     = useState("");
   const [filterStatus, setFilterStatus] = useState("");
@@ -1348,23 +1357,23 @@ function KanbanTab({ etapas, subsIndex, implId, somentePendentes, columnRefs, on
             type="text"
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
-            placeholder="Buscar tarefa..."
+            placeholder={t("kanbanTab.searchPlaceholder")}
             className={`${inputCls} pl-8 w-full`}
           />
         </div>
 
         {responsaveis.length > 0 && (
           <select value={filterResp} onChange={(e) => setFilterResp(e.target.value)} className={inputCls}>
-            <option value="">Todos responsáveis</option>
+            <option value="">{t("kanbanTab.allResponsibles")}</option>
             {responsaveis.map((r) => <option key={r} value={r}>{r}</option>)}
           </select>
         )}
 
         <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className={inputCls}>
-          <option value="">Todos status</option>
-          <option value="pendente">Pendentes</option>
-          <option value="bloqueado">Bloqueados</option>
-          <option value="nao_aplicavel">Não aplicáveis</option>
+          <option value="">{t("kanbanTab.allStatuses")}</option>
+          <option value="pendente">{t("kanbanTab.statusPending")}</option>
+          <option value="bloqueado">{t("kanbanTab.statusBlocked")}</option>
+          <option value="nao_aplicavel">{t("kanbanTab.statusNotApplicable")}</option>
         </select>
 
         {hasFilters && (
@@ -1372,7 +1381,7 @@ function KanbanTab({ etapas, subsIndex, implId, somentePendentes, columnRefs, on
             onClick={() => { setFilterText(""); setFilterResp(""); setFilterStatus(""); }}
             className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-500 bg-gray-100 hover:bg-gray-200 transition-colors"
           >
-            ✕ Limpar filtros
+            {t("kanbanTab.clearFilters")}
           </button>
         )}
       </div>
@@ -1421,11 +1430,11 @@ function KanbanTab({ etapas, subsIndex, implId, somentePendentes, columnRefs, on
                   if (e.key === "Enter") handleAddEtapa();
                   if (e.key === "Escape") { setShowAddEtapa(false); }
                 }}
-                placeholder="Nome da nova etapa..."
+                placeholder={t("kanbanTab.newEtapaPlaceholder")}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 transition bg-white"
               />
               <div>
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">Cor</p>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">{t("common.color")}</p>
                 <div className="flex gap-1.5 flex-wrap">
                   {ETAPA_CORES.map((c) => (
                     <button
@@ -1438,7 +1447,7 @@ function KanbanTab({ etapas, subsIndex, implId, somentePendentes, columnRefs, on
                 </div>
               </div>
               <div>
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1">SLA (dias)</p>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1">{t("kanbanTab.slaDaysLabel")}</p>
                 <input
                   type="number" min={1} max={999}
                   value={novaEtapa.sla_dias}
@@ -1449,7 +1458,7 @@ function KanbanTab({ etapas, subsIndex, implId, somentePendentes, columnRefs, on
               <div className="flex gap-1.5">
                 <button onClick={handleAddEtapa} disabled={savingEtapa || !novaEtapa.nome.trim()}
                   className="flex-1 py-1.5 rounded-lg text-xs font-semibold text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50 transition-colors">
-                  {savingEtapa ? "..." : "Criar"}
+                  {savingEtapa ? t("common.loading") : t("kanbanTab.create")}
                 </button>
                 <button onClick={() => setShowAddEtapa(false)}
                   className="px-3 py-1.5 rounded-lg text-xs text-gray-500 hover:bg-white/80 transition-colors">
@@ -1463,7 +1472,7 @@ function KanbanTab({ etapas, subsIndex, implId, somentePendentes, columnRefs, on
               className="w-full h-16 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center gap-2 text-sm text-gray-400 hover:border-orange-300 hover:text-orange-500 hover:bg-orange-50/30 transition-all group"
             >
               <span className="text-xl leading-none font-light group-hover:text-orange-500">+</span>
-              Nova etapa
+              {t("kanbanTab.newEtapa")}
             </button>
           )}
         </div>
@@ -1475,8 +1484,9 @@ function KanbanTab({ etapas, subsIndex, implId, somentePendentes, columnRefs, on
 // ── Timeline Tab ──────────────────────────────────────────────────────────────
 
 function TimelineTab({ timeline }) {
+  const { t } = useTranslation("implantacaoDetalhe");
   if (timeline.length === 0) {
-    return <div className="py-12 text-center text-sm text-gray-400">Nenhum evento na timeline.</div>;
+    return <div className="py-12 text-center text-sm text-gray-400">{t("timelineTab.empty")}</div>;
   }
 
   const iconMap = {
@@ -1503,7 +1513,7 @@ function TimelineTab({ timeline }) {
                 <p className="text-xs text-gray-400 shrink-0">{fmtDateTime(ev.created_at)}</p>
               </div>
               {ev.descricao && <p className="text-sm text-gray-600 mt-0.5">{ev.descricao}</p>}
-              {ev.usuario && <p className="text-xs text-gray-400 mt-1">por {ev.usuario}</p>}
+              {ev.usuario && <p className="text-xs text-gray-400 mt-1">{t("timelineTab.by", { nome: ev.usuario })}</p>}
             </div>
           </div>
         ))}
@@ -1515,6 +1525,7 @@ function TimelineTab({ timeline }) {
 // ── Comentários Tab ───────────────────────────────────────────────────────────
 
 function ComentariosTab({ implId, comentarios, onAdded }) {
+  const { t } = useTranslation("implantacaoDetalhe");
   const [text, setText]     = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -1536,7 +1547,7 @@ function ComentariosTab({ implId, comentarios, onAdded }) {
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={2}
-          placeholder="Escreva um comentário interno..."
+          placeholder={t("comentariosTab.placeholder")}
           className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 resize-none focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 transition"
         />
         <button
@@ -1544,12 +1555,12 @@ function ComentariosTab({ implId, comentarios, onAdded }) {
           disabled={saving || !text.trim()}
           className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-40 transition-colors self-end"
         >
-          {saving ? "..." : "Enviar"}
+          {saving ? t("common.loading") : t("comentariosTab.send")}
         </button>
       </form>
 
       {comentarios.length === 0 ? (
-        <p className="text-sm text-gray-400 text-center py-6">Nenhum comentário ainda.</p>
+        <p className="text-sm text-gray-400 text-center py-6">{t("comentariosTab.empty")}</p>
       ) : (
         <div className="space-y-3">
           {[...comentarios].reverse().map((c) => (
@@ -1570,6 +1581,7 @@ function ComentariosTab({ implId, comentarios, onAdded }) {
 // ── Cliente Tab ───────────────────────────────────────────────────────────────
 
 function ClienteTab({ clienteId }) {
+  const { t } = useTranslation("implantacaoDetalhe");
   const navigate = useNavigate();
   const [cliente, setCliente] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -1583,7 +1595,7 @@ function ClienteTab({ clienteId }) {
   }, [clienteId]);
 
   if (loading) return <Spinner />;
-  if (!cliente) return <p className="text-sm text-gray-400">Cliente não encontrado.</p>;
+  if (!cliente) return <p className="text-sm text-gray-400">{t("clienteTab.notFound")}</p>;
 
   const e = cliente.endereco || {};
   return (
@@ -1604,16 +1616,16 @@ function ClienteTab({ clienteId }) {
           onClick={() => navigate(`/admin/clientes/${cliente.id}`)}
           className="ml-auto text-xs font-semibold text-orange-600 hover:text-orange-700 transition-colors shrink-0"
         >
-          Ver ficha completa →
+          {t("clienteTab.viewFull")}
         </button>
       </div>
       <div className="grid grid-cols-2 gap-x-8 gap-y-4 border-t border-gray-100 pt-4">
-        <Field label="E-mail" value={cliente.email} />
-        <Field label="Celular" value={cliente.telefone_celular} mono />
-        <Field label="Responsável" value={cliente.responsavel} />
-        <Field label="Tel. Fixo" value={cliente.telefone_fixo} mono />
-        {e.cidade && <Field label="Cidade/UF" value={`${e.cidade} - ${e.estado}`} />}
-        {e.cep && <Field label="CEP" value={e.cep} mono />}
+        <Field label={t("clienteTab.fields.email")} value={cliente.email} />
+        <Field label={t("clienteTab.fields.cellphone")} value={cliente.telefone_celular} mono />
+        <Field label={t("clienteTab.fields.responsible")} value={cliente.responsavel} />
+        <Field label={t("clienteTab.fields.phone")} value={cliente.telefone_fixo} mono />
+        {e.cidade && <Field label={t("clienteTab.fields.cityState")} value={`${e.cidade} - ${e.estado}`} />}
+        {e.cep && <Field label={t("clienteTab.fields.zip")} value={e.cep} mono />}
       </div>
     </div>
   );
@@ -1639,6 +1651,7 @@ function ResponsavelAvatar({ nome, avatarUrl }) {
 // ── Responsável Modal ────────────────────────────────────────────────────────
 
 function ResponsavelModal({ implId, currentResponsavelId, onClose, onSaved }) {
+  const { t } = useTranslation("implantacaoDetalhe");
   const [usuarios, setUsuarios] = useState([]);
   const [selectedId, setSelectedId] = useState(currentResponsavelId ?? "");
   const [saving, setSaving] = useState(false);
@@ -1664,23 +1677,23 @@ function ResponsavelModal({ implId, currentResponsavelId, onClose, onSaved }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xs">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h3 className="font-semibold text-gray-900">Definir Responsável</h3>
+          <h3 className="font-semibold text-gray-900">{t("responsavelModal.title")}</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-lg">✕</button>
         </div>
         <div className="px-6 py-5 space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Usuário</label>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("responsavelModal.userLabel")}</label>
             <select value={selectedId} onChange={(e) => setSelectedId(e.target.value)} className={inputCls}>
-              <option value="">Selecione um usuário…</option>
+              <option value="">{t("responsavelModal.selectPlaceholder")}</option>
               {usuarios.map((u) => (
                 <option key={u.id} value={u.id}>{u.nome}</option>
               ))}
             </select>
           </div>
           <div className="flex gap-3 pt-1">
-            <button onClick={onClose} className="flex-1 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors">Cancelar</button>
+            <button onClick={onClose} className="flex-1 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors">{t("common.cancel")}</button>
             <button onClick={handleSave} disabled={saving || !selectedId} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50 transition-colors">
-              {saving ? "Salvando..." : "Confirmar"}
+              {saving ? t("common.saving") : t("responsavelModal.confirm")}
             </button>
           </div>
         </div>
@@ -1693,6 +1706,7 @@ function ResponsavelModal({ implId, currentResponsavelId, onClose, onSaved }) {
 // ── Edit Panel ────────────────────────────────────────────────────────────────
 
 function EditPanel({ impl, onClose, onSaved }) {
+  const { t } = useTranslation("implantacaoDetalhe");
   const [form, setForm] = useState({
     status:        impl.status,
     consultor:     impl.consultor || "",
@@ -1725,38 +1739,38 @@ function EditPanel({ impl, onClose, onSaved }) {
     <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h3 className="font-semibold text-gray-900">Editar Implantação</h3>
+          <h3 className="font-semibold text-gray-900">{t("editPanel.title")}</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-lg">✕</button>
         </div>
         <div className="px-6 py-5 space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Status</label>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("editPanel.statusLabel")}</label>
             <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))} className={inputCls}>
-              <option value="em_andamento">Em Andamento</option>
-              <option value="pausada">Pausada</option>
-              <option value="concluida">Concluída</option>
-              <option value="cancelada">Cancelada</option>
+              <option value="em_andamento">{t("editPanel.status.em_andamento")}</option>
+              <option value="pausada">{t("editPanel.status.pausada")}</option>
+              <option value="concluida">{t("editPanel.status.concluida")}</option>
+              <option value="cancelada">{t("editPanel.status.cancelada")}</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Responsável</label>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("editPanel.responsibleLabel")}</label>
             <select value={form.responsavel_id} onChange={(e) => setForm((f) => ({ ...f, responsavel_id: e.target.value }))} className={inputCls}>
-              <option value="">Sem responsável</option>
+              <option value="">{t("editPanel.noResponsible")}</option>
               {usuarios.map((u) => (
                 <option key={u.id} value={u.id}>{u.nome}</option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Consultor</label>
-            <input type="text" value={form.consultor} onChange={(e) => setForm((f) => ({ ...f, consultor: e.target.value }))} placeholder="Nome do consultor" className={inputCls} />
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("editPanel.consultantLabel")}</label>
+            <input type="text" value={form.consultor} onChange={(e) => setForm((f) => ({ ...f, consultor: e.target.value }))} placeholder={t("editPanel.consultantPlaceholder")} className={inputCls} />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Data Prevista</label>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("editPanel.expectedDateLabel")}</label>
             <input type="date" value={form.data_prevista} onChange={(e) => setForm((f) => ({ ...f, data_prevista: e.target.value }))} className={inputCls} />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Prioridade</label>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("editPanel.priorityLabel")}</label>
             <div className="flex gap-2">
               {["baixa", "normal", "alta", "critica"].map((p) => (
                 <button key={p} type="button"
@@ -1765,19 +1779,19 @@ function EditPanel({ impl, onClose, onSaved }) {
                     form.prioridade === p ? "bg-orange-500 text-white border-orange-500" : "border-gray-200 text-gray-600 hover:border-gray-300"
                   }`}
                 >
-                  {p === "critica" ? "Crítica" : p.charAt(0).toUpperCase() + p.slice(1)}
+                  {t(`editPanel.priority.${p}`)}
                 </button>
               ))}
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Observações</label>
-            <textarea value={form.observacoes} onChange={(e) => setForm((f) => ({ ...f, observacoes: e.target.value }))} rows={3} placeholder="Notas internas..." className={`${inputCls} resize-none`} />
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("editPanel.notesLabel")}</label>
+            <textarea value={form.observacoes} onChange={(e) => setForm((f) => ({ ...f, observacoes: e.target.value }))} rows={3} placeholder={t("editPanel.notesPlaceholder")} className={`${inputCls} resize-none`} />
           </div>
           <div className="flex gap-3 pt-1">
-            <button onClick={onClose} className="flex-1 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors">Cancelar</button>
+            <button onClick={onClose} className="flex-1 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors">{t("common.cancel")}</button>
             <button onClick={handleSave} disabled={saving} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50 transition-colors">
-              {saving ? "Salvando..." : "Salvar"}
+              {saving ? t("common.saving") : t("common.save")}
             </button>
           </div>
         </div>
@@ -1789,13 +1803,14 @@ function EditPanel({ impl, onClose, onSaved }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 const TABS = [
-  { id: "checklist",   label: "Kanban"      },
-  { id: "timeline",    label: "Timeline"    },
-  { id: "comentarios", label: "Comentários" },
-  { id: "cliente",     label: "Cliente"     },
+  { id: "checklist",   labelKey: "checklist"   },
+  { id: "timeline",    labelKey: "timeline"    },
+  { id: "comentarios", labelKey: "comentarios" },
+  { id: "cliente",     labelKey: "cliente"     },
 ];
 
 export default function ImplantacaoDetalhe() {
+  const { t } = useTranslation("implantacaoDetalhe");
   const { id } = useParams();
   const navigate = useNavigate();
   const [impl, setImpl]         = useState(null);
@@ -1851,7 +1866,7 @@ export default function ImplantacaoDetalhe() {
         <div className="flex flex-col items-center justify-center py-40 gap-3">
           <p className="text-sm text-red-500">{error}</p>
           <button onClick={() => navigate("/admin/implantacoes")} className="text-xs text-gray-400 hover:underline">
-            ← Voltar
+            {t("page.back")}
           </button>
         </div>
       </Layout>
@@ -1918,7 +1933,7 @@ export default function ImplantacaoDetalhe() {
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
-          Implantações
+          {t("page.breadcrumb")}
         </button>
         <span className="text-gray-300">/</span>
         <span className="font-mono text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{impl.codigo}</span>
@@ -1938,22 +1953,22 @@ export default function ImplantacaoDetalhe() {
                   <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M4 12h16M4 17h7" />
                   </svg>
-                  Conversão de dados
+                  {t("page.dataConversion")}
                 </span>
               )}
               {/* Go Live badge / botão */}
               {impl.data_go_live ? (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
-                  🚀 Go Live: {fmtDate(impl.data_go_live)}
+                  {t("page.goLiveLabel", { date: fmtDate(impl.data_go_live) })}
                   <button
                     onClick={async () => {
-                      if (!confirm("Remover o registro de Go Live?")) return;
+                      if (!confirm(t("page.confirmRemoveGoLive"))) return;
                       setGoLiveLoading(true);
                       try { await implantacoesApi.removerGoLive(impl.id); load(); } catch { } finally { setGoLiveLoading(false); }
                     }}
                     disabled={goLiveLoading}
                     className="ml-0.5 text-green-500 hover:text-red-500 transition-colors leading-none"
-                    title="Remover Go Live"
+                    title={t("page.removeGoLiveTooltip")}
                   >
                     ✕
                   </button>
@@ -1968,7 +1983,7 @@ export default function ImplantacaoDetalhe() {
                     disabled={goLiveLoading}
                     className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border border-dashed border-green-300 text-green-600 hover:bg-green-50 transition-colors disabled:opacity-50"
                   >
-                    {goLiveLoading ? "…" : "🚀 Registrar Go Live"}
+                    {goLiveLoading ? "…" : t("page.registerGoLive")}
                   </button>
                 )
               )}
@@ -1983,7 +1998,7 @@ export default function ImplantacaoDetalhe() {
                     onClick={() => setShowResponsavelModal(true)}
                     className="text-[10px] text-orange-500 hover:text-orange-700 font-semibold px-1.5 py-0.5 rounded hover:bg-orange-50 transition-colors"
                   >
-                    Trocar
+                    {t("page.change")}
                   </button>
                 </div>
               ) : (
@@ -1994,36 +2009,36 @@ export default function ImplantacaoDetalhe() {
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
-                  Sem responsável
+                  {t("page.noResponsible")}
                 </button>
               )}
               <span className="text-gray-200 text-xs">·</span>
               {impl.consultor && (
                 <>
-                  <span className="text-xs text-gray-500">Consultor: {impl.consultor}</span>
+                  <span className="text-xs text-gray-500">{t("page.consultantLabel", { nome: impl.consultor })}</span>
                   <span className="text-gray-200 text-xs">·</span>
                 </>
               )}
-              <span className={`text-xs ${slaColor}`}>SLA: {fmtDate(impl.sla_limite)}</span>
+              <span className={`text-xs ${slaColor}`}>{t("page.slaLabel", { date: fmtDate(impl.sla_limite) })}</span>
               <span className="text-gray-200 text-xs">·</span>
-              <span className="text-xs text-gray-500">Início: {fmtDate(impl.data_inicio)}</span>
+              <span className="text-xs text-gray-500">{t("page.startLabel", { date: fmtDate(impl.data_inicio) })}</span>
             </div>
           </div>
           <button
             onClick={() => setShowEdit(true)}
             className="px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shrink-0"
           >
-            Editar
+            {t("page.edit")}
           </button>
         </div>
 
         {/* Progress */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-xs font-semibold text-gray-500">Progresso geral</span>
+            <span className="text-xs font-semibold text-gray-500">{t("page.overallProgress")}</span>
             <div className="flex items-center gap-3">
               {pendingItems > 0 && (
-                <span className="text-xs text-gray-400">{pendingItems} pendente{pendingItems !== 1 ? "s" : ""}</span>
+                <span className="text-xs text-gray-400">{t("page.pendingCount", { count: pendingItems })}</span>
               )}
               <span className="text-sm font-bold text-gray-800">{liveProgress}%</span>
             </div>
@@ -2065,7 +2080,7 @@ export default function ImplantacaoDetalhe() {
                       : "border-transparent text-gray-500 hover:text-gray-700"
                   }`}
                 >
-                  {tab.label}
+                  {t(`tabs.${tab.labelKey}`)}
                   {tab.id === "comentarios" && impl.comentarios.length > 0 && (
                     <span className="ml-1.5 text-xs text-gray-400">({impl.comentarios.length})</span>
                   )}
@@ -2084,7 +2099,7 @@ export default function ImplantacaoDetalhe() {
                   className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-orange-500 hover:bg-orange-600 transition-colors"
                 >
                   <span className="text-base leading-none font-light">+</span>
-                  Nova Etapa
+                  {t("page.newEtapa")}
                 </button>
                 <button
                   onClick={() => setSomentePendentes((v) => !v)}
@@ -2095,15 +2110,15 @@ export default function ImplantacaoDetalhe() {
                   }`}
                 >
                   <span className={`w-1.5 h-1.5 rounded-full ${somentePendentes ? "bg-orange-500" : "bg-gray-400"}`} />
-                  Só pendentes
+                  {t("page.onlyPending")}
                 </button>
                 <button
                   onClick={() => setIsExpanded(true)}
-                  title="Expandir tela cheia"
+                  title={t("page.expandTooltip")}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent transition-all"
                 >
                   <IconExpand />
-                  Expandir
+                  {t("page.expand")}
                 </button>
               </div>
             )}
@@ -2162,7 +2177,7 @@ export default function ImplantacaoDetalhe() {
                 </div>
                 <span className="text-xs font-bold text-gray-700 tabular-nums">{liveProgress}%</span>
                 {pendingItems > 0 && (
-                  <span className="text-xs text-gray-400">{pendingItems} pendente{pendingItems !== 1 ? "s" : ""}</span>
+                  <span className="text-xs text-gray-400">{t("page.pendingCount", { count: pendingItems })}</span>
                 )}
               </div>
             </div>
@@ -2173,7 +2188,7 @@ export default function ImplantacaoDetalhe() {
                 className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-orange-500 hover:bg-orange-600 transition-colors"
               >
                 <span className="text-base leading-none font-light">+</span>
-                Nova Etapa
+                {t("page.newEtapa")}
               </button>
               <button
                 onClick={() => setSomentePendentes((v) => !v)}
@@ -2184,16 +2199,16 @@ export default function ImplantacaoDetalhe() {
                 }`}
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${somentePendentes ? "bg-orange-500" : "bg-gray-400"}`} />
-                Só pendentes
+                {t("page.onlyPending")}
               </button>
               <button
                 onClick={() => setIsExpanded(false)}
-                title="Minimizar (Esc)"
+                title={t("page.minimizeTooltip")}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 border border-gray-200 transition-colors"
               >
                 <IconCompress />
-                Minimizar
-                <span className="ml-1 text-[10px] text-gray-400 font-normal">Esc</span>
+                {t("page.minimize")}
+                <span className="ml-1 text-[10px] text-gray-400 font-normal">{t("page.escKey")}</span>
               </button>
             </div>
           </div>

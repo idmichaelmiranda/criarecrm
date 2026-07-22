@@ -1,9 +1,11 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Layout } from "../components/layout/Layout";
 import { instalacaosApi, usuariosApi, configuracoesApi } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { fmtDate, fmtDateOnly } from "../utils/dateUtils";
+import i18n from "../i18n";
 
 function maskPhone(value) {
   const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -13,27 +15,12 @@ function maskPhone(value) {
   return `(${digits.slice(0,2)}) ${digits.slice(2,7)}-${digits.slice(7)}`;
 }
 
-const TIPO_LABEL = {
-  pdv: "PDV Adicional",
-  coletor: "Coletor Mobile",
-  forca_vendas: "Força de Vendas",
-  impressora: "Impressora",
-  outro: "Outro",
-};
-
 const TIPO_COLOR = {
   pdv:          "bg-blue-100 text-blue-700",
   coletor:      "bg-purple-100 text-purple-700",
   forca_vendas: "bg-orange-100 text-orange-700",
   impressora:   "bg-teal-100 text-teal-700",
   outro:        "bg-gray-100 text-gray-600",
-};
-
-const STATUS_LABEL = {
-  agendada:    "Agendada",
-  em_execucao: "Em Execução",
-  concluida:   "Concluída",
-  cancelada:   "Cancelada",
 };
 
 const STATUS_COLOR = {
@@ -59,8 +46,8 @@ const ATIVAS_STATUSES   = ["agendada", "em_execucao"];
 const HISTORICO_STATUSES = ["concluida", "cancelada"];
 
 const TABS = [
-  { key: "ativas",    label: "Ativas"    },
-  { key: "historico", label: "Histórico" },
+  { key: "ativas",    labelKey: "ativas"    },
+  { key: "historico", labelKey: "historico" },
 ];
 
 function calcPresetRange(key) {
@@ -125,11 +112,11 @@ function dataRelativa(dataStr) {
   const d = new Date(dataStr + "T00:00:00");
   const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
   const diff = Math.round((d - hoje) / 86400000);
-  if (diff < 0) return { label: `${Math.abs(diff)}d atraso`, cls: "text-red-600 font-semibold" };
-  if (diff === 0) return { label: "Hoje", cls: "text-orange-600 font-semibold" };
-  if (diff === 1) return { label: "Amanhã", cls: "text-yellow-600 font-semibold" };
-  if (diff <= 7) return { label: `${diff}d`, cls: "text-yellow-600" };
-  return { label: `${diff}d`, cls: "text-gray-400" };
+  if (diff < 0) return { label: i18n.t("instalacoes:dateRelative.overdue", { count: Math.abs(diff) }), cls: "text-red-600 font-semibold" };
+  if (diff === 0) return { label: i18n.t("instalacoes:dateRelative.today"), cls: "text-orange-600 font-semibold" };
+  if (diff === 1) return { label: i18n.t("instalacoes:dateRelative.tomorrow"), cls: "text-yellow-600 font-semibold" };
+  if (diff <= 7) return { label: i18n.t("instalacoes:dateRelative.daysShort", { count: diff }), cls: "text-yellow-600" };
+  return { label: i18n.t("instalacoes:dateRelative.daysShort", { count: diff }), cls: "text-gray-400" };
 }
 
 // ── Tipo helpers ──────────────────────────────────────────────────────────────
@@ -150,6 +137,7 @@ function UserAvatar({ nome, avatarUrl, size = "md" }) {
 }
 
 function ResponsavelPicker({ usuarios, value, onChange }) {
+  const { t } = useTranslation("instalacoes");
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const selected = usuarios.find((u) => String(u.id) === String(value)) || null;
@@ -181,7 +169,7 @@ function ResponsavelPicker({ usuarios, value, onChange }) {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
               </svg>
             </div>
-            <span className="flex-1 text-left text-sm text-gray-400">Sem responsável</span>
+            <span className="flex-1 text-left text-sm text-gray-400">{t("semResponsavel")}</span>
           </>
         )}
         <svg className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -199,7 +187,7 @@ function ResponsavelPicker({ usuarios, value, onChange }) {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
               </svg>
             </div>
-            <span className="flex-1 text-left text-gray-500">Sem responsável</span>
+            <span className="flex-1 text-left text-gray-500">{t("semResponsavel")}</span>
             {!value && <svg className="w-4 h-4 text-orange-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>}
           </button>
 
@@ -234,6 +222,7 @@ function SectionLabel({ children }) {
 }
 
 function NovaInstalacaoModal({ onClose, onCreated, tiposConfig = [] }) {
+  const { t } = useTranslation("instalacoes");
   const [usuarios, setUsuarios] = useState([]);
   const [form, setForm] = useState({
     cliente_id: "",
@@ -276,11 +265,11 @@ function NovaInstalacaoModal({ onClose, onCreated, tiposConfig = [] }) {
         setClienteFound(data[0]);
       } else {
         setClienteFound(false);
-        setClienteError("CNPJ não encontrado ou cliente inativo no ERP.");
+        setClienteError(t("modal.cnpjNotFound"));
       }
     } catch (err) {
       setClienteFound(false);
-      setClienteError(err.message || "Erro ao consultar ERP.");
+      setClienteError(err.message || t("modal.erpError"));
     } finally {
       setClienteLoading(false);
     }
@@ -317,8 +306,8 @@ function NovaInstalacaoModal({ onClose, onCreated, tiposConfig = [] }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!form.cliente_nome) { setError("Selecione o cliente."); return; }
-    if (form.tipos.length === 0) { setError("Selecione ao menos um tipo de produto."); return; }
+    if (!form.cliente_nome) { setError(t("modal.errorSelectCliente")); return; }
+    if (form.tipos.length === 0) { setError(t("modal.errorSelectTipo")); return; }
     setSaving(true);
     setError("");
     try {
@@ -359,8 +348,8 @@ function NovaInstalacaoModal({ onClose, onCreated, tiposConfig = [] }) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100 shrink-0">
           <div>
-            <h2 className="text-base font-bold text-gray-800">Nova Instalação</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Preencha os dados e selecione os produtos</p>
+            <h2 className="text-base font-bold text-gray-800">{t("modal.title")}</h2>
+            <p className="text-xs text-gray-400 mt-0.5">{t("modal.subtitle")}</p>
           </div>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
@@ -384,7 +373,7 @@ function NovaInstalacaoModal({ onClose, onCreated, tiposConfig = [] }) {
 
               {/* CLIENTE */}
               <div>
-                <SectionLabel>Cliente</SectionLabel>
+                <SectionLabel>{t("modal.clienteSection")}</SectionLabel>
                 {form.cliente_nome ? (
                   <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg border-2 border-indigo-300 bg-indigo-50">
                     <div className="flex-1 min-w-0">
@@ -393,7 +382,7 @@ function NovaInstalacaoModal({ onClose, onCreated, tiposConfig = [] }) {
                     </div>
                     <button type="button" onClick={clearCliente}
                       className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 rounded hover:bg-white/60 transition-colors shrink-0">
-                      Trocar
+                      {t("modal.trocar")}
                     </button>
                   </div>
                 ) : (
@@ -402,14 +391,14 @@ function NovaInstalacaoModal({ onClose, onCreated, tiposConfig = [] }) {
                       <input ref={cnpjRef} type="text" value={cnpjInput}
                         onChange={(e) => { setCnpjInput(e.target.value); setClienteFound(null); setClienteError(""); }}
                         onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), buscarCliente())}
-                        placeholder="Digite o CNPJ do cliente…"
+                        placeholder={t("modal.cnpjPlaceholder")}
                         className={`${inputCls} flex-1 font-mono`} autoComplete="off" />
                       <button type="button" onClick={buscarCliente} disabled={clienteLoading || !cnpjInput.trim()}
                         className="px-3 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 disabled:opacity-40 text-white text-sm font-semibold transition-colors shrink-0 flex items-center gap-1.5">
                         {clienteLoading
                           ? <span className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
                           : <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>}
-                        Buscar
+                        {t("modal.buscar")}
                       </button>
                     </div>
                     {clienteFound && (
@@ -423,7 +412,7 @@ function NovaInstalacaoModal({ onClose, onCreated, tiposConfig = [] }) {
                         </div>
                         <button type="button" onClick={() => selectCliente(clienteFound)}
                           className="px-2.5 py-1 rounded-lg bg-green-500 hover:bg-green-600 text-white text-xs font-semibold transition-colors shrink-0">
-                          Selecionar
+                          {t("modal.selecionar")}
                         </button>
                       </div>
                     )}
@@ -434,7 +423,7 @@ function NovaInstalacaoModal({ onClose, onCreated, tiposConfig = [] }) {
                       </p>
                     )}
                     {!clienteFound && !clienteError && (
-                      <p className="text-[11px] text-gray-400">Digite o CNPJ e clique em Buscar para consultar o ERP.</p>
+                      <p className="text-[11px] text-gray-400">{t("modal.cnpjHint")}</p>
                     )}
                   </div>
                 )}
@@ -442,20 +431,20 @@ function NovaInstalacaoModal({ onClose, onCreated, tiposConfig = [] }) {
 
               {/* CONTATO DA VISITA */}
               <div>
-                <SectionLabel>Contato da Visita</SectionLabel>
+                <SectionLabel>{t("modal.contatoSection")}</SectionLabel>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">Nome</label>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("modal.nome")}</label>
                     <input type="text" value={form.contato_nome}
                       onChange={(e) => setForm((f) => ({ ...f, contato_nome: e.target.value }))}
-                      placeholder="Quem vai receber"
+                      placeholder={t("modal.quemVaiReceber")}
                       className={inputCls} />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">Telefone</label>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("modal.telefone")}</label>
                     <input type="tel" value={form.contato_telefone}
                       onChange={(e) => setForm((f) => ({ ...f, contato_telefone: maskPhone(e.target.value) }))}
-                      placeholder="(00) 00000-0000"
+                      placeholder={t("modal.telefonePlaceholder")}
                       className={inputCls} />
                   </div>
                 </div>
@@ -463,25 +452,25 @@ function NovaInstalacaoModal({ onClose, onCreated, tiposConfig = [] }) {
 
               {/* AGENDAMENTO */}
               <div>
-                <SectionLabel>Agendamento</SectionLabel>
+                <SectionLabel>{t("modal.agendamentoSection")}</SectionLabel>
                 <div className="grid grid-cols-2 gap-3 mb-3">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">Data Agendada</label>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("modal.dataAgendada")}</label>
                     <input type="date" value={form.data_agendada}
                       onChange={(e) => setForm((f) => ({ ...f, data_agendada: e.target.value }))}
                       className={inputCls} />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">Prioridade</label>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("modal.prioridade")}</label>
                     <select value={form.prioridade} onChange={(e) => setForm((f) => ({ ...f, prioridade: e.target.value }))} className={inputCls}>
-                      <option value="normal">Normal</option>
-                      <option value="alta">Alta</option>
-                      <option value="urgente">Urgente</option>
+                      <option value="normal">{t("priorityOptions.normal")}</option>
+                      <option value="alta">{t("priorityOptions.alta")}</option>
+                      <option value="urgente">{t("priorityOptions.urgente")}</option>
                     </select>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">Responsável pela execução</label>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("modal.responsavelExecucao")}</label>
                   <ResponsavelPicker
                     usuarios={usuarios}
                     value={form.responsavel_id}
@@ -492,10 +481,10 @@ function NovaInstalacaoModal({ onClose, onCreated, tiposConfig = [] }) {
 
               {/* OBSERVAÇÕES */}
               <div>
-                <SectionLabel>Observações</SectionLabel>
+                <SectionLabel>{t("modal.observacoesSection")}</SectionLabel>
                 <textarea value={form.observacoes} rows={2}
                   onChange={(e) => setForm((f) => ({ ...f, observacoes: e.target.value }))}
-                  placeholder="Informações adicionais sobre a instalação…"
+                  placeholder={t("modal.observacoesPlaceholder")}
                   className={`${inputCls} resize-none`} />
               </div>
             </div>
@@ -503,19 +492,19 @@ function NovaInstalacaoModal({ onClose, onCreated, tiposConfig = [] }) {
             {/* ── Coluna direita: produtos ── */}
             <div className="px-5 py-5 bg-gray-50/50">
               <SectionLabel>
-                Produtos{form.tipos.length === 0
+                {t("modal.produtosSection")}{form.tipos.length === 0
                   ? <span className="ml-1 text-red-400 normal-case font-normal tracking-normal"> *</span>
-                  : <span className="ml-1.5 bg-orange-100 text-orange-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full normal-case tracking-normal">{totalQty} un.</span>
+                  : <span className="ml-1.5 bg-orange-100 text-orange-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full normal-case tracking-normal">{t("modal.unitsBadge", { count: totalQty })}</span>
                 }
               </SectionLabel>
               <div className="space-y-2">
                 {tiposConfig.length === 0 ? (
                   <div className="flex items-center gap-2 text-sm text-gray-400 py-4 justify-center">
                     <span className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-transparent animate-spin" />
-                    Carregando produtos…
+                    {t("modal.loadingProdutos")}
                   </div>
                 ) : tiposConfig.filter((tc) => tc.ativo).length === 0 ? (
-                  <p className="text-sm text-gray-400 text-center py-4">Nenhum produto ativo. Configure em Configurações.</p>
+                  <p className="text-sm text-gray-400 text-center py-4">{t("modal.noProdutosAtivos")}</p>
                 ) : (
                   tiposConfig.filter((tc) => tc.ativo).map((chip) => {
                     const active = form.tipos.includes(chip.tipo);
@@ -552,21 +541,21 @@ function NovaInstalacaoModal({ onClose, onCreated, tiposConfig = [] }) {
               {form.tipos.length > 0 && (
                 <div className="mt-3 bg-white border border-gray-100 rounded-xl px-3 py-2.5">
                   <div className="flex flex-wrap gap-1 mb-1">
-                    {form.tipos.map((t) => {
-                      const chip = tiposConfig.find((c) => c.tipo === t);
+                    {form.tipos.map((tipoKey) => {
+                      const chip = tiposConfig.find((c) => c.tipo === tipoKey);
                       const cor = chip?.cor || "#6366f1";
-                      const nome = chip?.nome || TIPO_LABEL[t] || t;
+                      const nome = chip?.nome || (TIPO_COLOR[tipoKey] ? t(`tipos.${tipoKey}`) : tipoKey);
                       return (
-                        <span key={t} className="text-[11px] font-semibold px-2 py-0.5 rounded-full border"
+                        <span key={tipoKey} className="text-[11px] font-semibold px-2 py-0.5 rounded-full border"
                           style={{ background: `${cor}1a`, borderColor: `${cor}66`, color: cor }}>
-                          {quantidades[t] || 1}× {nome}
+                          {quantidades[tipoKey] || 1}× {nome}
                         </span>
                       );
                     })}
                   </div>
                   <p className="text-[10px] text-gray-400">
-                    {totalQty} un. · {form.tipos.length} tipo{form.tipos.length !== 1 ? "s" : ""}
-                    {form.tipos.length > 1 && " · checklists por produto"}
+                    {t("modal.summary", { count: form.tipos.length, totalQty })}
+                    {form.tipos.length > 1 && t("modal.checklistsPerProduct")}
                   </p>
                 </div>
               )}
@@ -577,11 +566,11 @@ function NovaInstalacaoModal({ onClose, onCreated, tiposConfig = [] }) {
           <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-100 shrink-0">
             <button type="button" onClick={onClose}
               className="px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-              Cancelar
+              {t("modal.cancelar")}
             </button>
             <button type="submit" disabled={saving || form.tipos.length === 0 || !form.cliente_nome}
               className="px-5 py-2 rounded-lg text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50 transition-colors">
-              {saving ? "Criando…" : `Criar Instalação${totalQty > 1 ? ` (${totalQty} un.)` : ""}`}
+              {saving ? t("modal.criando") : totalQty > 1 ? t("modal.criarInstalacaoComQty", { count: totalQty }) : t("modal.criarInstalacao")}
             </button>
           </div>
         </form>
@@ -593,6 +582,7 @@ function NovaInstalacaoModal({ onClose, onCreated, tiposConfig = [] }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Instalacoes() {
+  const { t } = useTranslation("instalacoes");
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
@@ -715,8 +705,8 @@ export default function Instalacoes() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Instalações</h1>
-          <p className="text-sm text-gray-400 mt-0.5">PDVs adicionais, coletores, força de vendas e mais</p>
+          <h1 className="text-xl font-bold text-gray-900">{t("header.title")}</h1>
+          <p className="text-sm text-gray-400 mt-0.5">{t("header.subtitle")}</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
@@ -725,17 +715,17 @@ export default function Instalacoes() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
           </svg>
-          Nova Instalação
+          {t("header.newButton")}
         </button>
       </div>
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {[
-          { label: "Agendadas",   value: kpiAgendadas,  color: "text-blue-600",   bg: "bg-blue-50",   icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z", tab: "ativas" },
-          { label: "Em Execução", value: kpiExecucao,   color: "text-orange-600", bg: "bg-orange-50", icon: "M13 10V3L4 14h7v7l9-11h-7z", tab: "ativas" },
-          { label: "Concluídas",  value: kpiConcluidas, color: "text-green-600",  bg: "bg-green-50",  icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", tab: "historico" },
-          { label: "Atrasadas",   value: kpiAtrasadas,  color: "text-red-600",    bg: filtroAtrasadas ? "bg-red-200" : "bg-red-50",    icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z", tab: null, atrasadas: true },
+          { label: t("kpi.agendadas"),   value: kpiAgendadas,  color: "text-blue-600",   bg: "bg-blue-50",   icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z", tab: "ativas" },
+          { label: t("kpi.emExecucao"), value: kpiExecucao,   color: "text-orange-600", bg: "bg-orange-50", icon: "M13 10V3L4 14h7v7l9-11h-7z", tab: "ativas" },
+          { label: t("kpi.concluidas"),  value: kpiConcluidas, color: "text-green-600",  bg: "bg-green-50",  icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", tab: "historico" },
+          { label: t("kpi.atrasadas"),   value: kpiAtrasadas,  color: "text-red-600",    bg: filtroAtrasadas ? "bg-red-200" : "bg-red-50",    icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z", tab: null, atrasadas: true },
         ].map((k) => (
           <button
             key={k.label}
@@ -759,32 +749,32 @@ export default function Instalacoes() {
       {/* Filtros */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm mb-4">
         <div className="flex items-center gap-1 px-4 pt-3 overflow-x-auto">
-          {TABS.map((t) => (
+          {TABS.map((tabItem) => (
             <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
+              key={tabItem.key}
+              onClick={() => setTab(tabItem.key)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap mb-1 ${
-                tab === t.key ? "bg-orange-50 text-orange-600" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                tab === tabItem.key ? "bg-orange-50 text-orange-600" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
               }`}
             >
-              {t.label}
+              {t(`tabs.${tabItem.labelKey}`)}
               <span className={`text-[11px] px-1.5 py-0.5 rounded-full font-semibold ${
-                tab === t.key ? "bg-orange-100 text-orange-600" : "bg-gray-100 text-gray-500"
+                tab === tabItem.key ? "bg-orange-100 text-orange-600" : "bg-gray-100 text-gray-500"
               }`}>
-                {counts[t.key]}
+                {counts[tabItem.key]}
               </span>
             </button>
           ))}
         </div>
         {/* Legenda das cores laterais */}
         <div className="flex items-center gap-4 px-4 py-2 border-t border-gray-50 flex-wrap">
-          <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider shrink-0">Legenda:</span>
+          <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider shrink-0">{t("legend.title")}</span>
           {[
-            { color: "bg-blue-400",   label: "Agendada" },
-            { color: "bg-orange-400", label: "Em Execução" },
-            { color: "bg-green-500",  label: "Concluída" },
-            { color: "bg-gray-300",   label: "Cancelada" },
-            { color: "bg-red-500",    label: "Atrasada" },
+            { color: "bg-blue-400",   label: t("status.agendada") },
+            { color: "bg-orange-400", label: t("status.em_execucao") },
+            { color: "bg-green-500",  label: t("status.concluida") },
+            { color: "bg-gray-300",   label: t("status.cancelada") },
+            { color: "bg-red-500",    label: t("legend.atrasada") },
           ].map(({ color, label }) => (
             <div key={label} className="flex items-center gap-1.5">
               <span className={`w-2.5 h-2.5 rounded-sm shrink-0 ${color}`} />
@@ -801,7 +791,7 @@ export default function Instalacoes() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar cliente ou código…"
+              placeholder={t("filters.searchPlaceholder")}
               className="w-full pl-9 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-orange-400 transition"
             />
           </div>
@@ -810,10 +800,10 @@ export default function Instalacoes() {
             onChange={(e) => setTipoFiltro(e.target.value)}
             className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-orange-400 transition text-gray-600"
           >
-            <option value="todos">Todos os tipos</option>
+            <option value="todos">{t("filters.allTypes")}</option>
             {tiposConfig.length > 0
-              ? tiposConfig.map((t) => <option key={t.tipo} value={t.tipo}>{t.nome}</option>)
-              : Object.entries(TIPO_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)
+              ? tiposConfig.map((tc) => <option key={tc.tipo} value={tc.tipo}>{tc.nome}</option>)
+              : Object.keys(TIPO_COLOR).map((k) => <option key={k} value={k}>{t(`tipos.${k}`)}</option>)
             }
           </select>
 
@@ -830,7 +820,7 @@ export default function Instalacoes() {
               <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              Período
+              {t("filters.period")}
               {(filtroDataInicio || filtroDataFim) && (
                 <span className="ml-0.5 w-1.5 h-1.5 rounded-full bg-white/80" />
               )}
@@ -840,13 +830,13 @@ export default function Instalacoes() {
               <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50 bg-white rounded-2xl border border-gray-100 shadow-2xl w-68 overflow-hidden" style={{ width: 268 }}>
                 {/* Header */}
                 <div className="px-4 pt-3 pb-2.5 border-b border-gray-100">
-                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Filtrar por período</p>
+                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">{t("filters.periodPopover.title")}</p>
                 </div>
 
                 <div className="px-4 pt-3 pb-1">
                   {/* Toggle Agendamento / Conclusão */}
                   <div className="flex bg-gray-100 rounded-lg p-0.5 text-xs font-medium mb-3">
-                    {[{ key: "agendada", label: "Agendamento" }, { key: "conclusao", label: "Conclusão" }].map(({ key, label }) => (
+                    {[{ key: "agendada", label: t("filters.periodPopover.toggleAgendamento") }, { key: "conclusao", label: t("filters.periodPopover.toggleConclusao") }].map(({ key, label }) => (
                       <button
                         key={key}
                         onClick={() => setFiltroDataCampo(key)}
@@ -864,10 +854,10 @@ export default function Instalacoes() {
                   {/* Presets */}
                   <div className="grid grid-cols-2 gap-1.5 mb-3">
                     {[
-                      { key: "hoje",        label: "Hoje" },
-                      { key: "semana",      label: "Esta semana" },
-                      { key: "mes",         label: "Este mês" },
-                      { key: "mes_passado", label: "Mês passado" },
+                      { key: "hoje",        label: t("filters.periodPopover.presets.hoje") },
+                      { key: "semana",      label: t("filters.periodPopover.presets.semana") },
+                      { key: "mes",         label: t("filters.periodPopover.presets.mes") },
+                      { key: "mes_passado", label: t("filters.periodPopover.presets.mesPassado") },
                     ].map(({ key, label }) => {
                       const r = calcPresetRange(key);
                       const ativo = filtroDataInicio === r.ini && filtroDataFim === r.fim;
@@ -890,10 +880,10 @@ export default function Instalacoes() {
 
                 {/* Divider + Range personalizado */}
                 <div className="border-t border-gray-100 px-4 py-3">
-                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Personalizado</p>
+                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">{t("filters.periodPopover.custom")}</p>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2.5">
-                      <span className="text-[11px] text-gray-400 w-5 shrink-0">De</span>
+                      <span className="text-[11px] text-gray-400 w-5 shrink-0">{t("filters.periodPopover.from")}</span>
                       <input
                         type="date"
                         value={filtroDataInicio}
@@ -902,7 +892,7 @@ export default function Instalacoes() {
                       />
                     </div>
                     <div className="flex items-center gap-2.5">
-                      <span className="text-[11px] text-gray-400 w-5 shrink-0">Até</span>
+                      <span className="text-[11px] text-gray-400 w-5 shrink-0">{t("filters.periodPopover.to")}</span>
                       <input
                         type="date"
                         value={filtroDataFim}
@@ -923,7 +913,7 @@ export default function Instalacoes() {
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                       </svg>
-                      Limpar filtro de período
+                      {t("filters.periodPopover.clear")}
                     </button>
                   </div>
                 )}
@@ -942,7 +932,7 @@ export default function Instalacoes() {
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
-            Minhas instalações
+            {t("filters.meusInstalacoes")}
             {filtroMeus && (
               <span className="ml-0.5 w-4 h-4 flex items-center justify-center rounded-full bg-white/25 text-[10px] font-bold">
                 {filtered.length}
@@ -959,18 +949,18 @@ export default function Instalacoes() {
             <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            {filtroDataCampo === "agendada" ? "Agendamento" : "Conclusão"}
+            {filtroDataCampo === "agendada" ? t("filters.periodPopover.toggleAgendamento") : t("filters.periodPopover.toggleConclusao")}
             {filtroDataInicio && filtroDataFim
-              ? `: ${fmtDateOnly(filtroDataInicio)} → ${fmtDateOnly(filtroDataFim)}`
+              ? t("periodChip.range", { start: fmtDateOnly(filtroDataInicio), end: fmtDateOnly(filtroDataFim) })
               : filtroDataInicio
-              ? `: a partir de ${fmtDateOnly(filtroDataInicio)}`
-              : `: até ${fmtDateOnly(filtroDataFim)}`}
+              ? t("periodChip.from", { start: fmtDateOnly(filtroDataInicio) })
+              : t("periodChip.to", { end: fmtDateOnly(filtroDataFim) })}
             <button
               onClick={() => { setFiltroDataInicio(""); setFiltroDataFim(""); }}
               className="ml-1 hover:text-blue-900 transition-colors"
             >✕</button>
           </span>
-          <span className="text-xs text-gray-400">{filtered.length} instalaç{filtered.length !== 1 ? "ões" : "ão"} encontrada{filtered.length !== 1 ? "s" : ""}</span>
+          <span className="text-xs text-gray-400">{t("resultsFound", { count: filtered.length })}</span>
         </div>
       )}
 
@@ -979,13 +969,13 @@ export default function Instalacoes() {
         <div className="flex items-center gap-2 mb-3">
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 border border-orange-200">
             <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-            Sem responsável
+            {t("semResponsavel")}
             <button
               onClick={() => { setFiltroSemResponsavel(false); setSearchParams({}); }}
               className="ml-1 hover:text-orange-900 transition-colors"
             >✕</button>
           </span>
-          <span className="text-xs text-gray-400">{filtered.length} instalaç{filtered.length !== 1 ? "ões" : "ão"} encontrada{filtered.length !== 1 ? "s" : ""}</span>
+          <span className="text-xs text-gray-400">{t("resultsFound", { count: filtered.length })}</span>
         </div>
       )}
 
@@ -997,7 +987,7 @@ export default function Instalacoes() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center">
-            <p className="text-sm text-gray-400">Nenhuma instalação encontrada.</p>
+            <p className="text-sm text-gray-400">{t("table.empty")}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -1005,13 +995,13 @@ export default function Instalacoes() {
             <thead>
               <tr className="border-b-2 border-gray-100 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
                 <th className="p-0 w-1" />
-                <th className="text-left px-5 py-3">Cliente</th>
-                <th className="text-left px-4 py-3 hidden sm:table-cell">Tipo</th>
-                <th className="text-left px-4 py-3">Status</th>
-                <th className="text-left px-4 py-3 w-40 hidden md:table-cell">Progresso</th>
-                <th className="text-left px-4 py-3 hidden md:table-cell">Responsável</th>
-                <th className="text-left px-4 py-3 hidden sm:table-cell">Agendado</th>
-                <th className="text-left px-4 py-3 hidden sm:table-cell">Concluído</th>
+                <th className="text-left px-5 py-3">{t("table.headers.cliente")}</th>
+                <th className="text-left px-4 py-3 hidden sm:table-cell">{t("table.headers.tipo")}</th>
+                <th className="text-left px-4 py-3">{t("table.headers.status")}</th>
+                <th className="text-left px-4 py-3 w-40 hidden md:table-cell">{t("table.headers.progresso")}</th>
+                <th className="text-left px-4 py-3 hidden md:table-cell">{t("table.headers.responsavel")}</th>
+                <th className="text-left px-4 py-3 hidden sm:table-cell">{t("table.headers.agendado")}</th>
+                <th className="text-left px-4 py-3 hidden sm:table-cell">{t("table.headers.concluido")}</th>
                 <th className="px-4 py-3 w-8" />
               </tr>
             </thead>
@@ -1042,12 +1032,12 @@ export default function Instalacoes() {
                         {atrasada && (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500 text-white">
                             <span className="w-1.5 h-1.5 rounded-full bg-white/70 animate-pulse shrink-0" />
-                            ATRASADA
+                            {t("table.overdueBadge")}
                           </span>
                         )}
                         {inst.prioridade !== "normal" && (
                           <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${PRIORIDADE_COLOR[inst.prioridade]}`}>
-                            {inst.prioridade === "urgente" ? "URGENTE" : "ALTA"}
+                            {inst.prioridade === "urgente" ? t("table.priorityUrgent") : t("table.priorityHigh")}
                           </span>
                         )}
                         {inst.quantidade > 1 && (
@@ -1066,14 +1056,14 @@ export default function Instalacoes() {
                     {/* Tipo */}
                     <td className="px-4 py-4 hidden sm:table-cell">
                       <div className="flex flex-wrap gap-1">
-                        {getTipos(inst).map((t) => {
-                          const td = tiposMap[normalizeTipo(t)];
+                        {getTipos(inst).map((tipoKey) => {
+                          const td = tiposMap[normalizeTipo(tipoKey)];
                           const cor = td?.cor;
                           return (
-                            <span key={t}
-                              className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${cor ? "" : (TIPO_COLOR[t] || "bg-gray-100 text-gray-600")}`}
+                            <span key={tipoKey}
+                              className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${cor ? "" : (TIPO_COLOR[tipoKey] || "bg-gray-100 text-gray-600")}`}
                               style={cor ? { background: `${cor}22`, color: cor } : undefined}>
-                              {td?.nome || TIPO_LABEL[t] || t}
+                              {td?.nome || (TIPO_COLOR[tipoKey] ? t(`tipos.${tipoKey}`) : tipoKey)}
                             </span>
                           );
                         })}
@@ -1088,7 +1078,7 @@ export default function Instalacoes() {
                           inst.status === "em_execucao" ? "bg-orange-500" :
                           inst.status === "agendada"    ? "bg-blue-500" : "bg-gray-400"
                         }`} />
-                        {STATUS_LABEL[inst.status] || inst.status}
+                        {STATUS_COLOR[inst.status] ? t(`status.${inst.status}`) : inst.status}
                       </span>
                     </td>
 
@@ -1125,7 +1115,7 @@ export default function Instalacoes() {
                           <span className="text-xs text-gray-600">{fmtDateOnly(inst.data_agendada)}</span>
                           {atrasada && !concluida && (
                             <span className="text-[10px] font-semibold text-red-500 uppercase tracking-wide leading-none">
-                              {Math.abs(Math.round((new Date(inst.data_agendada + "T00:00:00") - new Date().setHours(0,0,0,0)) / 86400000))}d atraso
+                              {t("dateRelative.overdue", { count: Math.abs(Math.round((new Date(inst.data_agendada + "T00:00:00") - new Date().setHours(0,0,0,0)) / 86400000)) })}
                             </span>
                           )}
                         </div>

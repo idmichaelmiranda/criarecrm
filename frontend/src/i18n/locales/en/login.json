@@ -1,0 +1,30 @@
+{
+  "leftPanel": {
+    "logoAlt": "CriareTI",
+    "brand": "CriareTI",
+    "tagline": "Implementation Platform",
+    "headline": "Manage implementations with efficiency and control.",
+    "subtext": "Triage, client management, stage tracking and much more — all in a single operational dashboard.",
+    "features": {
+      "triagem": { "title": "Smart triage", "desc": "Receive and process requests in real time" },
+      "rbac": { "title": "Full RBAC", "desc": "Access control by roles and permissions" },
+      "sla": { "title": "SLA tracking", "desc": "Automatically monitor deadlines and risks" }
+    },
+    "footer": "© {{year}} CriareTI. All rights reserved."
+  },
+  "form": {
+    "logoAlt": "CriareTI",
+    "brand": "CriareTI",
+    "title": "Sign in to the platform",
+    "subtitle": "Access with your corporate credentials",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@email.com",
+    "passwordLabel": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in...",
+    "errorRequired": "Fill in email and password.",
+    "errorDefault": "Incorrect email or password. Check your credentials and try again.",
+    "registerLink": "First time here? Request your account",
+    "troubleAccessing": "Trouble signing in? Contact the administrator."
+  }
+}

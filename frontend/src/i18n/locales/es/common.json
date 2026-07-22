@@ -1,0 +1,13 @@
+{
+  "brand": "CriareTI",
+  "logout": "Salir",
+  "language": {
+    "label": "Idioma",
+    "pt-BR": "Português (Brasil)",
+    "en": "English",
+    "es": "Español"
+  },
+  "errors": {
+    "forbidden": "No tienes permiso para acceder a esta página."
+  }
+}
