@@ -8,6 +8,7 @@ import Revisao from "./pages/Revisao";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Triagem from "./pages/Triagem";
+import TriagemDetalhe from "./pages/TriagemDetalhe";
 import Implantacoes from "./pages/Implantacoes";
 import ImplantacaoDetalhe from "./pages/ImplantacaoDetalhe";
 import Clientes from "./pages/Clientes";
@@ -45,6 +46,9 @@ export default function App() {
           } />
           <Route path="/admin/triagem" element={
             <PrivateRoute permission="triagem.view"><Triagem /></PrivateRoute>
+          } />
+          <Route path="/admin/triagem/:id" element={
+            <PrivateRoute permission="triagem.view"><TriagemDetalhe /></PrivateRoute>
           } />
           <Route path="/admin/implantacoes" element={
             <PrivateRoute permission="implantacoes.view"><Implantacoes /></PrivateRoute>

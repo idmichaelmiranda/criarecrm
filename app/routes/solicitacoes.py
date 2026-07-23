@@ -7,7 +7,7 @@ from app.database.connection import get_db
 from app.schemas.solicitacao import (
     SolicitacaoCreate, SolicitacaoListResponse, SolicitacaoResponse,
     SolicitacaoRevisaoPublic, TriagemAprovar, TriagemRecusar, TriagemCancelar,
-    AtribuirResponsavelPayload,
+    AtribuirResponsavelPayload, ProdutosContratadosPayload,
 )
 from app.schemas.implantacao import ImplantacaoListResponse
 from app.services import solicitacao_service, aprovacao_service
@@ -101,6 +101,13 @@ def atribuir_responsavel(
     current_user: Usuario = Depends(require_permission("triagem.view")),
 ):
     return solicitacao_service.atribuir_responsavel(db, sol_id, data.responsavel_id, current_user.nome)
+
+
+@router.put("/{sol_id}/produtos-contratados", response_model=SolicitacaoResponse)
+def atualizar_produtos_contratados(
+    sol_id: int, data: ProdutosContratadosPayload, db: Session = Depends(get_db), _: Usuario = _auth,
+):
+    return solicitacao_service.atualizar_produtos_contratados(db, sol_id, data)
 
 
 @router.post("/{sol_id}/aprovar", response_model=ImplantacaoListResponse)

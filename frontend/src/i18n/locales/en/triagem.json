@@ -29,6 +29,33 @@
       "emptyFilterHint": "Change the filter to see other requests."
     }
   },
+  "nav": {
+    "backToList": "Triage",
+    "prev": "Previous",
+    "next": "Next",
+    "position": "{{current}} of {{total}}"
+  },
+  "stepper": {
+    "received": "Received",
+    "inReview": "In Review",
+    "approved": "Approved",
+    "refused": "Refused"
+  },
+  "contractedProducts": {
+    "title": "Contracted Products",
+    "edit": "Edit",
+    "add": "Add products",
+    "empty": "No products registered yet.",
+    "selectProduct": "Select a product...",
+    "columnProduct": "Product",
+    "columnQty": "Qty.",
+    "addRow": "+ Add product",
+    "observationLabel": "Note for the implementation team",
+    "observationPlaceholder": "E.g.: client requested priority at branch 2...",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving..."
+  },
   "sla": {
     "linkExpired": "Link expired",
     "overdueDays": "Overdue {{count}}d",
@@ -230,6 +257,7 @@
     "noUserFound": "No user found"
   },
   "drawer": {
+    "notFound": "Request not found.",
     "receivedOn": "Received {{date}}",
     "savingEllipsis": "Saving…",
     "responsibleLabel": "Owner: {{name}}",

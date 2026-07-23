@@ -664,7 +664,7 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
       className={`fixed inset-y-0 left-0 bg-[#1B2240] flex flex-col z-30 overflow-hidden
         transition-[width,transform] duration-300 ease-in-out
         ${isMobile && !mobileOpen ? "-translate-x-full" : "translate-x-0"}`}
-      style={{ width: isMobile ? "240px" : (collapsed ? "64px" : "240px") }}
+      style={{ width: isMobile ? "15rem" : (collapsed ? "4rem" : "15rem") }}
     >
       {/* ── Cabeçalho: avatar + info + sino ── */}
       <div className={`border-b border-white/5 shrink-0 ${collapsed ? "px-0 pt-3 pb-3" : "px-4 pt-4 pb-3"}`}>
@@ -952,7 +952,7 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
                  rounded-r-xl shadow-md
                  group"
       style={{
-        left: collapsed ? "64px" : "240px",
+        left: collapsed ? "4rem" : "15rem",
         width: "18px",
         height: "48px",
         transition: "left 300ms ease-in-out, background-color 150ms, border-color 150ms, color 150ms",

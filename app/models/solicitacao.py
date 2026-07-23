@@ -43,11 +43,23 @@ class Solicitacao(Base):
     sla_horas: Mapped[int] = mapped_column(Integer, nullable=False, default=48)
     sla_limite: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
+    # Marcos do processo — preenchidos no momento exato da transição (não deduzidos
+    # de updated_at, que muda a cada edição e não representaria a data real do marco).
+    triagem_iniciada_em: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    aprovada_em: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+
     # Seções marcadas para correção (lista de keys: "empresa", "contato", etc.)
     campos_correcao: Mapped[list] = mapped_column(JSON, nullable=True)
 
     # Histórico acumulado de recusas [{data, motivo, campos}]
     historico_recusas: Mapped[list] = mapped_column(JSON, nullable=True)
+
+    # Produtos de instalação contratados pelo comercial [{tipo, nome, quantidade}]
+    # "nome" é congelado no momento do registro (mesmo padrão de tipos_nomes_json em
+    # Instalacao) — renomear o produto depois em Configurações não reescreve o histórico.
+    produtos_contratados: Mapped[list] = mapped_column(JSON, nullable=True, default=list)
+    # Recado livre do comercial para o time de implantação (não é por produto)
+    observacao_comercial: Mapped[str] = mapped_column(Text, nullable=True)
 
     # Responsável pela triagem (usuário interno atribuído)
     responsavel_triagem_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"), nullable=True)

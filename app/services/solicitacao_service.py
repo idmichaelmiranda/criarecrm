@@ -6,7 +6,7 @@ from sqlalchemy import select
 from fastapi import HTTPException, UploadFile
 
 from app.models.solicitacao import Solicitacao
-from app.schemas.solicitacao import SolicitacaoCreate
+from app.schemas.solicitacao import SolicitacaoCreate, ProdutosContratadosPayload
 from app.services import timeline_service
 
 
@@ -84,6 +84,26 @@ def atualizar(db: Session, solicitacao_id: int, data: SolicitacaoCreate) -> Soli
     return sol
 
 
+def atualizar_produtos_contratados(db: Session, solicitacao_id: int, data: ProdutosContratadosPayload) -> Solicitacao:
+    sol = get_by_id(db, solicitacao_id)
+    if sol.status in ("aprovada", "recusada", "cancelada"):
+        raise HTTPException(400, "Não é possível editar produtos de uma solicitação encerrada")
+
+    sol.produtos_contratados = [p.model_dump() for p in data.produtos_contratados]
+    sol.observacao_comercial = data.observacao_comercial
+    sol.updated_at = datetime.now()
+
+    timeline_service.log(
+        db, tipo="produtos_contratados_atualizados", titulo="Produtos contratados atualizados",
+        descricao="Comercial registrou/atualizou os produtos contratados pelo cliente.",
+        icone="package", cor="#6366f1",
+        solicitacao_id=sol.id,
+    )
+    db.commit()
+    db.refresh(sol)
+    return sol
+
+
 def get_all(db: Session, status: str | None = None) -> list[Solicitacao]:
     stmt = (
         select(Solicitacao)
@@ -109,6 +129,7 @@ def iniciar_triagem(db: Session, solicitacao_id: int) -> Solicitacao:
         raise HTTPException(400, "Apenas solicitações novas podem iniciar triagem")
     sol.status = "em_triagem"
     sol.updated_at = datetime.now()
+    sol.triagem_iniciada_em = sol.triagem_iniciada_em or sol.updated_at
     timeline_service.log(
         db, tipo="triagem_iniciada", titulo="Triagem iniciada",
         descricao="Revisão da solicitação iniciada pela equipe.", icone="search", cor="#f59e0b",

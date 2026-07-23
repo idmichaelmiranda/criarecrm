@@ -137,6 +137,7 @@ def aprovar(db: Session, solicitacao_id: int, data: TriagemAprovar, aprovador_id
     # 6. Atualizar solicitação
     sol.status = "aprovada"
     sol.updated_at = datetime.now()
+    sol.aprovada_em = sol.updated_at
 
     db.commit()
     db.refresh(implantacao)

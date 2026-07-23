@@ -29,6 +29,33 @@
       "emptyFilterHint": "Altere o filtro para ver outras solicitações."
     }
   },
+  "nav": {
+    "backToList": "Triagem",
+    "prev": "Anterior",
+    "next": "Próxima",
+    "position": "{{current}} de {{total}}"
+  },
+  "stepper": {
+    "received": "Recebida",
+    "inReview": "Em Triagem",
+    "approved": "Aprovada",
+    "refused": "Recusada"
+  },
+  "contractedProducts": {
+    "title": "Produtos Contratados",
+    "edit": "Editar",
+    "add": "Adicionar produtos",
+    "empty": "Nenhum produto registrado ainda.",
+    "selectProduct": "Selecione um produto...",
+    "columnProduct": "Produto",
+    "columnQty": "Qtd.",
+    "addRow": "+ Adicionar produto",
+    "observationLabel": "Observação para o time de implantação",
+    "observationPlaceholder": "Ex: cliente pediu prioridade na filial 2...",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "saving": "Salvando..."
+  },
   "sla": {
     "linkExpired": "Link expirado",
     "overdueDays": "Vencido {{count}}d",
@@ -230,6 +257,7 @@
     "noUserFound": "Nenhum usuário encontrado"
   },
   "drawer": {
+    "notFound": "Solicitação não encontrada.",
     "receivedOn": "Recebida {{date}}",
     "savingEllipsis": "Salvando…",
     "responsibleLabel": "Responsável: {{name}}",

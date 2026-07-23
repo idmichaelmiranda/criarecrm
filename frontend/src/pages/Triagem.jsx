@@ -4,15 +4,14 @@ import { useTranslation } from "react-i18next";
 import { Layout } from "../components/layout/Layout";
 import { Badge, PrioridadeBadge } from "../components/ui/Badge";
 import { solicitacoesApi, templatesApi, clientesApi, usuariosApi } from "../services/api";
-import { useAuth } from "../contexts/AuthContext";
 import { BANCOS_BR } from "../data/bancos";
-import { fmtDate, fmtDateTime, parseUTC } from "../utils/dateUtils";
+import { fmtDate, parseUTC } from "../utils/dateUtils";
 import { maskPhone, maskCnpj, maskCpf } from "../hooks/useCnpj";
 import i18n from "../i18n";
 
-const TERMINAL_STATUSES = ["aprovada", "recusada", "cancelada"];
+export const TERMINAL_STATUSES = ["aprovada", "recusada", "cancelada"];
 
-function slaRelativo(sol) {
+export function slaRelativo(sol) {
   if (TERMINAL_STATUSES.includes(sol.status)) return null;
   if (!sol.sla_limite) return null;
 
@@ -43,14 +42,14 @@ function slaRelativo(sol) {
   return           { label: i18n.t("triagem:sla.daysLeft", { count: d }), level: "ok" };
 }
 
-const SLA_PILL = {
+export const SLA_PILL = {
   expired: "text-red-600   bg-red-50   border-red-200",
   urgent:  "text-amber-700 bg-amber-50 border-amber-200",
   warning: "text-yellow-700 bg-yellow-50 border-yellow-200",
   ok:      "text-green-700 bg-green-50 border-green-100",
 };
 
-const STATUS_ACCENT = {
+export const STATUS_ACCENT = {
   nova:                "bg-blue-400",
   em_triagem:          "bg-amber-400",
   aguardando_correcao: "bg-orange-400",
@@ -61,7 +60,7 @@ const STATUS_ACCENT = {
 
 // ── Primitives ────────────────────────────────────────────────────────────────
 
-function Field({ label, value, mono = false }) {
+export function Field({ label, value, mono = false }) {
   return (
     <div>
       <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-0.5">{label}</p>
@@ -72,7 +71,7 @@ function Field({ label, value, mono = false }) {
   );
 }
 
-function Section({ title, children }) {
+export function Section({ title, children }) {
   return (
     <div className="mb-5">
       <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest pb-2 mb-3 border-b border-gray-100">
@@ -85,7 +84,7 @@ function Section({ title, children }) {
 
 // ── Approval Modal ────────────────────────────────────────────────────────────
 
-function AprovarModal({ sol, onClose, onApproved }) {
+export function AprovarModal({ sol, onClose, onApproved }) {
   const { t } = useTranslation("triagem");
   const [templates, setTemplates]               = useState([]);
   const [templateDetails, setTemplateDetails]   = useState({}); // id → full template with etapas
@@ -186,8 +185,10 @@ function AprovarModal({ sol, onClose, onApproved }) {
             <h3 className="font-semibold text-gray-900">{t("approveModal.title")}</h3>
             <p className="text-xs text-gray-500 mt-0.5">{sol.razao_social}</p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-lg">
-            ✕
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors shrink-0">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
@@ -410,12 +411,12 @@ function AprovarModal({ sol, onClose, onApproved }) {
 
 // ── Refusal Modal ─────────────────────────────────────────────────────────────
 
-const SECOES_CORRECAO_KEYS = [
+export const SECOES_CORRECAO_KEYS = [
   "empresa", "contato", "endereco", "contabilidade", "banco",
   "regime", "pagamento", "fiscal", "certificado", "adquirentes",
 ];
 
-function RecusarModal({ sol, onClose, onRefused }) {
+export function RecusarModal({ sol, onClose, onRefused }) {
   const { t } = useTranslation("triagem");
   const [motivo, setMotivo]               = useState("");
   const [camposSelecionados, setCampos]   = useState([]);
@@ -452,7 +453,11 @@ function RecusarModal({ sol, onClose, onRefused }) {
             <h3 className="font-semibold text-gray-900">{t("refuseModal.title")}</h3>
             <p className="text-xs text-gray-500 mt-0.5">{sol.razao_social}</p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-lg">✕</button>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors shrink-0">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4 overflow-y-auto">
           <div>
@@ -518,7 +523,7 @@ function RecusarModal({ sol, onClose, onRefused }) {
 
 // ── Cancel Modal ──────────────────────────────────────────────────────────────
 
-function CancelarModal({ sol, onClose, onCancelled }) {
+export function CancelarModal({ sol, onClose, onCancelled }) {
   const { t } = useTranslation("triagem");
   const [motivo, setMotivo] = useState("");
   const [saving, setSaving] = useState(false);
@@ -546,7 +551,11 @@ function CancelarModal({ sol, onClose, onCancelled }) {
             <h3 className="font-semibold text-gray-900">{t("cancelModal.title")}</h3>
             <p className="text-xs text-gray-500 mt-0.5">{sol.razao_social}</p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-lg">✕</button>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors shrink-0">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
           <div className="rounded-xl bg-gray-50 border border-gray-100 px-4 py-3">
@@ -681,7 +690,7 @@ function BankSelectorEdit({ form, set, inp }) {
 
 // ── Edit Modal ────────────────────────────────────────────────────────────────
 
-function EditModal({ sol, onClose, onSaved }) {
+export function EditModal({ sol, onClose, onSaved }) {
   const { t } = useTranslation("triagem");
   const [tab, setTab] = useState("empresa");
   const [saving, setSaving] = useState(false);
@@ -859,7 +868,11 @@ function EditModal({ sol, onClose, onSaved }) {
             <h3 className="font-semibold text-gray-900">{t("editModal.title")}</h3>
             <p className="text-xs text-gray-500 mt-0.5">{sol.razao_social}</p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-lg">✕</button>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors shrink-0">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
         {/* tabs */}
@@ -1229,7 +1242,7 @@ function EditModal({ sol, onClose, onSaved }) {
 
 // ── Drawer ────────────────────────────────────────────────────────────────────
 
-function RespPicker({ usuarios, selectedId, onSelect }) {
+export function RespPicker({ usuarios, selectedId, onSelect }) {
   const { t } = useTranslation("triagem");
   const [busca, setBusca] = useState("");
   const inputRef = useRef(null);
@@ -1297,569 +1310,6 @@ function RespPicker({ usuarios, selectedId, onSelect }) {
   );
 }
 
-function Drawer({ sol: solProp, onClose, onTriar, onApproved, onRefused, onEdited }) {
-  const { t, i18n: i18nInstance } = useTranslation("triagem");
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const [sol, setSol]             = useState(solProp);
-  const [modal, setModal]         = useState(null); // "aprovar" | "recusar" | "cancelar" | "editar"
-  const [triando, setTriando]     = useState(false);
-  const [tab, setTab]             = useState("dados");
-  const [showPass, setShowPass]   = useState(false);
-  const [reenviando, setReenviando] = useState(false);
-  const [reenvioMsg, setReenvioMsg] = useState(null); // { ok: bool, text: str }
-  const [usuarios, setUsuarios]   = useState([]);
-  const [showRespPicker, setShowRespPicker] = useState(false);
-  const [atribuindo, setAtribuindo] = useState(false);
-
-  useEffect(() => { setSol(solProp); }, [solProp]);
-
-  useEffect(() => {
-    usuariosApi.listar().then(r => setUsuarios(r.data.filter(u => u.ativo !== false))).catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    if (!showRespPicker) return;
-    const handler = (e) => {
-      if (!e.target.closest("[data-resp-picker]")) setShowRespPicker(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [showRespPicker]);
-
-  async function handleAtribuir(responsavel_id) {
-    setAtribuindo(true);
-    setShowRespPicker(false);
-    try {
-      const { data } = await solicitacoesApi.atribuirResponsavel(sol.id, responsavel_id);
-      setSol(data);
-    } catch {}
-    finally { setAtribuindo(false); }
-  }
-
-  const canEdit = user?.grupo_nome?.toLowerCase().includes("administra");
-
-  async function handleTriar() {
-    setTriando(true);
-    try {
-      await onTriar(sol.id);
-    } finally {
-      setTriando(false);
-    }
-  }
-
-  async function handleReenviarEmail() {
-    setReenviando(true);
-    setReenvioMsg(null);
-    try {
-      await solicitacoesApi.reenviarEmail(sol.id);
-      setReenvioMsg({ ok: true, text: t("drawer.resendSuccess") });
-    } catch (err) {
-      setReenvioMsg({ ok: false, text: err.message || t("drawer.resendError") });
-    } finally {
-      setReenviando(false);
-    }
-  }
-
-  const canTriar = sol.status === "nova";
-  const canAprovarRecusar = ["nova", "em_triagem", "aguardando_correcao"].includes(sol.status);
-  const canCancelar = !["aprovada", "cancelada"].includes(sol.status);
-  const isTerminal = sol.status === "aprovada" || sol.status === "cancelada";
-
-  const certFile = sol.certificado_path
-    ? sol.certificado_path.replace(/\\/g, "/").split("/").pop()
-    : null;
-
-  const e = sol.endereco || {};
-  const ct = sol.contabilidade || {};
-  const b = sol.dados_bancarios || {};
-  const r = sol.dados_contabeis || {};
-  const p = sol.formas_pagamento || {};
-  const f = sol.dados_fiscais || {};
-  const TABS = [
-    { id: "dados", labelKey: "dados" },
-    { id: "endereco", labelKey: "endereco" },
-    { id: "contabilidade", labelKey: "contabilidade" },
-    { id: "bancario", labelKey: "bancario" },
-    { id: "regime", labelKey: "regime" },
-    { id: "fiscal", labelKey: "fiscal" },
-  ];
-
-  // Initials avatar
-  const initials = sol.razao_social.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
-  const sla = slaRelativo(sol);
-  const hasHistory = (sol.historico_recusas?.length > 0 || sol.motivo_recusa) && sol.status !== "cancelada";
-  const [historyOpen, setHistoryOpen] = useState(false);
-
-  const AVATAR_BG = {
-    nova: "bg-blue-500", em_triagem: "bg-amber-500", aguardando_correcao: "bg-orange-500",
-    aprovada: "bg-green-500", recusada: "bg-red-500", cancelada: "bg-gray-400",
-  };
-
-  return (
-    <>
-      {/* overlay */}
-      <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-
-      {/* panel */}
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-xl bg-white shadow-2xl flex flex-col">
-
-        {/* ── Hero header ── */}
-        <div className="bg-gradient-to-br from-slate-800 to-slate-900 px-6 pt-5 pb-4 shrink-0">
-          <div className="flex items-start justify-between gap-3 mb-4">
-            <div className="flex items-start gap-3 min-w-0">
-              <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-lg ${AVATAR_BG[sol.status] || "bg-slate-600"}`}>
-                {initials || "?"}
-              </div>
-              <div className="min-w-0">
-                <h2 className="text-white font-bold text-base leading-snug">{sol.razao_social}</h2>
-                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                  <span className="text-slate-400 text-[11px] font-mono">{sol.cnpj}</span>
-                  <span className="text-slate-600 text-[11px]">·</span>
-                  <span className="text-slate-400 text-[11px]">{t("drawer.receivedOn", { date: fmtDateTime(sol.created_at) })}</span>
-                </div>
-              </div>
-            </div>
-            <button onClick={onClose} className="text-slate-400 hover:text-white w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-700 transition-colors shrink-0 text-lg">
-              ✕
-            </button>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <Badge status={sol.status} />
-            <PrioridadeBadge prioridade={sol.prioridade} />
-            {sla && (
-              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${SLA_PILL[sla.level]}`}>
-                {sla.label}
-              </span>
-            )}
-          </div>
-
-          {/* ── Responsável da triagem ── */}
-          {!isTerminal && (
-            <div className="relative mt-3" data-resp-picker>
-              <button
-                onClick={() => setShowRespPicker(v => !v)}
-                disabled={atribuindo}
-                className="flex items-center gap-2 text-[11px] text-slate-300 hover:text-white transition-colors disabled:opacity-50">
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${sol.responsavel_triagem_id ? "bg-indigo-500 text-white" : "bg-slate-600 text-slate-300"}`}>
-                  {sol.responsavel_triagem_nome
-                    ? sol.responsavel_triagem_nome.split(" ").slice(0,2).map(w => w[0]).join("").toUpperCase()
-                    : <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                  }
-                </div>
-                <span>{atribuindo ? t("drawer.savingEllipsis") : (sol.responsavel_triagem_nome ? t("drawer.responsibleLabel", { name: sol.responsavel_triagem_nome }) : t("drawer.assignResponsible"))}</span>
-                <svg className="w-3 h-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-              </button>
-
-              {showRespPicker && (
-                <RespPicker
-                  usuarios={usuarios}
-                  selectedId={sol.responsavel_triagem_id}
-                  onSelect={handleAtribuir}
-                />
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* ── Barra de ações ── */}
-        <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-100 shrink-0 bg-gray-50/80">
-          <div className="flex items-center gap-2 flex-1 flex-wrap">
-            {canTriar && (
-              <button onClick={handleTriar} disabled={triando}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-50 transition-colors shadow-sm">
-                {triando ? t("drawer.actions.startingTriage") : t("drawer.actions.startTriage")}
-              </button>
-            )}
-            {canAprovarRecusar && (
-              <>
-                <button onClick={() => setModal("aprovar")}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-green-600 text-white hover:bg-green-700 transition-colors shadow-sm">
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                  {t("drawer.actions.approve")}
-                </button>
-                <button onClick={() => setModal("recusar")}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border border-red-200 text-red-600 bg-white hover:bg-red-50 transition-colors">
-                  {t("drawer.actions.refuse")}
-                </button>
-              </>
-            )}
-            {canCancelar && (
-              <button onClick={() => setModal("cancelar")}
-                className="px-3.5 py-2 rounded-xl text-xs font-semibold border border-gray-200 text-gray-500 bg-white hover:bg-gray-50 transition-colors">
-                {t("drawer.actions.cancel")}
-              </button>
-            )}
-          </div>
-          {canEdit && sol.status !== "aprovada" && (
-            <button onClick={() => setModal("editar")}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 transition-colors">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              {t("drawer.actions.edit")}
-            </button>
-          )}
-        </div>
-
-        {/* ── Banners de status ── */}
-        {sol.status === "aprovada" && (
-          <div className="flex items-center gap-3 px-5 py-3 border-b border-green-100 bg-green-50 shrink-0">
-            <div className="w-7 h-7 rounded-lg bg-green-100 flex items-center justify-center shrink-0">
-              <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <p className="text-xs font-semibold text-green-800">{t("drawer.banners.approved.title")}</p>
-              <p className="text-[11px] text-green-600">{t("drawer.banners.approved.desc")}</p>
-            </div>
-            <button onClick={() => navigate("/admin/implantacoes")}
-              className="text-[11px] font-semibold text-green-700 bg-green-100 hover:bg-green-200 px-2.5 py-1.5 rounded-lg transition-colors shrink-0">
-              {t("drawer.banners.approved.link")}
-            </button>
-          </div>
-        )}
-
-        {sol.status === "aguardando_correcao" && (
-          <div className="px-5 py-3 border-b border-amber-100 bg-amber-50 shrink-0">
-            <div className="flex items-start gap-3">
-              <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center shrink-0 mt-0.5">
-                <svg className="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-amber-800">{t("drawer.banners.awaitingCorrection.title")}</p>
-                <p className="text-[11px] text-amber-600 mt-0.5">{t("drawer.banners.awaitingCorrection.desc")}</p>
-                {reenvioMsg && (
-                  <p className={`text-[11px] mt-1.5 font-medium ${reenvioMsg.ok ? "text-green-700" : "text-red-600"}`}>
-                    {reenvioMsg.text}
-                  </p>
-                )}
-              </div>
-              <button onClick={handleReenviarEmail} disabled={reenviando}
-                className="shrink-0 flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border border-amber-300 bg-white text-amber-700 hover:bg-amber-100 transition-colors disabled:opacity-50">
-                {reenviando
-                  ? <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
-                  : <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                }
-                {reenviando ? t("drawer.banners.awaitingCorrection.resending") : t("drawer.banners.awaitingCorrection.resend")}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {sol.status === "cancelada" && (
-          <div className="flex items-center gap-3 px-5 py-3 border-b border-gray-200 bg-gray-100 shrink-0">
-            <div className="w-7 h-7 rounded-lg bg-gray-200 flex items-center justify-center shrink-0">
-              <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </div>
-            <p className="text-xs font-semibold text-gray-600">{t("drawer.banners.cancelled.title")}</p>
-          </div>
-        )}
-
-        {/* ── Histórico de recusas (timeline) ── */}
-        {hasHistory && (
-          <div className="border-b border-gray-100 shrink-0">
-            <button
-              onClick={() => setHistoryOpen((v) => !v)}
-              className="w-full flex items-center gap-2.5 px-5 py-2.5 hover:bg-gray-50 transition-colors"
-            >
-              <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center shrink-0">
-                <svg className="w-3 h-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-              </div>
-              <span className="text-xs font-semibold text-gray-700 flex-1 text-left">{t("drawer.history.title")}</span>
-              {sol.historico_recusas?.length > 0 && (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-600">
-                  {sol.historico_recusas.length}
-                </span>
-              )}
-              <svg className={`w-3.5 h-3.5 text-gray-400 transition-transform ${historyOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            {historyOpen && (
-              <div className="px-5 pb-4 max-h-56 overflow-y-auto">
-                {sol.historico_recusas?.length > 0 ? (
-                  <div className="relative">
-                    <div className="absolute left-[13px] top-2 bottom-2 w-0.5 bg-red-100" />
-                    {[...sol.historico_recusas].reverse().map((entry, idx) => {
-                      const num = sol.historico_recusas.length - idx;
-                      const secaoLabels = (entry.campos || []).map(
-                        (k) => SECOES_CORRECAO_KEYS.includes(k) ? t(`correctionSections.${k}`) : k
-                      );
-                      return (
-                        <div key={idx} className="relative flex gap-3 pb-3 last:pb-0">
-                          <div className="w-7 h-7 rounded-full bg-red-100 border-2 border-white flex items-center justify-center shrink-0 text-[10px] font-bold text-red-600 z-10 shadow-sm">
-                            {num}
-                          </div>
-                          <div className="flex-1 bg-white rounded-xl border border-gray-100 p-3 shadow-sm mt-0.5">
-                            <div className="flex items-center justify-between mb-1.5">
-                              {entry.usuario && (
-                                <span className="text-[11px] font-semibold text-gray-600">{entry.usuario}</span>
-                              )}
-                              <span className="text-[10px] text-gray-400 tabular-nums ml-auto">
-                                {new Date(entry.data).toLocaleString(i18nInstance.language, { dateStyle: "short", timeStyle: "short" })}
-                              </span>
-                            </div>
-                            <p className="text-xs text-gray-700 leading-relaxed mb-2">{entry.motivo}</p>
-                            {secaoLabels.length > 0 && (
-                              <div className="flex flex-wrap gap-1">
-                                {secaoLabels.map((l) => (
-                                  <span key={l} className="text-[10px] bg-red-50 text-red-600 border border-red-100 px-1.5 py-0.5 rounded-full font-medium">
-                                    {l}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="bg-white rounded-xl border border-gray-100 p-3">
-                    <p className="text-xs text-gray-700">{sol.motivo_recusa}</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── Tabs ── */}
-        <div className="border-b border-gray-100 shrink-0 overflow-x-auto bg-white">
-          <div className="flex min-w-max px-5">
-            {TABS.map((tb) => (
-              <button
-                key={tb.id}
-                onClick={() => setTab(tb.id)}
-                className={`px-3 py-3 text-xs font-medium whitespace-nowrap border-b-2 transition-all ${
-                  tab === tb.id
-                    ? "border-orange-500 text-orange-600"
-                    : "border-transparent text-gray-400 hover:text-gray-600 hover:border-gray-200"
-                }`}
-              >
-                {t(`drawer.tabs.${tb.labelKey}`)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Conteúdo das tabs ── */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 bg-gray-50/30">
-          {tab === "dados" && (
-            <>
-              <Section title={t("drawer.sections.empresa")}>
-                <Field label={t("drawer.fields.razaoSocial")} value={sol.razao_social} />
-                <Field label={t("drawer.fields.nomeFantasia")} value={sol.nome_fantasia} />
-                <Field label={t("drawer.fields.cnpj")} value={sol.cnpj} mono />
-                <Field label={t("drawer.fields.ie")} value={sol.ie} mono />
-                <Field label={t("drawer.fields.email")} value={sol.email} />
-                <Field label={t("drawer.fields.responsavel")} value={sol.responsavel} />
-                <Field label={t("drawer.fields.telFixo")} value={sol.telefone_fixo} mono />
-                <Field label={t("drawer.fields.celular")} value={sol.telefone_celular} mono />
-              </Section>
-
-              <Section title={t("drawer.sections.pagamentos")}>
-                <div className="col-span-2 flex flex-wrap gap-1.5">
-                  {Object.entries({
-                    dinheiro:        t("drawer.paymentLabels.dinheiro"),
-                    cheque:          t("drawer.paymentLabels.cheque"),
-                    cartao_pos:      t("drawer.paymentLabels.cartaoPos"),
-                    pagamento_prazo: t("drawer.paymentLabels.prazo"),
-                    pix:             t("drawer.paymentLabels.pix"),
-                    cartao_tef:      t("drawer.paymentLabels.cartaoTef"),
-                  }).map(([key, label]) =>
-                    p[key] ? (
-                      <span key={key} className="px-2 py-1 rounded-full text-[11px] font-medium bg-green-50 text-green-700 border border-green-200">
-                        {label}
-                      </span>
-                    ) : null
-                  )}
-                  {p.integradora && (
-                    <span className="px-2 py-1 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                      {t("drawer.tefPrefix", { name: p.integradora })}
-                    </span>
-                  )}
-                </div>
-              </Section>
-            </>
-          )}
-
-          {tab === "endereco" && (
-            <Section title={t("drawer.sections.endereco")}>
-              <Field label={t("drawer.fields.cep")} value={e.cep} mono />
-              <Field label={t("drawer.fields.endereco")} value={e.endereco} />
-              <Field label={t("drawer.fields.numero")} value={e.numero} />
-              <Field label={t("drawer.fields.bairro")} value={e.bairro} />
-              <Field label={t("drawer.fields.cidade")} value={e.cidade} />
-              <Field label={t("drawer.fields.estado")} value={e.estado} />
-            </Section>
-          )}
-
-          {tab === "contabilidade" && (
-            <>
-              <Section title={t("drawer.sections.contador")}>
-                <Field label={t("drawer.fields.nome")} value={ct.nome_contador} />
-                <Field label={t("drawer.fields.cpf")} value={ct.cpf} mono />
-                <Field label={t("drawer.fields.crc")} value={ct.crc} />
-                <Field label={t("drawer.fields.cnpj")} value={ct.cnpj} mono />
-                <Field label={t("drawer.fields.email")} value={ct.email} />
-                <Field label={t("drawer.fields.celular")} value={ct.telefone_celular} mono />
-              </Section>
-              <Section title={t("drawer.sections.enderecoContador")}>
-                <Field label={t("drawer.fields.cep")} value={ct.cep} mono />
-                <Field label={t("drawer.fields.endereco")} value={ct.endereco} />
-                <Field label={t("drawer.fields.numero")} value={ct.numero} />
-                <Field label={t("drawer.fields.cidadeUf")} value={ct.cidade ? `${ct.cidade} - ${ct.estado}` : null} />
-              </Section>
-            </>
-          )}
-
-          {tab === "bancario" && (
-            <Section title={t("drawer.sections.dadosBancarios")}>
-              {(() => {
-                const match = b.nome_banco ? BANCOS_BR.find((bk) => bk.nome === b.nome_banco) : null;
-                const cod  = b.codigo_banco || match?.codigo || null;
-                const cnpj = b.cnpj_banco   || match?.cnpj   || null;
-                return (
-                  <>
-                    <Field label={t("drawer.fields.codBanco")}    value={cod}         mono />
-                    <Field label={t("drawer.fields.banco")}          value={b.nome_banco}     />
-                    <Field label={t("drawer.fields.cnpjBanco")}  value={cnpj}        mono />
-                  </>
-                );
-              })()}
-              <Field label={t("drawer.fields.tipoConta")} value={b.tipo_conta} />
-              <div>
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-0.5">{t("drawer.fields.agencia")}</p>
-                <p className="text-sm text-gray-800 font-mono">
-                  {b.agencia ? `${b.agencia}${b.dv_agencia ? `-${b.dv_agencia}` : ""}` : <span className="text-gray-300">—</span>}
-                </p>
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-0.5">{t("drawer.fields.conta")}</p>
-                <p className="text-sm text-gray-800 font-mono">
-                  {b.conta ? `${b.conta}${b.dv_conta ? `-${b.dv_conta}` : ""}` : <span className="text-gray-300">—</span>}
-                </p>
-              </div>
-            </Section>
-          )}
-
-          {tab === "regime" && (
-            <Section title={t("drawer.sections.regimeTributario")}>
-              <Field label={t("drawer.fields.crt")} value={t(`drawer.regimeLabels.crt.${r.crt}`, { defaultValue: r.crt })} />
-              <Field label={t("drawer.fields.regime")} value={t(`drawer.regimeLabels.tributario.${r.regime_tributario}`, { defaultValue: r.regime_tributario })} />
-              <Field label={t("drawer.fields.condicaoSt")} value={r.condicao_st} />
-              {(r.regime_tributario === "simples_nacional" || r.crt === "1" || r.crt === "2") && (
-                <>
-                  <Field label={t("drawer.fields.aliqSimples")} value={r.aliq_simples ? `${r.aliq_simples}%` : null} />
-                  <Field label={t("drawer.fields.receitaBruta")} value={r.receita_bruta ? `R$ ${r.receita_bruta}` : null} />
-                </>
-              )}
-            </Section>
-          )}
-
-          {tab === "fiscal" && (
-            <>
-              <Section title={t("drawer.sections.nfe")}>
-                <Field label={t("drawer.fields.csc")} value={f.csc} mono />
-                <Field label={t("drawer.fields.token")} value={f.token} mono />
-                <Field label={t("drawer.fields.serieNfe")} value={f.serie_nfe} />
-                <Field label={t("drawer.fields.ultimaNfe")} value={f.ultima_nfe_emitida} />
-                <Field label={t("drawer.fields.ultimaSerieNfce")} value={f.ultima_serie_nfce} />
-              </Section>
-
-              <Section title={t("drawer.sections.certificadoDigital")}>
-                <div className="col-span-2">
-                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1">{t("drawer.fields.arquivo")}</p>
-                  {certFile ? (
-                    <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-xs text-gray-700">
-                      <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      {certFile}
-                    </div>
-                  ) : (
-                    <span className="text-sm text-gray-300">—</span>
-                  )}
-                </div>
-
-                <div className="col-span-2">
-                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1">{t("drawer.fields.senha")}</p>
-                  {f.senha_certificado ? (
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-mono text-gray-800">
-                        {showPass ? f.senha_certificado : "•".repeat(Math.min(f.senha_certificado.length, 16))}
-                      </span>
-                      <button
-                        onClick={() => setShowPass((v) => !v)}
-                        className="text-gray-400 hover:text-gray-600 p-1 rounded transition-colors"
-                      >
-                        {showPass ? (
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                          </svg>
-                        ) : (
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                        )}
-                      </button>
-                    </div>
-                  ) : (
-                    <span className="text-sm text-gray-300">—</span>
-                  )}
-                </div>
-              </Section>
-
-            </>
-          )}
-        </div>
-      </div>
-
-      {modal === "aprovar" && (
-        <AprovarModal
-          sol={sol}
-          onClose={() => setModal(null)}
-          onApproved={(impl) => { setModal(null); onApproved(impl); }}
-        />
-      )}
-      {modal === "recusar" && (
-        <RecusarModal
-          sol={sol}
-          onClose={() => setModal(null)}
-          onRefused={() => { setModal(null); onRefused(); }}
-        />
-      )}
-      {modal === "cancelar" && (
-        <CancelarModal
-          sol={sol}
-          onClose={() => setModal(null)}
-          onCancelled={() => { setModal(null); onRefused(); }}
-        />
-      )}
-      {modal === "editar" && (
-        <EditModal
-          sol={sol}
-          onClose={() => setModal(null)}
-          onSaved={(updated) => { setModal(null); onEdited(updated); }}
-        />
-      )}
-    </>
-  );
-}
-
 // ── KPI Card ──────────────────────────────────────────────────────────────────
 
 const KPI_ICONS = {
@@ -1906,11 +1356,13 @@ const STATUS_TABS = [
 
 export default function Triagem() {
   const { t } = useTranslation("triagem");
+  const navigate = useNavigate();
   const [items, setItems]               = useState([]);
   const [loading, setLoading]           = useState(true);
   const [filterStatus, setFilterStatus] = useState("ativas");
-  const [selected, setSelected]         = useState(null);
   const [search, setSearch]             = useState("");
+  const [focusedIdx, setFocusedIdx]     = useState(-1);
+  const searchRef = useRef(null);
 
   // Carrega tudo — filtragem client-side permite KPIs sempre corretos
   const load = useCallback(async () => {
@@ -1923,24 +1375,7 @@ export default function Triagem() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
-
-  async function openDrawer(id) {
-    try {
-      const { data } = await solicitacoesApi.obter(id);
-      setSelected(data);
-    } catch { /* ignore */ }
-  }
-
-  async function handleTriar(id) {
-    await solicitacoesApi.triar(id);
-    const { data } = await solicitacoesApi.obter(id);
-    setSelected(data);
-    load();
-  }
-
-  function handleApproved() { setSelected(null); load(); }
-  function handleRefused()  { setSelected(null); load(); }
-  function handleEdited(updated) { setSelected(updated); load(); }
+  useEffect(() => { setFocusedIdx(-1); }, [filterStatus, search]);
 
   // ── Derivados ──────────────────────────────────────────────────────────────
   // "Pendentes" = apenas novas que ainda não tiveram triagem iniciada
@@ -1978,6 +1413,29 @@ export default function Triagem() {
       );
     });
 
+  function openRow(s) {
+    navigate(`/admin/triagem/${s.id}`, { state: { ids: filtered.map((x) => x.id) } });
+  }
+
+  // ── Navegação por teclado: ↑/↓ percorre a lista, Enter abre a linha focada ──
+  useEffect(() => {
+    function onKey(e) {
+      if (document.activeElement === searchRef.current) return;
+      if (filtered.length === 0) return;
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setFocusedIdx((i) => Math.min(i + 1, filtered.length - 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setFocusedIdx((i) => Math.max(i - 1, 0));
+      } else if (e.key === "Enter" && focusedIdx >= 0) {
+        openRow(filtered[focusedIdx]);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [filtered, focusedIdx]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <Layout>
       {/* ── Cabeçalho + busca ─────────────────────────────────────────────── */}
@@ -1992,6 +1450,7 @@ export default function Triagem() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input
+            ref={searchRef}
             type="text"
             placeholder={t("page.searchPlaceholder")}
             value={search}
@@ -2026,7 +1485,7 @@ export default function Triagem() {
             >
               {t(`page.tabs.${tb.labelKey}`)}
               {cnt > 0 && (
-                <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
+                <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full leading-none ${
                   filterStatus === tb.key
                     ? "bg-orange-100 text-orange-600"
                     : "bg-gray-200 text-gray-500"
@@ -2047,7 +1506,11 @@ export default function Triagem() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center">
-            <p className="text-3xl mb-3">📋</p>
+            <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-3">
+              <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
             <p className="text-sm font-medium text-gray-700">{t("page.table.emptyTitle")}</p>
             <p className="text-xs text-gray-400 mt-1">
               {search ? t("page.table.emptySearchHint") : t("page.table.emptyFilterHint")}
@@ -2069,25 +1532,28 @@ export default function Triagem() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filtered.map((s) => {
+                {filtered.map((s, i) => {
                   const sla = slaRelativo(s);
                   const isAlta = s.prioridade && s.prioridade !== "normal";
                   const isTerminal = TERMINAL_STATUSES.includes(s.status);
-                  const accent = STATUS_ACCENT[s.status] || "bg-gray-200";
-                  const rowBg = isTerminal
+                  // P2: uma única dimensão de cor por linha — o status já vem do Badge;
+                  // o único acento de cor extra é reservado para o sinal mais urgente (SLA vencido).
+                  const isExpired = !isTerminal && sla?.level === "expired";
+                  const rowBg = i === focusedIdx
+                    ? "bg-orange-50 ring-1 ring-inset ring-orange-300"
+                    : isTerminal
                     ? "bg-gray-50/60 hover:bg-gray-100/60"
-                    : sla?.level === "expired"
-                    ? "bg-red-50/30 hover:bg-red-50/60"
                     : "hover:bg-orange-50/40";
 
                   return (
                     <tr
                       key={s.id}
-                      onClick={() => openDrawer(s.id)}
+                      onClick={() => openRow(s)}
+                      onMouseEnter={() => setFocusedIdx(i)}
                       className={`transition-colors cursor-pointer group ${rowBg}`}
                     >
-                      {/* Acento lateral por status */}
-                      <td className={`p-0 ${accent}`} style={{ width: "4px", minWidth: "4px" }} />
+                      {/* Acento lateral — só para SLA vencido, o sinal mais urgente da tela */}
+                      <td className={`p-0 ${isExpired ? "bg-red-500" : "bg-transparent"}`} style={{ width: "4px", minWidth: "4px" }} />
 
                       {/* Empresa */}
                       <td className="px-5 py-4">
@@ -2097,7 +1563,7 @@ export default function Triagem() {
                           </p>
                           {isAlta && !isTerminal && <PrioridadeBadge prioridade={s.prioridade} />}
                           {s.status === "em_triagem" && s.motivo_recusa && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">
                               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                               </svg>
@@ -2137,7 +1603,7 @@ export default function Triagem() {
                       {/* SLA — oculto para terminais */}
                       <td className="px-4 py-4">
                         {sla ? (
-                          <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full border ${
+                          <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border ${
                             sla.isCliente
                               ? sla.level === "expired"
                                 ? "text-gray-500 bg-gray-100 border-gray-200"
@@ -2181,17 +1647,6 @@ export default function Triagem() {
           </div>
         )}
       </div>
-
-      {selected && (
-        <Drawer
-          sol={selected}
-          onClose={() => setSelected(null)}
-          onTriar={handleTriar}
-          onApproved={handleApproved}
-          onRefused={handleRefused}
-          onEdited={handleEdited}
-        />
-      )}
     </Layout>
   );
 }

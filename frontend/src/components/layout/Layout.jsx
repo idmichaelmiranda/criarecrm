@@ -30,7 +30,7 @@ export function Layout({ children }) {
     });
   }
 
-  const sidebarWidth = collapsed ? "64px" : "240px";
+  const sidebarWidth = collapsed ? "4rem" : "15rem";
 
   return (
     <div className="flex min-h-screen bg-gray-50">

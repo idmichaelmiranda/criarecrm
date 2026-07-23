@@ -219,6 +219,11 @@ def _migrate_sqlite():
         "ALTER TABLE solicitacoes_instalador ADD COLUMN cancelado_em DATETIME",
         "ALTER TABLE solicitacoes_instalador ADD COLUMN aprovado_por_id INTEGER REFERENCES usuarios(id)",
         "ALTER TABLE solicitacoes_instalador ADD COLUMN recusado_por_id INTEGER REFERENCES usuarios(id)",
+        "ALTER TABLE solicitacoes ADD COLUMN responsavel_triagem_id INTEGER REFERENCES usuarios(id)",
+        "ALTER TABLE solicitacoes ADD COLUMN produtos_contratados JSON",
+        "ALTER TABLE solicitacoes ADD COLUMN observacao_comercial TEXT",
+        "ALTER TABLE solicitacoes ADD COLUMN triagem_iniciada_em DATETIME",
+        "ALTER TABLE solicitacoes ADD COLUMN aprovada_em DATETIME",
         """CREATE TABLE instalacao_pausas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             instalacao_id INTEGER NOT NULL REFERENCES instalacoes(id) ON DELETE CASCADE,
@@ -332,6 +337,10 @@ def _migrate_postgres() -> None:
             UNIQUE(instalacao_id, usuario_id)
         )""",
         "CREATE INDEX IF NOT EXISTS ix_instalacao_responsaveis_instalacao_id ON instalacao_responsaveis (instalacao_id)",
+        "ALTER TABLE solicitacoes ADD COLUMN IF NOT EXISTS produtos_contratados JSON",
+        "ALTER TABLE solicitacoes ADD COLUMN IF NOT EXISTS observacao_comercial TEXT",
+        "ALTER TABLE solicitacoes ADD COLUMN IF NOT EXISTS triagem_iniciada_em TIMESTAMP",
+        "ALTER TABLE solicitacoes ADD COLUMN IF NOT EXISTS aprovada_em TIMESTAMP",
     ]
     with engine.connect() as conn:
         for ddl in new_cols:

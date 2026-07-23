@@ -72,6 +72,17 @@ class AtribuirResponsavelPayload(BaseModel):
     responsavel_id: int | None = None
 
 
+class ProdutoContratadoItem(BaseModel):
+    tipo: str
+    nome: str
+    quantidade: int = 1
+
+
+class ProdutosContratadosPayload(BaseModel):
+    produtos_contratados: list[ProdutoContratadoItem] = []
+    observacao_comercial: str | None = None
+
+
 # ── Responses ────────────────────────────────────────────────────────────────
 
 class SolicitacaoListResponse(BaseModel):
@@ -121,6 +132,10 @@ class SolicitacaoResponse(SolicitacaoListResponse):
     certificado_path: str | None
     observacoes_triagem: str | None
     motivo_recusa: str | None
+    produtos_contratados: list[ProdutoContratadoItem] | None = []
+    observacao_comercial: str | None = None
+    triagem_iniciada_em: datetime | None = None
+    aprovada_em: datetime | None = None
     updated_at: datetime
 
     model_config = {"from_attributes": True}

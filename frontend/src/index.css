@@ -3,6 +3,11 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    /* Densidade "profissional" (compacta) em vez do padrão de 16px do navegador —
+       escala todo o app via rem (Tailwind é rem-based), sem depender de zoom manual. */
+    font-size: 90%;
+  }
   body {
     @apply bg-gray-50 text-gray-900 font-sans antialiased;
   }
