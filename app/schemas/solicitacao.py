@@ -83,6 +83,10 @@ class ProdutosContratadosPayload(BaseModel):
     observacao_comercial: str | None = None
 
 
+class ConversaoDadosPayload(BaseModel):
+    conversao_dados: bool
+
+
 # ── Responses ────────────────────────────────────────────────────────────────
 
 class SolicitacaoListResponse(BaseModel):
@@ -134,6 +138,7 @@ class SolicitacaoResponse(SolicitacaoListResponse):
     motivo_recusa: str | None
     produtos_contratados: list[ProdutoContratadoItem] | None = []
     observacao_comercial: str | None = None
+    conversao_dados: bool = False
     triagem_iniciada_em: datetime | None = None
     aprovada_em: datetime | None = None
     updated_at: datetime

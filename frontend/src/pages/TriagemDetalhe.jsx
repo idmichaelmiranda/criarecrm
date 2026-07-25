@@ -277,6 +277,56 @@ function ProdutosContratadosCard({ sol, isTerminal, onSaved }) {
   );
 }
 
+// ── Conversão de dados ───────────────────────────────────────────────────────
+
+function ConversaoDadosCard({ sol, isTerminal, onSaved }) {
+  const { t } = useTranslation("triagem");
+  const [saving, setSaving] = useState(false);
+
+  async function toggle() {
+    if (isTerminal || saving) return;
+    setSaving(true);
+    try {
+      const { data } = await solicitacoesApi.atualizarConversaoDados(sol.id, !sol.conversao_dados);
+      onSaved(data);
+    } catch {
+      // Falha de rede não deve travar a tela de triagem — usuário pode tentar de novo.
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="px-5 py-4 border-b border-gray-100">
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={isTerminal || saving}
+        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left transition-all ${
+          sol.conversao_dados ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-gray-50 hover:border-gray-300"
+        } ${isTerminal ? "opacity-70 cursor-default" : ""}`}
+      >
+        <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+          sol.conversao_dados ? "bg-blue-500" : "bg-gray-300"
+        }`}>
+          {sol.conversao_dados && (
+            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+        </div>
+        <div className="flex-1">
+          <p className={`text-sm font-semibold ${sol.conversao_dados ? "text-blue-700" : "text-gray-600"}`}>
+            {t("dataConversion.title")}
+          </p>
+          <p className="text-xs text-gray-400">{t("dataConversion.desc")}</p>
+        </div>
+        {saving && <span className="w-3.5 h-3.5 rounded-full border-2 border-gray-300 border-t-gray-500 animate-spin shrink-0" />}
+      </button>
+    </div>
+  );
+}
+
 // ── Página ────────────────────────────────────────────────────────────────────
 
 export default function TriagemDetalhe() {
@@ -600,6 +650,9 @@ export default function TriagemDetalhe() {
 
         {/* ── Produtos contratados (comercial) ── */}
         <ProdutosContratadosCard sol={sol} isTerminal={isTerminal} onSaved={setSol} />
+
+        {/* ── Conversão de dados ── */}
+        <ConversaoDadosCard sol={sol} isTerminal={isTerminal} onSaved={setSol} />
 
         {/* ── Banners de status ── */}
         {sol.status === "aprovada" && (

@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from sqlalchemy import String, Text, Integer, DateTime, JSON, ForeignKey
+from sqlalchemy import String, Text, Integer, Boolean, DateTime, JSON, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database.connection import Base
 
@@ -60,6 +60,11 @@ class Solicitacao(Base):
     produtos_contratados: Mapped[list] = mapped_column(JSON, nullable=True, default=list)
     # Recado livre do comercial para o time de implantação (não é por produto)
     observacao_comercial: Mapped[str] = mapped_column(Text, nullable=True)
+
+    # Marcado durante a triagem quando o cliente terá dados migrados do sistema
+    # anterior. Pré-carrega o checkbox equivalente no modal de aprovação, para não
+    # depender de lembrar de marcar só naquele instante.
+    conversao_dados: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     # Responsável pela triagem (usuário interno atribuído)
     responsavel_triagem_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"), nullable=True)

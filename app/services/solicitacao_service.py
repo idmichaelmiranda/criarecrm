@@ -104,6 +104,25 @@ def atualizar_produtos_contratados(db: Session, solicitacao_id: int, data: Produ
     return sol
 
 
+def atualizar_conversao_dados(db: Session, solicitacao_id: int, conversao_dados: bool) -> Solicitacao:
+    sol = get_by_id(db, solicitacao_id)
+    if sol.status in ("aprovada", "recusada", "cancelada"):
+        raise HTTPException(400, "Não é possível editar uma solicitação encerrada")
+
+    sol.conversao_dados = conversao_dados
+    sol.updated_at = datetime.now()
+
+    timeline_service.log(
+        db, tipo="conversao_dados_atualizada", titulo="Conversão de dados atualizada",
+        descricao=f"Marcado como: {'com' if conversao_dados else 'sem'} conversão de dados.",
+        icone="database", cor="#6366f1",
+        solicitacao_id=sol.id,
+    )
+    db.commit()
+    db.refresh(sol)
+    return sol
+
+
 def get_all(db: Session, status: str | None = None) -> list[Solicitacao]:
     stmt = (
         select(Solicitacao)

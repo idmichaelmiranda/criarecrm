@@ -151,7 +151,8 @@
       "critica": "Crítica"
     },
     "notesLabel": "Observaciones",
-    "notesPlaceholder": "Notas internas..."
+    "notesPlaceholder": "Notas internas...",
+    "dataConversionLabel": "Conversión de datos"
   },
   "tabs": {
     "checklist": "Kanban",

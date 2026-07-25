@@ -224,6 +224,7 @@ def _migrate_sqlite():
         "ALTER TABLE solicitacoes ADD COLUMN observacao_comercial TEXT",
         "ALTER TABLE solicitacoes ADD COLUMN triagem_iniciada_em DATETIME",
         "ALTER TABLE solicitacoes ADD COLUMN aprovada_em DATETIME",
+        "ALTER TABLE solicitacoes ADD COLUMN conversao_dados BOOLEAN NOT NULL DEFAULT 0",
         """CREATE TABLE instalacao_pausas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             instalacao_id INTEGER NOT NULL REFERENCES instalacoes(id) ON DELETE CASCADE,
@@ -341,6 +342,7 @@ def _migrate_postgres() -> None:
         "ALTER TABLE solicitacoes ADD COLUMN IF NOT EXISTS observacao_comercial TEXT",
         "ALTER TABLE solicitacoes ADD COLUMN IF NOT EXISTS triagem_iniciada_em TIMESTAMP",
         "ALTER TABLE solicitacoes ADD COLUMN IF NOT EXISTS aprovada_em TIMESTAMP",
+        "ALTER TABLE solicitacoes ADD COLUMN IF NOT EXISTS conversao_dados BOOLEAN NOT NULL DEFAULT FALSE",
     ]
     with engine.connect() as conn:
         for ddl in new_cols:

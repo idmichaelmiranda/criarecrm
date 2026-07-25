@@ -169,6 +169,7 @@ class ImplantacaoUpdate(BaseModel):
     prioridade: str | None = None
     data_prevista: date | None = None
     responsavel_id: int | None = None
+    conversao_dados: bool | None = None
 
 
 class ImplantacaoFullResponse(BaseModel):

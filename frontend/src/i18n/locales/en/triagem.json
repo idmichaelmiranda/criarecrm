@@ -56,6 +56,10 @@
     "save": "Save",
     "saving": "Saving..."
   },
+  "dataConversion": {
+    "title": "Data conversion",
+    "desc": "Migration of data from the previous system"
+  },
   "sla": {
     "linkExpired": "Link expired",
     "overdueDays": "Overdue {{count}}d",

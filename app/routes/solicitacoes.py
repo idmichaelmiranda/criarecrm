@@ -7,7 +7,7 @@ from app.database.connection import get_db
 from app.schemas.solicitacao import (
     SolicitacaoCreate, SolicitacaoListResponse, SolicitacaoResponse,
     SolicitacaoRevisaoPublic, TriagemAprovar, TriagemRecusar, TriagemCancelar,
-    AtribuirResponsavelPayload, ProdutosContratadosPayload,
+    AtribuirResponsavelPayload, ProdutosContratadosPayload, ConversaoDadosPayload,
 )
 from app.schemas.implantacao import ImplantacaoListResponse
 from app.services import solicitacao_service, aprovacao_service
@@ -108,6 +108,13 @@ def atualizar_produtos_contratados(
     sol_id: int, data: ProdutosContratadosPayload, db: Session = Depends(get_db), _: Usuario = _auth,
 ):
     return solicitacao_service.atualizar_produtos_contratados(db, sol_id, data)
+
+
+@router.put("/{sol_id}/conversao-dados", response_model=SolicitacaoResponse)
+def atualizar_conversao_dados(
+    sol_id: int, data: ConversaoDadosPayload, db: Session = Depends(get_db), _: Usuario = _auth,
+):
+    return solicitacao_service.atualizar_conversao_dados(db, sol_id, data.conversao_dados)
 
 
 @router.post("/{sol_id}/aprovar", response_model=ImplantacaoListResponse)

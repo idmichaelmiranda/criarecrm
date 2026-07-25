@@ -56,6 +56,10 @@
     "save": "Guardar",
     "saving": "Guardando..."
   },
+  "dataConversion": {
+    "title": "Conversión de datos",
+    "desc": "Migración de datos del sistema anterior"
+  },
   "sla": {
     "linkExpired": "Enlace vencido",
     "overdueDays": "Vencido hace {{count}}d",

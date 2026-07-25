@@ -89,7 +89,8 @@ export function AprovarModal({ sol, onClose, onApproved }) {
   const [templates, setTemplates]               = useState([]);
   const [templateDetails, setTemplateDetails]   = useState({}); // id → full template with etapas
   const [form, setForm]                         = useState({
-    template_ids: [], consultor: "", prioridade: "normal", sla_dias: 30, observacoes: "", conversao_dados: false,
+    template_ids: [], consultor: "", prioridade: "normal", sla_dias: 30, observacoes: "",
+    conversao_dados: sol.conversao_dados || false,
   });
   // step: "form" | "confirmar_cliente"
   const [step, setStep]                         = useState("form");
