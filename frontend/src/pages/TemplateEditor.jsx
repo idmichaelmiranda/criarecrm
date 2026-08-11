@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Layout } from "../components/layout/Layout";
 import { templatesApi } from "../services/api";
@@ -546,11 +546,25 @@ const DEFAULT_TEMPLATE = {
   nome: "", descricao: "", tipo: "", sla_total_dias: 30, ativo: true, pop_pdf_path: null,
 };
 
+// Mesma convenção usada em Configurações > Produtos de Instalação — "tipo" de
+// instalação é sempre "instalacao_" + slug do nome, nunca digitado à mão.
+function toSlug(nome) {
+  return nome.toLowerCase()
+    .normalize("NFD").replace(/\p{Mn}/gu, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
 export default function TemplateEditor() {
   const { t } = useTranslation("templateEditor");
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const isNew = !id || id === "novo";
+  // Categoria de origem — vem da aba ativa em /admin/templates ao clicar "Novo Template".
+  // Sem isso, um novo template criado a partir da aba Instalação não tinha como ser
+  // marcado como tal e caía sempre em Implantação (tipo ficava null).
+  const isNewInstalacao = isNew && location.state?.categoria === "instalacao";
 
   const [header, setHeader]               = useState(DEFAULT_TEMPLATE);
   const [etapas, setEtapas]               = useState([]);
@@ -622,9 +636,10 @@ export default function TemplateEditor() {
       let templateId = isNew ? null : parseInt(id);
 
       if (isNew) {
+        const tipo = isNewInstalacao ? `instalacao_${toSlug(header.nome.trim())}` : (header.tipo || null);
         const { data: t } = await templatesApi.criar({
           nome: header.nome, descricao: header.descricao || null,
-          tipo: header.tipo || null, sla_total_dias: header.sla_total_dias, ativo: header.ativo,
+          tipo, sla_total_dias: header.sla_total_dias, ativo: header.ativo,
         });
         templateId = t.id;
       } else {
@@ -769,21 +784,28 @@ export default function TemplateEditor() {
                   className={`${inputCls} resize-none`} />
               </div>
 
-              {/* Tipo — read-only para instalação */}
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("page.typeLabel")}</label>
-                {isInstalacaoTemplate ? (
+              {/* Tipo — read-only para instalação; para instalação nova, gerado ao vivo a partir do nome */}
+              {(isInstalacaoTemplate || isNewInstalacao) ? (
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("page.typeLabel")}</label>
                   <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-orange-50 border border-orange-100">
                     <span className="text-[11px] px-1.5 py-0.5 rounded bg-orange-100 text-orange-600 font-bold shrink-0">{t("page.installationType")}</span>
-                    <span className="text-xs text-gray-500 font-mono truncate">{header.tipo}</span>
+                    <span className="text-xs text-gray-500 font-mono truncate">
+                      {isNewInstalacao
+                        ? (header.nome.trim() ? `instalacao_${toSlug(header.nome.trim())}` : t("page.typeAutoHint"))
+                        : header.tipo}
+                    </span>
                   </div>
-                ) : (
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("page.typeLabel")}</label>
                   <input type="text" value={header.tipo}
                     onChange={(e) => setHeader((h) => ({ ...h, tipo: e.target.value }))}
                     placeholder={t("page.typePlaceholder")}
                     className={inputCls} />
-                )}
-              </div>
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">{t("page.slaTotalLabel")}</label>

@@ -323,7 +323,7 @@ export default function Templates() {
           <p className="text-sm text-gray-500 mt-0.5">{t("page.subtitle")}</p>
         </div>
         <button
-          onClick={() => navigate("/admin/templates/novo")}
+          onClick={() => navigate("/admin/templates/novo", { state: { categoria: tab } })}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 transition-colors shadow-sm"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
@@ -406,7 +406,7 @@ export default function Templates() {
           </p>
           {!search && (
             <button
-              onClick={() => navigate("/admin/templates/novo")}
+              onClick={() => navigate("/admin/templates/novo", { state: { categoria: tab } })}
               className="mt-5 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 transition-colors"
             >
               {t("empty.createButton")}

@@ -56,6 +56,7 @@
     "typeLabel": "Type",
     "typePlaceholder": "E.g.: erp, restaurant, industry",
     "installationType": "Installation",
+    "typeAutoHint": "generated from the name…",
     "slaTotalLabel": "Total SLA (days)",
     "activeLabel": "Active template",
     "legendRequired": "Checked box = required task",

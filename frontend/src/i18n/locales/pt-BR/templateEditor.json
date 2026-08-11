@@ -56,6 +56,7 @@
     "typeLabel": "Tipo",
     "typePlaceholder": "Ex: erp, restaurante, industria",
     "installationType": "Instalação",
+    "typeAutoHint": "gerado a partir do nome…",
     "slaTotalLabel": "SLA Total (dias)",
     "activeLabel": "Template ativo",
     "legendRequired": "Checkbox marcado = tarefa obrigatória",
