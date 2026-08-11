@@ -10,6 +10,7 @@
   "status": {
     "agendada": "Scheduled",
     "em_execucao": "In Progress",
+    "pausada": "Paused",
     "concluida": "Completed",
     "cancelada": "Cancelled"
   },

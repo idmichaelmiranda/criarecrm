@@ -26,6 +26,7 @@ const TIPO_COLOR = {
 const STATUS_COLOR = {
   agendada:    "bg-blue-100 text-blue-700",
   em_execucao: "bg-orange-100 text-orange-700",
+  pausada:     "bg-amber-100 text-amber-700",
   concluida:   "bg-green-100 text-green-700",
   cancelada:   "bg-gray-100 text-gray-500",
 };
@@ -33,6 +34,7 @@ const STATUS_COLOR = {
 const STATUS_ACCENT = {
   agendada:    "bg-blue-400",
   em_execucao: "bg-orange-400",
+  pausada:     "bg-amber-400",
   concluida:   "bg-green-500",
   cancelada:   "bg-gray-300",
 };
@@ -772,6 +774,7 @@ export default function Instalacoes() {
           {[
             { color: "bg-blue-400",   label: t("status.agendada") },
             { color: "bg-orange-400", label: t("status.em_execucao") },
+            { color: "bg-amber-400",  label: t("status.pausada") },
             { color: "bg-green-500",  label: t("status.concluida") },
             { color: "bg-gray-300",   label: t("status.cancelada") },
             { color: "bg-red-500",    label: t("legend.atrasada") },
@@ -1010,7 +1013,11 @@ export default function Instalacoes() {
                 const agendado = dataRelativa(inst.data_agendada);
                 const atrasada = isAtrasada(inst);
                 const concluida = inst.status === "concluida";
-                const accentColor = atrasada ? "bg-red-500" : (STATUS_ACCENT[inst.status] || "bg-gray-200");
+                // Pausar não muda o status persistido (continua "em_execucao") — só sinaliza
+                // via pausado_em. Aqui derivamos um status "pausada" só para exibição.
+                const pausada = inst.status === "em_execucao" && Boolean(inst.pausado_em);
+                const displayStatus = pausada ? "pausada" : inst.status;
+                const accentColor = atrasada ? "bg-red-500" : (STATUS_ACCENT[displayStatus] || "bg-gray-200");
                 const rowBg = atrasada
                   ? "bg-red-50/50 hover:bg-red-50"
                   : concluida
@@ -1072,13 +1079,14 @@ export default function Instalacoes() {
 
                     {/* Status */}
                     <td className="px-4 py-4">
-                      <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full ${STATUS_COLOR[inst.status]}`}>
+                      <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full ${STATUS_COLOR[displayStatus]}`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${
-                          inst.status === "concluida"   ? "bg-green-500" :
-                          inst.status === "em_execucao" ? "bg-orange-500" :
-                          inst.status === "agendada"    ? "bg-blue-500" : "bg-gray-400"
+                          displayStatus === "concluida"   ? "bg-green-500" :
+                          displayStatus === "pausada"     ? "bg-amber-500" :
+                          displayStatus === "em_execucao" ? "bg-orange-500" :
+                          displayStatus === "agendada"    ? "bg-blue-500" : "bg-gray-400"
                         }`} />
-                        {STATUS_COLOR[inst.status] ? t(`status.${inst.status}`) : inst.status}
+                        {STATUS_COLOR[displayStatus] ? t(`status.${displayStatus}`) : displayStatus}
                       </span>
                     </td>
 

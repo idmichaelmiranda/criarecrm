@@ -191,6 +191,7 @@ class InstalacaoListResponse(BaseModel):
     tipos_nomes: dict[str, str] = {}
     quantidade: int
     status: str
+    pausado_em: datetime | None = None
     prioridade: str
     responsavel_id: int | None = None
     responsavel_nome: str | None = None
