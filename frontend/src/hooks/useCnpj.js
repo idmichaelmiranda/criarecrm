@@ -57,6 +57,58 @@ function formatCep(raw) {
   return d.length === 8 ? `${d.slice(0, 5)}-${d.slice(5)}` : raw;
 }
 
+const LOOKUP_TIMEOUT_MS = 8000;
+
+async function fetchWithTimeout(url) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), LOOKUP_TIMEOUT_MS);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// BrasilAPI espelha a base da Receita Federal, mas com atraso de indexação —
+// CNPJs abertos há poucos dias costumam não aparecer lá ainda. ReceitaWS entra
+// como segunda fonte antes de desistir e mostrar "não encontrado" pro usuário.
+async function lookupBrasilApi(digits) {
+  const res = await fetchWithTimeout(`https://brasilapi.com.br/api/cnpj/v1/${digits}`);
+  if (!res.ok) return null;
+  const d = await res.json();
+  return {
+    razao_social:  d.razao_social,
+    nome_fantasia: d.nome_fantasia,
+    email:         d.email,
+    telefone_fixo: d.ddd_telefone_1 ? formatPhone(d.ddd_telefone_1) : undefined,
+    endereco:      d.logradouro,
+    numero:        d.numero,
+    bairro:        d.bairro,
+    cidade:        d.municipio,
+    estado:        d.uf,
+    cep:           d.cep ? formatCep(String(d.cep)) : undefined,
+  };
+}
+
+async function lookupReceitaWs(digits) {
+  const res = await fetchWithTimeout(`https://receitaws.com.br/v1/cnpj/${digits}`);
+  if (!res.ok) return null;
+  const d = await res.json();
+  if (d.status === "ERROR") return null;
+  return {
+    razao_social:  d.nome,
+    nome_fantasia: d.fantasia,
+    email:         d.email,
+    telefone_fixo: d.telefone,
+    endereco:      d.logradouro,
+    numero:        d.numero,
+    bairro:        d.bairro,
+    cidade:        d.municipio,
+    estado:        d.uf,
+    cep:           d.cep ? formatCep(d.cep) : undefined,
+  };
+}
+
 export function useCnpj() {
   const [status, setStatus] = useState("idle"); // idle | loading | found | not_found
 
@@ -67,26 +119,31 @@ export function useCnpj() {
       return;
     }
     setStatus("loading");
-    try {
-      const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${digits}`);
-      if (!res.ok) { setStatus("not_found"); return; }
-      const d = await res.json();
 
-      if (d.razao_social)    setValue("razao_social",   d.razao_social);
-      if (d.nome_fantasia)   setValue("nome_fantasia",  d.nome_fantasia);
-      if (d.email)           setValue("email",          d.email);
-      if (d.ddd_telefone_1)  setValue("telefone_fixo",  formatPhone(d.ddd_telefone_1));
-      if (d.logradouro)      setValue("endereco",       d.logradouro);
-      if (d.numero)          setValue("numero",         d.numero);
-      if (d.bairro)          setValue("bairro",         d.bairro);
-      if (d.municipio)       setValue("cidade",         d.municipio);
-      if (d.uf)              setValue("estado",         d.uf);
-      if (d.cep)             setValue("cep",            formatCep(d.cep));
-
-      setStatus("found");
-    } catch {
-      setStatus("not_found");
+    let d = null;
+    for (const lookup of [lookupBrasilApi, lookupReceitaWs]) {
+      try {
+        d = await lookup(digits);
+      } catch {
+        d = null;
+      }
+      if (d) break;
     }
+
+    if (!d) { setStatus("not_found"); return; }
+
+    if (d.razao_social)  setValue("razao_social",  d.razao_social);
+    if (d.nome_fantasia) setValue("nome_fantasia", d.nome_fantasia);
+    if (d.email)         setValue("email",         d.email);
+    if (d.telefone_fixo) setValue("telefone_fixo", d.telefone_fixo);
+    if (d.endereco)      setValue("endereco",      d.endereco);
+    if (d.numero)        setValue("numero",        d.numero);
+    if (d.bairro)        setValue("bairro",        d.bairro);
+    if (d.cidade)        setValue("cidade",        d.cidade);
+    if (d.estado)        setValue("estado",        d.estado);
+    if (d.cep)           setValue("cep",           d.cep);
+
+    setStatus("found");
   }
 
   return { fetchCnpj, status };
