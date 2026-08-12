@@ -651,8 +651,21 @@ export default function TemplateEditor() {
 
       for (const eid of deletedEtapaIds) await templatesApi.deletarEtapa(eid);
 
-      for (let i = 0; i < etapas.length; i++) {
-        const etapa = { ...etapas[i], ordem: i + 1 };
+      // Template novo de Instalação sem nenhuma etapa montada manualmente → usa o
+      // checklist padrão (mesmo default de Configurações > Produtos de Instalação),
+      // em vez de deixar o template salvo vazio.
+      const etapasToSave = (isNewInstalacao && etapas.length === 0)
+        ? [{
+            id: null, nome: t("page.defaultStageChecklist"), ordem: 1, sla_dias: 7, cor: COLORS[0],
+            tarefas: t("page.defaultTasks", { returnObjects: true }).map((titulo, i) => ({
+              id: null, titulo, obrigatoria: true, ordem: i + 1, subitens: [], _deletedSubitemIds: [],
+            })),
+            _deletedTarefaIds: [],
+          }]
+        : etapas;
+
+      for (let i = 0; i < etapasToSave.length; i++) {
+        const etapa = { ...etapasToSave[i], ordem: i + 1 };
         let etapaId = etapa.id;
 
         if (!etapaId) {

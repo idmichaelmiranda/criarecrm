@@ -69,6 +69,13 @@
     "emptyTitle": "Nenhuma etapa configurada",
     "emptySubtitle": "Clique em Adicionar Etapa para começar.",
     "addStage": "Adicionar Etapa",
-    "defaultStageName": "Nova Etapa"
+    "defaultStageName": "Nova Etapa",
+    "defaultStageChecklist": "Checklist de Instalação",
+    "defaultTasks": [
+      "Levantamento de requisitos",
+      "Instalação e configuração",
+      "Testes e validação",
+      "Aprovação do cliente"
+    ]
   }
 }

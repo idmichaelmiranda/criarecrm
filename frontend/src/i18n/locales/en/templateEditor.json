@@ -69,6 +69,13 @@
     "emptyTitle": "No stages configured",
     "emptySubtitle": "Click Add Stage to get started.",
     "addStage": "Add Stage",
-    "defaultStageName": "New Stage"
+    "defaultStageName": "New Stage",
+    "defaultStageChecklist": "Installation Checklist",
+    "defaultTasks": [
+      "Requirements gathering",
+      "Installation and configuration",
+      "Testing and validation",
+      "Customer approval"
+    ]
   }
 }
