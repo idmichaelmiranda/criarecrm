@@ -354,9 +354,12 @@ def _migrate_postgres() -> None:
     # então ficam bloqueadas por padrão. DROP POLICY IF EXISTS antes do CREATE mantém
     # isso idempotente (CREATE POLICY sozinho não tem "IF NOT EXISTS" e falharia em
     # todo restart subsequente).
+    # Nota: enderecos/contabilidades/dados_bancarios/dados_contabeis/dados_fiscais/
+    # formas_pagamento/adquirentes NÃO entram aqui — são tabelas legadas que só existem
+    # numa cópia local antiga do banco; nos models atuais viraram colunas JSON dentro de
+    # clientes/solicitacoes. Em produção essas tabelas nunca existiram.
     rls_tables = [
-        "adquirentes", "checklist_itens", "clientes", "comentarios", "contabilidades",
-        "dados_bancarios", "dados_contabeis", "dados_fiscais", "enderecos", "formas_pagamento",
+        "checklist_itens", "clientes", "comentarios",
         "grupos_permissao", "implantacao_etapas", "implantacoes", "instalacao_anexos",
         "instalacao_checklist", "instalacao_comentarios", "instalacao_pausas",
         "instalacao_responsaveis", "instalacoes", "notificacoes", "solicitacoes",
