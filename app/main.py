@@ -19,6 +19,7 @@ from app.models import (  # noqa: F401 — registra todos os modelos no metadata
     Notificacao, SolicitacaoInstalador,
 )
 from app.routes.solicitacoes import router as solicitacoes_router
+from app.routes.cnpj import router as cnpj_router
 from app.routes.implantacoes import router as implantacoes_router
 from app.routes.clientes import router as clientes_router
 from app.routes.templates import router as templates_router
@@ -457,6 +458,7 @@ app.include_router(auth_router, prefix="/api/v1")
 
 # ── Rotas mistas: POST / e POST /{id}/certificado são públicas; demais exigem auth
 app.include_router(solicitacoes_router, prefix="/api/v1")
+app.include_router(cnpj_router, prefix="/api/v1")
 
 # ── Rotas protegidas (exigem JWT válido) ──────────────────────────────────────
 _auth_dep = [Depends(get_current_user)]

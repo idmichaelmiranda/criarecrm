@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { cnpjApi } from "../services/api";
 
 export function validateCnpj(raw) {
   const d = (raw || "").replace(/\D/g, "");
@@ -90,11 +91,10 @@ async function lookupBrasilApi(digits) {
   };
 }
 
+// A ReceitaWS não envia cabeçalho CORS — uma chamada direta daqui (navegador) é
+// bloqueada silenciosamente. Passa pelo backend, que não sofre essa restrição.
 async function lookupReceitaWs(digits) {
-  const res = await fetchWithTimeout(`https://receitaws.com.br/v1/cnpj/${digits}`);
-  if (!res.ok) return null;
-  const d = await res.json();
-  if (d.status === "ERROR") return null;
+  const { data: d } = await cnpjApi.receitaWs(digits);
   return {
     razao_social:  d.nome,
     nome_fantasia: d.fantasia,

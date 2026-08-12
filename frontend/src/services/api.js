@@ -42,6 +42,11 @@ api.interceptors.response.use(
   }
 );
 
+// ── CNPJ (fallback de busca — proxy no backend por causa de CORS na ReceitaWS) ─
+export const cnpjApi = {
+  receitaWs: (cnpj) => api.get(`/cnpj/${cnpj}/receita-ws`),
+};
+
 // ── Solicitações (formulário público + triagem) ───────────────────────────────
 export const solicitacoesApi = {
   listar: (params) => api.get("/solicitacoes/", { params }),
