@@ -344,6 +344,34 @@ def _migrate_postgres() -> None:
         "ALTER TABLE solicitacoes ADD COLUMN IF NOT EXISTS aprovada_em TIMESTAMP",
         "ALTER TABLE solicitacoes ADD COLUMN IF NOT EXISTS conversao_dados BOOLEAN NOT NULL DEFAULT FALSE",
     ]
+    # Segurança — o Supabase expõe todas as tabelas do schema "public" via API REST
+    # própria (PostgREST), usando uma chave "anon" pública por padrão. Sem RLS, qualquer
+    # pessoa com a URL do projeto lê/edita/apaga essas tabelas direto, sem passar pelo
+    # backend. Habilita RLS em todas e cria uma política liberando CURRENT_USER — ou seja,
+    # a própria role usada por esta conexão (a mesma que o backend usa em toda consulta)
+    # continua com acesso total, sem depender de sabermos se ela é superusuário/dona das
+    # tabelas. Roles do PostgREST (anon/authenticated) não batem com CURRENT_USER aqui,
+    # então ficam bloqueadas por padrão. DROP POLICY IF EXISTS antes do CREATE mantém
+    # isso idempotente (CREATE POLICY sozinho não tem "IF NOT EXISTS" e falharia em
+    # todo restart subsequente).
+    rls_tables = [
+        "adquirentes", "checklist_itens", "clientes", "comentarios", "contabilidades",
+        "dados_bancarios", "dados_contabeis", "dados_fiscais", "enderecos", "formas_pagamento",
+        "grupos_permissao", "implantacao_etapas", "implantacoes", "instalacao_anexos",
+        "instalacao_checklist", "instalacao_comentarios", "instalacao_pausas",
+        "instalacao_responsaveis", "instalacoes", "notificacoes", "solicitacoes",
+        "solicitacoes_instalador", "template_etapas", "template_tarefas", "templates",
+        "timeline_eventos", "usuarios",
+    ]
+    rls_statements = []
+    for tbl in rls_tables:
+        rls_statements.append(f"ALTER TABLE {tbl} ENABLE ROW LEVEL SECURITY")
+        rls_statements.append(f"DROP POLICY IF EXISTS app_full_access ON {tbl}")
+        rls_statements.append(
+            f'CREATE POLICY app_full_access ON {tbl} FOR ALL TO CURRENT_USER '
+            f'USING (true) WITH CHECK (true)'
+        )
+
     with engine.connect() as conn:
         for ddl in new_cols:
             try:
@@ -351,6 +379,12 @@ def _migrate_postgres() -> None:
                 conn.commit()
             except Exception:
                 pass
+        for ddl in rls_statements:
+            try:
+                conn.execute(text(ddl))
+                conn.commit()
+            except Exception:
+                conn.rollback()
         # Corrige sub-itens criados com etapa_id incorreto (devem ter etapa_id=NULL)
         try:
             conn.execute(text("UPDATE checklist_itens SET etapa_id = NULL WHERE parent_id IS NOT NULL"))
