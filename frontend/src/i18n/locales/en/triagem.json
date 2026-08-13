@@ -323,6 +323,8 @@
       "responsavel": "Contact Person",
       "telFixo": "Landline",
       "celular": "Mobile",
+      "whatsappTitle": "Open in WhatsApp",
+      "callTitle": "Call (MicroSIP)",
       "cep": "ZIP Code",
       "endereco": "Address",
       "numero": "Number",

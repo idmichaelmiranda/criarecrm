@@ -60,13 +60,16 @@ export const STATUS_ACCENT = {
 
 // ── Primitives ────────────────────────────────────────────────────────────────
 
-export function Field({ label, value, mono = false }) {
+export function Field({ label, value, mono = false, actions }) {
   return (
     <div>
       <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-0.5">{label}</p>
-      <p className={`text-sm text-gray-800 break-words ${mono ? "font-mono text-xs" : ""}`}>
-        {value || <span className="text-gray-300">—</span>}
-      </p>
+      <div className="flex items-center gap-1.5">
+        <p className={`text-sm text-gray-800 break-words ${mono ? "font-mono text-xs" : ""}`}>
+          {value || <span className="text-gray-300">—</span>}
+        </p>
+        {value && actions}
+      </div>
     </div>
   );
 }

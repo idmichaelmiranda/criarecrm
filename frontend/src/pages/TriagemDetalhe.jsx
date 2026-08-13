@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Layout } from "../components/layout/Layout";
 import { Badge, PrioridadeBadge } from "../components/ui/Badge";
+import { WhatsAppButton, CallButton } from "../components/ui/ContactActions";
 import { solicitacoesApi, usuariosApi, instalacaosApi } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { BANCOS_BR } from "../data/bancos";
@@ -819,8 +820,13 @@ export default function TriagemDetalhe() {
                   <Field label={t("drawer.fields.ie")} value={sol.ie} mono />
                   <Field label={t("drawer.fields.email")} value={sol.email} />
                   <Field label={t("drawer.fields.responsavel")} value={sol.responsavel} />
-                  <Field label={t("drawer.fields.telFixo")} value={sol.telefone_fixo} mono />
-                  <Field label={t("drawer.fields.celular")} value={sol.telefone_celular} mono />
+                  <Field label={t("drawer.fields.telFixo")} value={sol.telefone_fixo} mono
+                    actions={<CallButton telefone={sol.telefone_fixo} title={t("drawer.fields.callTitle")} />} />
+                  <Field label={t("drawer.fields.celular")} value={sol.telefone_celular} mono
+                    actions={<>
+                      <WhatsAppButton telefone={sol.telefone_celular} title={t("drawer.fields.whatsappTitle")} />
+                      <CallButton telefone={sol.telefone_celular} title={t("drawer.fields.callTitle")} />
+                    </>} />
                 </Section>
 
                 <Section title={t("drawer.sections.pagamentos")}>

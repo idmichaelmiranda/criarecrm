@@ -323,6 +323,8 @@
       "responsavel": "Responsável",
       "telFixo": "Tel. Fixo",
       "celular": "Celular",
+      "whatsappTitle": "Abrir no WhatsApp",
+      "callTitle": "Ligar (MicroSIP)",
       "cep": "CEP",
       "endereco": "Endereço",
       "numero": "Número",

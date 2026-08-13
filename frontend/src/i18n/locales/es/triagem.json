@@ -323,6 +323,8 @@
       "responsavel": "Responsable",
       "telFixo": "Tel. Fijo",
       "celular": "Celular",
+      "whatsappTitle": "Abrir en WhatsApp",
+      "callTitle": "Llamar (MicroSIP)",
       "cep": "Código Postal",
       "endereco": "Dirección",
       "numero": "Número",
