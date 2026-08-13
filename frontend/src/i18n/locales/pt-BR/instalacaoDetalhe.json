@@ -1,4 +1,6 @@
 {
+  "whatsappTitle": "Abrir no WhatsApp",
+  "callTitle": "Ligar (MicroSIP)",
   "units": {
     "hour": "h",
     "minute": "min",

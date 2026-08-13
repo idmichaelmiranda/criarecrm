@@ -1,4 +1,6 @@
 {
+  "whatsappTitle": "Open in WhatsApp",
+  "callTitle": "Call (MicroSIP)",
   "units": {
     "hour": "h",
     "minute": "min",
