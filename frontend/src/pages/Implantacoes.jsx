@@ -44,6 +44,28 @@ function leafProgress(rootItems, subsIndex) {
   return { total, done };
 }
 
+// Mesma seleção de item-folha do leafProgress, mas devolvendo os itens pendentes
+// em si (com o nome da etapa) em vez de só a contagem — usado pra listar "o que
+// falta" na aba Atividades, sem precisar abrir o Kanban.
+function pendingLeafItems(etapas, subsIndex) {
+  const result = [];
+  for (const e of etapas || []) {
+    for (const item of e.itens || []) {
+      if (item.arquivado) continue;
+      const subs = (subsIndex && subsIndex[item.id]) || item.subitens || [];
+      const activeSubs = subs.filter((s) => !s.arquivado && s.status !== "nao_aplicavel");
+      if (activeSubs.length > 0) {
+        for (const s of activeSubs) {
+          if (s.status !== "concluido") result.push({ ...s, etapaNome: e.nome });
+        }
+      } else if (item.status !== "nao_aplicavel" && item.status !== "concluido") {
+        result.push({ ...item, etapaNome: e.nome });
+      }
+    }
+  }
+  return result;
+}
+
 function slaRelativo(impl) {
   if (impl.status === "concluida" || impl.status === "cancelada") {
     return { label: fmtDate(impl.sla_limite), level: "done" };
@@ -415,6 +437,7 @@ function QuickViewPanel({ implId, onClose, onNavigate }) {
     : { total: 0, done: 0 };
   const liveProgress = lpTotal > 0 ? Math.round((lpDone / lpTotal) * 100) : 0;
   const pendingItems = lpTotal - lpDone;
+  const pendingTasks = impl ? pendingLeafItems(impl.etapas, subsIndex) : [];
 
   return (
       // Painel docado ao lado do conteúdo (não sobrepõe nada) — sticky pra
@@ -556,20 +579,48 @@ function QuickViewPanel({ implId, onClose, onNavigate }) {
               )}
 
               {tab === "atividades" && (
-                <div className="space-y-3">
-                  {(impl.timeline || []).map((ev) => (
-                    <div key={ev.id} className="flex items-start gap-2.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-orange-400 mt-1.5 shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-xs text-gray-700 font-medium">{ev.titulo}</p>
-                        {ev.descricao && <p className="text-[11px] text-gray-500 mt-0.5">{ev.descricao}</p>}
-                        <p className="text-[10px] text-gray-400 mt-0.5">{fmtDateTime(ev.created_at)}</p>
+                <div className="space-y-5">
+                  {pendingTasks.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">
+                        {t("quickView.pendingTasksTitle", { count: pendingTasks.length })}
+                      </p>
+                      <div className="space-y-2">
+                        {pendingTasks.map((task) => (
+                          <div key={task.id} className="flex items-start gap-2.5">
+                            <span className="w-3 h-3 rounded-full border-2 border-gray-300 mt-0.5 shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs text-gray-700 leading-snug">{task.titulo}</p>
+                              <p className="text-[10px] text-gray-400 mt-0.5">{task.etapaNome}</p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  ))}
-                  {(impl.timeline || []).length === 0 && (
-                    <p className="text-xs text-gray-300 text-center py-6">{t("quickView.noActivity")}</p>
                   )}
+
+                  <div>
+                    {pendingTasks.length > 0 && (
+                      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2 pt-4 border-t border-gray-100">
+                        {t("quickView.activityLogTitle")}
+                      </p>
+                    )}
+                    <div className="space-y-3">
+                      {(impl.timeline || []).map((ev) => (
+                        <div key={ev.id} className="flex items-start gap-2.5">
+                          <div className="w-1.5 h-1.5 rounded-full bg-orange-400 mt-1.5 shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-xs text-gray-700 font-medium">{ev.titulo}</p>
+                            {ev.descricao && <p className="text-[11px] text-gray-500 mt-0.5">{ev.descricao}</p>}
+                            <p className="text-[10px] text-gray-400 mt-0.5">{fmtDateTime(ev.created_at)}</p>
+                          </div>
+                        </div>
+                      ))}
+                      {(impl.timeline || []).length === 0 && (
+                        <p className="text-xs text-gray-300 text-center py-6">{t("quickView.noActivity")}</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
 
