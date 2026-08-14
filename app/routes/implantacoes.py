@@ -62,6 +62,11 @@ def listar(
         data = ImplantacaoListResponse.model_validate(impl)
         data.cliente_nome = impl.cliente.razao_social if impl.cliente else None
         data.cliente_cnpj = impl.cliente.cnpj if impl.cliente else None
+        if impl.cliente:
+            endereco = impl.cliente.endereco or {}
+            data.cliente_cidade = endereco.get("cidade")
+            data.cliente_estado = endereco.get("estado")
+            data.cliente_regime_tributario = (impl.cliente.dados_contabeis or {}).get("regime_tributario")
         data.progresso = live_progresso
         data.tarefas_vencidas = vencidas
         data.responsavel_nome = impl.responsavel.nome if impl.responsavel else None

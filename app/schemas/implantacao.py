@@ -152,6 +152,9 @@ class ImplantacaoListResponse(BaseModel):
     cliente_id: int
     cliente_nome: str | None = None
     cliente_cnpj: str | None = None
+    cliente_cidade: str | None = None
+    cliente_estado: str | None = None
+    cliente_regime_tributario: str | None = None
 
     tarefas_vencidas: int = 0
 

@@ -1,11 +1,18 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Layout } from "../components/layout/Layout";
 import { Badge } from "../components/ui/Badge";
 import { implantacoesApi } from "../services/api";
-import { fmtDate } from "../utils/dateUtils";
+import { fmtDate, fmtDateTime } from "../utils/dateUtils";
 import i18n from "../i18n";
+
+// Cidade chega em CAIXA ALTA do cadastro — normaliza pra não competir
+// visualmente com o CNPJ (que é mono/minúsculo) na mesma linha do card.
+function toTitleCase(str) {
+  if (!str) return str;
+  return str.toLowerCase().replace(/(^|[\s/-])\S/g, (c) => c.toUpperCase());
+}
 
 function slaRelativo(impl) {
   if (impl.status === "concluida" || impl.status === "cancelada") {
@@ -30,6 +37,32 @@ const SLA_PILL = {
   ok:      "text-green-700 bg-green-50 border-green-100",
 };
 
+// Categoria exclusiva usada só pra agrupar no Kanban (uma implantação só pode
+// morar numa coluna). Prioridade: Concluída > SLA Vencido > Com Conversão > Em
+// Andamento — decisão de produto que pode ser ajustada depois. Nas abas/KPIs do
+// topo, cada contagem continua independente (uma implantação pode contar em
+// mais de um KPI ao mesmo tempo, exatamente como já era antes).
+const REGIME_KEYS = {
+  "1": "simples", simples_nacional: "simples",
+  "2": "presumido", lucro_presumido: "presumido",
+  "3": "real", lucro_real: "real",
+};
+
+// Regime tributário chega como código cru do cadastro do cliente (histórico
+// mistura "1"/"2"/"3" com slugs tipo "simples_nacional") — normaliza pro rótulo
+// compacto certo, com fallback pro valor cru se não reconhecer.
+function regimeLabel(t, code) {
+  const key = REGIME_KEYS[code];
+  return key ? t(`regime.${key}`) : code;
+}
+
+function getCategoria(impl) {
+  if (impl.status === "concluida") return "concluida";
+  if (impl.sla_status === "atrasada") return "sla_vencido";
+  if (impl.conversao_dados) return "conversao";
+  return "em_andamento";
+}
+
 function UserAvatar({ nome, avatarUrl, size = "md" }) {
   const dim = size === "sm" ? "w-6 h-6 text-[9px]" : "w-7 h-7 text-[10px]";
   const initials = nome
@@ -47,24 +80,50 @@ function UserAvatar({ nome, avatarUrl, size = "md" }) {
 
 // ── Subcomponents ─────────────────────────────────────────────────────────────
 
-function KpiCard({ label, value, sub, accent, onClick }) {
+// Sparkline decorativo — NÃO representa dado histórico real (o sistema ainda não
+// guarda série temporal desses números). Serve só pra compor o visual do card
+// enquanto não existe uma fonte de dado de verdade pra alimentar isso.
+function Sparkline({ seed = 0, color = "#f97316" }) {
+  const points = [4, 7, 5, 9, 6, 10, 8, 12].map((v, i) => {
+    const jitter = ((seed + i) * 37) % 5;
+    return [i * 10, 22 - (v + jitter)];
+  });
+  const path = points.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x},${y}`).join(" ");
+  return (
+    <svg width="70" height="24" viewBox="0 0 70 24" className="shrink-0" aria-hidden="true">
+      <path d={path} fill="none" stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />
+    </svg>
+  );
+}
+
+function KpiCard({ icon, label, value, sub, accent, active, onClick }) {
   const palettes = {
-    orange: { wrap: "border-orange-100 bg-orange-50", val: "text-orange-600",  sub: "text-orange-400"  },
-    red:    { wrap: "border-red-100   bg-red-50",     val: "text-red-600",    sub: "text-red-400"    },
-    blue:   { wrap: "border-blue-100  bg-blue-50",    val: "text-blue-600",   sub: "text-blue-400"   },
-    green:  { wrap: "border-green-100 bg-green-50",   val: "text-green-600",  sub: "text-green-400"  },
-    gray:   { wrap: "border-gray-100  bg-gray-50",    val: "text-gray-500",   sub: "text-gray-400"   },
+    orange: { icon: "bg-orange-100 text-orange-600", val: "text-gray-900", sub: "text-orange-500", spark: "#f97316" },
+    red:    { icon: "bg-red-100 text-red-600",       val: "text-gray-900", sub: "text-red-500",    spark: "#ef4444" },
+    blue:   { icon: "bg-blue-100 text-blue-600",     val: "text-gray-900", sub: "text-blue-500",   spark: "#3b82f6" },
+    green:  { icon: "bg-green-100 text-green-600",   val: "text-gray-900", sub: "text-green-500",  spark: "#22c55e" },
+    gray:   { icon: "bg-gray-100 text-gray-500",     val: "text-gray-900", sub: "text-gray-400",   spark: "#9ca3af" },
   };
   const p = palettes[accent] || palettes.gray;
   return (
-    <div
+    <button
       onClick={onClick}
-      className={`rounded-xl border px-4 py-3 flex flex-col gap-0.5 ${p.wrap} ${onClick ? "cursor-pointer hover:shadow-sm transition-shadow" : ""}`}
+      className={`text-left rounded-2xl border bg-white px-4 py-3.5 flex items-center justify-between gap-3 transition-shadow ${
+        active ? "border-orange-300 shadow-sm ring-1 ring-orange-100" : "border-gray-100 hover:shadow-sm"
+      } ${onClick ? "cursor-pointer" : "cursor-default"}`}
     >
-      <span className={`text-2xl font-bold leading-none ${p.val}`}>{value}</span>
-      <span className={`text-xs font-semibold mt-1 ${p.val}`}>{label}</span>
-      {sub && <span className={`text-[10px] ${p.sub}`}>{sub}</span>}
-    </div>
+      <div className="min-w-0">
+        <div className="flex items-center gap-2 mb-1.5">
+          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${p.icon}`}>
+            {icon}
+          </div>
+          <span className={`text-2xl font-bold leading-none ${p.val}`}>{value}</span>
+        </div>
+        <p className="text-xs font-semibold text-gray-600">{label}</p>
+        {sub && <p className={`text-[10px] mt-0.5 ${p.sub}`}>{sub}</p>}
+      </div>
+      <Sparkline seed={value} color={p.spark} />
+    </button>
   );
 }
 
@@ -151,35 +210,398 @@ function ContextBanner({ filterSla, filterHighlight, count, onClear }) {
   return null;
 }
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+const REGIME_BADGE_COLOR = {
+  simples:   "bg-emerald-50 text-emerald-600",
+  presumido: "bg-blue-50 text-blue-600",
+  real:      "bg-violet-50 text-violet-600",
+};
 
-const TABS = [
-  { key: "em_andamento", labelKey: "emAndamento" },
-  { key: "todas",        labelKey: "todas"       },
+// Cidade em texto leve com ícone (contexto, não é dado de identidade — não deve
+// competir com CNPJ), regime como badge colorido (classificação, igual aos
+// outros badges do app) — em vez de uma terceira linha de texto corrido.
+function LocationRegimeTags({ cidade, estado, regimeCode, t }) {
+  if (!cidade && !regimeCode) return null;
+  const regimeKey = REGIME_KEYS[regimeCode];
+  return (
+    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+      {cidade && (
+        <span className="inline-flex items-center gap-0.5 text-[10px] text-gray-400">
+          <svg className="w-2.5 h-2.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          {toTitleCase(cidade)}{estado ? `/${estado}` : ""}
+        </span>
+      )}
+      {regimeCode && (
+        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded leading-none ${REGIME_BADGE_COLOR[regimeKey] || "bg-gray-100 text-gray-500"}`}>
+          {regimeLabel(t, regimeCode)}
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ── Card (usado na tabela e no Kanban) ──────────────────────────────────────────
+
+function ImplCard({ impl, onClick }) {
+  const { t } = useTranslation("implantacoes");
+  const sla = slaRelativo(impl);
+  const isAtrasada = impl.sla_status === "atrasada";
+
+  return (
+    <div
+      onClick={onClick}
+      className={`rounded-xl border bg-white p-3.5 cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5 ${
+        isAtrasada ? "border-red-200" : "border-gray-100"
+      }`}
+    >
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <span className="font-mono text-[10px] font-semibold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded whitespace-nowrap">
+          {impl.codigo}
+        </span>
+        {impl.prioridade !== "normal" && <PrioridadePill prioridade={impl.prioridade} />}
+      </div>
+      <p className="font-semibold text-gray-900 text-sm leading-tight truncate">{impl.cliente_nome}</p>
+      <p className="text-[11px] font-mono text-gray-400 mt-0.5">{impl.cliente_cnpj}</p>
+      <LocationRegimeTags cidade={impl.cliente_cidade} estado={impl.cliente_estado} regimeCode={impl.cliente_regime_tributario} t={t} />
+
+      <div className="mt-2.5">
+        <ProgressBar value={impl.progresso} status={impl.status} />
+      </div>
+
+      <div className="flex items-center justify-between mt-2.5">
+        {impl.responsavel_nome ? (
+          <div className="flex items-center gap-1.5 min-w-0">
+            <UserAvatar nome={impl.responsavel_nome} avatarUrl={impl.responsavel_avatar_url} size="sm" />
+            <span className="text-[11px] text-gray-600 truncate">{impl.responsavel_nome}</span>
+          </div>
+        ) : <span />}
+        {impl.status === "concluida" ? (
+          <span className="text-[10px] text-gray-400 whitespace-nowrap">{t("card.concludedOn", { date: fmtDate(impl.data_conclusao) })}</span>
+        ) : sla?.level === "expired" ? (
+          <span className="text-[10px] font-semibold text-red-600 whitespace-nowrap">{sla.label}</span>
+        ) : (
+          <span className="text-[10px] text-gray-400 whitespace-nowrap">{sla?.label}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Kanban ────────────────────────────────────────────────────────────────────
+
+const KANBAN_PREVIEW = 3;
+
+function KanbanColumn({ title, dotClass, items, onCardClick, onVerTodas }) {
+  const { t } = useTranslation("implantacoes");
+  const preview = items.slice(0, KANBAN_PREVIEW);
+  return (
+    <div className="flex-1 min-w-[260px] bg-gray-50/70 rounded-2xl border border-gray-100 flex flex-col">
+      <div className="px-3.5 pt-3.5 pb-2.5 flex items-center gap-2">
+        <span className={`w-2 h-2 rounded-full shrink-0 ${dotClass}`} />
+        <span className="text-sm font-semibold text-gray-700">{title}</span>
+        <span className="text-xs text-gray-400">{items.length}</span>
+      </div>
+      <div className="px-2.5 pb-2.5 space-y-2 flex-1">
+        {preview.length === 0 ? (
+          <p className="text-xs text-gray-300 text-center py-6">{t("kanban.empty")}</p>
+        ) : (
+          preview.map((impl) => <ImplCard key={impl.id} impl={impl} onClick={() => onCardClick(impl)} />)
+        )}
+      </div>
+      {items.length > KANBAN_PREVIEW && (
+        <button
+          onClick={onVerTodas}
+          className="text-xs font-semibold text-orange-600 hover:text-orange-700 py-2.5 border-t border-gray-100"
+        >
+          {t("kanban.verTodas", { count: items.length })}
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ── Painel lateral de visão rápida ───────────────────────────────────────────
+
+function CircularProgress({ value }) {
+  const r = 34, c = 2 * Math.PI * r;
+  const offset = c - (value / 100) * c;
+  return (
+    <div className="relative w-24 h-24 shrink-0">
+      <svg width="96" height="96" viewBox="0 0 96 96" className="-rotate-90">
+        <circle cx="48" cy="48" r={r} fill="none" stroke="#f3f4f6" strokeWidth="8" />
+        <circle
+          cx="48" cy="48" r={r} fill="none" stroke={value >= 100 ? "#22c55e" : "#f97316"} strokeWidth="8"
+          strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round"
+          style={{ transition: "stroke-dashoffset 400ms ease" }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-lg font-bold text-gray-800">{value}%</span>
+      </div>
+    </div>
+  );
+}
+
+const QUICK_TABS = [
+  { id: "geral",      labelKey: "geral"      },
+  { id: "atividades", labelKey: "atividades" },
+  { id: "arquivos",   labelKey: "arquivos"   },
+  { id: "historico",  labelKey: "historico"  },
 ];
 
-const STATUS_SUBFILTERS = [
-  { key: "",             labelKey: "all"         },
-  { key: "em_andamento", labelKey: "emAndamento" },
-  { key: "pausada",      labelKey: "pausada"     },
-  { key: "concluida",    labelKey: "concluida"   },
-  { key: "cancelada",    labelKey: "cancelada"   },
-];
+function QuickViewPanel({ implId, onClose, onNavigate }) {
+  const { t } = useTranslation("implantacoes");
+  const [impl, setImpl] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState("geral");
+  const [showAcoes, setShowAcoes] = useState(false);
 
-const SLA_FILTERS = [
-  { key: "",         labelKey: "any"      },
-  { key: "atrasada", labelKey: "atrasada" },
-  { key: "critico",  labelKey: "critico"  },
-  { key: "ok",       labelKey: "ok"       },
-];
+  useEffect(() => {
+    setLoading(true);
+    setTab("geral");
+    implantacoesApi.obter(implId)
+      .then(({ data }) => setImpl(data))
+      .catch(() => setImpl(null))
+      .finally(() => setLoading(false));
+  }, [implId]);
 
-const PRIORIDADE_FILTERS = [
-  { key: "",        labelKey: "any"     },
-  { key: "critica", labelKey: "critica" },
-  { key: "alta",    labelKey: "alta"    },
-  { key: "normal",  labelKey: "normal"  },
-  { key: "baixa",   labelKey: "baixa"   },
-];
+  return (
+      // Painel docado ao lado do conteúdo (não sobrepõe nada) — sticky pra
+      // acompanhar o scroll, só na faixa abaixo do cabeçalho/KPIs, com scroll
+      // próprio quando o conteúdo é maior que a tela.
+      <div
+        className="w-full max-w-sm shrink-0 sticky top-4 bg-white rounded-2xl border border-gray-100 shadow-lg flex flex-col"
+        style={{ maxHeight: "calc(100vh - 2rem)" }}
+      >
+        {loading || !impl ? (
+          <div className="flex-1 flex items-center justify-center">
+            <span className="w-6 h-6 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" />
+          </div>
+        ) : (
+          <>
+            {/* Header */}
+            <div className="px-5 pt-5 pb-4 border-b border-gray-100 shrink-0">
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[10px] font-semibold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{impl.codigo}</span>
+                  <Badge status={impl.status} />
+                </div>
+                <button onClick={onClose} className="text-gray-400 hover:text-gray-600 w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors shrink-0">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <h2 className="text-base font-bold text-gray-900 leading-tight">{impl.nome}</h2>
+              <p className="text-xs font-mono text-gray-400 mt-0.5">{impl.cliente_cnpj}</p>
+
+              {/* Tabs */}
+              <div className="flex gap-4 mt-4 -mb-4 border-b border-gray-100">
+                {QUICK_TABS.map((qt) => (
+                  <button
+                    key={qt.id}
+                    onClick={() => setTab(qt.id)}
+                    className={`pb-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap ${
+                      tab === qt.id ? "border-orange-500 text-orange-600" : "border-transparent text-gray-400 hover:text-gray-600"
+                    }`}
+                  >
+                    {t(`quickView.tabs.${qt.labelKey}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
+              {tab === "geral" && (
+                <>
+                  <div>
+                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-3">{t("quickView.overallProgress")}</p>
+                    <div className="flex items-center gap-4">
+                      <CircularProgress value={impl.progresso} />
+                      <div className="text-xs text-gray-500 space-y-1.5">
+                        <p><span className="text-gray-400">{t("quickView.startedOn")}</span> {fmtDate(impl.data_inicio) || "—"}</p>
+                        <p>
+                          <span className="text-gray-400">{t("quickView.expectedCompletion")}</span> {fmtDate(impl.data_prevista) || "—"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <ProgressBar value={impl.progresso} status={impl.status} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">{t("quickView.responsible")}</p>
+                    <div className="flex items-center justify-between">
+                      {impl.responsavel_nome ? (
+                        <div className="flex items-center gap-2">
+                          <UserAvatar nome={impl.responsavel_nome} avatarUrl={impl.responsavel_avatar_url} />
+                          <span className="text-sm text-gray-700 font-medium">{impl.responsavel_nome}</span>
+                        </div>
+                      ) : <span className="text-sm text-gray-300">—</span>}
+                      <button
+                        onClick={() => onNavigate(impl.id)}
+                        className="text-xs font-semibold text-orange-600 hover:text-orange-700 px-2 py-1 rounded-lg hover:bg-orange-50 transition-colors"
+                      >
+                        {t("quickView.change")}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">{t("quickView.information")}</p>
+                    <div className="space-y-2 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">{t("quickView.sla")}</span>
+                        <span className="text-gray-700 font-medium">{impl.sla_dias} {t("quickView.days")}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">{t("quickView.priority")}</span>
+                        <PrioridadePill prioridade={impl.prioridade} />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">{t("quickView.company")}</span>
+                        <span className="text-gray-700 font-medium truncate max-w-[160px]">{impl.cliente_nome}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">{t("quickView.recentActivity")}</p>
+                    </div>
+                    <div className="space-y-3">
+                      {(impl.timeline || []).slice(0, 3).map((ev) => (
+                        <div key={ev.id} className="flex items-start gap-2.5">
+                          <div className="w-1.5 h-1.5 rounded-full bg-orange-400 mt-1.5 shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-xs text-gray-700 font-medium">{ev.titulo}</p>
+                            <p className="text-[10px] text-gray-400">{fmtDateTime(ev.created_at)}</p>
+                          </div>
+                        </div>
+                      ))}
+                      {(impl.timeline || []).length === 0 && (
+                        <p className="text-xs text-gray-300">{t("quickView.noActivity")}</p>
+                      )}
+                    </div>
+                    {(impl.timeline || []).length > 3 && (
+                      <button onClick={() => setTab("atividades")} className="text-xs font-semibold text-orange-600 hover:text-orange-700 mt-2">
+                        {t("quickView.viewAllActivity")}
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {tab === "atividades" && (
+                <div className="space-y-3">
+                  {(impl.timeline || []).map((ev) => (
+                    <div key={ev.id} className="flex items-start gap-2.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-orange-400 mt-1.5 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs text-gray-700 font-medium">{ev.titulo}</p>
+                        {ev.descricao && <p className="text-[11px] text-gray-500 mt-0.5">{ev.descricao}</p>}
+                        <p className="text-[10px] text-gray-400 mt-0.5">{fmtDateTime(ev.created_at)}</p>
+                      </div>
+                    </div>
+                  ))}
+                  {(impl.timeline || []).length === 0 && (
+                    <p className="text-xs text-gray-300 text-center py-6">{t("quickView.noActivity")}</p>
+                  )}
+                </div>
+              )}
+
+              {tab === "arquivos" && (
+                <p className="text-xs text-gray-300 text-center py-10">{t("quickView.comingSoon")}</p>
+              )}
+
+              {tab === "historico" && (
+                <div className="space-y-3">
+                  {(impl.timeline || []).map((ev) => (
+                    <div key={ev.id} className="flex items-start gap-2.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-gray-300 mt-1.5 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs text-gray-700">{ev.titulo}</p>
+                        <p className="text-[10px] text-gray-400">{fmtDateTime(ev.created_at)}</p>
+                      </div>
+                    </div>
+                  ))}
+                  {(impl.timeline || []).length === 0 && (
+                    <p className="text-xs text-gray-300 text-center py-6">{t("quickView.noActivity")}</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-5 py-4 border-t border-gray-100 flex gap-2 shrink-0 relative">
+              <button
+                onClick={() => onNavigate(impl.id)}
+                className="flex-1 py-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                {t("quickView.viewFull")}
+              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setShowAcoes((v) => !v)}
+                  className="h-full px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition-colors flex items-center gap-1.5"
+                >
+                  {t("quickView.actions")}
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {showAcoes && (
+                  <div className="absolute bottom-full right-0 mb-2 w-44 bg-white rounded-xl border border-gray-100 shadow-lg py-1.5 z-10">
+                    <button
+                      onClick={() => onNavigate(impl.id)}
+                      className="w-full text-left px-3.5 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"
+                    >
+                      {t("quickView.edit")}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+  );
+}
+
+// ── Filtros avançados (popover) ─────────────────────────────────────────────
+
+function FiltrosAvancados({ filterPrioridade, onChangePrioridade, onClose }) {
+  const { t } = useTranslation("implantacoes");
+  const ref = useRef(null);
+  useEffect(() => {
+    function onClick(e) { if (ref.current && !ref.current.contains(e.target)) onClose(); }
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [onClose]);
+
+  return (
+    <div ref={ref} className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl border border-gray-100 shadow-lg p-4 z-20">
+      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">{t("page.priorityLabel")}</p>
+      <div className="flex flex-wrap gap-1.5">
+        {["", "critica", "alta", "normal", "baixa"].map((p) => (
+          <button
+            key={p}
+            onClick={() => onChangePrioridade(p)}
+            className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
+              filterPrioridade === p ? "border-orange-400 bg-orange-50 text-orange-700" : "border-gray-200 text-gray-500 hover:border-gray-300"
+            }`}
+          >
+            {p ? t(`prioridadeFilters.${p}`) : t("prioridadeFilters.any")}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
@@ -191,12 +613,19 @@ export default function Implantacoes() {
   const [items, setItems]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch]  = useState("");
+  const [viewMode, setViewMode] = useState("kanban"); // kanban | list
+  const [showFiltros, setShowFiltros] = useState(false);
+  const [quickViewId, setQuickViewId] = useState(null);
 
-  const activeTab        = searchParams.get("tab")        || "em_andamento";
-  const filterStatus     = searchParams.get("status")     || "";
-  const filterSla        = searchParams.get("sla_status") || "";
+  const activeTab        = searchParams.get("tab")        || "todas";
   const filterPrioridade = searchParams.get("prioridade") || "";
   const filterHighlight  = searchParams.get("highlight")  || "";
+
+  function setTab(tab) {
+    const p = new URLSearchParams(searchParams);
+    p.set("tab", tab);
+    setSearchParams(p, { replace: true });
+  }
 
   function setParam(key, value) {
     const p = new URLSearchParams(searchParams);
@@ -204,14 +633,6 @@ export default function Implantacoes() {
     setSearchParams(p, { replace: true });
   }
 
-  function setTab(tab) {
-    const p = new URLSearchParams(searchParams);
-    p.set("tab", tab);
-    if (tab === "em_andamento") p.delete("status");
-    setSearchParams(p, { replace: true });
-  }
-
-  // Load all — filter client-side so KPIs and badges are always accurate
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -222,22 +643,27 @@ export default function Implantacoes() {
 
   useEffect(() => { load(); }, [load]);
 
-  // ── KPIs ──────────────────────────────────────────────────────────────────
+  // ── KPIs (contagens independentes — uma implantação pode contar em mais de uma) ──
   const kpiEmAndamento = items.filter((i) => i.status === "em_andamento").length;
   const kpiSlaVencido  = items.filter((i) => i.sla_status === "atrasada").length;
   const kpiConversao   = items.filter((i) => i.conversao_dados).length;
   const kpiConcluidas  = items.filter((i) => i.status === "concluida").length;
 
-  // ── Tab counts ─────────────────────────────────────────────────────────────
-  const tabCount = (key) =>
-    key === "todas" ? items.length : items.filter((i) => i.status === key).length;
+  const TABS = [
+    { key: "todas",        labelKey: "todas",       count: items.length },
+    { key: "em_andamento", labelKey: "emAndamento", count: kpiEmAndamento },
+    { key: "conversao",    labelKey: "conversao",   count: kpiConversao },
+    { key: "sla_vencido",  labelKey: "slaVencido",  count: kpiSlaVencido },
+    { key: "concluida",    labelKey: "concluida",   count: kpiConcluidas },
+  ];
 
   // ── Client-side filtering ──────────────────────────────────────────────────
   const filtered = items.filter((i) => {
     if (activeTab === "em_andamento" && i.status !== "em_andamento") return false;
-    if (activeTab === "todas" && filterStatus && i.status !== filterStatus) return false;
-    if (filterSla        && i.sla_status  !== filterSla)        return false;
-    if (filterPrioridade && i.prioridade  !== filterPrioridade) return false;
+    if (activeTab === "conversao" && !i.conversao_dados) return false;
+    if (activeTab === "sla_vencido" && i.sla_status !== "atrasada") return false;
+    if (activeTab === "concluida" && i.status !== "concluida") return false;
+    if (filterPrioridade && i.prioridade !== filterPrioridade) return false;
     if (search) {
       const q = search.toLowerCase();
       if (
@@ -250,9 +676,8 @@ export default function Implantacoes() {
     return true;
   });
 
-  const hasActiveFilters = (activeTab === "todas" && filterStatus) || filterSla || filterPrioridade;
+  const hasActiveFilters = !!filterPrioridade;
 
-  // When arriving from dashboard "Tarefas Vencidas", sort overdue items first
   const displayList = filterHighlight === "tarefas"
     ? [...filtered].sort((a, b) => {
         const order = { atrasada: 0, critico: 1, em_risco: 2 };
@@ -260,23 +685,79 @@ export default function Implantacoes() {
       })
     : filtered;
 
+  // Agrupamento exclusivo pro Kanban (exclui canceladas, igual ao mockup)
+  const kanbanBuckets = { em_andamento: [], conversao: [], sla_vencido: [], concluida: [] };
+  for (const impl of filtered) {
+    if (impl.status === "cancelada") continue;
+    kanbanBuckets[getCategoria(impl)].push(impl);
+  }
+
+  function handleVerTodas(tabKey) {
+    setTab(tabKey);
+    setViewMode("list");
+  }
+
   return (
     <Layout>
+      {/* Cabeçalho + KPIs — sempre largura total, nunca encolhem nem ficam atrás do painel */}
       {/* Header */}
-      <div className="mb-5">
-        <h1 className="text-2xl font-bold text-gray-900">{t("page.title")}</h1>
-        <p className="text-sm text-gray-400 mt-0.5">
-          {filtered.length !== items.length
-            ? t("page.subtitleFiltered", { filtered: filtered.length, total: items.length })
-            : t("page.subtitleTotal", { count: items.length })}
-        </p>
+      <div className="flex items-start justify-between gap-4 mb-5 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {t("page.title")}
+          </h1>
+          <p className="text-sm text-gray-400 mt-0.5">{t("page.subtitleRealtime")}</p>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="relative min-w-[220px]">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+            </svg>
+            <input
+              type="text"
+              placeholder={t("page.searchPlaceholder")}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 transition bg-white"
+            />
+          </div>
+          <div className="relative">
+            <button
+              onClick={() => setShowFiltros((v) => !v)}
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                hasActiveFilters ? "border-orange-400 text-orange-700 bg-orange-50" : "border-gray-200 text-gray-600 bg-white hover:bg-gray-50"
+              }`}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              {t("page.advancedFilters")}
+            </button>
+            {showFiltros && (
+              <FiltrosAvancados
+                filterPrioridade={filterPrioridade}
+                onChangePrioridade={(v) => setParam("prioridade", v)}
+                onClose={() => setShowFiltros(false)}
+              />
+            )}
+          </div>
+          <button
+            onClick={() => alert(t("page.novaImplantacaoSoon"))}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-sm"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            {t("page.novaImplantacao")}
+          </button>
+        </div>
       </div>
 
-      {/* Context banner (when arriving from dashboard with a filter/highlight) */}
-      {(filterSla === "atrasada" || filterSla === "critico" || filterHighlight === "tarefas") && (
+      {/* Context banner */}
+      {(searchParams.get("sla_status") === "atrasada" || searchParams.get("sla_status") === "critico" || filterHighlight === "tarefas") && (
         <div className="mb-4">
           <ContextBanner
-            filterSla={filterSla}
+            filterSla={searchParams.get("sla_status")}
             filterHighlight={filterHighlight}
             count={filtered.length}
             onClear={() => {
@@ -292,146 +773,140 @@ export default function Implantacoes() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
         <KpiCard
+          icon={<span className="text-sm">🚀</span>}
           label={t("page.kpi.inProgress")}
           value={kpiEmAndamento}
+          sub={items.length ? t("page.kpi.pctOfTotal", { pct: Math.round((kpiEmAndamento / items.length) * 100) }) : undefined}
           accent="orange"
+          active={activeTab === "em_andamento"}
           onClick={() => setTab("em_andamento")}
         />
         <KpiCard
+          icon={<span className="text-sm">⏱️</span>}
           label={t("page.kpi.slaOverdue")}
           value={kpiSlaVencido}
           sub={kpiSlaVencido > 0 ? t("page.kpi.requiresAttention") : t("page.kpi.onSchedule")}
           accent={kpiSlaVencido > 0 ? "red" : "gray"}
-          onClick={kpiSlaVencido > 0 ? () => setParam("sla_status", filterSla === "atrasada" ? "" : "atrasada") : undefined}
+          active={activeTab === "sla_vencido"}
+          onClick={() => setTab("sla_vencido")}
         />
         <KpiCard
+          icon={<span className="text-sm">🗄️</span>}
           label={t("page.kpi.withConversion")}
           value={kpiConversao}
           sub={t("page.kpi.ofData")}
           accent={kpiConversao > 0 ? "blue" : "gray"}
+          active={activeTab === "conversao"}
+          onClick={() => setTab("conversao")}
         />
         <KpiCard
+          icon={<span className="text-sm">✅</span>}
           label={t("page.kpi.completed")}
           value={kpiConcluidas}
+          sub={items.length ? t("page.kpi.pctOfTotal", { pct: Math.round((kpiConcluidas / items.length) * 100) }) : undefined}
           accent="green"
-          onClick={() => {
-            const p = new URLSearchParams(searchParams);
-            if (activeTab === "todas" && filterStatus === "concluida") {
-              p.delete("status");
-            } else {
-              p.set("tab", "todas");
-              p.set("status", "concluida");
-            }
-            setSearchParams(p, { replace: true });
-          }}
+          active={activeTab === "concluida"}
+          onClick={() => setTab("concluida")}
         />
       </div>
 
-      {/* Filters */}
-      <div className="space-y-3 mb-5">
-        {/* Status tabs */}
-        <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
-          {TABS.map((tb) => {
-            const cnt = tabCount(tb.key);
-            return (
-              <button
-                key={tb.key}
-                onClick={() => setTab(tb.key)}
-                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-                  activeTab === tb.key
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                {t(`tabs.${tb.labelKey}`)}
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
-                  activeTab === tb.key
-                    ? "bg-orange-100 text-orange-600"
-                    : "bg-gray-200 text-gray-500"
-                }`}>
-                  {cnt}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Secondary filters */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Status sub-filter — só visível na aba Todas */}
-          {activeTab === "todas" && (
-            <select
-              value={filterStatus}
-              onChange={(e) => setParam("status", e.target.value)}
-              className={`text-sm border rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 transition ${
-                filterStatus ? "border-orange-400 text-orange-700 bg-orange-50" : "border-gray-200 text-gray-600 bg-white"
+      {/* A partir daqui: conteúdo (abas + Kanban/lista) e painel de detalhe dividem
+          a largura lado a lado — o painel nunca cobre o cabeçalho/KPIs acima. */}
+      <div className="flex items-start gap-4">
+      <div className="flex-1 min-w-0">
+      {/* Tabs + view toggle */}
+      <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
+        <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit flex-wrap">
+          {TABS.map((tb) => (
+            <button
+              key={tb.key}
+              onClick={() => setTab(tb.key)}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                activeTab === tb.key ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              {STATUS_SUBFILTERS.map((f) => <option key={f.key} value={f.key}>{t(`statusSubfilters.${f.labelKey}`)}</option>)}
-            </select>
-          )}
-
-          <select
-            value={filterSla}
-            onChange={(e) => setParam("sla_status", e.target.value)}
-            className={`text-sm border rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 transition ${
-              filterSla ? "border-orange-400 text-orange-700 bg-orange-50" : "border-gray-200 text-gray-600 bg-white"
-            }`}
-          >
-            {SLA_FILTERS.map((f) => <option key={f.key} value={f.key}>{t(`slaFilters.${f.labelKey}`)}</option>)}
-          </select>
-
-          <select
-            value={filterPrioridade}
-            onChange={(e) => setParam("prioridade", e.target.value)}
-            className={`text-sm border rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 transition ${
-              filterPrioridade ? "border-orange-400 text-orange-700 bg-orange-50" : "border-gray-200 text-gray-600 bg-white"
-            }`}
-          >
-            {PRIORIDADE_FILTERS.map((f) => <option key={f.key} value={f.key}>{t(`prioridadeFilters.${f.labelKey}`)}</option>)}
-          </select>
-
-          <div className="relative flex-1 min-w-[180px] max-w-xs">
-            <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
-            </svg>
-            <input
-              type="text"
-              placeholder={t("page.searchPlaceholder")}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 transition bg-white"
-            />
-          </div>
-
-          {(hasActiveFilters || search) && (
-            <button
-              onClick={() => { setSearchParams({ tab: activeTab }); setSearch(""); }}
-              className="text-xs font-medium text-gray-400 hover:text-red-500 transition-colors px-2 py-1.5 rounded-lg hover:bg-red-50"
-            >
-              {t("page.clearFilters")}
+              {t(`tabs.${tb.labelKey}`)}
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
+                activeTab === tb.key ? "bg-orange-100 text-orange-600" : "bg-gray-200 text-gray-500"
+              }`}>
+                {tb.count}
+              </span>
             </button>
-          )}
+          ))}
+        </div>
+
+        <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
+          <button
+            onClick={() => setViewMode("list")}
+            title={t("page.viewList")}
+            className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${
+              viewMode === "list" ? "bg-white shadow-sm text-gray-700" : "text-gray-400 hover:text-gray-600"
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <button
+            onClick={() => setViewMode("kanban")}
+            title={t("page.viewKanban")}
+            className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${
+              viewMode === "kanban" ? "bg-white shadow-sm text-gray-700" : "text-gray-400 hover:text-gray-600"
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5z" />
+            </svg>
+          </button>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-6 h-6 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" />
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="py-16 text-center">
-            <p className="text-3xl mb-3">⚙️</p>
-            <p className="text-sm font-medium text-gray-700">{t("page.emptyTitle")}</p>
-            <p className="text-xs text-gray-400 mt-1">
-              {search || hasActiveFilters
-                ? t("page.emptyFiltered")
-                : t("page.emptyDefault")}
-            </p>
-          </div>
-        ) : (
+      {/* Content */}
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="w-6 h-6 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm py-16 text-center">
+          <p className="text-3xl mb-3">⚙️</p>
+          <p className="text-sm font-medium text-gray-700">{t("page.emptyTitle")}</p>
+          <p className="text-xs text-gray-400 mt-1">
+            {search || hasActiveFilters ? t("page.emptyFiltered") : t("page.emptyDefault")}
+          </p>
+        </div>
+      ) : viewMode === "kanban" ? (
+        <div className="flex gap-4 overflow-x-auto pb-2">
+          <KanbanColumn
+            title={t("tabs.emAndamento")}
+            dotClass="bg-blue-500"
+            items={kanbanBuckets.em_andamento}
+            onCardClick={(impl) => setQuickViewId(impl.id)}
+            onVerTodas={() => handleVerTodas("em_andamento")}
+          />
+          <KanbanColumn
+            title={t("tabs.conversao")}
+            dotClass="bg-indigo-500"
+            items={kanbanBuckets.conversao}
+            onCardClick={(impl) => setQuickViewId(impl.id)}
+            onVerTodas={() => handleVerTodas("conversao")}
+          />
+          <KanbanColumn
+            title={t("tabs.slaVencido")}
+            dotClass="bg-red-500"
+            items={kanbanBuckets.sla_vencido}
+            onCardClick={(impl) => setQuickViewId(impl.id)}
+            onVerTodas={() => handleVerTodas("sla_vencido")}
+          />
+          <KanbanColumn
+            title={t("tabs.concluida")}
+            dotClass="bg-green-500"
+            items={kanbanBuckets.concluida}
+            onCardClick={(impl) => setQuickViewId(impl.id)}
+            onVerTodas={() => handleVerTodas("concluida")}
+          />
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -461,28 +936,25 @@ export default function Implantacoes() {
                   return (
                     <tr
                       key={impl.id}
-                      onClick={() => navigate(`/admin/implantacoes/${impl.id}`)}
+                      onClick={() => setQuickViewId(impl.id)}
                       className={`cursor-pointer group transition-colors ${
                         isAtrasada ? "bg-red-50/50 hover:bg-red-50/80" :
                         isCritico  ? "bg-amber-50/40 hover:bg-amber-50/70" :
                         "hover:bg-orange-50/40"
                       }`}
                     >
-                      {/* Urgency stripe — always visible, colored by SLA level */}
                       <td className={`p-0 ${stripeColor}`} style={{ width: "4px", minWidth: "4px" }}></td>
 
-                      {/* Cliente — código + nome + cnpj + tags */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-1.5 mb-1">
                           <span className="font-mono text-[10px] font-semibold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded whitespace-nowrap">
                             {impl.codigo}
                           </span>
-                          {impl.prioridade !== "normal" && (
-                            <PrioridadePill prioridade={impl.prioridade} />
-                          )}
+                          {impl.prioridade !== "normal" && <PrioridadePill prioridade={impl.prioridade} />}
                         </div>
                         <p className="font-semibold text-gray-900 leading-tight">{impl.cliente_nome}</p>
                         <p className="text-xs font-mono text-gray-400 mt-0.5">{impl.cliente_cnpj}</p>
+                        <LocationRegimeTags cidade={impl.cliente_cidade} estado={impl.cliente_estado} regimeCode={impl.cliente_regime_tributario} t={t} />
                         <div className="flex flex-wrap gap-1.5 mt-1.5">
                           {isAtrasada && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500 text-white">
@@ -514,17 +986,12 @@ export default function Implantacoes() {
                         </div>
                       </td>
 
-                      {/* Status */}
-                      <td className="px-6 py-4">
-                        <Badge status={impl.status} />
-                      </td>
+                      <td className="px-6 py-4"><Badge status={impl.status} /></td>
 
-                      {/* Progresso */}
                       <td className="px-6 py-4 min-w-[150px]">
                         <ProgressBar value={impl.progresso} status={impl.status} />
                       </td>
 
-                      {/* Responsável */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         {impl.responsavel_nome ? (
                           <div className="flex items-center gap-2">
@@ -536,7 +1003,6 @@ export default function Implantacoes() {
                         )}
                       </td>
 
-                      {/* SLA */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         {sla ? (
                           sla.level === "done" ? (
@@ -552,7 +1018,6 @@ export default function Implantacoes() {
                         ) : <span className="text-gray-300">—</span>}
                       </td>
 
-                      {/* Chevron */}
                       <td className="px-3 py-4">
                         <svg className="w-4 h-4 text-gray-200 group-hover:text-orange-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -564,7 +1029,18 @@ export default function Implantacoes() {
               </tbody>
             </table>
           </div>
-        )}
+        </div>
+      )}
+
+      </div>
+
+      {quickViewId && (
+        <QuickViewPanel
+          implId={quickViewId}
+          onClose={() => setQuickViewId(null)}
+          onNavigate={(id) => navigate(`/admin/implantacoes/${id}`)}
+        />
+      )}
       </div>
     </Layout>
   );

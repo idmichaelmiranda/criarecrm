@@ -4,6 +4,11 @@
     "alta": "Alta",
     "critica": "Crítica"
   },
+  "regime": {
+    "simples": "Simples Nacional",
+    "presumido": "Lucro Presumido",
+    "real": "Lucro Real"
+  },
   "slaRelativo": {
     "overdue": "Vencido {{count}}d",
     "dueToday": "Vence hoje",
@@ -26,8 +31,11 @@
     "tasksDesc": "As implantações com SLA mais crítico foram listadas primeiro. Abra cada uma para identificar quais tarefas estão atrasadas e atribuir responsáveis."
   },
   "tabs": {
+    "todas": "Todas",
     "emAndamento": "Em Andamento",
-    "todas": "Todas"
+    "conversao": "Com Conversão",
+    "slaVencido": "SLA Vencido",
+    "concluida": "Concluídas"
   },
   "statusSubfilters": {
     "all": "Todos os status",
@@ -49,11 +57,50 @@
     "normal": "Normal",
     "baixa": "Baixa"
   },
+  "card": {
+    "concludedOn": "Concluído em {{date}}"
+  },
+  "kanban": {
+    "empty": "Nenhuma implantação aqui.",
+    "verTodas": "Ver todas ({{count}})"
+  },
+  "quickView": {
+    "tabs": {
+      "geral": "Visão Geral",
+      "atividades": "Atividades",
+      "arquivos": "Arquivos",
+      "historico": "Histórico"
+    },
+    "overallProgress": "Progresso Geral",
+    "startedOn": "Iniciado em",
+    "expectedCompletion": "Previsão de conclusão",
+    "responsible": "Responsável",
+    "change": "Alterar",
+    "information": "Informações",
+    "sla": "SLA",
+    "days": "dias",
+    "priority": "Prioridade",
+    "company": "Empresa",
+    "recentActivity": "Atividades Recentes",
+    "noActivity": "Nenhuma atividade registrada ainda.",
+    "viewAllActivity": "Ver todas as atividades",
+    "viewFull": "Ver detalhes completos",
+    "actions": "Ações",
+    "edit": "Editar",
+    "comingSoon": "Em breve."
+  },
   "page": {
     "title": "Implantações",
+    "subtitleRealtime": "Acompanhe todas as implantações do sistema em tempo real.",
     "subtitleFiltered": "{{filtered}} de {{total}} implantações",
     "subtitleTotal_one": "{{count}} implantação",
     "subtitleTotal_other": "{{count}} implantações",
+    "advancedFilters": "Filtros avançados",
+    "priorityLabel": "Prioridade",
+    "novaImplantacao": "Nova Implantação",
+    "novaImplantacaoSoon": "Criação direta de implantação ainda não disponível — implantações nascem ao aprovar uma solicitação na Triagem.",
+    "viewList": "Ver como lista",
+    "viewKanban": "Ver como quadro",
     "kpi": {
       "inProgress": "Em Andamento",
       "slaOverdue": "SLA Vencido",
@@ -61,7 +108,8 @@
       "onSchedule": "tudo no prazo",
       "withConversion": "Com Conversão",
       "ofData": "de dados",
-      "completed": "Concluídas"
+      "completed": "Concluídas",
+      "pctOfTotal": "{{pct}}% do total"
     },
     "searchPlaceholder": "Buscar empresa, código...",
     "clearFilters": "Limpar ✕",

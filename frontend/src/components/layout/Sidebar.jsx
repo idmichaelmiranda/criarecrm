@@ -666,6 +666,30 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
         ${isMobile && !mobileOpen ? "-translate-x-full" : "translate-x-0"}`}
       style={{ width: isMobile ? "15rem" : (collapsed ? "4rem" : "15rem") }}
     >
+      {/* ── Logo no topo ── */}
+      <div className={`border-b border-white/5 shrink-0 ${collapsed ? "px-0 pt-3 pb-3 flex justify-center" : "px-4 pt-4 pb-3"}`}>
+        {collapsed ? (
+          <div className="w-9 h-9 rounded-xl overflow-hidden ring-1 ring-white/10 shadow-lg shrink-0">
+            <img src="/logo.jpg" alt={t("brand.logoAlt")} className="w-full h-full object-cover" />
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-xl overflow-hidden ring-1 ring-white/10 shrink-0 shadow-lg">
+              <img src="/logo.jpg" alt={t("brand.logoAlt")} className="w-full h-full object-cover" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-white font-bold text-[15px] leading-none tracking-tight">{t("brand.name")}</p>
+              <span className="inline-flex items-center mt-1.5 px-1.5 py-0.5 rounded-md bg-white/5 border border-white/8 text-[9px] font-semibold text-slate-400 uppercase tracking-widest leading-none">
+                {t("brand.tagline")}
+              </span>
+            </div>
+            <svg className="w-3.5 h-3.5 text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+            </svg>
+          </div>
+        )}
+      </div>
+
       {/* ── Cabeçalho: avatar + info + sino ── */}
       <div className={`border-b border-white/5 shrink-0 ${collapsed ? "px-0 pt-3 pb-3" : "px-4 pt-4 pb-3"}`}>
         {user && (
@@ -799,6 +823,33 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
         <NavGroup titleKey="administracao"  items={MENU.ADMINISTRACAO} badge={0}             pendenteBadge={pendentesCount} installsBadge={0}            hasPermission={hasPermission} collapsed={collapsed} />
       </nav>
 
+      {/* ── Atalhos rápidos ── */}
+      {!collapsed && hasPermission("implantacoes.view") && (
+        <div className="px-4 pt-3 pb-1 shrink-0">
+          <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest pb-2">{t("shortcuts.title")}</p>
+          <div className="space-y-0.5">
+            <button
+              onClick={() => navigate("/admin/implantacoes")}
+              className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all"
+            >
+              <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              {t("shortcuts.novaImplantacao")}
+            </button>
+            <button
+              onClick={() => navigate("/admin/implantacoes")}
+              className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all"
+            >
+              <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              {t("shortcuts.verTodas")}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Senha do dia ── */}
       {collapsed ? (
         <div className="flex justify-center pb-1 shrink-0">
@@ -851,14 +902,22 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
         </div>
       )}
 
-      {/* ── Brand footer ── */}
-      <div className={`border-t border-white/5 shrink-0 ${collapsed ? "px-0 py-3" : "px-4 py-4"}`}>
+      {/* ── Rodapé: config + sair ── */}
+      <div className={`border-t border-white/5 shrink-0 ${collapsed ? "px-0 py-3" : "px-4 py-3"}`}>
         {collapsed ? (
-          /* Modo colapsado: logo centralizado + sair */
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-9 h-9 rounded-xl overflow-hidden ring-1 ring-white/10 shadow-lg shrink-0">
-              <img src="/logo.jpg" alt={t("brand.logoAlt")} className="w-full h-full object-cover" />
-            </div>
+          <div className="flex flex-col items-center gap-2">
+            {hasPermission("configuracoes.view") && (
+              <button
+                onClick={() => navigate("/admin/configuracoes")}
+                title={t("settings")}
+                className="w-8 h-8 flex items-center justify-center rounded-md text-slate-600 hover:text-slate-300 hover:bg-white/8 transition-all"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
+            )}
             <button
               onClick={handleLogout}
               title={t("logout")}
@@ -870,35 +929,7 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
             </button>
           </div>
         ) : (
-          /* Modo expandido: layout original */
-          <>
-            <div className="flex items-center justify-between gap-2 mb-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl overflow-hidden ring-1 ring-white/10 shrink-0 shadow-lg">
-                  <img src="/logo.jpg" alt={t("brand.logoAlt")} className="w-full h-full object-cover" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-white font-bold text-[15px] leading-none tracking-tight">{t("brand.name")}</p>
-                  <span className="inline-flex items-center mt-1.5 px-1.5 py-0.5 rounded-md bg-white/5 border border-white/8 text-[9px] font-semibold text-slate-400 uppercase tracking-widest leading-none">
-                    {t("brand.tagline")}
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 shrink-0">
-                {hasPermission("configuracoes.view") && (
-                  <button
-                    onClick={() => navigate("/admin/configuracoes")}
-                    title={t("settings")}
-                    className="w-7 h-7 flex items-center justify-center rounded-md text-slate-600 hover:text-slate-300 hover:bg-white/8 transition-all shrink-0"
-                  >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-            </div>
+          <div className="flex items-center justify-between gap-2">
             <button
               onClick={handleLogout}
               className="flex items-center gap-2 text-xs text-slate-600 hover:text-slate-400 transition-colors py-1"
@@ -908,7 +939,19 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, isMob
               </svg>
               {t("logout")}
             </button>
-          </>
+            {hasPermission("configuracoes.view") && (
+              <button
+                onClick={() => navigate("/admin/configuracoes")}
+                title={t("settings")}
+                className="w-7 h-7 flex items-center justify-center rounded-md text-slate-600 hover:text-slate-300 hover:bg-white/8 transition-all shrink-0"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
+            )}
+          </div>
         )}
       </div>
 

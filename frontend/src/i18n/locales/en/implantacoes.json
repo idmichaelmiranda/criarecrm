@@ -4,6 +4,11 @@
     "alta": "High",
     "critica": "Critical"
   },
+  "regime": {
+    "simples": "Simples Nacional",
+    "presumido": "Presumed Profit",
+    "real": "Actual Profit"
+  },
   "slaRelativo": {
     "overdue": "Overdue {{count}}d",
     "dueToday": "Due today",
@@ -26,8 +31,11 @@
     "tasksDesc": "Implementations with the most critical SLA were listed first. Open each one to identify which tasks are overdue and assign owners."
   },
   "tabs": {
+    "todas": "All",
     "emAndamento": "In Progress",
-    "todas": "All"
+    "conversao": "With Conversion",
+    "slaVencido": "SLA Overdue",
+    "concluida": "Completed"
   },
   "statusSubfilters": {
     "all": "All statuses",
@@ -49,11 +57,50 @@
     "normal": "Normal",
     "baixa": "Low"
   },
+  "card": {
+    "concludedOn": "Completed on {{date}}"
+  },
+  "kanban": {
+    "empty": "No implementations here.",
+    "verTodas": "View all ({{count}})"
+  },
+  "quickView": {
+    "tabs": {
+      "geral": "Overview",
+      "atividades": "Activity",
+      "arquivos": "Files",
+      "historico": "History"
+    },
+    "overallProgress": "Overall Progress",
+    "startedOn": "Started on",
+    "expectedCompletion": "Expected completion",
+    "responsible": "Owner",
+    "change": "Change",
+    "information": "Information",
+    "sla": "SLA",
+    "days": "days",
+    "priority": "Priority",
+    "company": "Company",
+    "recentActivity": "Recent Activity",
+    "noActivity": "No activity recorded yet.",
+    "viewAllActivity": "View all activity",
+    "viewFull": "View full details",
+    "actions": "Actions",
+    "edit": "Edit",
+    "comingSoon": "Coming soon."
+  },
   "page": {
     "title": "Implementations",
+    "subtitleRealtime": "Track every implementation in the system in real time.",
     "subtitleFiltered": "{{filtered}} of {{total}} implementations",
     "subtitleTotal_one": "{{count}} implementation",
     "subtitleTotal_other": "{{count}} implementations",
+    "advancedFilters": "Advanced filters",
+    "priorityLabel": "Priority",
+    "novaImplantacao": "New Implementation",
+    "novaImplantacaoSoon": "Creating an implementation directly isn't available yet — implementations are created when a request is approved in Triage.",
+    "viewList": "View as list",
+    "viewKanban": "View as board",
     "kpi": {
       "inProgress": "In Progress",
       "slaOverdue": "SLA Overdue",
@@ -61,7 +108,8 @@
       "onSchedule": "all on schedule",
       "withConversion": "With Conversion",
       "ofData": "of data",
-      "completed": "Completed"
+      "completed": "Completed",
+      "pctOfTotal": "{{pct}}% of total"
     },
     "searchPlaceholder": "Search company, code...",
     "clearFilters": "Clear ✕",
