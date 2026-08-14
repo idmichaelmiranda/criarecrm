@@ -72,8 +72,8 @@
       "historico": "Historial"
     },
     "overallProgress": "Progreso General",
-    "pendingCount_one": "{{count}} pendiente",
-    "pendingCount_other": "{{count}} pendientes",
+    "pendingCount_one": "{{count}} tarea pendiente",
+    "pendingCount_other": "{{count}} tareas pendientes",
     "startedOn": "Iniciada el",
     "expectedCompletion": "Finalización prevista",
     "responsible": "Responsable",
