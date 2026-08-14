@@ -135,6 +135,7 @@ def get_by_id(db: Session, impl_id: int) -> Implantacao:
         .options(
             selectinload(Implantacao.cliente),
             selectinload(Implantacao.responsavel),
+            selectinload(Implantacao.solicitacao),
             selectinload(Implantacao.etapas).selectinload(ImplantacaoEtapa.itens).selectinload(ChecklistItem.template_tarefa),
             selectinload(Implantacao.etapas).selectinload(ImplantacaoEtapa.itens).selectinload(ChecklistItem.subitens),
             selectinload(Implantacao.checklist),

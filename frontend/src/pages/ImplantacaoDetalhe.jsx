@@ -3,11 +3,24 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Layout } from "../components/layout/Layout";
 import { Badge, PrioridadeBadge } from "../components/ui/Badge";
-import { implantacoesApi, clientesApi, usuariosApi, templatesApi } from "../services/api";
+import { implantacoesApi, clientesApi, usuariosApi, templatesApi, instalacaosApi } from "../services/api";
 import { fmtDate, fmtDateTime } from "../utils/dateUtils";
 import i18n from "../i18n";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+function toTitleCase(str) {
+  if (!str) return str;
+  return str.toLowerCase().replace(/(^|[\s/-])\S/g, (c) => c.toUpperCase());
+}
+
+function hexToRgba(hex, alpha) {
+  const c = hex && hex.startsWith("#") && hex.length >= 7 ? hex : "#6366f1";
+  const r = parseInt(c.slice(1, 3), 16);
+  const g = parseInt(c.slice(3, 5), 16);
+  const b = parseInt(c.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
 
 /**
  * Builds parent_id → [sub_items] index from the flat checklist.
@@ -1844,7 +1857,12 @@ export default function ImplantacaoDetalhe() {
   const [somentePendentes, setSomentePendentes] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showAddEtapa, setShowAddEtapa] = useState(false);
+  const [catalogo, setCatalogo] = useState([]);
   const columnRefs = useRef({});
+
+  useEffect(() => {
+    instalacaosApi.tipos().then(({ data }) => setCatalogo(data)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!isExpanded) return;
@@ -2083,6 +2101,45 @@ export default function ImplantacaoDetalhe() {
             onAddEtapa={() => { setActiveTab("checklist"); setShowAddEtapa(true); }}
             onRenameEtapa={handleRenameEtapa}
           />
+        )}
+
+        {/* Produtos contratados (comercial) — somente leitura; edição fica na Triagem */}
+        {(impl.produtos_contratados?.length > 0 || impl.observacao_comercial) && (
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-gray-500">{t("page.contractedProductsTitle")}</span>
+              {impl.solicitacao_id && (
+                <button
+                  onClick={() => navigate(`/admin/triagem/${impl.solicitacao_id}`)}
+                  className="text-xs font-semibold text-orange-600 hover:text-orange-700"
+                >
+                  {t("page.viewSolicitacao")}
+                </button>
+              )}
+            </div>
+            <div className="space-y-2">
+              {impl.produtos_contratados?.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {impl.produtos_contratados.map((p, i) => {
+                    const hex = catalogo.find((c) => c.tipo === p.tipo)?.cor || "#6366f1";
+                    return (
+                      <span
+                        key={i}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border"
+                        style={{ backgroundColor: hexToRgba(hex, 0.08), color: hex, borderColor: hexToRgba(hex, 0.3) }}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: hex }} />
+                        <span className="font-semibold">{p.quantidade}×</span> {toTitleCase(p.nome)}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+              {impl.observacao_comercial && (
+                <p className="text-xs text-gray-600 italic leading-relaxed">"{impl.observacao_comercial}"</p>
+              )}
+            </div>
+          </div>
         )}
       </div>
 

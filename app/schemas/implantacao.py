@@ -1,6 +1,7 @@
 from datetime import datetime, date
 from typing import Literal
 from pydantic import BaseModel
+from app.schemas.solicitacao import ProdutoContratadoItem
 
 StatusImplantacaoType = Literal["em_andamento", "pausada", "concluida", "cancelada"]
 StatusEtapaType = Literal["pendente", "em_andamento", "concluida", "bloqueada", "pulada"]
@@ -195,6 +196,10 @@ class ImplantacaoFullResponse(BaseModel):
 
     cliente_id: int
     solicitacao_id: int | None
+    # Produtos contratados pelo comercial na Solicitação de origem — somente leitura
+    # aqui; edição continua exclusiva da Triagem.
+    produtos_contratados: list[ProdutoContratadoItem] = []
+    observacao_comercial: str | None = None
     etapas: list[EtapaResponse] = []
     checklist: list[ChecklistItemFlatResponse] = []
     timeline: list[TimelineResponse] = []

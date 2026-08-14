@@ -175,6 +175,8 @@
     "startLabel": "Inicio: {{date}}",
     "edit": "Editar",
     "overallProgress": "Progreso general",
+    "contractedProductsTitle": "Productos Contratados",
+    "viewSolicitacao": "Ver solicitud original →",
     "pendingCount_one": "{{count}} pendiente",
     "pendingCount_other": "{{count}} pendientes",
     "newEtapa": "Nueva Etapa",

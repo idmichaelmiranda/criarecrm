@@ -25,6 +25,9 @@ def _build_full_response(impl: Implantacao) -> ImplantacaoFullResponse:
     resp.responsavel_nome = impl.responsavel.nome if impl.responsavel else None
     if impl.responsavel and impl.responsavel.avatar_path:
         resp.responsavel_avatar_url = storage.avatar_url(impl.responsavel.avatar_path)
+    if impl.solicitacao:
+        resp.produtos_contratados = impl.solicitacao.produtos_contratados or []
+        resp.observacao_comercial = impl.solicitacao.observacao_comercial
     return resp
 
 

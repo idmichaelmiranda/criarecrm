@@ -46,6 +46,7 @@ class Implantacao(Base):
 
     cliente: Mapped["Cliente"] = relationship("Cliente", back_populates="implantacoes")
     responsavel: Mapped["Usuario | None"] = relationship("Usuario", foreign_keys="[Implantacao.responsavel_id]")
+    solicitacao: Mapped["Solicitacao | None"] = relationship("Solicitacao", foreign_keys="[Implantacao.solicitacao_id]")
     etapas: Mapped[list["ImplantacaoEtapa"]] = relationship(
         "ImplantacaoEtapa", back_populates="implantacao",
         order_by="ImplantacaoEtapa.ordem", cascade="all, delete-orphan"
