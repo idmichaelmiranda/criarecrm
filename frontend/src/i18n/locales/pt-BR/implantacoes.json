@@ -97,8 +97,6 @@
     "subtitleTotal_other": "{{count}} implantações",
     "advancedFilters": "Filtros avançados",
     "priorityLabel": "Prioridade",
-    "novaImplantacao": "Nova Implantação",
-    "novaImplantacaoSoon": "Criação direta de implantação ainda não disponível — implantações nascem ao aprovar uma solicitação na Triagem.",
     "viewList": "Ver como lista",
     "viewKanban": "Ver como quadro",
     "kpi": {

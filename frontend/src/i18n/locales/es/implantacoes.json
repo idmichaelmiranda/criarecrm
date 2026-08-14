@@ -97,8 +97,6 @@
     "subtitleTotal_other": "{{count}} implementaciones",
     "advancedFilters": "Filtros avanzados",
     "priorityLabel": "Prioridad",
-    "novaImplantacao": "Nueva Implementación",
-    "novaImplantacaoSoon": "Crear una implementación directamente aún no está disponible — las implementaciones se crean al aprobar una solicitud en Triaje.",
     "viewList": "Ver como lista",
     "viewKanban": "Ver como tablero",
     "kpi": {

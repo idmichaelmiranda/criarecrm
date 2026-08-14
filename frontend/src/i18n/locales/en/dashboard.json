@@ -4,8 +4,7 @@
     "subtitleLoading": "Loading operational data…",
     "subtitleLoaded": "Operations Center · {{refresh}}",
     "refreshing": "Refreshing",
-    "refresh": "Refresh",
-    "newTriage": "New Triage"
+    "refresh": "Refresh"
   },
   "time": {
     "now": "just now",

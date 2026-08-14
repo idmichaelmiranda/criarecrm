@@ -329,11 +329,18 @@ function CircularProgress({ value }) {
   const offset = c - (value / 100) * c;
   return (
     <div className="relative w-24 h-24 shrink-0">
-      <svg width="96" height="96" viewBox="0 0 96 96" className="-rotate-90">
+      {/* w-full/h-full (não width/height fixos em px) — o SVG precisa herdar o
+          tamanho real do container em vez de ter seu próprio tamanho fixo em
+          pixels, senão ele e a div de texto sobreposta (dimensionada em rem
+          pelo Tailwind) podem não coincidir exatamente, descentralizando o
+          número em relação ao anel. Rotação via atributo SVG (não classe CSS)
+          gira com precisão em torno do centro real do círculo (48,48). */}
+      <svg viewBox="0 0 96 96" className="w-full h-full">
         <circle cx="48" cy="48" r={r} fill="none" stroke="#f3f4f6" strokeWidth="8" />
         <circle
           cx="48" cy="48" r={r} fill="none" stroke={value >= 100 ? "#22c55e" : "#f97316"} strokeWidth="8"
           strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round"
+          transform="rotate(-90 48 48)"
           style={{ transition: "stroke-dashoffset 400ms ease" }}
         />
       </svg>
@@ -741,15 +748,6 @@ export default function Implantacoes() {
               />
             )}
           </div>
-          <button
-            onClick={() => alert(t("page.novaImplantacaoSoon"))}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-sm"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-            {t("page.novaImplantacao")}
-          </button>
         </div>
       </div>
 

@@ -4,8 +4,7 @@
     "subtitleLoading": "Carregando dados operacionais…",
     "subtitleLoaded": "Central Operacional · {{refresh}}",
     "refreshing": "Atualizando",
-    "refresh": "Atualizar",
-    "newTriage": "Nova Triagem"
+    "refresh": "Atualizar"
   },
   "time": {
     "now": "agora",

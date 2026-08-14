@@ -959,16 +959,6 @@ export default function Dashboard() {
             </svg>
             {t("header.refresh")}
           </button>
-          <Link
-            to="/admin/triagem"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all hover:opacity-90"
-            style={{ background: "linear-gradient(135deg, #F56316, #d94f0d)" }}
-          >
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-            {t("header.newTriage")}
-          </Link>
         </div>
       </div>
 

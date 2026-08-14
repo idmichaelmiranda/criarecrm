@@ -63,11 +63,6 @@
     "tagline": "Implantações",
     "logoAlt": "CriareTI"
   },
-  "shortcuts": {
-    "title": "Atalhos rápidos",
-    "novaImplantacao": "Nova Implantação",
-    "verTodas": "Ver todas implantações"
-  },
   "settings": "Configurações",
   "logout": "Sair",
   "openMenu": "Abrir menu",

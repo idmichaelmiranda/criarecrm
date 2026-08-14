@@ -63,11 +63,6 @@
     "tagline": "Implementations",
     "logoAlt": "CriareTI"
   },
-  "shortcuts": {
-    "title": "Quick shortcuts",
-    "novaImplantacao": "New Implementation",
-    "verTodas": "View all implementations"
-  },
   "settings": "Settings",
   "logout": "Log out",
   "openMenu": "Open menu",
