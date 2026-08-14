@@ -72,6 +72,8 @@
       "historico": "History"
     },
     "overallProgress": "Overall Progress",
+    "pendingCount_one": "{{count}} pending",
+    "pendingCount_other": "{{count}} pending",
     "startedOn": "Started on",
     "expectedCompletion": "Expected completion",
     "responsible": "Owner",

@@ -14,6 +14,36 @@ function toTitleCase(str) {
   return str.toLowerCase().replace(/(^|[\s/-])\S/g, (c) => c.toUpperCase());
 }
 
+// Contagem de progresso por item-folha — portado de ImplantacaoDetalhe.jsx pra
+// bater exatamente com o número mostrado na tela completa da mesma implantação
+// (tarefa com subitens conta os subitens, não a tarefa-pai, senão conta dobrado).
+function buildSubsIndex(checklist) {
+  const idx = {};
+  for (const item of checklist || []) {
+    if (item.parent_id) {
+      (idx[item.parent_id] = idx[item.parent_id] || []).push(item);
+    }
+  }
+  return idx;
+}
+
+function leafProgress(rootItems, subsIndex) {
+  let total = 0, done = 0;
+  for (const item of rootItems || []) {
+    if (item.arquivado) continue;
+    const subs = (subsIndex && subsIndex[item.id]) || item.subitens || [];
+    const activeSubs = subs.filter((s) => !s.arquivado && s.status !== "nao_aplicavel");
+    if (activeSubs.length > 0) {
+      total += activeSubs.length;
+      done  += activeSubs.filter((s) => s.status === "concluido").length;
+    } else if (item.status !== "nao_aplicavel") {
+      total += 1;
+      if (item.status === "concluido") done += 1;
+    }
+  }
+  return { total, done };
+}
+
 function slaRelativo(impl) {
   if (impl.status === "concluida" || impl.status === "cancelada") {
     return { label: fmtDate(impl.sla_limite), level: "done" };
@@ -374,6 +404,18 @@ function QuickViewPanel({ implId, onClose, onNavigate }) {
       .finally(() => setLoading(false));
   }, [implId]);
 
+  // Mesmo cálculo por item-folha da tela completa, pra "N pendentes" e a
+  // porcentagem sempre baterem com o que aparece em ImplantacaoDetalhe.jsx.
+  const subsIndex = impl ? buildSubsIndex(impl.checklist) : {};
+  const { total: lpTotal, done: lpDone } = impl
+    ? impl.etapas.reduce((acc, e) => {
+        const r = leafProgress(e.itens, subsIndex);
+        return { total: acc.total + r.total, done: acc.done + r.done };
+      }, { total: 0, done: 0 })
+    : { total: 0, done: 0 };
+  const liveProgress = lpTotal > 0 ? Math.round((lpDone / lpTotal) * 100) : 0;
+  const pendingItems = lpTotal - lpDone;
+
   return (
       // Painel docado ao lado do conteúdo (não sobrepõe nada) — sticky pra
       // acompanhar o scroll, só na faixa abaixo do cabeçalho/KPIs, com scroll
@@ -425,9 +467,14 @@ function QuickViewPanel({ implId, onClose, onNavigate }) {
               {tab === "geral" && (
                 <>
                   <div>
-                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-3">{t("quickView.overallProgress")}</p>
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">{t("quickView.overallProgress")}</p>
+                      {pendingItems > 0 && (
+                        <span className="text-[10px] text-gray-400">{t("quickView.pendingCount", { count: pendingItems })}</span>
+                      )}
+                    </div>
                     <div className="flex items-center gap-4">
-                      <CircularProgress value={impl.progresso} />
+                      <CircularProgress value={liveProgress} />
                       <div className="text-xs text-gray-500 space-y-1.5">
                         <p><span className="text-gray-400">{t("quickView.startedOn")}</span> {fmtDate(impl.data_inicio) || "—"}</p>
                         <p>
@@ -436,7 +483,7 @@ function QuickViewPanel({ implId, onClose, onNavigate }) {
                       </div>
                     </div>
                     <div className="mt-3">
-                      <ProgressBar value={impl.progresso} status={impl.status} />
+                      <ProgressBar value={liveProgress} status={impl.status} />
                     </div>
                   </div>
 
