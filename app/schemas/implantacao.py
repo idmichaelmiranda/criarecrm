@@ -31,6 +31,15 @@ class ChecklistItemResponse(BaseModel):
 ChecklistItemResponse.model_rebuild()
 
 
+class ChecklistItemUpdateResponse(BaseModel):
+    """Resposta do PATCH de checklist — o item em si, mais um sinal opcional de
+    que essa atualização específica deixou a implantação pronta pra concluir
+    (todas as etapas terminadas). Não conclui sozinha: o frontend usa esse sinal
+    pra perguntar confirmação antes de marcar como concluída de fato."""
+    item: ChecklistItemResponse
+    implantacao_pronta_para_concluir: bool = False
+
+
 class ChecklistItemCreate(BaseModel):
     titulo: str
     etapa_id: int | None = None

@@ -129,6 +129,12 @@
     "selectPlaceholder": "Selecciona un usuario…",
     "confirm": "Confirmar"
   },
+  "concluirModal": {
+    "title": "Todas las tareas completadas",
+    "description": "¿Deseas concluir la implementación ahora?",
+    "yes": "Sí, concluir",
+    "no": "No"
+  },
   "editPanel": {
     "title": "Editar Implementación",
     "statusLabel": "Estado",

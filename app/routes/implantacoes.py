@@ -11,6 +11,7 @@ from app.models.implantacao import Implantacao
 from app.schemas.implantacao import (
     ImplantacaoListResponse, ImplantacaoFullResponse, ImplantacaoUpdate,
     ChecklistItemResponse, ChecklistItemUpdate, ChecklistItemCreate, ChecklistReorder,
+    ChecklistItemUpdateResponse,
     EtapaResponse, EtapaManualUpdate, EtapaCreate, EtapaPropsUpdate, EtapaReorder,
     ComentarioCreate, ComentarioResponse,
 )
@@ -151,9 +152,13 @@ def criar_item(impl_id: int, data: ChecklistItemCreate, db: Session = Depends(ge
     return implantacao_service.criar_checklist_item(db, impl_id, data, usuario=current_user.nome)
 
 
-@router.patch("/checklist/{item_id}", response_model=ChecklistItemResponse)
+@router.patch("/checklist/{item_id}", response_model=ChecklistItemUpdateResponse)
 def atualizar_item(item_id: int, data: ChecklistItemUpdate, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
-    return implantacao_service.atualizar_checklist_item(db, item_id, data, usuario=current_user.nome, usuario_id=current_user.id)
+    item, pronta = implantacao_service.atualizar_checklist_item(db, item_id, data, usuario=current_user.nome, usuario_id=current_user.id)
+    return ChecklistItemUpdateResponse(
+        item=ChecklistItemResponse.model_validate(item),
+        implantacao_pronta_para_concluir=pronta,
+    )
 
 
 @router.delete("/checklist/{item_id}", status_code=204)

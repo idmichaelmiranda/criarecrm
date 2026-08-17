@@ -385,7 +385,7 @@ function EditEtapaModal({ etapa, implId, onClose, onSaved }) {
 
 // ── Sub-item Row ──────────────────────────────────────────────────────────────
 
-function SubItemRow({ sub, implId, onRefresh, onOptimisticToggle }) {
+function SubItemRow({ sub, implId, onRefresh, onOptimisticToggle, onReadyToConclude }) {
   const { t } = useTranslation("implantacaoDetalhe");
   const [toggling, setToggling]         = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
@@ -403,8 +403,9 @@ function SubItemRow({ sub, implId, onRefresh, onOptimisticToggle }) {
     onOptimisticToggle?.(sub.id, newStatus);
     setToggling(true);
     try {
-      await implantacoesApi.atualizarChecklist(sub.id, { status: newStatus });
+      const { data } = await implantacoesApi.atualizarChecklist(sub.id, { status: newStatus });
       setOverrideDone(null);
+      if (data?.implantacao_pronta_para_concluir) onReadyToConclude?.();
     } catch {
       setOverrideDone(null);
       onOptimisticToggle?.(sub.id, sub.status);
@@ -488,7 +489,7 @@ function SubItemRow({ sub, implId, onRefresh, onOptimisticToggle }) {
 
 // ── Kanban Card ───────────────────────────────────────────────────────────────
 
-function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticToggle, isDragged, onDragStart, onDragEnd, onMoveUp, onMoveDown }) {
+function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticToggle, onReadyToConclude, isDragged, onDragStart, onDragEnd, onMoveUp, onMoveDown }) {
   const { t } = useTranslation("implantacaoDetalhe");
   const [hovered, setHovered]         = useState(false);
   const [showNote, setShowNote]       = useState(false);
@@ -556,8 +557,9 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
     onOptimisticToggle?.(item.id, newStatus);
     setToggling(true);
     try {
-      await implantacoesApi.atualizarChecklist(item.id, { status: newStatus });
+      const { data } = await implantacoesApi.atualizarChecklist(item.id, { status: newStatus });
       setOverrideStatus(null);
+      if (data?.implantacao_pronta_para_concluir) onReadyToConclude?.();
     } catch {
       setOverrideStatus(null);
       onOptimisticToggle?.(item.id, item.status);
@@ -570,8 +572,9 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
     setOverrideStatus(newStatus);
     onOptimisticToggle?.(item.id, newStatus);
     try {
-      await implantacoesApi.atualizarChecklist(item.id, { status: newStatus });
+      const { data } = await implantacoesApi.atualizarChecklist(item.id, { status: newStatus });
       setOverrideStatus(null);
+      if (data?.implantacao_pronta_para_concluir) onReadyToConclude?.();
     } catch {
       setOverrideStatus(null);
       onOptimisticToggle?.(item.id, item.status);
@@ -899,7 +902,7 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
         <div className="px-3 pb-3 pt-0 border-t border-gray-100">
           <div className="pt-2 space-y-0.5">
             {subitens.map((sub) => (
-              <SubItemRow key={sub.id} sub={sub} implId={implId} onRefresh={onRefresh} onOptimisticToggle={onOptimisticToggle} />
+              <SubItemRow key={sub.id} sub={sub} implId={implId} onRefresh={onRefresh} onOptimisticToggle={onOptimisticToggle} onReadyToConclude={onReadyToConclude} />
             ))}
             {archivedSubs.length > 0 && (
               <div className="pt-0.5">
@@ -911,7 +914,7 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
                   {t("kanbanCard.archivedSubItems", { count: archivedSubs.length })}
                 </button>
                 {showArchivedSubs && archivedSubs.map((sub) => (
-                  <SubItemRow key={sub.id} sub={sub} implId={implId} onRefresh={onRefresh} onOptimisticToggle={onOptimisticToggle} />
+                  <SubItemRow key={sub.id} sub={sub} implId={implId} onRefresh={onRefresh} onOptimisticToggle={onOptimisticToggle} onReadyToConclude={onReadyToConclude} />
                 ))}
               </div>
             )}
@@ -979,7 +982,7 @@ function KanbanCard({ item, implId, etapaId, usuarios, onRefresh, onOptimisticTo
 
 // ── Kanban Column ─────────────────────────────────────────────────────────────
 
-function KanbanColumn({ etapa, subsIndex, implId, somentePendentes, filterText, filterResp, filterStatus, columnRef, onRefresh, onOptimisticToggle, isExpanded, dragItem, onDragStart, onDragEnd, onMoveItem, usuarios, isFirst, isLast, onMoveLeft, onMoveRight, onDelete }) {
+function KanbanColumn({ etapa, subsIndex, implId, somentePendentes, filterText, filterResp, filterStatus, columnRef, onRefresh, onOptimisticToggle, onReadyToConclude, isExpanded, dragItem, onDragStart, onDragEnd, onMoveItem, usuarios, isFirst, isLast, onMoveLeft, onMoveRight, onDelete }) {
   const { t } = useTranslation("implantacaoDetalhe");
   const [showAdd, setShowAdd]             = useState(false);
   const [newTitle, setNewTitle]           = useState("");
@@ -1170,6 +1173,7 @@ function KanbanColumn({ etapa, subsIndex, implId, somentePendentes, filterText, 
             usuarios={usuarios}
             onRefresh={onRefresh}
             onOptimisticToggle={onOptimisticToggle}
+            onReadyToConclude={onReadyToConclude}
             isDragged={dragItem?.id === item.id}
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
@@ -1214,6 +1218,7 @@ function KanbanColumn({ etapa, subsIndex, implId, somentePendentes, filterText, 
                     usuarios={usuarios}
                     onRefresh={onRefresh}
                     onOptimisticToggle={onOptimisticToggle}
+                    onReadyToConclude={onReadyToConclude}
                     isDragged={false}
                     onDragStart={onDragStart}
                     onDragEnd={onDragEnd}
@@ -1295,7 +1300,7 @@ function IconCompress() {
 
 // ── Kanban Tab ────────────────────────────────────────────────────────────────
 
-function KanbanTab({ etapas, subsIndex, implId, somentePendentes, columnRefs, onRefresh, onOptimisticToggle, isExpanded, showAddEtapa: propShowAdd, onSetShowAddEtapa }) {
+function KanbanTab({ etapas, subsIndex, implId, somentePendentes, columnRefs, onRefresh, onOptimisticToggle, onReadyToConclude, isExpanded, showAddEtapa: propShowAdd, onSetShowAddEtapa }) {
   const { t } = useTranslation("implantacaoDetalhe");
   const [filterText, setFilterText]     = useState("");
   const [filterResp, setFilterResp]     = useState("");
@@ -1417,6 +1422,7 @@ function KanbanTab({ etapas, subsIndex, implId, somentePendentes, columnRefs, on
             columnRef={(el) => { if (el) columnRefs.current[etapa.id] = el; }}
             onRefresh={onRefresh}
             onOptimisticToggle={onOptimisticToggle}
+            onReadyToConclude={onReadyToConclude}
             isExpanded={isExpanded}
             dragItem={dragItem}
             onDragStart={setDragItem}
@@ -1663,6 +1669,47 @@ function ResponsavelAvatar({ nome, avatarUrl }) {
 
 // ── Responsável Modal ────────────────────────────────────────────────────────
 
+function ConcluirImplantacaoModal({ onClose, onConfirm }) {
+  const { t } = useTranslation("implantacaoDetalhe");
+  const [confirming, setConfirming] = useState(false);
+
+  async function handleConfirm() {
+    setConfirming(true);
+    await onConfirm();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+        <div className="px-6 pt-6 pb-2 flex flex-col items-center text-center">
+          <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-3">
+            <span className="text-2xl text-green-600">✓</span>
+          </div>
+          <h3 className="font-semibold text-gray-900">{t("concluirModal.title")}</h3>
+          <p className="text-sm text-gray-500 mt-1.5">{t("concluirModal.description")}</p>
+        </div>
+        <div className="flex gap-3 px-6 pt-4 pb-6">
+          <button
+            onClick={onClose}
+            disabled={confirming}
+            className="flex-1 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+          >
+            {t("concluirModal.no")}
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={confirming}
+            className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 transition-colors"
+          >
+            {confirming ? t("common.saving") : t("concluirModal.yes")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 function ResponsavelModal({ implId, currentResponsavelId, onClose, onSaved }) {
   const { t } = useTranslation("implantacaoDetalhe");
   const [usuarios, setUsuarios] = useState([]);
@@ -1858,6 +1905,7 @@ export default function ImplantacaoDetalhe() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showAddEtapa, setShowAddEtapa] = useState(false);
   const [catalogo, setCatalogo] = useState([]);
+  const [showConcluirConfirm, setShowConcluirConfirm] = useState(false);
   const columnRefs = useRef({});
 
   useEffect(() => {
@@ -1946,6 +1994,18 @@ export default function ImplantacaoDetalhe() {
         }),
       })),
     }));
+  }
+
+  function handleReadyToConclude() {
+    setShowConcluirConfirm(true);
+  }
+
+  async function handleConfirmConcluir() {
+    setShowConcluirConfirm(false);
+    try {
+      await implantacoesApi.atualizar(impl.id, { status: "concluida" });
+      load();
+    } catch { }
   }
 
   const slaColor =
@@ -2213,6 +2273,7 @@ export default function ImplantacaoDetalhe() {
               columnRefs={columnRefs}
               onRefresh={load}
               onOptimisticToggle={handleOptimisticToggle}
+              onReadyToConclude={handleReadyToConclude}
               showAddEtapa={showAddEtapa}
               onSetShowAddEtapa={setShowAddEtapa}
             />
@@ -2301,6 +2362,7 @@ export default function ImplantacaoDetalhe() {
               columnRefs={columnRefs}
               onRefresh={load}
               onOptimisticToggle={handleOptimisticToggle}
+              onReadyToConclude={handleReadyToConclude}
               isExpanded={true}
               showAddEtapa={showAddEtapa}
               onSetShowAddEtapa={setShowAddEtapa}
@@ -2323,6 +2385,13 @@ export default function ImplantacaoDetalhe() {
           currentResponsavelId={impl.responsavel_id}
           onClose={() => setShowResponsavelModal(false)}
           onSaved={() => { setShowResponsavelModal(false); load(); }}
+        />
+      )}
+
+      {showConcluirConfirm && (
+        <ConcluirImplantacaoModal
+          onClose={() => setShowConcluirConfirm(false)}
+          onConfirm={handleConfirmConcluir}
         />
       )}
     </Layout>

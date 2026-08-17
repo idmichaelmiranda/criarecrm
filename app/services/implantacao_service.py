@@ -190,7 +190,7 @@ def atualizar(db: Session, impl_id: int, data: ImplantacaoUpdate, usuario: str =
     return impl
 
 
-def atualizar_checklist_item(db: Session, item_id: int, data: ChecklistItemUpdate, usuario: str = "Sistema", usuario_id: int | None = None) -> ChecklistItem:
+def atualizar_checklist_item(db: Session, item_id: int, data: ChecklistItemUpdate, usuario: str = "Sistema", usuario_id: int | None = None) -> tuple[ChecklistItem, bool]:
     item = db.get(ChecklistItem, item_id)
     if not item:
         raise HTTPException(404, "Item não encontrado")
@@ -252,11 +252,11 @@ def atualizar_checklist_item(db: Session, item_id: int, data: ChecklistItemUpdat
         item.etapa_id = update_fields["etapa_id"]
 
     _recalcular_progresso(db, item.implantacao_id)
-    _sincronizar_etapas(db, item.implantacao_id, usuario=usuario, usuario_id=usuario_id)
+    pronta_para_concluir = _sincronizar_etapas(db, item.implantacao_id, usuario=usuario, usuario_id=usuario_id)
 
     db.commit()
     db.refresh(item)
-    return item
+    return item, pronta_para_concluir
 
 
 def criar_checklist_item(db: Session, implantacao_id: int, data: ChecklistItemCreate, usuario: str = "Sistema") -> ChecklistItem:
@@ -534,7 +534,7 @@ def _recalcular_progresso(db: Session, implantacao_id: int) -> None:
         impl.updated_at = datetime.now()
 
 
-def _sincronizar_etapas(db: Session, implantacao_id: int, usuario: str = "Sistema", usuario_id: int | None = None) -> None:
+def _sincronizar_etapas(db: Session, implantacao_id: int, usuario: str = "Sistema", usuario_id: int | None = None) -> bool:
     """Re-evaluate all etapa statuses based on current checklist state.
 
     Rules:
@@ -624,29 +624,28 @@ def _sincronizar_etapas(db: Session, implantacao_id: int, usuario: str = "Sistem
             etapa.status = "pendente"
             etapa.data_inicio = None
 
-    # Implantação completion check
+    # Implantação completion check — NÃO conclui mais sozinha. Só sinaliza que
+    # está pronta (todas as etapas prontas); quem chamou (atualizar_checklist_item)
+    # devolve esse sinal pro frontend, que pergunta confirmação ao usuário antes
+    # de de fato marcar como concluída (via PATCH /implantacoes/{id} normal, o
+    # mesmo caminho já usado pela edição manual de status).
     all_done = all(e.status in ("concluida", "pulada", "bloqueada") for e in etapas)
     impl = db.get(Implantacao, implantacao_id)
     if not impl:
-        return
+        return False
 
-    if all_done and etapas and impl.status != "concluida":
-        impl.status = "concluida"
-        impl.progresso = 100
-        impl.data_conclusao = date.today()
-        _atualizar_sla_status(impl)
-        timeline_service.log(db, tipo="implantacao_concluida",
-            titulo="Implantação concluída!",
-            descricao="Todas as etapas e tarefas foram concluídas com sucesso.",
-            usuario=usuario, icone="trophy", cor="#f59e0b", implantacao_id=impl.id)
-        _notificar_conclusao_implantacao(db, impl, excluir_usuario_id=usuario_id)
-        _discord_implantacao_concluida(db, impl)
-    elif not all_done and impl.status == "concluida":
+    pronta_para_concluir = bool(all_done and etapas and impl.status != "concluida")
+
+    if not all_done and impl.status == "concluida":
+        # Reverter uma conclusão já confirmada quando algo é desmarcado depois —
+        # isso continua automático, só o caminho de ir PRA concluída pede confirmação.
         impl.status = "em_andamento"
         impl.data_conclusao = None
         if impl.sla_limite:
             dias = (impl.sla_limite - date.today()).days
             impl.sla_status = "atrasada" if dias < 0 else "critico" if dias <= 3 else "em_risco" if dias <= 7 else "ok"
+
+    return pronta_para_concluir
 
 
 def _verificar_conclusao_etapa(db: Session, etapa_id: int) -> None:

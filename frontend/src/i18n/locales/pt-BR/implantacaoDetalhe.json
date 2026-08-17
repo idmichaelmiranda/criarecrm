@@ -129,6 +129,12 @@
     "selectPlaceholder": "Selecione um usuário…",
     "confirm": "Confirmar"
   },
+  "concluirModal": {
+    "title": "Todos os checklists concluídos",
+    "description": "Deseja concluir a implantação agora?",
+    "yes": "Sim, concluir",
+    "no": "Não"
+  },
   "editPanel": {
     "title": "Editar Implantação",
     "statusLabel": "Status",

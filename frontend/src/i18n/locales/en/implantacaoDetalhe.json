@@ -129,6 +129,12 @@
     "selectPlaceholder": "Select a user…",
     "confirm": "Confirm"
   },
+  "concluirModal": {
+    "title": "All checklists completed",
+    "description": "Do you want to complete this implementation now?",
+    "yes": "Yes, complete",
+    "no": "No"
+  },
   "editPanel": {
     "title": "Edit Implementation",
     "statusLabel": "Status",
