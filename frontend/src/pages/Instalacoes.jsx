@@ -645,7 +645,10 @@ export default function Instalacoes() {
   }
 
   function isAtrasada(i) {
-    if (i.status === "concluida" || i.status === "cancelada" || i.finalizado_em) return false;
+    // Atraso é sobre não ter iniciado na data marcada — uma vez que a instalação
+    // começa (em_execucao, incluindo o sub-estado "pausada"), ela deixa de ser
+    // "atrasada" mesmo que a data agendada já tenha passado.
+    if (i.status !== "agendada") return false;
     if (!i.data_agendada) return false;
     const agendada = new Date(i.data_agendada + "T00:00:00");
     const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
