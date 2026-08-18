@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Layout } from "../components/layout/Layout";
 import { Badge } from "../components/ui/Badge";
 import { implantacoesApi } from "../services/api";
-import { EditPanel } from "../components/implantacoes/EditPanel";
+import { ImplantacaoEditForm } from "../components/implantacoes/EditPanel";
 import { fmtDate, fmtDateTime } from "../utils/dateUtils";
 import i18n from "../i18n";
 
@@ -449,10 +449,9 @@ function QuickViewPanel({ implId, onClose, onNavigate, onUpdated }) {
   const pendingTasks = impl ? pendingLeafItems(impl.etapas, subsIndex) : [];
 
   return (
-    <>
-      {/* Painel docado ao lado do conteúdo (não sobrepõe nada) — sticky pra
-          acompanhar o scroll, só na faixa abaixo do cabeçalho/KPIs, com scroll
-          próprio quando o conteúdo é maior que a tela. */}
+      // Painel docado ao lado do conteúdo (não sobrepõe nada) — sticky pra
+      // acompanhar o scroll, só na faixa abaixo do cabeçalho/KPIs, com scroll
+      // próprio quando o conteúdo é maior que a tela.
       <div
         className="w-full max-w-sm shrink-0 sticky top-4 bg-white rounded-2xl border border-gray-100 shadow-lg flex flex-col"
         style={{ maxHeight: "calc(100vh - 2rem)" }}
@@ -461,6 +460,22 @@ function QuickViewPanel({ implId, onClose, onNavigate, onUpdated }) {
           <div className="flex-1 flex items-center justify-center">
             <span className="w-6 h-6 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" />
           </div>
+        ) : editing ? (
+          <>
+            {/* Header — modo edição substitui o conteúdo normal do card, não
+                sobrepõe: cancelar/salvar volta pro mesmo card na visão padrão. */}
+            <div className="px-5 pt-5 pb-4 border-b border-gray-100 shrink-0 flex items-center justify-between">
+              <h2 className="text-base font-bold text-gray-900 leading-tight">{t("quickView.edit")}</h2>
+              <button onClick={() => setEditing(false)} className="text-gray-400 hover:text-gray-600 w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors shrink-0">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              <ImplantacaoEditForm impl={impl} onCancel={() => setEditing(false)} onSaved={handleEditSaved} showHeader={false} />
+            </div>
+          </>
         ) : (
           <>
             {/* Header */}
@@ -689,10 +704,6 @@ function QuickViewPanel({ implId, onClose, onNavigate, onUpdated }) {
           </>
         )}
       </div>
-      {editing && impl && (
-        <EditPanel impl={impl} onClose={() => setEditing(false)} onSaved={handleEditSaved} />
-      )}
-    </>
   );
 }
 
