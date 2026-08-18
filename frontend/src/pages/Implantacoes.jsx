@@ -463,14 +463,24 @@ function QuickViewPanel({ implId, onClose, onNavigate, onUpdated }) {
         ) : editing ? (
           <>
             {/* Header — modo edição substitui o conteúdo normal do card, não
-                sobrepõe: cancelar/salvar volta pro mesmo card na visão padrão. */}
-            <div className="px-5 pt-5 pb-4 border-b border-gray-100 shrink-0 flex items-center justify-between">
-              <h2 className="text-base font-bold text-gray-900 leading-tight">{t("quickView.edit")}</h2>
-              <button onClick={() => setEditing(false)} className="text-gray-400 hover:text-gray-600 w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors shrink-0">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+                sobrepõe: cancelar/salvar volta pro mesmo card na visão padrão.
+                Mantém a identificação do cliente visível (código/nome/CNPJ)
+                pra não perder de vista quem está sendo editado. */}
+            <div className="px-5 pt-5 pb-4 border-b border-gray-100 shrink-0">
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[10px] font-semibold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{impl.codigo}</span>
+                  <Badge status={impl.status} />
+                </div>
+                <button onClick={() => setEditing(false)} className="text-gray-400 hover:text-gray-600 w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors shrink-0">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <h2 className="text-base font-bold text-gray-900 leading-tight">{impl.nome}</h2>
+              <p className="text-xs font-mono text-gray-400 mt-0.5">{impl.cliente_cnpj}</p>
+              <p className="text-[10px] font-semibold text-orange-600 uppercase tracking-wide mt-3">{t("quickView.edit")}</p>
             </div>
             <div className="flex-1 overflow-y-auto">
               <ImplantacaoEditForm impl={impl} onCancel={() => setEditing(false)} onSaved={handleEditSaved} showHeader={false} />
