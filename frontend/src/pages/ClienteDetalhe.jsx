@@ -7,6 +7,7 @@ import { Badge } from "../components/ui/Badge";
 import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
 import { Checkbox } from "../components/ui/Checkbox";
+import { WhatsAppButton, CallButton } from "../components/ui/ContactActions";
 import { clientesApi, implantacoesApi, solicitacoesInstaladorApi } from "../services/api";
 import { fmtDate, timeAgoFromUTC } from "../utils/dateUtils";
 import { useAuth } from "../contexts/AuthContext";
@@ -26,13 +27,16 @@ const CONTA_KEYS  = ["corrente", "poupanca", "pagamento"];
 
 // ── Layout primitives ─────────────────────────────────────────────────────────
 
-function Field({ label, value, mono = false }) {
+function Field({ label, value, mono = false, actions }) {
   return (
     <div>
       <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-1">{label}</p>
-      <p className={`text-sm text-gray-800 break-words ${mono ? "font-mono text-xs" : ""}`}>
-        {value || <span className="text-gray-300">—</span>}
-      </p>
+      <div className="flex items-center gap-2">
+        <p className={`text-sm text-gray-800 break-words ${mono ? "font-mono text-xs" : ""}`}>
+          {value || <span className="text-gray-300">—</span>}
+        </p>
+        {value && actions}
+      </div>
     </div>
   );
 }
@@ -199,8 +203,15 @@ function TabCadastro({ c }) {
         <Field label={t("cadastro.view.ie")}           value={c.ie} mono />
         <Field label={t("cadastro.view.email")}        value={c.email} />
         <Field label={t("cadastro.view.responsavel")}  value={c.responsavel} />
-        <Field label={t("cadastro.view.telefoneFixo")} value={c.telefone_fixo} mono />
-        <Field label={t("cadastro.view.celular")}      value={c.telefone_celular} mono />
+        <Field label={t("cadastro.view.telefoneFixo")} value={c.telefone_fixo} mono
+          actions={c.telefone_fixo && <CallButton telefone={c.telefone_fixo} title={t("callTitle")} />} />
+        <Field label={t("cadastro.view.celular")}      value={c.telefone_celular} mono
+          actions={c.telefone_celular && (
+            <>
+              <WhatsAppButton telefone={c.telefone_celular} title={t("whatsappTitle")} />
+              <CallButton telefone={c.telefone_celular} title={t("callTitle")} />
+            </>
+          )} />
       </Grid>
       <Divider title={t("cadastro.view.endereco")} />
       {c.endereco ? (

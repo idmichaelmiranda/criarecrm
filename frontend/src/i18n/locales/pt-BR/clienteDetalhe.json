@@ -1,4 +1,6 @@
 {
+  "whatsappTitle": "Abrir no WhatsApp",
+  "callTitle": "Ligar (MicroSIP)",
   "tabs": {
     "cadastro": "Cadastro",
     "contabilidade": "Contabilidade",
