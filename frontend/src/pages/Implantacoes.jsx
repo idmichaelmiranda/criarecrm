@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Layout } from "../components/layout/Layout";
 import { Badge } from "../components/ui/Badge";
 import { implantacoesApi } from "../services/api";
+import { EditPanel } from "../components/implantacoes/EditPanel";
 import { fmtDate, fmtDateTime } from "../utils/dateUtils";
 import i18n from "../i18n";
 
@@ -410,21 +411,29 @@ const QUICK_TABS = [
   { id: "historico",  labelKey: "historico"  },
 ];
 
-function QuickViewPanel({ implId, onClose, onNavigate }) {
+function QuickViewPanel({ implId, onClose, onNavigate, onUpdated }) {
   const { t } = useTranslation("implantacoes");
   const [impl, setImpl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("geral");
   const [showAcoes, setShowAcoes] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     setLoading(true);
     setTab("geral");
+    setEditing(false);
     implantacoesApi.obter(implId)
       .then(({ data }) => setImpl(data))
       .catch(() => setImpl(null))
       .finally(() => setLoading(false));
   }, [implId]);
+
+  function handleEditSaved() {
+    setEditing(false);
+    implantacoesApi.obter(implId).then(({ data }) => setImpl(data)).catch(() => {});
+    onUpdated?.();
+  }
 
   // Mesmo cálculo por item-folha da tela completa, pra "N pendentes" e a
   // porcentagem sempre baterem com o que aparece em ImplantacaoDetalhe.jsx.
@@ -440,9 +449,10 @@ function QuickViewPanel({ implId, onClose, onNavigate }) {
   const pendingTasks = impl ? pendingLeafItems(impl.etapas, subsIndex) : [];
 
   return (
-      // Painel docado ao lado do conteúdo (não sobrepõe nada) — sticky pra
-      // acompanhar o scroll, só na faixa abaixo do cabeçalho/KPIs, com scroll
-      // próprio quando o conteúdo é maior que a tela.
+    <>
+      {/* Painel docado ao lado do conteúdo (não sobrepõe nada) — sticky pra
+          acompanhar o scroll, só na faixa abaixo do cabeçalho/KPIs, com scroll
+          próprio quando o conteúdo é maior que a tela. */}
       <div
         className="w-full max-w-sm shrink-0 sticky top-4 bg-white rounded-2xl border border-gray-100 shadow-lg flex flex-col"
         style={{ maxHeight: "calc(100vh - 2rem)" }}
@@ -667,7 +677,7 @@ function QuickViewPanel({ implId, onClose, onNavigate }) {
                 {showAcoes && (
                   <div className="absolute bottom-full right-0 mb-2 w-44 bg-white rounded-xl border border-gray-100 shadow-lg py-1.5 z-10">
                     <button
-                      onClick={() => onNavigate(impl.id)}
+                      onClick={() => { setEditing(true); setShowAcoes(false); }}
                       className="w-full text-left px-3.5 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"
                     >
                       {t("quickView.edit")}
@@ -679,6 +689,10 @@ function QuickViewPanel({ implId, onClose, onNavigate }) {
           </>
         )}
       </div>
+      {editing && impl && (
+        <EditPanel impl={impl} onClose={() => setEditing(false)} onSaved={handleEditSaved} />
+      )}
+    </>
   );
 }
 
@@ -727,7 +741,7 @@ export default function Implantacoes() {
   const [showFiltros, setShowFiltros] = useState(false);
   const [quickViewId, setQuickViewId] = useState(null);
 
-  const activeTab        = searchParams.get("tab")        || "todas";
+  const activeTab        = searchParams.get("tab")        || "em_andamento";
   const filterPrioridade = searchParams.get("prioridade") || "";
   const filterHighlight  = searchParams.get("highlight")  || "";
 
@@ -760,11 +774,11 @@ export default function Implantacoes() {
   const kpiConcluidas  = items.filter((i) => i.status === "concluida").length;
 
   const TABS = [
-    { key: "todas",        labelKey: "todas",       count: items.length },
     { key: "em_andamento", labelKey: "emAndamento", count: kpiEmAndamento },
     { key: "conversao",    labelKey: "conversao",   count: kpiConversao },
     { key: "sla_vencido",  labelKey: "slaVencido",  count: kpiSlaVencido },
     { key: "concluida",    labelKey: "concluida",   count: kpiConcluidas },
+    { key: "todas",        labelKey: "todas",       count: items.length },
   ];
 
   // ── Client-side filtering ──────────────────────────────────────────────────
@@ -1140,6 +1154,7 @@ export default function Implantacoes() {
           implId={quickViewId}
           onClose={() => setQuickViewId(null)}
           onNavigate={(id) => navigate(`/admin/implantacoes/${id}`)}
+          onUpdated={load}
         />
       )}
       </div>
