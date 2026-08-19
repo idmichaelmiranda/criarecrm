@@ -89,11 +89,11 @@ def kpis(db: Session = Depends(get_db)):
     ).scalar_one()
     sla_critico = db.execute(
         select(func.count()).select_from(Implantacao)
-        .where(Implantacao.status.in_(_ACTIVE), Implantacao.sla_status == "critico")
+        .where(Implantacao.status.in_(_ACTIVE), Implantacao.data_go_live.is_(None), Implantacao.sla_status == "critico")
     ).scalar_one()
     sla_atrasada = db.execute(
         select(func.count()).select_from(Implantacao)
-        .where(Implantacao.status.in_(_ACTIVE), Implantacao.sla_status == "atrasada")
+        .where(Implantacao.status.in_(_ACTIVE), Implantacao.data_go_live.is_(None), Implantacao.sla_status == "atrasada")
     ).scalar_one()
 
     total_clientes = db.execute(select(func.count()).select_from(Cliente)).scalar_one()
@@ -112,6 +112,7 @@ def kpis(db: Session = Depends(get_db)):
         select(func.count()).select_from(Implantacao)
         .where(
             Implantacao.status.in_(_ACTIVE),
+            Implantacao.data_go_live.is_(None),
             Implantacao.sla_status == "atrasada",
             Implantacao.sla_limite >= week_start,
             Implantacao.sla_limite < today,
@@ -266,7 +267,9 @@ def kpis(db: Session = Depends(get_db)):
 
     for impl in active_impls:
         etapa_nome = _etapa_atual(impl)
-        dias_restantes = (impl.sla_limite - today).days if impl.sla_limite else None
+        # Com Go Live já registrado, a meta do SLA foi cumprida — não faz mais
+        # sentido mostrar "dias restantes"/"vencido" contra o prazo original.
+        dias_restantes = (impl.sla_limite - today).days if (impl.sla_limite and not impl.data_go_live) else None
 
         if impl.sla_status == "ok" and dias_restantes is not None:
             sla_dias_list.append(dias_restantes)

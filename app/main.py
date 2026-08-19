@@ -53,6 +53,9 @@ async def lifespan(app: FastAPI):
         n_fix = sla_service.fix_concluded_sla_status(db)
         if n_fix:
             print(f"[SLA] Startup: {n_fix} implantacao(es) concluidas/canceladas com SLA normalizado")
+        n_fix_gl = sla_service.fix_go_live_sla_status(db)
+        if n_fix_gl:
+            print(f"[SLA] Startup: {n_fix_gl} implantacao(es) com Go Live e SLA normalizado")
         _migrate_storage_to_private(db)
     finally:
         db.close()

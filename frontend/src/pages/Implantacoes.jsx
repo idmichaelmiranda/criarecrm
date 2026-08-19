@@ -117,11 +117,13 @@ function getCategoria(impl) {
 }
 
 // SLA vencido só faz sentido pra quem ainda está sendo monitorado — uma vez
-// concluída/cancelada, não há mais prazo a acompanhar. O backend já deveria
-// nunca persistir "atrasada" fora do status ativo, mas confere aqui também
-// pra não depender só disso.
+// concluída/cancelada, ou já com Go Live registrado (meta do SLA cumprida),
+// não há mais prazo a acompanhar. O backend já deveria nunca persistir
+// "atrasada" nesses casos, mas confere aqui também pra não depender só disso.
 function isSlaVencido(impl) {
-  return impl.sla_status === "atrasada" && (impl.status === "em_andamento" || impl.status === "pausada");
+  return impl.sla_status === "atrasada"
+    && (impl.status === "em_andamento" || impl.status === "pausada")
+    && !impl.data_go_live;
 }
 
 function UserAvatar({ nome, avatarUrl, size = "md" }) {
@@ -1067,7 +1069,7 @@ export default function Implantacoes() {
               <tbody className="divide-y divide-gray-50">
                 {displayList.map((impl) => {
                   const sla = slaRelativo(impl);
-                  const isAtiva = impl.status === "em_andamento" || impl.status === "pausada";
+                  const isAtiva = (impl.status === "em_andamento" || impl.status === "pausada") && !impl.data_go_live;
                   const isAtrasada = isAtiva && impl.sla_status === "atrasada";
                   const isCritico  = isAtiva && impl.sla_status === "critico";
 

@@ -18,6 +18,7 @@ def recalculate(db: Session) -> int:
         select(Implantacao).where(
             Implantacao.status.in_(["em_andamento", "pausada"]),
             Implantacao.sla_limite.isnot(None),
+            Implantacao.data_go_live.is_(None),
         )
     ).scalars().all()
 
@@ -50,6 +51,24 @@ def fix_concluded_sla_status(db: Session) -> int:
     result = db.execute(
         update(Implantacao)
         .where(Implantacao.status.in_(["concluida", "cancelada"]), Implantacao.sla_status != "ok")
+        .values(sla_status="ok")
+    )
+    if result.rowcount:
+        db.commit()
+    return result.rowcount
+
+
+def fix_go_live_sla_status(db: Session) -> int:
+    """Normaliza sla_status de implantações que já tiveram Go Live registrado.
+
+    O SLA mede o tempo até colocar o cliente em produção — uma vez atingido
+    o Go Live, essa meta foi cumprida e o SLA original para de contar como
+    vencido, mesmo que o status continue "em_andamento" (acompanhamento
+    pós-go-live). Corrige registros que ficaram travados em "atrasada"/
+    "critico" de antes dessa regra existir (idempotente, seguro no startup)."""
+    result = db.execute(
+        update(Implantacao)
+        .where(Implantacao.data_go_live.isnot(None), Implantacao.sla_status != "ok")
         .values(sla_status="ok")
     )
     if result.rowcount:

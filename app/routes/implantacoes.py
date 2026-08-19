@@ -110,6 +110,11 @@ def registrar_go_live(
         from fastapi import HTTPException
         raise HTTPException(404, "Implantação não encontrada")
     impl.data_go_live = payload.data_go_live or date.today()
+    # Go Live é a meta que o SLA mede ("tempo até colocar o cliente em
+    # produção") — uma vez atingida, o SLA original para de contar como
+    # vencido. O que resta é acompanhamento pós-go-live, que tem visibilidade
+    # própria via prazo de tarefas, não pelo SLA da implantação.
+    impl.sla_status = "ok"
     db.commit()
     from app.services import timeline_service
     timeline_service.log(
@@ -138,6 +143,11 @@ def remover_go_live(
         from fastapi import HTTPException
         raise HTTPException(404, "Implantação não encontrada")
     impl.data_go_live = None
+    # Desfazer o Go Live volta a implantação pro radar de SLA normal —
+    # recalcula contra o sla_limite como o worker faria.
+    if impl.status in ("em_andamento", "pausada") and impl.sla_limite:
+        dias = (impl.sla_limite - date.today()).days
+        impl.sla_status = "atrasada" if dias < 0 else "critico" if dias <= 3 else "em_risco" if dias <= 7 else "ok"
     db.commit()
     return _build_full_response(implantacao_service.get_by_id(db, impl_id))
 
