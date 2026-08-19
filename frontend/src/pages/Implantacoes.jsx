@@ -111,9 +111,17 @@ function regimeLabel(t, code) {
 
 function getCategoria(impl) {
   if (impl.status === "concluida") return "concluida";
-  if (impl.sla_status === "atrasada") return "sla_vencido";
+  if (isSlaVencido(impl)) return "sla_vencido";
   if (impl.conversao_dados) return "conversao";
   return "em_andamento";
+}
+
+// SLA vencido só faz sentido pra quem ainda está sendo monitorado — uma vez
+// concluída/cancelada, não há mais prazo a acompanhar. O backend já deveria
+// nunca persistir "atrasada" fora do status ativo, mas confere aqui também
+// pra não depender só disso.
+function isSlaVencido(impl) {
+  return impl.sla_status === "atrasada" && (impl.status === "em_andamento" || impl.status === "pausada");
 }
 
 function UserAvatar({ nome, avatarUrl, size = "md" }) {
@@ -300,7 +308,7 @@ function LocationRegimeTags({ cidade, estado, regimeCode, t }) {
 function ImplCard({ impl, onClick }) {
   const { t } = useTranslation("implantacoes");
   const sla = slaRelativo(impl);
-  const isAtrasada = impl.sla_status === "atrasada";
+  const isAtrasada = isSlaVencido(impl);
 
   return (
     <div
@@ -790,7 +798,7 @@ export default function Implantacoes() {
 
   // ── KPIs (contagens independentes — uma implantação pode contar em mais de uma) ──
   const kpiEmAndamento = items.filter((i) => i.status === "em_andamento").length;
-  const kpiSlaVencido  = items.filter((i) => i.sla_status === "atrasada").length;
+  const kpiSlaVencido  = items.filter(isSlaVencido).length;
   const kpiConversao   = items.filter((i) => i.conversao_dados).length;
   const kpiConcluidas  = items.filter((i) => i.status === "concluida").length;
 
@@ -806,7 +814,7 @@ export default function Implantacoes() {
   const filtered = items.filter((i) => {
     if (activeTab === "em_andamento" && i.status !== "em_andamento") return false;
     if (activeTab === "conversao" && !i.conversao_dados) return false;
-    if (activeTab === "sla_vencido" && i.sla_status !== "atrasada") return false;
+    if (activeTab === "sla_vencido" && !isSlaVencido(i)) return false;
     if (activeTab === "concluida" && i.status !== "concluida") return false;
     if (filterPrioridade && i.prioridade !== filterPrioridade) return false;
     if (search) {
@@ -1059,8 +1067,9 @@ export default function Implantacoes() {
               <tbody className="divide-y divide-gray-50">
                 {displayList.map((impl) => {
                   const sla = slaRelativo(impl);
-                  const isAtrasada = impl.sla_status === "atrasada";
-                  const isCritico  = impl.sla_status === "critico";
+                  const isAtiva = impl.status === "em_andamento" || impl.status === "pausada";
+                  const isAtrasada = isAtiva && impl.sla_status === "atrasada";
+                  const isCritico  = isAtiva && impl.sla_status === "critico";
 
                   const stripeColor =
                     sla?.level === "expired" ? "bg-red-500" :

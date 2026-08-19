@@ -92,7 +92,8 @@ def kpis(db: Session = Depends(get_db)):
         .where(Implantacao.status.in_(_ACTIVE), Implantacao.sla_status == "critico")
     ).scalar_one()
     sla_atrasada = db.execute(
-        select(func.count()).select_from(Implantacao).where(Implantacao.sla_status == "atrasada")
+        select(func.count()).select_from(Implantacao)
+        .where(Implantacao.status.in_(_ACTIVE), Implantacao.sla_status == "atrasada")
     ).scalar_one()
 
     total_clientes = db.execute(select(func.count()).select_from(Cliente)).scalar_one()
@@ -110,6 +111,7 @@ def kpis(db: Session = Depends(get_db)):
     atrasadas_novas_semana = db.execute(
         select(func.count()).select_from(Implantacao)
         .where(
+            Implantacao.status.in_(_ACTIVE),
             Implantacao.sla_status == "atrasada",
             Implantacao.sla_limite >= week_start,
             Implantacao.sla_limite < today,

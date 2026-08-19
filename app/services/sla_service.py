@@ -4,7 +4,7 @@ from collections import defaultdict
 from datetime import date, datetime, timezone
 
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from app.models.implantacao import Implantacao
 
@@ -38,6 +38,23 @@ def recalculate(db: Session) -> int:
         db.commit()
 
     return updated
+
+
+def fix_concluded_sla_status(db: Session) -> int:
+    """Normaliza sla_status de implantações já concluídas/canceladas.
+
+    "SLA vencido" só faz sentido pra quem ainda está sendo monitorado —
+    uma vez finalizada, não há mais prazo a acompanhar. Corrige registros
+    que ficaram travados em "atrasada"/"critico" de antes dessa regra
+    existir (idempotente, seguro rodar em todo startup)."""
+    result = db.execute(
+        update(Implantacao)
+        .where(Implantacao.status.in_(["concluida", "cancelada"]), Implantacao.sla_status != "ok")
+        .values(sla_status="ok")
+    )
+    if result.rowcount:
+        db.commit()
+    return result.rowcount
 
 
 def _notificar_atrasos(db: Session) -> int:

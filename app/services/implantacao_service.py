@@ -171,7 +171,6 @@ def atualizar(db: Session, impl_id: int, data: ImplantacaoUpdate, usuario: str =
         if data.status == "concluida":
             impl.data_conclusao = date.today()
             impl.progresso = 100
-            _atualizar_sla_status(impl)
             _notificar_conclusao_implantacao(db, impl, excluir_usuario_id=usuario_id)
             _discord_implantacao_concluida(db, impl)
         timeline_service.log(
@@ -184,6 +183,13 @@ def atualizar(db: Session, impl_id: int, data: ImplantacaoUpdate, usuario: str =
             cor="#6366f1",
             implantacao_id=impl_id,
         )
+
+    # SLA "vencido"/"crítico" só faz sentido pra implantação sendo monitorada —
+    # uma vez concluída/cancelada, não há mais prazo a acompanhar (evita que o
+    # bloco de data_prevista acima, ou o valor herdado antes de concluir, deixe
+    # a implantação marcada como atrasada pra sempre mesmo já finalizada).
+    if impl.status in ("concluida", "cancelada"):
+        impl.sla_status = "ok"
 
     db.commit()
     db.refresh(impl)
