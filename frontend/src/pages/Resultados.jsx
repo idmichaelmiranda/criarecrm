@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense, useCallback, useRef } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { usePresentationMode } from "../contexts/PresentationContext";
@@ -26,6 +26,21 @@ const C = {
   purple: "#8b5cf6", teal: "#14b8a6", pink: "#ec4899",
 };
 const CHART_COLORS = [C.orange, C.indigo, C.green, C.blue, C.amber, C.purple, C.teal, C.pink];
+
+// Arredonda percentuais para inteiros garantindo soma exata de 100 (método do maior resto)
+function arredondarPercentuais(valores) {
+  const total = valores.reduce((s, v) => s + v, 0);
+  if (!total) return valores.map(() => 0);
+  const brutos = valores.map((v) => (v / total) * 100);
+  const piso = brutos.map(Math.floor);
+  const faltam = 100 - piso.reduce((s, v) => s + v, 0);
+  const ordemResto = brutos
+    .map((v, i) => ({ i, resto: v - Math.floor(v) }))
+    .sort((a, b) => b.resto - a.resto);
+  const resultado = [...piso];
+  for (let k = 0; k < faltam; k++) resultado[ordemResto[k].i] += 1;
+  return resultado;
+}
 
 const STATUS_MAP_COLOR = {
   concluida:   "#10b981",
@@ -137,6 +152,11 @@ function AbaVisaoGeral({ filtros }) {
     ? t("visaoGeral.kpis.crescimentoSub", { value: `${kpis.crescimento_mensal >= 0 ? "+" : ""}${kpis.crescimento_mensal}` })
     : null;
 
+  const produtosPercentuais = useMemo(
+    () => arredondarPercentuais(produtos.map((p) => p.total)),
+    [produtos]
+  );
+
   return (
     <div className="space-y-5">
       {/* KPIs */}
@@ -218,8 +238,9 @@ function AbaVisaoGeral({ filtros }) {
               <Pie
                 data={produtos} dataKey="total" nameKey="produto"
                 cx="50%" cy="47%" outerRadius={70}
-                label={({ cx, cy, midAngle, outerRadius, percent }) => {
-                  if (percent <= 0) return null;
+                label={({ cx, cy, midAngle, outerRadius, index }) => {
+                  const pct = produtosPercentuais[index];
+                  if (!pct) return null;
                   const R = Math.PI / 180;
                   const r = outerRadius + 24;
                   const x = cx + r * Math.cos(-midAngle * R);
@@ -227,7 +248,7 @@ function AbaVisaoGeral({ filtros }) {
                   return (
                     <text x={x} y={y} fill="#374151" fontSize={11} fontWeight={700}
                       textAnchor={x > cx ? "start" : "end"} dominantBaseline="central">
-                      {`${(percent * 100).toFixed(0)}%`}
+                      {`${pct}%`}
                     </text>
                   );
                 }}
