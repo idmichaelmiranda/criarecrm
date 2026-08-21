@@ -42,6 +42,22 @@ def notify_nova_triagem(razao_social: str, cnpj: str | None = None) -> None:
     })
 
 
+def notify_triagem_iniciada(empresa: str, cnpj: str | None, iniciado_por: str | None = None) -> None:
+    fields = [{"name": "Empresa", "value": empresa, "inline": True}]
+    if cnpj:
+        fields.append({"name": "CNPJ", "value": cnpj, "inline": True})
+    if iniciado_por:
+        fields.append({"name": "Iniciado por", "value": iniciado_por, "inline": True})
+    _fire({
+        "embeds": [{
+            "title": "🔎 Triagem iniciada",
+            "color": 0x6366F1,
+            "fields": fields,
+            "timestamp": _ts(),
+        }]
+    })
+
+
 def notify_triagem_atribuida(
     empresa: str,
     cnpj: str | None,

@@ -142,7 +142,7 @@ def get_by_id(db: Session, solicitacao_id: int) -> Solicitacao:
     return sol
 
 
-def iniciar_triagem(db: Session, solicitacao_id: int) -> Solicitacao:
+def iniciar_triagem(db: Session, solicitacao_id: int, iniciado_por: str | None = None) -> Solicitacao:
     sol = get_by_id(db, solicitacao_id)
     if sol.status != "nova":
         raise HTTPException(400, "Apenas solicitações novas podem iniciar triagem")
@@ -156,6 +156,10 @@ def iniciar_triagem(db: Session, solicitacao_id: int) -> Solicitacao:
     )
     db.commit()
     db.refresh(sol)
+
+    from app.services import discord_service
+    discord_service.notify_triagem_iniciada(sol.razao_social, cnpj=sol.cnpj, iniciado_por=iniciado_por)
+
     _dispatch_triagem_email(sol.email, sol.razao_social)
     return sol
 

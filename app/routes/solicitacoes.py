@@ -84,8 +84,8 @@ def obter(sol_id: int, db: Session = Depends(get_db), _: Usuario = _auth):
 
 
 @router.post("/{sol_id}/triar", response_model=SolicitacaoResponse)
-def triar(sol_id: int, db: Session = Depends(get_db), _: Usuario = _auth):
-    return solicitacao_service.iniciar_triagem(db, sol_id)
+def triar(sol_id: int, db: Session = Depends(get_db), current_user: Usuario = Depends(require_permission("triagem.view"))):
+    return solicitacao_service.iniciar_triagem(db, sol_id, iniciado_por=current_user.nome)
 
 
 @router.put("/{sol_id}", response_model=SolicitacaoResponse)
