@@ -124,24 +124,24 @@ const ESTADOS_BR = [
 // ═══════════════════════════════════════════════════════════════════════════════
 function AbaVisaoGeral({ filtros }) {
   const { t } = useTranslation("resultados");
-  const [kpis,      setKpis]      = useState(null);
-  const [evolucao,  setEvolucao]  = useState([]);
-  const [consultor, setConsultor] = useState([]);
-  const [produtos,  setProdutos]  = useState([]);
-  const [loading,   setLoading]   = useState(true);
+  const [kpis,        setKpis]        = useState(null);
+  const [evolucao,    setEvolucao]    = useState([]);
+  const [responsavel, setResponsavel] = useState([]);
+  const [produtos,    setProdutos]    = useState([]);
+  const [loading,     setLoading]     = useState(true);
 
   useEffect(() => {
     setLoading(true);
     Promise.all([
       resultadosApi.visaoGeral({ periodo_dias: filtros.periodo, estado: filtros.estado }),
       resultadosApi.evolucao({ periodo_dias: filtros.periodo, estado: filtros.estado }),
-      resultadosApi.porConsultor({ periodo_dias: filtros.periodo }),
+      resultadosApi.porResponsavel({ periodo_dias: filtros.periodo }),
       resultadosApi.produtos({ periodo_dias: filtros.periodo }),
     ])
-      .then(([k, e, c, p]) => {
+      .then(([k, e, r, p]) => {
         setKpis(k.data);
         setEvolucao(e.data);
-        setConsultor(c.data.slice(0, 8));
+        setResponsavel(r.data.slice(0, 8));
         setProdutos(p.data.slice(0, 6));
       })
       .catch(() => {})
@@ -262,12 +262,12 @@ function AbaVisaoGeral({ filtros }) {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title={t("visaoGeral.charts.implantacoesPorConsultor")} loading={loading}>
+        <ChartCard title={t("visaoGeral.charts.implantacoesPorResponsavel")} loading={loading}>
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={consultor} layout="vertical">
+            <BarChart data={responsavel} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
               <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} />
-              <YAxis type="category" dataKey="consultor" width={90} tick={{ fontSize: 10 }} />
+              <YAxis type="category" dataKey="responsavel" width={90} tick={{ fontSize: 10 }} />
               <Tooltip content={<ChartTip />} />
               <Bar dataKey="total"      name={t("visaoGeral.charts.seriesTotal")}      fill={C.indigo} radius={[0,3,3,0]} />
               <Bar dataKey="concluidas" name={t("visaoGeral.charts.seriesConcluidas")} fill={C.green}  radius={[0,3,3,0]} />

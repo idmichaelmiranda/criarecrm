@@ -860,34 +860,37 @@ def debug_mapa(db: Session = Depends(get_db)):
     return rows
 
 
-@router.get("/por-consultor")
-def por_consultor(
+@router.get("/por-responsavel")
+def por_responsavel(
     periodo_dias: int = Query(365),
     db: Session = Depends(get_db),
 ):
+    # Agrupa por responsável (usuário interno atribuído), não por "consultor":
+    # consultor é um texto livre opcional e fica vazio na maioria das implantações,
+    # enquanto responsavel_id é preenchido automaticamente na aprovação da triagem.
     desde = _desde(periodo_dias)
 
     implantacoes = db.execute(
-        select(Implantacao).where(
-            Implantacao.created_at >= datetime.combine(desde, datetime.min.time()),
-            Implantacao.consultor.isnot(None),
-        )
+        select(Implantacao)
+        .options(selectinload(Implantacao.responsavel))
+        .where(Implantacao.created_at >= datetime.combine(desde, datetime.min.time()))
     ).scalars().all()
 
-    por_consultor: dict[str, dict] = {}
+    por_resp: dict[int | None, dict] = {}
     for impl in implantacoes:
-        nome = (impl.consultor or "Sem consultor").strip()
-        if nome not in por_consultor:
-            por_consultor[nome] = {"consultor": nome, "total": 0, "concluidas": 0, "andamento": 0, "progresso_medio": []}
-        por_consultor[nome]["total"] += 1
+        uid = impl.responsavel_id
+        nome = impl.responsavel.nome if impl.responsavel else "Sem responsável"
+        if uid not in por_resp:
+            por_resp[uid] = {"responsavel": nome, "total": 0, "concluidas": 0, "andamento": 0, "progresso_medio": []}
+        por_resp[uid]["total"] += 1
         if impl.status == "concluida":
-            por_consultor[nome]["concluidas"] += 1
+            por_resp[uid]["concluidas"] += 1
         elif impl.status == "em_andamento":
-            por_consultor[nome]["andamento"] += 1
-        por_consultor[nome]["progresso_medio"].append(impl.progresso or 0)
+            por_resp[uid]["andamento"] += 1
+        por_resp[uid]["progresso_medio"].append(impl.progresso or 0)
 
     result = []
-    for entry in por_consultor.values():
+    for entry in por_resp.values():
         progs = entry.pop("progresso_medio")
         entry["progresso_medio"] = round(sum(progs) / len(progs)) if progs else 0
         entry["taxa_conclusao"] = round(entry["concluidas"] / entry["total"] * 100, 1) if entry["total"] else 0

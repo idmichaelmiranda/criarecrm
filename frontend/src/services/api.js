@@ -285,7 +285,7 @@ export const resultadosApi = {
   produtos:      (params) => api.get("/resultados/produtos",       { params }),
   porEstado:     (params) => api.get("/resultados/por-estado",     { params }),
   clientesMapa:  (params) => api.get("/resultados/clientes-mapa",  { params }),
-  porConsultor:  (params) => api.get("/resultados/por-consultor",  { params }),
+  porResponsavel: (params) => api.get("/resultados/por-responsavel", { params }),
 };
 
 export default api;

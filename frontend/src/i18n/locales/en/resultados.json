@@ -50,7 +50,7 @@
       "concluidasPorMes": "Completed by Month",
       "concluidasPorMesDesc": "By actual completion date, split by type",
       "produtosMaisImplantados": "Most Implemented Products",
-      "implantacoesPorConsultor": "Implementations by Consultant",
+      "implantacoesPorResponsavel": "Implementations by Owner",
       "seriesImplantacoes": "Implementations",
       "seriesInstalacoes": "Installations",
       "seriesTotal": "Total",
