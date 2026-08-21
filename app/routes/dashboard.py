@@ -263,7 +263,16 @@ def kpis(db: Session = Depends(get_db)):
     pipeline, stage_order = _build_dynamic_pipeline(active_impls)
     fila = []
     sla_dias_list = []
-    consultores_map: dict = {}
+    responsaveis_map: dict = {}
+
+    def _add_workload(resp_id, resp_nome, progresso, atrasada):
+        key = resp_id if resp_id is not None else "__na__"
+        if key not in responsaveis_map:
+            responsaveis_map[key] = {"responsavel": resp_nome or "Não atribuído", "total": 0, "atrasadas": 0, "prog_soma": 0}
+        responsaveis_map[key]["total"] += 1
+        if atrasada:
+            responsaveis_map[key]["atrasadas"] += 1
+        responsaveis_map[key]["prog_soma"] += progresso
 
     for impl in active_impls:
         etapa_nome = _etapa_atual(impl)
@@ -316,14 +325,28 @@ def kpis(db: Session = Depends(get_db)):
 
         fila.append(item)
 
-        # Workload por consultor
-        c = impl.consultor or "Não atribuído"
-        if c not in consultores_map:
-            consultores_map[c] = {"consultor": c, "total": 0, "atrasadas": 0, "prog_soma": 0}
-        consultores_map[c]["total"] += 1
-        if impl.sla_status == "atrasada":
-            consultores_map[c]["atrasadas"] += 1
-        consultores_map[c]["prog_soma"] += live_progresso
+        _add_workload(
+            impl.responsavel_id,
+            impl.responsavel.nome if impl.responsavel else None,
+            live_progresso,
+            impl.sla_status == "atrasada",
+        )
+
+    # Instalações ativas também entram na carga por responsável
+    active_insts = db.execute(
+        select(InstalacaoModel)
+        .where(InstalacaoModel.status.in_(("agendada", "em_execucao")))
+        .options(selectinload(InstalacaoModel.responsavel))
+    ).scalars().all()
+
+    for inst in active_insts:
+        atrasada = bool(inst.data_agendada and inst.data_agendada < today)
+        _add_workload(
+            inst.responsavel_id,
+            inst.responsavel.nome if inst.responsavel else None,
+            inst.progresso or 0,
+            atrasada,
+        )
 
     # Sort fila by urgency
     sla_ord  = {"atrasada": 0, "critico": 1, "em_risco": 2, "ok": 3}
@@ -344,9 +367,9 @@ def kpis(db: Session = Depends(get_db)):
     pipeline_total = len(active_impls)  # contagem real de implantações únicas
 
     workload = []
-    for w in sorted(consultores_map.values(), key=lambda x: x["total"], reverse=True):
+    for w in sorted(responsaveis_map.values(), key=lambda x: x["total"], reverse=True):
         workload.append({
-            "consultor": w["consultor"],
+            "responsavel": w["responsavel"],
             "total": w["total"],
             "atrasadas": w["atrasadas"],
             "progresso_medio": round(w["prog_soma"] / w["total"]) if w["total"] > 0 else 0,
@@ -428,7 +451,7 @@ def kpis(db: Session = Depends(get_db)):
         "fila": fila,
         "fila_total": fila_total,
         # Workload
-        "workload_consultores": workload,
+        "workload_responsaveis": workload,
         # Gráfico mensal
         "grafico_mensal": grafico_mensal,
         # Timeline

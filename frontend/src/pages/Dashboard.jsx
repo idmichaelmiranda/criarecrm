@@ -748,9 +748,9 @@ function GraficoMensal({ dados }) {
   );
 }
 
-// ── 8. Workload Consultores ────────────────────────────────────────────────────
+// ── 8. Workload Responsáveis ───────────────────────────────────────────────────
 
-function WorkloadConsultores({ dados }) {
+function WorkloadResponsaveis({ dados }) {
   const { t } = useTranslation("dashboard");
   if (!dados || dados.length === 0) return null;
   const maxTotal = Math.max(...dados.map((c) => c.total), 1);
@@ -763,17 +763,17 @@ function WorkloadConsultores({ dados }) {
       </div>
       <div className="space-y-3.5">
         {dados.map((c) => {
-          const isNA = c.consultor === "Não atribuído";
+          const isNA = c.responsavel === "Não atribuído";
           return (
-            <div key={c.consultor} className="flex items-center gap-3">
+            <div key={c.responsavel} className="flex items-center gap-3">
               <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
                 isNA ? "bg-gray-100 text-gray-400" : c.atrasadas > 0 ? "bg-red-100 text-red-600" : "bg-orange-100 text-orange-600"
               }`}>
-                {initials(c.consultor)}
+                {initials(c.responsavel)}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1">
-                  <span className={`text-xs font-medium truncate ${isNA ? "text-gray-400 italic" : "text-gray-700"}`}>{c.consultor}</span>
+                  <span className={`text-xs font-medium truncate ${isNA ? "text-gray-400 italic" : "text-gray-700"}`}>{c.responsavel}</span>
                   <span className="text-[10px] text-gray-400 tabular-nums shrink-0 ml-2">{t("workload.implCount", { count: c.total })}</span>
                 </div>
                 <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -1101,8 +1101,8 @@ export default function Dashboard() {
             {/* Gráfico Mensal + Workload stacked */}
             <div className="flex flex-col gap-5">
               <GraficoMensal dados={data.grafico_mensal} />
-              {data.workload_consultores?.length > 0 && (
-                <WorkloadConsultores dados={data.workload_consultores} />
+              {data.workload_responsaveis?.length > 0 && (
+                <WorkloadResponsaveis dados={data.workload_responsaveis} />
               )}
             </div>
 

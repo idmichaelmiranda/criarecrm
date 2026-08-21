@@ -125,10 +125,10 @@
     "tooltipImplantacoes": "{{label}} — Implementaciones: {{count}}"
   },
   "workload": {
-    "title": "Carga por Consultor",
-    "subtitle_one": "{{count}} consultor",
-    "subtitle_other": "{{count}} consultores",
-    "implCount": "{{count}} impl.",
+    "title": "Carga por Responsable",
+    "subtitle_one": "{{count}} responsable",
+    "subtitle_other": "{{count}} responsables",
+    "implCount": "{{count}} activas",
     "avgProgress": "{{pct}}% progreso promedio",
     "overdueCount_one": "{{count}} vencida",
     "overdueCount_other": "{{count}} vencidas"

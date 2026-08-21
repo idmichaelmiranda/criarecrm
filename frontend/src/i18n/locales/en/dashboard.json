@@ -125,10 +125,10 @@
     "tooltipImplantacoes": "{{label}} — Implementations: {{count}}"
   },
   "workload": {
-    "title": "Workload by Consultant",
-    "subtitle_one": "{{count}} consultant",
-    "subtitle_other": "{{count}} consultants",
-    "implCount": "{{count}} impl.",
+    "title": "Workload by Owner",
+    "subtitle_one": "{{count}} owner",
+    "subtitle_other": "{{count}} owners",
+    "implCount": "{{count}} active",
     "avgProgress": "{{pct}}% avg. progress",
     "overdueCount_one": "{{count}} overdue",
     "overdueCount_other": "{{count}} overdue"
