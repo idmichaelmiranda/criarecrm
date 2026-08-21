@@ -219,7 +219,7 @@ function AbaVisaoGeral({ filtros }) {
                 data={produtos} dataKey="total" nameKey="produto"
                 cx="50%" cy="47%" outerRadius={70}
                 label={({ cx, cy, midAngle, outerRadius, percent }) => {
-                  if (percent < 0.04) return null;
+                  if (percent <= 0) return null;
                   const R = Math.PI / 180;
                   const r = outerRadius + 24;
                   const x = cx + r * Math.cos(-midAngle * R);
