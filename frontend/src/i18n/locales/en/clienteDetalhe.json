@@ -229,7 +229,7 @@
   },
   "requestBanner": {
     "titulo": "Installation requested via Assistente Criare — Tax ID {{cnpj}}",
-    "tempo": "created {{criada}} · expires {{expira}}",
+    "tempo": "created {{criada}} · expires in {{expira}}",
     "recusar": "Decline",
     "aprovar": "Approve",
     "aguarde": "Please wait…"

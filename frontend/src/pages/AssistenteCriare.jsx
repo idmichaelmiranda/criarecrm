@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Layout } from "../components/layout/Layout";
 import { solicitacoesInstaladorApi } from "../services/api";
-import { fmtDateTime, timeAgoFromUTC, parseUTC } from "../utils/dateUtils";
+import { fmtDateTime, timeAgoFromUTC, timeUntilUTC, parseUTC } from "../utils/dateUtils";
 
 const POLL_MS = 5000;
 const PAGE_SIZE = 20;
@@ -388,7 +388,7 @@ export default function AssistenteCriare() {
                       </td>
                       <td className="px-4 py-4 hidden sm:table-cell text-xs text-gray-500 whitespace-nowrap">
                         {isPendente ? (
-                          <span title={fmtDateTime(sol.expiraEm)}>{t("table.expiresPrefix", { time: timeAgoFromUTC(sol.expiraEm) })}</span>
+                          <span title={fmtDateTime(sol.expiraEm)}>{t("table.expiresPrefix", { time: timeUntilUTC(sol.expiraEm) })}</span>
                         ) : decisaoDe(sol) ? (
                           <span title={timeAgoFromUTC(decisaoDe(sol))}>{fmtDateTime(decisaoDe(sol))}</span>
                         ) : (

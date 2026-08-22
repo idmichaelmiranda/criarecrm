@@ -43,7 +43,7 @@
     "decidedAt": "Decisão em",
     "responsible": "Responsável",
     "status": "Status",
-    "expiresPrefix": "expira {{time}}",
+    "expiresPrefix": "expira em {{time}}",
     "previousAttempt": "tentativa anterior"
   },
   "group": {

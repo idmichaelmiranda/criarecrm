@@ -9,7 +9,7 @@ import { Select } from "../components/ui/Select";
 import { Checkbox } from "../components/ui/Checkbox";
 import { WhatsAppButton, CallButton } from "../components/ui/ContactActions";
 import { clientesApi, implantacoesApi, solicitacoesInstaladorApi } from "../services/api";
-import { fmtDate, timeAgoFromUTC } from "../utils/dateUtils";
+import { fmtDate, timeAgoFromUTC, timeUntilUTC } from "../utils/dateUtils";
 import { useAuth } from "../contexts/AuthContext";
 import { useCep } from "../hooks/useCep";
 import { maskPhone, maskCnpj, maskCpf } from "../hooks/useCnpj";
@@ -1008,7 +1008,7 @@ export default function ClienteDetalhe() {
                   {t("requestBanner.titulo", { cnpj: sol.cnpj })}
                 </p>
                 <p className="text-xs text-amber-600 mt-0.5">
-                  {t("requestBanner.tempo", { criada: timeAgoFromUTC(sol.criadoEm), expira: timeAgoFromUTC(sol.expiraEm) })}
+                  {t("requestBanner.tempo", { criada: timeAgoFromUTC(sol.criadoEm), expira: timeUntilUTC(sol.expiraEm) })}
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">

@@ -229,7 +229,7 @@
   },
   "requestBanner": {
     "titulo": "Instalação solicitada pelo Assistente Criare — CNPJ {{cnpj}}",
-    "tempo": "criada {{criada}} · expira {{expira}}",
+    "tempo": "criada {{criada}} · expira em {{expira}}",
     "recusar": "Recusar",
     "aprovar": "Aprovar",
     "aguarde": "Aguarde…"
