@@ -14,6 +14,14 @@ const STATUS_COR = {
   pausada:      "#f59e0b",
 };
 
+// A CARTO passou a exigir API key mesmo no plano gratuito para os tiles raster
+// (basemaps.cartocdn.com) — sem isso os tiles voltam com o watermark "API KEY
+// REQUIRED". Chave gratuita (sem cartão, sem aprovação): https://carto.com/basemaps/apikey/
+const CARTO_API_KEY = import.meta.env.VITE_CARTO_API_KEY;
+const CARTO_DARK_TILE_URL =
+  `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png` +
+  (CARTO_API_KEY ? `?key=${CARTO_API_KEY}` : "");
+
 const PERIODO_OPTS = [
   { value: "30"  },
   { value: "90"  },
@@ -313,7 +321,7 @@ export default function ResultadosMapaTab({ filtros, onFiltroChange, presentatio
             scrollWheelZoom
           >
             <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              url={CARTO_DARK_TILE_URL}
               attribution='&copy; <a href="https://carto.com">CARTO</a>'
             />
 
