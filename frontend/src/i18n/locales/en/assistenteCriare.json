@@ -79,7 +79,9 @@
   },
   "tracking": {
     "empty": "No steps reported yet.",
-    "stepOf": "Step {{atual}} of {{total}}"
+    "reportedOf": "{{count}} of {{total}} steps reported",
+    "released": "Installation released",
+    "releasedBy": "Approved by {{nome}}"
   },
   "quickView": {
     "tabs": {

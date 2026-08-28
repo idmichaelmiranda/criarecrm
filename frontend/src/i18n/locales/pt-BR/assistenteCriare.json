@@ -79,7 +79,9 @@
   },
   "tracking": {
     "empty": "Nenhuma etapa reportada ainda.",
-    "stepOf": "Etapa {{atual}} de {{total}}"
+    "reportedOf": "{{count}} de {{total}} etapas reportadas",
+    "released": "Instalação liberada",
+    "releasedBy": "Aprovada por {{nome}}"
   },
   "quickView": {
     "tabs": {

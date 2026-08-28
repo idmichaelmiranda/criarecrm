@@ -157,6 +157,7 @@ function EtapaRow({ etapa }) {
           </div>
         )}
         {isFailed && etapa.mensagem && <p className="text-xs text-red-500 mt-1 truncate" title={etapa.mensagem}>{etapa.mensagem}</p>}
+        {isDone && etapa.mensagem && <p className="text-xs text-gray-400 mt-1 truncate" title={etapa.mensagem}>{etapa.mensagem}</p>}
       </div>
     </li>
   );
@@ -320,7 +321,7 @@ function MaquinaSection({ info }) {
   );
 }
 
-function ProgressoTab({ solId }) {
+function ProgressoTab({ sol }) {
   const { t } = useTranslation("assistenteCriare");
   const [etapas, setEtapas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -329,14 +330,14 @@ function ProgressoTab({ solId }) {
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     try {
-      const { data } = await solicitacoesInstaladorApi.etapas(solId);
+      const { data } = await solicitacoesInstaladorApi.etapas(sol.id);
       setEtapas(data);
     } catch {
       // silencioso — o próximo poll tenta de novo, igual ao resto da tela
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [solId]);
+  }, [sol.id]);
 
   useEffect(() => {
     load();
@@ -351,20 +352,36 @@ function ProgressoTab({ solId }) {
       </div>
     );
   }
-  if (etapas.length === 0) {
-    return <p className="text-sm text-gray-400 text-center py-10">{t("tracking.empty")}</p>;
-  }
 
-  const atual = etapas.find((e) => e.status === "em_andamento");
-  const total = atual?.totalEtapas || etapas.at(-1)?.totalEtapas;
+  // Item sintético — não vem do instalador (que só reporta a partir da primeira
+  // etapa dele), é o marco da própria aprovação (sol.aprovadoEm), sempre presente
+  // já que essa aba só existe quando a solicitação está aprovada.
+  const etapaLiberada = {
+    indiceEtapa: -1,
+    nome: t("tracking.released"),
+    status: "concluida",
+    percentual: null,
+    mensagem: sol.responsavelNome ? t("tracking.releasedBy", { nome: sol.responsavelNome }) : null,
+    concluidoEm: sol.aprovadoEm,
+  };
+  const linha = [etapaLiberada, ...etapas];
+
+  // Total reportado pelo instalador (última chamada é a fonte mais confiável) —
+  // mostrado sempre, não só quando algo está em andamento, pra um descompasso
+  // (ex.: instalador pulando/reaproveitando índice) ficar visível na hora, sem
+  // precisar comparar manualmente.
+  const totalEtapas = etapas.at(-1)?.totalEtapas;
 
   return (
     <>
-      {atual && total && (
-        <p className="text-xs text-gray-400 -mt-1">{t("tracking.stepOf", { atual: atual.indiceEtapa + 1, total })}</p>
+      {totalEtapas != null && (
+        <p className="text-xs text-gray-400 -mt-1">{t("tracking.reportedOf", { count: etapas.length, total: totalEtapas })}</p>
       )}
+      {etapas.length === 0 ? (
+        <p className="text-sm text-gray-400 text-center py-6">{t("tracking.empty")}</p>
+      ) : null}
       <ol className="space-y-4">
-        {etapas.map((e) => <EtapaRow key={e.indiceEtapa} etapa={e} />)}
+        {linha.map((e) => <EtapaRow key={e.indiceEtapa} etapa={e} />)}
       </ol>
     </>
   );
@@ -515,7 +532,7 @@ function QuickViewPanel({ solId, solicitacoes, onClose, navigate, onAprovar, onR
           </>
         )}
 
-        {tab === "progresso" && <ProgressoTab solId={sol.id} />}
+        {tab === "progresso" && <ProgressoTab sol={sol} />}
         {tab === "tentativas" && <TentativasTab tentativas={tentativas} currentId={sol.id} onSelect={onSelectAttempt} />}
       </div>
 
