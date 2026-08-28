@@ -41,12 +41,8 @@
     "createdAt": "Criada em",
     "expiresAt": "Expira em",
     "decidedAt": "Decisão em",
-    "responsible": "Responsável",
     "status": "Status",
-    "machine": "Máquina",
-    "expiresPrefix": "expira em {{time}}",
-    "previousAttempt": "tentativa anterior",
-    "latestAttempt": "tentativa mais recente"
+    "expiresPrefix": "expira em {{time}}"
   },
   "group": {
     "attemptsCount_one": "{{count}} tentativa",
@@ -55,20 +51,18 @@
   "actions": {
     "reject": "Recusar",
     "approve": "Aprovar",
-    "waiting": "Aguarde…",
-    "track": "Acompanhar"
+    "waiting": "Aguarde…"
   },
   "machine": {
-    "noData": "—",
+    "noDataFull": "Nenhum dado de máquina foi coletado nessa tentativa.",
     "diskFree_one": "{{count}}GB livre",
     "diskFree_other": "{{count}}GB livres",
-    "warningLabel": "Pouco espaço ({{pct}}% livre)",
     "verdictOk": "Máquina sem alertas",
     "verdictWarning": "Atenção: pouco espaço em disco",
-    "hasDataGeneric": "Dados disponíveis",
     "storageUsage": "{{free}} GB livres de {{total}} GB",
     "fields": {
       "os": "Sistema",
+      "hardware": "Hardware",
       "processor": "Processador",
       "cores": "Núcleos",
       "ram": "Memória RAM",
@@ -76,10 +70,24 @@
     }
   },
   "tracking": {
-    "title": "Acompanhamento da instalação",
     "empty": "Nenhuma etapa reportada ainda.",
-    "loadError": "Erro ao carregar o progresso.",
     "stepOf": "Etapa {{atual}} de {{total}}"
+  },
+  "quickView": {
+    "tabs": {
+      "geral": "Visão Geral",
+      "maquina": "Máquina",
+      "progresso": "Progresso",
+      "historico": "Histórico"
+    },
+    "expiresIn": "Expira em",
+    "decidedOn": "Decisão",
+    "responsible": "Responsável",
+    "information": "Informações",
+    "createdAt": "Criada em",
+    "cnpj": "CNPJ",
+    "viewClient": "Ver cliente",
+    "actions": "Ações"
   },
   "loadMore": {
     "button": "Carregar mais ({{count}} restantes)"

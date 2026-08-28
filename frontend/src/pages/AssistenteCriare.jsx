@@ -1,5 +1,4 @@
-import { useState, useEffect, useCallback, useRef, Fragment } from "react";
-import { createPortal } from "react-dom";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Layout } from "../components/layout/Layout";
@@ -8,6 +7,8 @@ import { fmtDateTime, timeAgoFromUTC, timeUntilUTC, parseUTC } from "../utils/da
 
 const POLL_MS = 5000;
 const PAGE_SIZE = 20;
+const ETAPA_TRACK_POLL_MS = 3000;
+const DISCO_LIVRE_BAIXO_PCT = 15;
 
 const STATUS_HISTORICO = [
   { value: "", labelKey: "all" },
@@ -65,9 +66,8 @@ function decisaoDe(sol) {
   return sol.aprovadoEm || sol.recusadoEm || sol.canceladoEm || null;
 }
 
-// Célula de identidade do cliente — só nome + CNPJ. Dado de máquina NÃO mora aqui:
-// pertence à tentativa específica que pediu a instalação (ver MaquinaChip), não ao
-// cliente como um todo, então fica na sua própria coluna.
+// Célula de identidade do cliente — só nome + CNPJ. Detalhe (máquina, histórico,
+// progresso) mora no painel lateral (QuickViewPanel), não na tabela.
 function ClienteCell({ sol, navigate }) {
   const { t } = useTranslation("assistenteCriare");
   return (
@@ -87,12 +87,20 @@ function ClienteCell({ sol, navigate }) {
   );
 }
 
-// ── Máquina que pediu a instalação ──────────────────────────────────────────────
+function ResponsavelCell({ sol, size }) {
+  if (!sol.responsavelNome) return <span className="text-gray-300 text-sm">—</span>;
+  return (
+    <div className="flex items-center gap-2">
+      <Avatar nome={sol.responsavelNome} avatarUrl={sol.responsavelAvatarUrl} size={size} />
+      <span className="text-sm text-gray-600 truncate max-w-[160px]">{sol.responsavelNome}</span>
+    </div>
+  );
+}
+
+// ── Avaliação da máquina que pediu a instalação ─────────────────────────────────
 // Cada solicitação carrega seu próprio snapshot (best-effort via WMI no instalador,
 // qualquer campo pode faltar) — a avaliação abaixo transforma os números crus num
 // veredito direto, pra quem aprova não precisar saber interpretar GB/SSD sozinho.
-const DISCO_LIVRE_BAIXO_PCT = 15;
-
 function avaliarMaquina(info) {
   if (!info) return { nivel: "unknown" };
   const temAlgumDado = info.windows?.versao || info.processador || info.memoriaRamGb || (info.disco?.tipo && info.disco.tipo !== "desconhecido");
@@ -108,126 +116,6 @@ function avaliarMaquina(info) {
   }
   return { nivel: "ok", pctLivre };
 }
-
-function MaquinaChip({ info }) {
-  const { t } = useTranslation("assistenteCriare");
-  const [open, setOpen] = useState(false);
-  const [pos, setPos] = useState(null);
-  const btnRef = useRef(null);
-  const panelRef = useRef(null);
-
-  useEffect(() => {
-    if (!open) return;
-    function handlePointerDown(e) {
-      if (btnRef.current?.contains(e.target)) return;
-      if (panelRef.current?.contains(e.target)) return;
-      setOpen(false);
-    }
-    document.addEventListener("mousedown", handlePointerDown);
-    return () => document.removeEventListener("mousedown", handlePointerDown);
-  }, [open]);
-
-  const avaliacao = avaliarMaquina(info);
-  if (avaliacao.nivel === "unknown") {
-    return <span className="text-xs text-gray-300">{t("machine.noData")}</span>;
-  }
-
-  function toggleOpen(e) {
-    e.stopPropagation();
-    if (!open && btnRef.current) {
-      const r = btnRef.current.getBoundingClientRect();
-      setPos({ top: r.bottom + 6, left: Math.min(r.left, window.innerWidth - 300) });
-    }
-    setOpen((v) => !v);
-  }
-
-  const isWarning = avaliacao.nivel === "warning";
-  const dotColor = isWarning ? "bg-amber-400" : "bg-green-500";
-  const label = isWarning
-    ? t("machine.warningLabel", { pct: Math.round(avaliacao.pctLivre) })
-    : [info.windows?.versao, info.disco?.tipo && info.disco.tipo !== "desconhecido" ? info.disco.tipo : null]
-        .filter(Boolean).join(" · ") || t("machine.hasDataGeneric");
-
-  const disco = info.disco || {};
-  const temUso = disco.espacoTotalGb && disco.espacoLivreGb != null;
-  const pctUsado = temUso ? Math.round(((disco.espacoTotalGb - disco.espacoLivreGb) / disco.espacoTotalGb) * 100) : null;
-
-  return (
-    <>
-      <button ref={btnRef} onClick={toggleOpen}
-        className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-colors max-w-[170px]">
-        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotColor}`} />
-        <span className="truncate">{label}</span>
-      </button>
-      {open && pos && createPortal(
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div ref={panelRef} className="fixed z-50 w-72 bg-white rounded-xl shadow-2xl border border-gray-100 p-4"
-            style={{ top: pos.top, left: pos.left }}>
-            <div className="flex items-center gap-2 pb-3 mb-3 border-b border-gray-100">
-              <span className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`} />
-              <span className="text-sm font-bold text-gray-900">
-                {isWarning ? t("machine.verdictWarning") : t("machine.verdictOk")}
-              </span>
-            </div>
-            <dl className="space-y-2.5 text-xs">
-              <div className="flex justify-between gap-3">
-                <dt className="text-gray-400 shrink-0">{t("machine.fields.os")}</dt>
-                <dd className="text-gray-700 text-right">
-                  {info.windows?.versao || "—"}
-                  {info.windows?.build && <span className="text-gray-400"> · build {info.windows.build}</span>}
-                </dd>
-              </div>
-              <div className="flex justify-between gap-3">
-                <dt className="text-gray-400 shrink-0">{t("machine.fields.processor")}</dt>
-                <dd className="text-gray-700 text-right truncate max-w-[170px]" title={info.processador || ""}>{info.processador || "—"}</dd>
-              </div>
-              <div className="flex justify-between gap-3">
-                <dt className="text-gray-400 shrink-0">{t("machine.fields.cores")}</dt>
-                <dd className="text-gray-700">{info.nucleos ?? "—"}</dd>
-              </div>
-              <div className="flex justify-between gap-3">
-                <dt className="text-gray-400 shrink-0">{t("machine.fields.ram")}</dt>
-                <dd className="text-gray-700">{info.memoriaRamGb ? `${info.memoriaRamGb} GB` : "—"}</dd>
-              </div>
-              <div>
-                <div className="flex justify-between gap-3 mb-1">
-                  <dt className="text-gray-400 shrink-0">{t("machine.fields.storage")}</dt>
-                  <dd className="text-gray-700">{disco.tipo && disco.tipo !== "desconhecido" ? disco.tipo : "—"}</dd>
-                </div>
-                {temUso ? (
-                  <>
-                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div className={`h-full ${isWarning ? "bg-amber-400" : "bg-gray-400"}`} style={{ width: `${pctUsado}%` }} />
-                    </div>
-                    <p className="text-[11px] text-gray-400 mt-1">
-                      {t("machine.storageUsage", { free: Math.round(disco.espacoLivreGb), total: Math.round(disco.espacoTotalGb) })}
-                    </p>
-                  </>
-                ) : disco.espacoLivreGb != null ? (
-                  <p className="text-[11px] text-gray-400 mt-1">{t("machine.diskFree", { count: Math.round(disco.espacoLivreGb) })}</p>
-                ) : null}
-              </div>
-            </dl>
-          </div>
-        </>,
-        document.body
-      )}
-    </>
-  );
-}
-
-function ResponsavelCell({ sol, size }) {
-  if (!sol.responsavelNome) return <span className="text-gray-300 text-sm">—</span>;
-  return (
-    <div className="flex items-center gap-2">
-      <Avatar nome={sol.responsavelNome} avatarUrl={sol.responsavelAvatarUrl} size={size} />
-      <span className="text-sm text-gray-600 truncate max-w-[120px]">{sol.responsavelNome}</span>
-    </div>
-  );
-}
-
-const ETAPA_TRACK_POLL_MS = 3000;
 
 function EtapaRow({ etapa }) {
   const isDone = etapa.status === "concluida";
@@ -260,7 +148,81 @@ function EtapaRow({ etapa }) {
   );
 }
 
-function EtapasModal({ sol, onClose }) {
+// ── Abas do painel lateral (QuickViewPanel) ─────────────────────────────────────
+
+function MaquinaTab({ info }) {
+  const { t } = useTranslation("assistenteCriare");
+  const avaliacao = avaliarMaquina(info);
+
+  if (avaliacao.nivel === "unknown") {
+    return <p className="text-sm text-gray-300 text-center py-10">{t("machine.noDataFull")}</p>;
+  }
+
+  const isWarning = avaliacao.nivel === "warning";
+  const disco = info.disco || {};
+  const temUso = disco.espacoTotalGb && disco.espacoLivreGb != null;
+  const pctUsado = temUso ? Math.round(((disco.espacoTotalGb - disco.espacoLivreGb) / disco.espacoTotalGb) * 100) : null;
+
+  return (
+    <>
+      <div className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border ${isWarning ? "bg-amber-50 border-amber-200" : "bg-green-50 border-green-200"}`}>
+        <span className={`w-2 h-2 rounded-full shrink-0 ${isWarning ? "bg-amber-400" : "bg-green-500"}`} />
+        <span className={`text-sm font-semibold ${isWarning ? "text-amber-700" : "text-green-700"}`}>
+          {isWarning ? t("machine.verdictWarning") : t("machine.verdictOk")}
+        </span>
+      </div>
+
+      <div>
+        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">{t("machine.fields.os")}</p>
+        <p className="text-sm text-gray-700">
+          {info.windows?.versao || "—"}
+          {info.windows?.build && <span className="text-gray-400"> · build {info.windows.build}</span>}
+        </p>
+      </div>
+
+      <div>
+        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">{t("machine.fields.hardware")}</p>
+        <div className="space-y-2 text-xs">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-gray-400 shrink-0">{t("machine.fields.processor")}</span>
+            <span className="text-gray-700 font-medium text-right truncate" title={info.processador || ""}>{info.processador || "—"}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-gray-400">{t("machine.fields.cores")}</span>
+            <span className="text-gray-700 font-medium">{info.nucleos ?? "—"}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-gray-400">{t("machine.fields.ram")}</span>
+            <span className="text-gray-700 font-medium">{info.memoriaRamGb ? `${info.memoriaRamGb} GB` : "—"}</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">{t("machine.fields.storage")}</p>
+          <span className="text-xs text-gray-700 font-medium">{disco.tipo && disco.tipo !== "desconhecido" ? disco.tipo : "—"}</span>
+        </div>
+        {temUso ? (
+          <>
+            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div className={`h-full ${isWarning ? "bg-amber-400" : "bg-gray-400"}`} style={{ width: `${pctUsado}%` }} />
+            </div>
+            <p className="text-xs text-gray-400 mt-1.5">
+              {t("machine.storageUsage", { free: Math.round(disco.espacoLivreGb), total: Math.round(disco.espacoTotalGb) })}
+            </p>
+          </>
+        ) : disco.espacoLivreGb != null ? (
+          <p className="text-xs text-gray-400 mt-1.5">{t("machine.diskFree", { count: Math.round(disco.espacoLivreGb) })}</p>
+        ) : (
+          <p className="text-xs text-gray-300">—</p>
+        )}
+      </div>
+    </>
+  );
+}
+
+function ProgressoTab({ solId }) {
   const { t } = useTranslation("assistenteCriare");
   const [etapas, setEtapas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -269,14 +231,14 @@ function EtapasModal({ sol, onClose }) {
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     try {
-      const { data } = await solicitacoesInstaladorApi.etapas(sol.id);
+      const { data } = await solicitacoesInstaladorApi.etapas(solId);
       setEtapas(data);
     } catch {
       // silencioso — o próximo poll tenta de novo, igual ao resto da tela
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [sol.id]);
+  }, [solId]);
 
   useEffect(() => {
     load();
@@ -284,39 +246,193 @@ function EtapasModal({ sol, onClose }) {
     return () => clearInterval(timerRef.current);
   }, [load]);
 
+  if (loading) {
+    return (
+      <div className="flex justify-center py-10">
+        <div className="w-5 h-5 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+  if (etapas.length === 0) {
+    return <p className="text-sm text-gray-400 text-center py-10">{t("tracking.empty")}</p>;
+  }
+
   const atual = etapas.find((e) => e.status === "em_andamento");
   const total = atual?.totalEtapas || etapas.at(-1)?.totalEtapas;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
-        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
-          <div className="min-w-0">
-            <h3 className="text-sm font-bold text-gray-900">{t("tracking.title")}</h3>
-            <p className="text-xs text-gray-400 mt-0.5 truncate">
-              {sol.clienteNome || formatCnpj(sol.cnpj)}
-              {atual && total ? ` · ${t("tracking.stepOf", { atual: atual.indiceEtapa + 1, total })}` : ""}
-            </p>
+    <>
+      {atual && total && (
+        <p className="text-xs text-gray-400 -mt-1">{t("tracking.stepOf", { atual: atual.indiceEtapa + 1, total })}</p>
+      )}
+      <ol className="space-y-4">
+        {etapas.map((e) => <EtapaRow key={e.indiceEtapa} etapa={e} />)}
+      </ol>
+    </>
+  );
+}
+
+function HistoricoTab({ tentativas, onSelect }) {
+  return (
+    <div className="space-y-2.5">
+      {tentativas.map((att) => (
+        <button key={att.id} onClick={() => onSelect(att.id)}
+          className="w-full text-left px-3.5 py-3 rounded-xl border border-gray-100 hover:border-orange-200 hover:bg-orange-50/40 transition-colors">
+          <div className="flex items-center justify-between mb-1.5">
+            <StatusBadge status={att.status} />
+            <span className="text-[11px] text-gray-400">{timeAgoFromUTC(att.criadoEm)}</span>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 shrink-0">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <ResponsavelCell sol={att} size="w-5 h-5" />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ── Painel lateral — mesmo padrão do QuickViewPanel de Implantações: docado ao
+// lado do conteúdo (não sobrepõe), sticky, com abas. Aqui as abas são condicionais
+// (Progresso só se aprovada, Histórico só se há outras tentativas do mesmo CNPJ).
+function QuickViewPanel({ solId, solicitacoes, onClose, navigate, onAprovar, onRecusar, onSelectAttempt, actingId }) {
+  const { t } = useTranslation("assistenteCriare");
+  const [tab, setTab] = useState("geral");
+  const [showAcoes, setShowAcoes] = useState(false);
+
+  useEffect(() => { setTab("geral"); setShowAcoes(false); }, [solId]);
+
+  const sol = solicitacoes.find((s) => s.id === solId);
+  if (!sol) return null;
+
+  const isPendente = sol.status === "pendente";
+  const tentativas = solicitacoes
+    .filter((s) => s.cnpj === sol.cnpj && s.id !== sol.id)
+    .sort((a, b) => parseUTC(b.criadoEm) - parseUTC(a.criadoEm));
+
+  const tabs = [
+    { id: "geral", label: t("quickView.tabs.geral") },
+    { id: "maquina", label: t("quickView.tabs.maquina") },
+    ...(sol.status === "aprovada" ? [{ id: "progresso", label: t("quickView.tabs.progresso") }] : []),
+    ...(tentativas.length > 0 ? [{ id: "historico", label: t("quickView.tabs.historico") }] : []),
+  ];
+
+  return (
+    <div
+      className="w-full max-w-sm shrink-0 sticky top-4 bg-white rounded-2xl border border-gray-100 shadow-lg flex flex-col"
+      style={{ maxHeight: "calc(100vh - 2rem)" }}
+    >
+      {/* Header */}
+      <div className="px-5 pt-5 pb-4 border-b border-gray-100 shrink-0">
+        <div className="flex items-start justify-between mb-2">
+          <StatusBadge status={sol.status} />
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors shrink-0">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-5">
-          {loading ? (
-            <div className="flex justify-center py-10">
-              <div className="w-5 h-5 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" />
-            </div>
-          ) : etapas.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-10">{t("tracking.empty")}</p>
-          ) : (
-            <ol className="space-y-4">
-              {etapas.map((e) => <EtapaRow key={e.indiceEtapa} etapa={e} />)}
-            </ol>
-          )}
+        <h2 className="text-base font-bold text-gray-900 leading-tight truncate">
+          {sol.clienteNome || t("clientCell.noRecord")}
+        </h2>
+        <p className="text-xs font-mono text-gray-400 mt-0.5">{formatCnpj(sol.cnpj)}</p>
+
+        <div className="flex gap-4 mt-4 -mb-4 border-b border-gray-100 overflow-x-auto">
+          {tabs.map((tb) => (
+            <button
+              key={tb.id}
+              onClick={() => setTab(tb.id)}
+              className={`pb-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap ${
+                tab === tb.id ? "border-orange-500 text-orange-600" : "border-transparent text-gray-400 hover:text-gray-600"
+              }`}
+            >
+              {tb.label}
+            </button>
+          ))}
         </div>
+      </div>
+
+      {/* Body */}
+      <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
+        {tab === "geral" && (
+          <>
+            <div>
+              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">
+                {isPendente ? t("quickView.expiresIn") : t("quickView.decidedOn")}
+              </p>
+              {isPendente ? (
+                <p className="text-2xl font-bold text-amber-600" title={fmtDateTime(sol.expiraEm)}>{timeUntilUTC(sol.expiraEm)}</p>
+              ) : decisaoDe(sol) ? (
+                <p className="text-sm text-gray-700 font-medium">{fmtDateTime(decisaoDe(sol))}</p>
+              ) : (
+                <p className="text-sm text-gray-400">—</p>
+              )}
+            </div>
+
+            <div>
+              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">{t("quickView.responsible")}</p>
+              <ResponsavelCell sol={sol} />
+            </div>
+
+            <div>
+              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">{t("quickView.information")}</p>
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">{t("quickView.createdAt")}</span>
+                  <span className="text-gray-700 font-medium">{fmtDateTime(sol.criadoEm)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">{t("quickView.cnpj")}</span>
+                  <span className="text-gray-700 font-medium font-mono">{formatCnpj(sol.cnpj)}</span>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {tab === "maquina" && <MaquinaTab info={sol.maquinaInfo} />}
+        {tab === "progresso" && <ProgressoTab solId={sol.id} />}
+        {tab === "historico" && <HistoricoTab tentativas={tentativas} onSelect={onSelectAttempt} />}
+      </div>
+
+      {/* Footer */}
+      <div className="px-5 py-4 border-t border-gray-100 flex gap-2 shrink-0 relative">
+        {sol.clienteId ? (
+          <button
+            onClick={() => navigate(`/admin/clientes/${sol.clienteId}`)}
+            className="flex-1 py-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            {t("quickView.viewClient")}
+          </button>
+        ) : <div className="flex-1" />}
+
+        {isPendente && (
+          <div className="relative">
+            <button
+              onClick={() => setShowAcoes((v) => !v)}
+              disabled={actingId === sol.id}
+              className="h-full px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+            >
+              {actingId === sol.id ? t("actions.waiting") : t("quickView.actions")}
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {showAcoes && (
+              <div className="absolute bottom-full right-0 mb-2 w-40 bg-white rounded-xl border border-gray-100 shadow-lg py-1.5 z-10">
+                <button
+                  onClick={() => { setShowAcoes(false); onAprovar(sol); }}
+                  className="w-full text-left px-3.5 py-2 text-xs font-semibold text-green-700 hover:bg-green-50 transition-colors"
+                >
+                  {t("actions.approve")}
+                </button>
+                <button
+                  onClick={() => { setShowAcoes(false); onRecusar(sol); }}
+                  className="w-full text-left px-3.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
+                >
+                  {t("actions.reject")}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -331,10 +447,9 @@ export default function AssistenteCriare() {
   const [search, setSearch]             = useState("");
   const [statusFiltro, setStatusFiltro] = useState("");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const [expandidos, setExpandidos]     = useState(new Set());
   const [actingId, setActingId]         = useState(null);
   const [toast, setToast]               = useState(null);
-  const [trackingSol, setTrackingSol]   = useState(null);
+  const [quickViewId, setQuickViewId]   = useState(null);
   const timerRef = useRef(null);
 
   const load = useCallback(async (silent = false) => {
@@ -356,14 +471,6 @@ export default function AssistenteCriare() {
   }, [load]);
 
   useEffect(() => { setVisibleCount(PAGE_SIZE); }, [tab, search, statusFiltro]);
-
-  function toggleExpandido(cnpj) {
-    setExpandidos((prev) => {
-      const next = new Set(prev);
-      if (next.has(cnpj)) next.delete(cnpj); else next.add(cnpj);
-      return next;
-    });
-  }
 
   function tratarErro(err, errorKey) {
     const msg = err.message || "";
@@ -418,9 +525,11 @@ export default function AssistenteCriare() {
     );
   }
 
-  // No histórico sem filtro de status, agrupa por CNPJ: 1 linha resumo (última tentativa)
-  // + accordion com as anteriores. Com filtro de status ativo, mostra a lista crua —
-  // agrupar ali confundiria "última tentativa" com "tentativa que bateu o filtro".
+  // No histórico sem filtro de status, agrupa por CNPJ: a lista mostra só a
+  // tentativa mais recente de cada cliente, com um badge de quantas tentativas
+  // existem — as demais ficam a 1 clique, na aba Histórico do painel lateral.
+  // Com filtro de status ativo, mostra a lista crua (agrupar confundiria "última
+  // tentativa" com "tentativa que bateu o filtro").
   const agrupar = tab === "historico" && !statusFiltro;
   let grupos = [];
   if (agrupar) {
@@ -432,12 +541,17 @@ export default function AssistenteCriare() {
     grupos = Array.from(porCnpj.values())
       .map((tentativas) => {
         const ordenadas = [...tentativas].sort((a, b) => parseUTC(b.criadoEm) - parseUTC(a.criadoEm));
-        return { cnpj: ordenadas[0].cnpj, ultima: ordenadas[0], anteriores: ordenadas.slice(1) };
+        return { ultima: ordenadas[0], total: ordenadas.length };
       })
       .sort((a, b) => parseUTC(b.ultima.criadoEm) - parseUTC(a.ultima.criadoEm));
   }
 
-  const itens = agrupar ? grupos : lista;
+  // Normaliza os dois modos (agrupado / lista crua) numa forma só, pra renderizar
+  // a tabela com um único map — cada linha é 1 solicitação representante + quantas
+  // tentativas ela resume (0/1 = nenhuma tentativa anterior a mostrar).
+  const itens = agrupar
+    ? grupos.map((g) => ({ sol: g.ultima, attemptsCount: g.total }))
+    : lista.map((s) => ({ sol: s, attemptsCount: 0 }));
   const visiveis = itens.slice(0, visibleCount);
 
   return (
@@ -455,227 +569,175 @@ export default function AssistenteCriare() {
         )}
       </div>
 
-      {/* Toolbar */}
-      <div className="flex items-center gap-3 mb-4 flex-wrap">
-        <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
-          <button onClick={() => setTab("pendentes")}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${tab === "pendentes" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
-            {t("tabs.pending")}
-            {pendentes.length > 0 && (
-              <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-amber-500 text-white text-[10px] font-bold">
-                {pendentes.length}
-              </span>
-            )}
-          </button>
-          <button onClick={() => setTab("historico")}
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${tab === "historico" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
-            {t("tabs.history")}
-          </button>
-        </div>
-
-        <div className="relative flex-1 max-w-xs">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("search.placeholder")}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 bg-white shadow-sm" />
-          {search && (
-            <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 6L6 18M6 6l12 12" />
-              </svg>
+      {/* A partir daqui: tabela e painel de detalhe dividem a largura lado a
+          lado, mesmo padrão da tela de Implantações — o painel nunca cobre o
+          cabeçalho acima. */}
+      <div className="flex items-start gap-4">
+      <div className="flex-1 min-w-0">
+        {/* Toolbar */}
+        <div className="flex items-center gap-3 mb-4 flex-wrap">
+          <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+            <button onClick={() => setTab("pendentes")}
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${tab === "pendentes" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+              {t("tabs.pending")}
+              {pendentes.length > 0 && (
+                <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-amber-500 text-white text-[10px] font-bold">
+                  {pendentes.length}
+                </span>
+              )}
             </button>
+            <button onClick={() => setTab("historico")}
+              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${tab === "historico" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+              {t("tabs.history")}
+            </button>
+          </div>
+
+          <div className="relative flex-1 max-w-xs">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("search.placeholder")}
+              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 bg-white shadow-sm" />
+            {search && (
+              <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          {tab === "historico" && (
+            <select value={statusFiltro} onChange={(e) => setStatusFiltro(e.target.value)}
+              className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400">
+              {STATUS_HISTORICO.map((s) => <option key={s.value} value={s.value}>{t(`statusHistorico.${s.labelKey}`)}</option>)}
+            </select>
           )}
+
+          <span className="text-xs text-gray-400 ml-auto">
+            {agrupar
+              ? `${t("counter.clients", { count: grupos.length })} · ${t("counter.requests", { count: lista.length })}`
+              : t("counter.requests", { count: lista.length })}
+          </span>
         </div>
 
-        {tab === "historico" && (
-          <select value={statusFiltro} onChange={(e) => setStatusFiltro(e.target.value)}
-            className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400">
-            {STATUS_HISTORICO.map((s) => <option key={s.value} value={s.value}>{t(`statusHistorico.${s.labelKey}`)}</option>)}
-          </select>
-        )}
-
-        <span className="text-xs text-gray-400 ml-auto">
-          {agrupar
-            ? `${t("counter.clients", { count: grupos.length })} · ${t("counter.requests", { count: lista.length })}`
-            : t("counter.requests", { count: lista.length })}
-        </span>
-      </div>
-
-      {/* Tabela */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-6 h-6 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" />
-          </div>
-        ) : visiveis.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center mb-3">
-              <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-              </svg>
+        {/* Tabela */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="w-6 h-6 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" />
             </div>
-            <p className="text-sm font-semibold text-gray-700">
-              {search || statusFiltro
-                ? t("empty.noneForFilter")
-                : tab === "pendentes" ? t("empty.nonePending") : t("empty.noneHistory")}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[760px]">
-              <thead>
-                <tr className="border-b-2 border-gray-100 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
-                  <th className="p-0 w-1" />
-                  <th className="text-left px-5 py-3">{t("table.client")}</th>
-                  <th className="text-left px-4 py-3 hidden sm:table-cell">{t("table.createdAt")}</th>
-                  <th className="text-left px-4 py-3 hidden sm:table-cell">
-                    {tab === "pendentes" ? t("table.expiresAt") : t("table.decidedAt")}
-                  </th>
-                  <th className="text-left px-4 py-3 hidden md:table-cell">{t("table.responsible")}</th>
-                  <th className="text-left px-4 py-3">{t("table.status")}</th>
-                  <th className="text-left px-4 py-3 hidden md:table-cell">{t("table.machine")}</th>
-                  <th className="px-4 py-3 w-52" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {agrupar ? visiveis.map((grupo) => {
-                  const aberto = expandidos.has(grupo.cnpj);
-                  const temAnteriores = grupo.anteriores.length > 0;
-                  const tentativas = [grupo.ultima, ...(aberto ? grupo.anteriores : [])];
-                  return (
-                    <Fragment key={grupo.cnpj}>
-                      {/* Cabeçalho do cliente — só identidade (nome + CNPJ) e o total de
-                          tentativas. Nenhum dado de tentativa específica mora aqui: cada
-                          tentativa (inclusive a mais recente) é sua própria linha completa
-                          logo abaixo, com os mesmos campos de qualquer outra. */}
-                      <tr
-                        onClick={() => temAnteriores && toggleExpandido(grupo.cnpj)}
-                        className={`bg-gray-50/60 ${temAnteriores ? "cursor-pointer hover:bg-gray-100/70" : ""} transition-colors`}
-                      >
-                        <td className="p-0 bg-gray-200" style={{ width: "4px", minWidth: "4px" }} />
-                        <td colSpan={7} className="px-5 py-2.5">
+          ) : visiveis.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center mb-3">
+                <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+              </div>
+              <p className="text-sm font-semibold text-gray-700">
+                {search || statusFiltro
+                  ? t("empty.noneForFilter")
+                  : tab === "pendentes" ? t("empty.nonePending") : t("empty.noneHistory")}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[640px]">
+                <thead>
+                  <tr className="border-b-2 border-gray-100 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                    <th className="p-0 w-1" />
+                    <th className="text-left px-5 py-3">{t("table.client")}</th>
+                    <th className="text-left px-4 py-3 hidden sm:table-cell">{t("table.createdAt")}</th>
+                    <th className="text-left px-4 py-3 hidden sm:table-cell">
+                      {tab === "pendentes" ? t("table.expiresAt") : t("table.decidedAt")}
+                    </th>
+                    <th className="text-left px-4 py-3">{t("table.status")}</th>
+                    <th className="px-4 py-3 w-52" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {visiveis.map(({ sol, attemptsCount }) => {
+                    const isPendente = sol.status === "pendente";
+                    return (
+                      <tr key={sol.id} onClick={() => setQuickViewId(sol.id)}
+                        className="group hover:bg-gray-50/60 transition-colors cursor-pointer">
+                        <td className={`p-0 ${STATUS_STYLE[sol.status]?.accent || STATUS_STYLE.expirada.accent}`} style={{ width: "4px", minWidth: "4px" }} />
+                        <td className="px-5 py-4">
                           <div className="flex items-center gap-2">
-                            <span className={`shrink-0 w-4 h-4 flex items-center justify-center rounded text-gray-400 transition-transform ${aberto ? "rotate-90" : ""} ${temAnteriores ? "" : "invisible"}`}>
-                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                              </svg>
-                            </span>
-                            <ClienteCell sol={grupo.ultima} navigate={navigate} />
-                            <span className="ml-auto shrink-0 text-[11px] font-semibold text-gray-400 whitespace-nowrap">
-                              {t("group.attemptsCount", { count: 1 + grupo.anteriores.length })}
-                            </span>
+                            <ClienteCell sol={sol} navigate={navigate} />
+                            {attemptsCount > 1 && (
+                              <span className="ml-auto shrink-0 text-[11px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full whitespace-nowrap">
+                                {t("group.attemptsCount", { count: attemptsCount })}
+                              </span>
+                            )}
                           </div>
                         </td>
+                        <td className="px-4 py-4 hidden sm:table-cell text-xs text-gray-500 whitespace-nowrap" title={fmtDateTime(sol.criadoEm)}>
+                          {timeAgoFromUTC(sol.criadoEm)}
+                        </td>
+                        <td className="px-4 py-4 hidden sm:table-cell text-xs text-gray-500 whitespace-nowrap">
+                          {isPendente ? (
+                            <span title={fmtDateTime(sol.expiraEm)}>{t("table.expiresPrefix", { time: timeUntilUTC(sol.expiraEm) })}</span>
+                          ) : decisaoDe(sol) ? (
+                            <span title={timeAgoFromUTC(decisaoDe(sol))}>{fmtDateTime(decisaoDe(sol))}</span>
+                          ) : (
+                            <span>{fmtDateTime(sol.expiraEm)}</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-4">
+                          <StatusBadge status={sol.status} />
+                        </td>
+                        <td className="px-4 py-4">
+                          {isPendente ? (
+                            <div className="flex items-center gap-2 justify-end">
+                              <button onClick={(e) => { e.stopPropagation(); handleRecusar(sol); }} disabled={actingId === sol.id}
+                                className="px-3 py-1.5 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 transition-colors disabled:opacity-50">
+                                {t("actions.reject")}
+                              </button>
+                              <button onClick={(e) => { e.stopPropagation(); handleAprovar(sol); }} disabled={actingId === sol.id}
+                                className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-green-600 hover:bg-green-700 transition-colors disabled:opacity-50 shadow-sm">
+                                {actingId === sol.id ? t("actions.waiting") : t("actions.approve")}
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex justify-end">
+                              <svg className="w-4 h-4 text-gray-200 group-hover:text-orange-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                              </svg>
+                            </div>
+                          )}
+                        </td>
                       </tr>
-                      {tentativas.map((att, i) => {
-                        const isLatest = i === 0;
-                        return (
-                          <tr key={att.id} className={isLatest ? "hover:bg-gray-50/60 transition-colors" : "bg-gray-50/30 hover:bg-gray-50/60 transition-colors"}>
-                            <td className={`p-0 ${STATUS_STYLE[att.status]?.accent || STATUS_STYLE.expirada.accent}`} style={{ width: "4px", minWidth: "4px" }} />
-                            <td className="pl-12 pr-5 py-3">
-                              <span className={`text-xs text-gray-400 ${isLatest ? "" : "italic"}`}>
-                                {isLatest ? t("table.latestAttempt") : t("table.previousAttempt")}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 hidden sm:table-cell text-xs text-gray-500 whitespace-nowrap" title={fmtDateTime(att.criadoEm)}>
-                              {timeAgoFromUTC(att.criadoEm)}
-                            </td>
-                            <td className="px-4 py-3 hidden sm:table-cell text-xs text-gray-500 whitespace-nowrap">
-                              {decisaoDe(att) ? (
-                                <span title={timeAgoFromUTC(decisaoDe(att))}>{fmtDateTime(decisaoDe(att))}</span>
-                              ) : (
-                                <span>{fmtDateTime(att.expiraEm)}</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-3 hidden md:table-cell">
-                              <ResponsavelCell sol={att} size="w-5 h-5" />
-                            </td>
-                            <td className="px-4 py-3"><StatusBadge status={att.status} /></td>
-                            <td className="px-4 py-3 hidden md:table-cell">
-                              <MaquinaChip info={att.maquinaInfo} />
-                            </td>
-                            <td className="px-4 py-3">
-                              {att.status === "aprovada" && (
-                                <div className="flex justify-end">
-                                  <button onClick={() => setTrackingSol(att)}
-                                    className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 transition-colors">
-                                    {t("actions.track")}
-                                  </button>
-                                </div>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </Fragment>
-                  );
-                }) : visiveis.map((sol) => {
-                  const isPendente = sol.status === "pendente";
-                  return (
-                    <tr key={sol.id} className="hover:bg-gray-50/60 transition-colors">
-                      <td className={`p-0 ${STATUS_STYLE[sol.status]?.accent || STATUS_STYLE.expirada.accent}`} style={{ width: "4px", minWidth: "4px" }} />
-                      <td className="px-5 py-4">
-                        <ClienteCell sol={sol} navigate={navigate} />
-                      </td>
-                      <td className="px-4 py-4 hidden sm:table-cell text-xs text-gray-500 whitespace-nowrap" title={fmtDateTime(sol.criadoEm)}>
-                        {timeAgoFromUTC(sol.criadoEm)}
-                      </td>
-                      <td className="px-4 py-4 hidden sm:table-cell text-xs text-gray-500 whitespace-nowrap">
-                        {isPendente ? (
-                          <span title={fmtDateTime(sol.expiraEm)}>{t("table.expiresPrefix", { time: timeUntilUTC(sol.expiraEm) })}</span>
-                        ) : decisaoDe(sol) ? (
-                          <span title={timeAgoFromUTC(decisaoDe(sol))}>{fmtDateTime(decisaoDe(sol))}</span>
-                        ) : (
-                          <span>{fmtDateTime(sol.expiraEm)}</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-4 hidden md:table-cell">
-                        <ResponsavelCell sol={sol} />
-                      </td>
-                      <td className="px-4 py-4">
-                        <StatusBadge status={sol.status} />
-                      </td>
-                      <td className="px-4 py-4 hidden md:table-cell">
-                        <MaquinaChip info={sol.maquinaInfo} />
-                      </td>
-                      <td className="px-4 py-4">
-                        {isPendente ? (
-                          <div className="flex items-center gap-2 justify-end">
-                            <button onClick={() => handleRecusar(sol)} disabled={actingId === sol.id}
-                              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 transition-colors disabled:opacity-50">
-                              {t("actions.reject")}
-                            </button>
-                            <button onClick={() => handleAprovar(sol)} disabled={actingId === sol.id}
-                              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-green-600 hover:bg-green-700 transition-colors disabled:opacity-50 shadow-sm">
-                              {actingId === sol.id ? t("actions.waiting") : t("actions.approve")}
-                            </button>
-                          </div>
-                        ) : sol.status === "aprovada" && (
-                          <div className="flex justify-end">
-                            <button onClick={() => setTrackingSol(sol)}
-                              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 transition-colors">
-                              {t("actions.track")}
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
 
-        {visiveis.length < itens.length && (
-          <div className="flex justify-center py-4 border-t border-gray-100">
-            <button onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 border border-gray-200 transition-colors">
-              {t("loadMore.button", { count: itens.length - visiveis.length })}
-            </button>
-          </div>
-        )}
+          {visiveis.length < itens.length && (
+            <div className="flex justify-center py-4 border-t border-gray-100">
+              <button onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 border border-gray-200 transition-colors">
+                {t("loadMore.button", { count: itens.length - visiveis.length })}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {quickViewId && (
+        <QuickViewPanel
+          solId={quickViewId}
+          solicitacoes={solicitacoes}
+          onClose={() => setQuickViewId(null)}
+          navigate={navigate}
+          onAprovar={handleAprovar}
+          onRecusar={handleRecusar}
+          onSelectAttempt={setQuickViewId}
+          actingId={actingId}
+        />
+      )}
       </div>
 
       {toast && (
@@ -687,8 +749,6 @@ export default function AssistenteCriare() {
           {toast.text}
         </div>
       )}
-
-      {trackingSol && <EtapasModal sol={trackingSol} onClose={() => setTrackingSol(null)} />}
     </Layout>
   );
 }

@@ -41,12 +41,8 @@
     "createdAt": "Created at",
     "expiresAt": "Expires at",
     "decidedAt": "Decided at",
-    "responsible": "Responsible",
     "status": "Status",
-    "machine": "Machine",
-    "expiresPrefix": "expires in {{time}}",
-    "previousAttempt": "previous attempt",
-    "latestAttempt": "latest attempt"
+    "expiresPrefix": "expires in {{time}}"
   },
   "group": {
     "attemptsCount_one": "{{count}} attempt",
@@ -55,20 +51,18 @@
   "actions": {
     "reject": "Reject",
     "approve": "Approve",
-    "waiting": "Please wait…",
-    "track": "Track"
+    "waiting": "Please wait…"
   },
   "machine": {
-    "noData": "—",
+    "noDataFull": "No machine data was collected for this attempt.",
     "diskFree_one": "{{count}}GB free",
     "diskFree_other": "{{count}}GB free",
-    "warningLabel": "Low space ({{pct}}% free)",
     "verdictOk": "No alerts on this machine",
     "verdictWarning": "Warning: low disk space",
-    "hasDataGeneric": "Data available",
     "storageUsage": "{{free}} GB free of {{total}} GB",
     "fields": {
       "os": "OS",
+      "hardware": "Hardware",
       "processor": "Processor",
       "cores": "Cores",
       "ram": "RAM",
@@ -76,10 +70,24 @@
     }
   },
   "tracking": {
-    "title": "Installation progress",
     "empty": "No steps reported yet.",
-    "loadError": "Error loading progress.",
     "stepOf": "Step {{atual}} of {{total}}"
+  },
+  "quickView": {
+    "tabs": {
+      "geral": "Overview",
+      "maquina": "Machine",
+      "progresso": "Progress",
+      "historico": "History"
+    },
+    "expiresIn": "Expires in",
+    "decidedOn": "Decided",
+    "responsible": "Responsible",
+    "information": "Information",
+    "createdAt": "Created at",
+    "cnpj": "CNPJ",
+    "viewClient": "View client",
+    "actions": "Actions"
   },
   "loadMore": {
     "button": "Load more ({{count}} remaining)"
