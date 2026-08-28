@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Layout } from "../components/layout/Layout";
@@ -163,6 +164,58 @@ function EtapaRow({ etapa }) {
 
 // ── Abas do painel lateral (QuickViewPanel) ─────────────────────────────────────
 
+// Botão (i) que abre um popover explicando um veredito — mesmo padrão de popover
+// já usado no seletor de idioma (getBoundingClientRect + portal + fecha ao clicar
+// fora), pra não depender de position:absolute preso ao scroll do painel.
+function InfoPopover({ children }) {
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState(null);
+  const btnRef = useRef(null);
+  const panelRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handlePointerDown(e) {
+      if (btnRef.current?.contains(e.target)) return;
+      if (panelRef.current?.contains(e.target)) return;
+      setOpen(false);
+    }
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, [open]);
+
+  function toggle(e) {
+    e.stopPropagation();
+    if (!open && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      setPos({ top: r.bottom + 6, left: Math.min(r.left, window.innerWidth - 272) });
+    }
+    setOpen((v) => !v);
+  }
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        onClick={toggle}
+        className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold border border-current opacity-60 hover:opacity-100 transition-opacity shrink-0"
+      >
+        i
+      </button>
+      {open && pos && createPortal(
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div ref={panelRef} className="fixed z-50 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 p-3.5" style={{ top: pos.top, left: pos.left }}>
+            {children}
+          </div>
+        </>,
+        document.body
+      )}
+    </>
+  );
+}
+
 // Specs da máquina — não é mais uma aba própria, faz parte da Visão Geral: quem
 // abre o painel já vê tudo da tentativa em foco (status, responsável e máquina)
 // sem precisar trocar de aba pra isso.
@@ -183,6 +236,7 @@ function MaquinaSection({ info }) {
   const disco = info.disco || {};
   const temUso = disco.espacoTotalGb && disco.espacoLivreGb != null;
   const pctUsado = temUso ? Math.round(((disco.espacoTotalGb - disco.espacoLivreGb) / disco.espacoTotalGb) * 100) : null;
+  const pctLivre = avaliacao.pctLivre;
 
   return (
     <div className="space-y-5">
@@ -190,9 +244,29 @@ function MaquinaSection({ info }) {
         <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">{t("quickView.machine")}</p>
         <div className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border ${isWarning ? "bg-amber-50 border-amber-200" : "bg-green-50 border-green-200"}`}>
           <span className={`w-2 h-2 rounded-full shrink-0 ${isWarning ? "bg-amber-400" : "bg-green-500"}`} />
-          <span className={`text-sm font-semibold ${isWarning ? "text-amber-700" : "text-green-700"}`}>
+          <span className={`text-sm font-semibold flex-1 ${isWarning ? "text-amber-700" : "text-green-700"}`}>
             {isWarning ? t("machine.verdictWarning") : t("machine.verdictOk")}
           </span>
+          <InfoPopover>
+            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2.5">{t("machine.criteriaTitle")}</p>
+            <div className="flex items-start gap-2">
+              <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5 ${
+                pctLivre == null ? "bg-gray-100 text-gray-400" : isWarning ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600"
+              }`}>
+                {pctLivre == null ? "?" : isWarning ? "✕" : "✓"}
+              </span>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-gray-700">{t("machine.criteriaDisk")}</p>
+                <p className="text-[11px] text-gray-500 mt-0.5">
+                  {pctLivre == null
+                    ? t("machine.criteriaDiskUnavailable")
+                    : t(isWarning ? "machine.criteriaDiskWarningDetail" : "machine.criteriaDiskOkDetail", {
+                        pct: Math.round(pctLivre), min: DISCO_LIVRE_BAIXO_PCT,
+                      })}
+                </p>
+              </div>
+            </div>
+          </InfoPopover>
         </div>
       </div>
 

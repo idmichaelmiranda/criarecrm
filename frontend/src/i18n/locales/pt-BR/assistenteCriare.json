@@ -63,6 +63,11 @@
     "verdictOk": "Máquina sem alertas",
     "verdictWarning": "Atenção: pouco espaço em disco",
     "storageUsage": "{{free}} GB livres de {{total}} GB",
+    "criteriaTitle": "Critérios avaliados",
+    "criteriaDisk": "Espaço livre em disco",
+    "criteriaDiskOkDetail": "{{pct}}% livre — acima do mínimo recomendado de {{min}}%",
+    "criteriaDiskWarningDetail": "{{pct}}% livre — abaixo do mínimo recomendado de {{min}}%",
+    "criteriaDiskUnavailable": "Dado de disco incompleto — não foi possível avaliar",
     "fields": {
       "os": "Sistema",
       "hardware": "Hardware",

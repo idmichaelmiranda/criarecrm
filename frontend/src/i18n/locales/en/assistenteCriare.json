@@ -63,6 +63,11 @@
     "verdictOk": "No alerts on this machine",
     "verdictWarning": "Warning: low disk space",
     "storageUsage": "{{free}} GB free of {{total}} GB",
+    "criteriaTitle": "Criteria evaluated",
+    "criteriaDisk": "Free disk space",
+    "criteriaDiskOkDetail": "{{pct}}% free — above the recommended minimum of {{min}}%",
+    "criteriaDiskWarningDetail": "{{pct}}% free — below the recommended minimum of {{min}}%",
+    "criteriaDiskUnavailable": "Incomplete disk data — could not be evaluated",
     "fields": {
       "os": "OS",
       "hardware": "Hardware",
