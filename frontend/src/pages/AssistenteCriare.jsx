@@ -11,6 +11,28 @@ const PAGE_SIZE = 20;
 const ETAPA_TRACK_POLL_MS = 3000;
 const DISCO_LIVRE_BAIXO_PCT = 15;
 
+// Contrato de índices combinado com quem mantém o CriareInstaller — usado só
+// pra desenhar a jornada completa desde já (placeholders "pendente" pros
+// índices que ainda não chegaram). O nome real reportado sempre tem prioridade
+// sobre o rótulo do molde; isso é só uma prévia de onde a jornada tende a ir.
+const ETAPAS_TEMPLATE = [
+  { indice: 0, key: "mysql" },
+  { indice: 1, key: "baixarBase" },
+  { indice: 2, key: "importarBase" },
+  { indice: 3, key: "baixarErp" },
+  { indice: 4, key: "instalarErp" },
+  { indice: 5, key: "concluido" },
+];
+
+function formatDuracao(iniciadoEm, concluidoEm) {
+  if (!iniciadoEm || !concluidoEm) return null;
+  const segs = Math.max(0, Math.round((parseUTC(concluidoEm) - parseUTC(iniciadoEm)) / 1000));
+  if (segs < 60) return `${segs}s`;
+  const min = Math.floor(segs / 60);
+  const rem = segs % 60;
+  return rem > 0 ? `${min}min ${rem}s` : `${min}min`;
+}
+
 const STATUS_HISTORICO = [
   { value: "", labelKey: "all" },
   { value: "aprovada", labelKey: "aprovada" },
@@ -131,26 +153,61 @@ function maquinaResumoCompacto(info, t) {
   return { dotColor: isWarning ? "bg-amber-400" : "bg-green-500", label };
 }
 
-function EtapaRow({ etapa }) {
+// Ícone do nó + o trecho de conector que desce até o próximo — o trecho fica
+// sólido/verde só quando ESTA etapa está concluída (jornada "já percorrida");
+// caso contrário fica tracejado/cinza (jornada ainda não percorrida até ali).
+function StepperIcone({ status, isLast }) {
+  const isDone = status === "concluida";
+  const isFailed = status === "falhou";
+  const isActive = status === "em_andamento";
+
+  const corNo = isFailed
+    ? "bg-red-500 text-white"
+    : isDone
+    ? "bg-green-500 text-white"
+    : isActive
+    ? "bg-white border-2 border-orange-400 text-orange-500"
+    : "bg-white border-2 border-dashed border-gray-200 text-gray-300";
+
+  return (
+    <div className="flex flex-col items-center w-6 shrink-0 self-stretch">
+      <div className="relative w-6 h-6 shrink-0">
+        {isActive && <span className="absolute inset-0 rounded-full bg-orange-400 opacity-60 animate-ping" />}
+        <div className={`relative w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${corNo}`}>
+          {isDone ? "✓" : isFailed ? "✕" : isActive ? <span className="w-2 h-2 rounded-full bg-orange-400" /> : ""}
+        </div>
+      </div>
+      {!isLast && (
+        <div className={`w-0 flex-1 mt-0.5 border-l-2 ${isDone ? "border-green-300 border-solid" : "border-gray-200 border-dashed"}`} />
+      )}
+    </div>
+  );
+}
+
+function StepperRow({ etapa, isLast }) {
   const isDone = etapa.status === "concluida";
   const isFailed = etapa.status === "falhou";
   const isActive = etapa.status === "em_andamento";
-  const dotColor = isFailed ? "bg-red-500" : isDone ? "bg-green-500" : isActive ? "bg-orange-400 animate-pulse" : "bg-gray-300";
+  const isPending = etapa.status === "pendente";
+
   const horaFim = etapa.concluidoEm ? parseUTC(etapa.concluidoEm).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : null;
+  const duracao = isDone ? formatDuracao(etapa.iniciadoEm, etapa.concluidoEm) : null;
 
   return (
     <li className="flex gap-3">
-      <span className={`w-2.5 h-2.5 rounded-full shrink-0 mt-1 ${dotColor}`} />
-      <div className="flex-1 min-w-0 pb-1">
+      <StepperIcone status={etapa.status} isLast={isLast} />
+      <div className="flex-1 min-w-0 pb-5">
         <div className="flex items-center justify-between gap-2">
-          <span className={`text-sm font-semibold truncate ${isFailed ? "text-red-600" : "text-gray-800"}`}>{etapa.nome}</span>
+          <span className={`text-sm font-semibold truncate ${isFailed ? "text-red-600" : isPending ? "text-gray-400" : "text-gray-800"}`}>
+            {etapa.nome}
+          </span>
           {horaFim && <span className="text-[11px] text-gray-400 shrink-0">{horaFim}</span>}
         </div>
         {isActive && (
           <div className="mt-1.5">
             {etapa.percentual != null && (
               <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-orange-400 transition-all" style={{ width: `${Math.min(100, Math.max(0, etapa.percentual))}%` }} />
+                <div className="h-full bg-orange-400 animate-pulse transition-all" style={{ width: `${Math.min(100, Math.max(0, etapa.percentual))}%` }} />
               </div>
             )}
             {etapa.mensagem && <p className="text-xs text-gray-500 mt-1 truncate" title={etapa.mensagem}>{etapa.mensagem}</p>}
@@ -158,8 +215,30 @@ function EtapaRow({ etapa }) {
         )}
         {isFailed && etapa.mensagem && <p className="text-xs text-red-500 mt-1 truncate" title={etapa.mensagem}>{etapa.mensagem}</p>}
         {isDone && etapa.mensagem && <p className="text-xs text-gray-400 mt-1 truncate" title={etapa.mensagem}>{etapa.mensagem}</p>}
+        {isDone && duracao && <p className="text-[11px] text-gray-300 mt-0.5">{duracao}</p>}
       </div>
     </li>
+  );
+}
+
+function MiniCircularProgress({ value }) {
+  const r = 26, c = 2 * Math.PI * r;
+  const offset = c - (Math.min(100, Math.max(0, value)) / 100) * c;
+  return (
+    <div className="relative w-16 h-16 shrink-0">
+      <svg viewBox="0 0 64 64" className="w-full h-full">
+        <circle cx="32" cy="32" r={r} fill="none" stroke="#f3f4f6" strokeWidth="6" />
+        <circle
+          cx="32" cy="32" r={r} fill="none" stroke={value >= 100 ? "#22c55e" : "#f97316"} strokeWidth="6"
+          strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round"
+          transform="rotate(-90 32 32)"
+          style={{ transition: "stroke-dashoffset 400ms ease" }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-sm font-bold text-gray-800">{value}%</span>
+      </div>
+    </div>
   );
 }
 
@@ -360,28 +439,63 @@ function ProgressoTab({ sol }) {
     indiceEtapa: -1,
     nome: t("tracking.released"),
     status: "concluida",
-    percentual: null,
     mensagem: sol.responsavelNome ? t("tracking.releasedBy", { nome: sol.responsavelNome }) : null,
     concluidoEm: sol.aprovadoEm,
   };
-  const linha = [etapaLiberada, ...etapas];
+
+  // Monta a jornada completa: molde conhecido (contrato com o instalador) com
+  // placeholder "pendente" pros índices que ainda não chegaram, dado real
+  // sempre tem prioridade sobre o rótulo do molde. Etapa reportada fora do
+  // molde (contrato mudou/estendeu) entra no fim, na ordem que veio.
+  const porIndice = new Map(etapas.map((e) => [e.indiceEtapa, e]));
+  const doMolde = ETAPAS_TEMPLATE.map(({ indice, key }) => {
+    const reportada = porIndice.get(indice);
+    porIndice.delete(indice);
+    return reportada || { indiceEtapa: indice, nome: t(`tracking.steps.${key}`), status: "pendente" };
+  });
+  const extras = [...porIndice.values()].sort((a, b) => a.indiceEtapa - b.indiceEtapa);
+  const linha = [etapaLiberada, ...doMolde, ...extras];
+
+  const concluidasDoMolde = doMolde.filter((e) => e.status === "concluida").length;
+  const pctGeral = Math.round((concluidasDoMolde / ETAPAS_TEMPLATE.length) * 100);
+  const etapaComFalha = linha.find((e) => e.status === "falhou");
 
   // Total reportado pelo instalador (última chamada é a fonte mais confiável) —
   // mostrado sempre, não só quando algo está em andamento, pra um descompasso
   // (ex.: instalador pulando/reaproveitando índice) ficar visível na hora, sem
-  // precisar comparar manualmente.
+  // precisar comparar manualmente com o molde.
   const totalEtapas = etapas.at(-1)?.totalEtapas;
 
   return (
     <>
-      {totalEtapas != null && (
-        <p className="text-xs text-gray-400 -mt-1">{t("tracking.reportedOf", { count: etapas.length, total: totalEtapas })}</p>
+      <div className="flex items-center gap-4 pb-1">
+        <MiniCircularProgress value={pctGeral} />
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-gray-800">
+            {t("tracking.stepsCount", { done: concluidasDoMolde, total: ETAPAS_TEMPLATE.length })}
+          </p>
+          <p className="text-[11px] text-gray-400 mt-0.5 flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" />
+            {t("tracking.liveUpdate")}
+          </p>
+          {totalEtapas != null && totalEtapas !== etapas.length && (
+            <p className="text-[11px] text-amber-600 mt-0.5">{t("tracking.reportedOf", { count: etapas.length, total: totalEtapas })}</p>
+          )}
+        </div>
+      </div>
+
+      {etapaComFalha && (
+        <div className="flex items-start gap-2.5 px-3.5 py-2.5 rounded-xl bg-red-50 border border-red-200">
+          <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xs font-bold shrink-0">✕</span>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-red-700">{t("tracking.failedTitle", { nome: etapaComFalha.nome })}</p>
+            {etapaComFalha.mensagem && <p className="text-[11px] text-red-500 mt-0.5">{etapaComFalha.mensagem}</p>}
+          </div>
+        </div>
       )}
-      {etapas.length === 0 ? (
-        <p className="text-sm text-gray-400 text-center py-6">{t("tracking.empty")}</p>
-      ) : null}
-      <ol className="space-y-4">
-        {linha.map((e) => <EtapaRow key={e.indiceEtapa} etapa={e} />)}
+
+      <ol>
+        {linha.map((e, i) => <StepperRow key={e.indiceEtapa} etapa={e} isLast={i === linha.length - 1} />)}
       </ol>
     </>
   );

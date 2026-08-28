@@ -81,7 +81,18 @@
     "empty": "Ninguna etapa reportada todavía.",
     "reportedOf": "{{count}} de {{total}} etapas reportadas",
     "released": "Instalación liberada",
-    "releasedBy": "Aprobada por {{nome}}"
+    "releasedBy": "Aprobada por {{nome}}",
+    "stepsCount": "{{done}} de {{total}} etapas",
+    "liveUpdate": "Actualizando en vivo",
+    "failedTitle": "Falla en: {{nome}}",
+    "steps": {
+      "mysql": "Instalando MySQL",
+      "baixarBase": "Descargando base del CRM",
+      "importarBase": "Importando base del cliente",
+      "baixarErp": "Descargando ERP",
+      "instalarErp": "Instalando ERP",
+      "concluido": "Instalación completa"
+    }
   },
   "quickView": {
     "tabs": {
