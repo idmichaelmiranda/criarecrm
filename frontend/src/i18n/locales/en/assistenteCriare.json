@@ -57,6 +57,8 @@
     "noDataFull": "No machine data was collected for this attempt.",
     "diskFree_one": "{{count}}GB free",
     "diskFree_other": "{{count}}GB free",
+    "warningLabel": "Low space ({{pct}}% free)",
+    "hasDataGeneric": "Data available",
     "verdictOk": "No alerts on this machine",
     "verdictWarning": "Warning: low disk space",
     "storageUsage": "{{free}} GB free of {{total}} GB",
@@ -78,7 +80,7 @@
       "geral": "Overview",
       "maquina": "Machine",
       "progresso": "Progress",
-      "historico": "History"
+      "tentativas": "Attempts"
     },
     "expiresIn": "Expires in",
     "decidedOn": "Decided",
@@ -87,7 +89,8 @@
     "createdAt": "Created at",
     "cnpj": "CNPJ",
     "viewClient": "View client",
-    "actions": "Actions"
+    "actions": "Actions",
+    "current": "current"
   },
   "loadMore": {
     "button": "Load more ({{count}} remaining)"

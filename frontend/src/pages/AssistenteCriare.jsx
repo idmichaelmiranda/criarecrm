@@ -117,6 +117,19 @@ function avaliarMaquina(info) {
   return { nivel: "ok", pctLivre };
 }
 
+// Resumo de 1 linha (bolinha + rótulo curto) pra comparar a máquina de várias
+// tentativas lado a lado na aba Tentativas — sem precisar abrir cada uma.
+function maquinaResumoCompacto(info, t) {
+  const avaliacao = avaliarMaquina(info);
+  if (avaliacao.nivel === "unknown") return null;
+  const isWarning = avaliacao.nivel === "warning";
+  const label = isWarning
+    ? t("machine.warningLabel", { pct: Math.round(avaliacao.pctLivre) })
+    : [info.windows?.versao, info.disco?.tipo && info.disco.tipo !== "desconhecido" ? info.disco.tipo : null]
+        .filter(Boolean).join(" · ") || t("machine.hasDataGeneric");
+  return { dotColor: isWarning ? "bg-amber-400" : "bg-green-500", label };
+}
+
 function EtapaRow({ etapa }) {
   const isDone = etapa.status === "concluida";
   const isFailed = etapa.status === "falhou";
@@ -272,19 +285,48 @@ function ProgressoTab({ solId }) {
   );
 }
 
-function HistoricoTab({ tentativas, onSelect }) {
+// Linha do tempo com TODAS as tentativas do CNPJ, inclusive a que já está aberta
+// (marcada "atual") — cada uma com seu próprio resumo de máquina lado a lado, pra
+// dar pra comparar sem abrir uma por uma e sem "sumir" a que você já estava vendo.
+function TentativasTab({ tentativas, currentId, onSelect }) {
+  const { t } = useTranslation("assistenteCriare");
   return (
     <div className="space-y-2.5">
-      {tentativas.map((att) => (
-        <button key={att.id} onClick={() => onSelect(att.id)}
-          className="w-full text-left px-3.5 py-3 rounded-xl border border-gray-100 hover:border-orange-200 hover:bg-orange-50/40 transition-colors">
-          <div className="flex items-center justify-between mb-1.5">
-            <StatusBadge status={att.status} />
-            <span className="text-[11px] text-gray-400">{timeAgoFromUTC(att.criadoEm)}</span>
+      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+        {t("group.attemptsCount", { count: tentativas.length })}
+      </p>
+      {tentativas.map((att) => {
+        const isCurrent = att.id === currentId;
+        const resumo = maquinaResumoCompacto(att.maquinaInfo, t);
+        return (
+          <div
+            key={att.id}
+            onClick={() => !isCurrent && onSelect(att.id)}
+            className={`px-3.5 py-3 rounded-xl border transition-colors ${
+              isCurrent ? "border-orange-200 bg-orange-50/50" : "border-gray-100 hover:border-orange-200 hover:bg-orange-50/40 cursor-pointer"
+            }`}
+          >
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <div className="flex items-center gap-2">
+                <StatusBadge status={att.status} />
+                {isCurrent && (
+                  <span className="text-[10px] font-bold text-orange-600 uppercase tracking-wide">{t("quickView.current")}</span>
+                )}
+              </div>
+              <span className="text-[11px] text-gray-400 shrink-0">{timeAgoFromUTC(att.criadoEm)}</span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <ResponsavelCell sol={att} size="w-5 h-5" />
+              {resumo && (
+                <span className="inline-flex items-center gap-1.5 text-[11px] text-gray-500 shrink-0 max-w-[130px]">
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${resumo.dotColor}`} />
+                  <span className="truncate">{resumo.label}</span>
+                </span>
+              )}
+            </div>
           </div>
-          <ResponsavelCell sol={att} size="w-5 h-5" />
-        </button>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -303,15 +345,17 @@ function QuickViewPanel({ solId, solicitacoes, onClose, navigate, onAprovar, onR
   if (!sol) return null;
 
   const isPendente = sol.status === "pendente";
+  // Inclui a própria tentativa atual — antes ela ficava só implícita na aba Visão
+  // Geral e "sumia" daqui, o que confundia mais do que ajudava.
   const tentativas = solicitacoes
-    .filter((s) => s.cnpj === sol.cnpj && s.id !== sol.id)
+    .filter((s) => s.cnpj === sol.cnpj)
     .sort((a, b) => parseUTC(b.criadoEm) - parseUTC(a.criadoEm));
 
   const tabs = [
     { id: "geral", label: t("quickView.tabs.geral") },
     { id: "maquina", label: t("quickView.tabs.maquina") },
     ...(sol.status === "aprovada" ? [{ id: "progresso", label: t("quickView.tabs.progresso") }] : []),
-    ...(tentativas.length > 0 ? [{ id: "historico", label: t("quickView.tabs.historico") }] : []),
+    ...(tentativas.length > 1 ? [{ id: "tentativas", label: t("quickView.tabs.tentativas") }] : []),
   ];
 
   return (
@@ -389,7 +433,7 @@ function QuickViewPanel({ solId, solicitacoes, onClose, navigate, onAprovar, onR
 
         {tab === "maquina" && <MaquinaTab info={sol.maquinaInfo} />}
         {tab === "progresso" && <ProgressoTab solId={sol.id} />}
-        {tab === "historico" && <HistoricoTab tentativas={tentativas} onSelect={onSelectAttempt} />}
+        {tab === "tentativas" && <TentativasTab tentativas={tentativas} currentId={sol.id} onSelect={onSelectAttempt} />}
       </div>
 
       {/* Footer */}

@@ -57,6 +57,8 @@
     "noDataFull": "Nenhum dado de máquina foi coletado nessa tentativa.",
     "diskFree_one": "{{count}}GB livre",
     "diskFree_other": "{{count}}GB livres",
+    "warningLabel": "Pouco espaço ({{pct}}% livre)",
+    "hasDataGeneric": "Dados disponíveis",
     "verdictOk": "Máquina sem alertas",
     "verdictWarning": "Atenção: pouco espaço em disco",
     "storageUsage": "{{free}} GB livres de {{total}} GB",
@@ -78,7 +80,7 @@
       "geral": "Visão Geral",
       "maquina": "Máquina",
       "progresso": "Progresso",
-      "historico": "Histórico"
+      "tentativas": "Tentativas"
     },
     "expiresIn": "Expira em",
     "decidedOn": "Decisão",
@@ -87,7 +89,8 @@
     "createdAt": "Criada em",
     "cnpj": "CNPJ",
     "viewClient": "Ver cliente",
-    "actions": "Ações"
+    "actions": "Ações",
+    "current": "atual"
   },
   "loadMore": {
     "button": "Carregar mais ({{count}} restantes)"
