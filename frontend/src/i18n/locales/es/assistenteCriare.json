@@ -43,12 +43,14 @@
     "decidedAt": "Decisión el",
     "responsible": "Responsable",
     "status": "Estado",
+    "machine": "Máquina",
     "expiresPrefix": "expira en {{time}}",
-    "previousAttempt": "intento anterior"
+    "previousAttempt": "intento anterior",
+    "latestAttempt": "intento más reciente"
   },
   "group": {
-    "previousCount_one": "+{{count}} anterior",
-    "previousCount_other": "+{{count}} anteriores"
+    "attemptsCount_one": "{{count}} intento",
+    "attemptsCount_other": "{{count}} intentos"
   },
   "actions": {
     "reject": "Rechazar",
@@ -57,8 +59,21 @@
     "track": "Seguimiento"
   },
   "machine": {
+    "noData": "—",
     "diskFree_one": "{{count}}GB libre",
-    "diskFree_other": "{{count}}GB libres"
+    "diskFree_other": "{{count}}GB libres",
+    "warningLabel": "Poco espacio ({{pct}}% libre)",
+    "verdictOk": "Máquina sin alertas",
+    "verdictWarning": "Atención: poco espacio en disco",
+    "hasDataGeneric": "Datos disponibles",
+    "storageUsage": "{{free}} GB libres de {{total}} GB",
+    "fields": {
+      "os": "Sistema",
+      "processor": "Procesador",
+      "cores": "Núcleos",
+      "ram": "Memoria RAM",
+      "storage": "Almacenamiento"
+    }
   },
   "tracking": {
     "title": "Seguimiento de la instalación",

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, Fragment } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Layout } from "../components/layout/Layout";
@@ -64,26 +65,11 @@ function decisaoDe(sol) {
   return sol.aprovadoEm || sol.recusadoEm || sol.canceladoEm || null;
 }
 
-// Resumo compacto da máquina que pediu a instalação, pro setor de implantações ver
-// antes de aprovar (ex.: "Windows 11 Pro · 16GB RAM · SSD 210GB livres"). Todo campo é
-// best-effort (via WMI no instalador) — qualquer um pode faltar, por isso os checks.
-function formatMaquinaResumo(info, t) {
-  if (!info) return null;
-  const partes = [];
-  if (info.windows?.versao) partes.push(info.windows.versao);
-  if (info.memoriaRamGb) partes.push(`${info.memoriaRamGb}GB RAM`);
-  if (info.disco?.tipo && info.disco.tipo !== "desconhecido") {
-    const livre = info.disco.espacoLivreGb != null
-      ? ` ${t("machine.diskFree", { count: Math.round(info.disco.espacoLivreGb) })}`
-      : "";
-    partes.push(`${info.disco.tipo}${livre}`);
-  }
-  return partes.length ? partes.join(" · ") : null;
-}
-
+// Célula de identidade do cliente — só nome + CNPJ. Dado de máquina NÃO mora aqui:
+// pertence à tentativa específica que pediu a instalação (ver MaquinaChip), não ao
+// cliente como um todo, então fica na sua própria coluna.
 function ClienteCell({ sol, navigate }) {
   const { t } = useTranslation("assistenteCriare");
-  const maquinaResumo = formatMaquinaResumo(sol.maquinaInfo, t);
   return (
     <div className="min-w-0">
       {sol.clienteId ? (
@@ -97,12 +83,137 @@ function ClienteCell({ sol, navigate }) {
         <p className="text-sm font-semibold text-gray-400 italic truncate">{t("clientCell.noRecord")}</p>
       )}
       <p className="text-xs text-gray-400 mt-0.5 font-mono">{formatCnpj(sol.cnpj)}</p>
-      {maquinaResumo && (
-        <p className="text-[11px] text-gray-400 mt-0.5 truncate" title={maquinaResumo}>
-          🖥️ {maquinaResumo}
-        </p>
-      )}
     </div>
+  );
+}
+
+// ── Máquina que pediu a instalação ──────────────────────────────────────────────
+// Cada solicitação carrega seu próprio snapshot (best-effort via WMI no instalador,
+// qualquer campo pode faltar) — a avaliação abaixo transforma os números crus num
+// veredito direto, pra quem aprova não precisar saber interpretar GB/SSD sozinho.
+const DISCO_LIVRE_BAIXO_PCT = 15;
+
+function avaliarMaquina(info) {
+  if (!info) return { nivel: "unknown" };
+  const temAlgumDado = info.windows?.versao || info.processador || info.memoriaRamGb || (info.disco?.tipo && info.disco.tipo !== "desconhecido");
+  if (!temAlgumDado) return { nivel: "unknown" };
+
+  const disco = info.disco || {};
+  let pctLivre = null;
+  if (disco.espacoTotalGb && disco.espacoLivreGb != null) {
+    pctLivre = (disco.espacoLivreGb / disco.espacoTotalGb) * 100;
+  }
+  if (pctLivre != null && pctLivre < DISCO_LIVRE_BAIXO_PCT) {
+    return { nivel: "warning", pctLivre };
+  }
+  return { nivel: "ok", pctLivre };
+}
+
+function MaquinaChip({ info }) {
+  const { t } = useTranslation("assistenteCriare");
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState(null);
+  const btnRef = useRef(null);
+  const panelRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handlePointerDown(e) {
+      if (btnRef.current?.contains(e.target)) return;
+      if (panelRef.current?.contains(e.target)) return;
+      setOpen(false);
+    }
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, [open]);
+
+  const avaliacao = avaliarMaquina(info);
+  if (avaliacao.nivel === "unknown") {
+    return <span className="text-xs text-gray-300">{t("machine.noData")}</span>;
+  }
+
+  function toggleOpen(e) {
+    e.stopPropagation();
+    if (!open && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      setPos({ top: r.bottom + 6, left: Math.min(r.left, window.innerWidth - 300) });
+    }
+    setOpen((v) => !v);
+  }
+
+  const isWarning = avaliacao.nivel === "warning";
+  const dotColor = isWarning ? "bg-amber-400" : "bg-green-500";
+  const label = isWarning
+    ? t("machine.warningLabel", { pct: Math.round(avaliacao.pctLivre) })
+    : [info.windows?.versao, info.disco?.tipo && info.disco.tipo !== "desconhecido" ? info.disco.tipo : null]
+        .filter(Boolean).join(" · ") || t("machine.hasDataGeneric");
+
+  const disco = info.disco || {};
+  const temUso = disco.espacoTotalGb && disco.espacoLivreGb != null;
+  const pctUsado = temUso ? Math.round(((disco.espacoTotalGb - disco.espacoLivreGb) / disco.espacoTotalGb) * 100) : null;
+
+  return (
+    <>
+      <button ref={btnRef} onClick={toggleOpen}
+        className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-colors max-w-[170px]">
+        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotColor}`} />
+        <span className="truncate">{label}</span>
+      </button>
+      {open && pos && createPortal(
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div ref={panelRef} className="fixed z-50 w-72 bg-white rounded-xl shadow-2xl border border-gray-100 p-4"
+            style={{ top: pos.top, left: pos.left }}>
+            <div className="flex items-center gap-2 pb-3 mb-3 border-b border-gray-100">
+              <span className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`} />
+              <span className="text-sm font-bold text-gray-900">
+                {isWarning ? t("machine.verdictWarning") : t("machine.verdictOk")}
+              </span>
+            </div>
+            <dl className="space-y-2.5 text-xs">
+              <div className="flex justify-between gap-3">
+                <dt className="text-gray-400 shrink-0">{t("machine.fields.os")}</dt>
+                <dd className="text-gray-700 text-right">
+                  {info.windows?.versao || "—"}
+                  {info.windows?.build && <span className="text-gray-400"> · build {info.windows.build}</span>}
+                </dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt className="text-gray-400 shrink-0">{t("machine.fields.processor")}</dt>
+                <dd className="text-gray-700 text-right truncate max-w-[170px]" title={info.processador || ""}>{info.processador || "—"}</dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt className="text-gray-400 shrink-0">{t("machine.fields.cores")}</dt>
+                <dd className="text-gray-700">{info.nucleos ?? "—"}</dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt className="text-gray-400 shrink-0">{t("machine.fields.ram")}</dt>
+                <dd className="text-gray-700">{info.memoriaRamGb ? `${info.memoriaRamGb} GB` : "—"}</dd>
+              </div>
+              <div>
+                <div className="flex justify-between gap-3 mb-1">
+                  <dt className="text-gray-400 shrink-0">{t("machine.fields.storage")}</dt>
+                  <dd className="text-gray-700">{disco.tipo && disco.tipo !== "desconhecido" ? disco.tipo : "—"}</dd>
+                </div>
+                {temUso ? (
+                  <>
+                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div className={`h-full ${isWarning ? "bg-amber-400" : "bg-gray-400"}`} style={{ width: `${pctUsado}%` }} />
+                    </div>
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      {t("machine.storageUsage", { free: Math.round(disco.espacoLivreGb), total: Math.round(disco.espacoTotalGb) })}
+                    </p>
+                  </>
+                ) : disco.espacoLivreGb != null ? (
+                  <p className="text-[11px] text-gray-400 mt-1">{t("machine.diskFree", { count: Math.round(disco.espacoLivreGb) })}</p>
+                ) : null}
+              </div>
+            </dl>
+          </div>
+        </>,
+        document.body
+      )}
+    </>
   );
 }
 
@@ -423,93 +534,80 @@ export default function AssistenteCriare() {
                   </th>
                   <th className="text-left px-4 py-3 hidden md:table-cell">{t("table.responsible")}</th>
                   <th className="text-left px-4 py-3">{t("table.status")}</th>
+                  <th className="text-left px-4 py-3 hidden md:table-cell">{t("table.machine")}</th>
                   <th className="px-4 py-3 w-52" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {agrupar ? visiveis.map((grupo) => {
-                  const sol = grupo.ultima;
                   const aberto = expandidos.has(grupo.cnpj);
                   const temAnteriores = grupo.anteriores.length > 0;
+                  const tentativas = [grupo.ultima, ...(aberto ? grupo.anteriores : [])];
                   return (
                     <Fragment key={grupo.cnpj}>
+                      {/* Cabeçalho do cliente — só identidade (nome + CNPJ) e o total de
+                          tentativas. Nenhum dado de tentativa específica mora aqui: cada
+                          tentativa (inclusive a mais recente) é sua própria linha completa
+                          logo abaixo, com os mesmos campos de qualquer outra. */}
                       <tr
                         onClick={() => temAnteriores && toggleExpandido(grupo.cnpj)}
-                        className={`hover:bg-gray-50/60 transition-colors ${temAnteriores ? "cursor-pointer" : ""}`}
+                        className={`bg-gray-50/60 ${temAnteriores ? "cursor-pointer hover:bg-gray-100/70" : ""} transition-colors`}
                       >
-                        <td className={`p-0 ${STATUS_STYLE[sol.status]?.accent || STATUS_STYLE.expirada.accent}`} style={{ width: "4px", minWidth: "4px" }} />
-                        <td className="px-5 py-4">
+                        <td className="p-0 bg-gray-200" style={{ width: "4px", minWidth: "4px" }} />
+                        <td colSpan={7} className="px-5 py-2.5">
                           <div className="flex items-center gap-2">
-                            <span className={`shrink-0 w-5 h-5 flex items-center justify-center rounded text-gray-400 transition-transform ${aberto ? "rotate-90" : ""} ${temAnteriores ? "" : "invisible"}`}>
-                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <span className={`shrink-0 w-4 h-4 flex items-center justify-center rounded text-gray-400 transition-transform ${aberto ? "rotate-90" : ""} ${temAnteriores ? "" : "invisible"}`}>
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                               </svg>
                             </span>
-                            <ClienteCell sol={sol} navigate={navigate} />
+                            <ClienteCell sol={grupo.ultima} navigate={navigate} />
+                            <span className="ml-auto shrink-0 text-[11px] font-semibold text-gray-400 whitespace-nowrap">
+                              {t("group.attemptsCount", { count: 1 + grupo.anteriores.length })}
+                            </span>
                           </div>
-                        </td>
-                        <td className="px-4 py-4 hidden sm:table-cell text-xs text-gray-500 whitespace-nowrap" title={fmtDateTime(sol.criadoEm)}>
-                          {timeAgoFromUTC(sol.criadoEm)}
-                        </td>
-                        <td className="px-4 py-4 hidden sm:table-cell text-xs text-gray-500 whitespace-nowrap">
-                          {decisaoDe(sol) ? (
-                            <span title={timeAgoFromUTC(decisaoDe(sol))}>{fmtDateTime(decisaoDe(sol))}</span>
-                          ) : (
-                            <span>{fmtDateTime(sol.expiraEm)}</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-4 hidden md:table-cell">
-                          <ResponsavelCell sol={sol} />
-                        </td>
-                        <td className="px-4 py-4">
-                          <div className="flex items-center gap-2">
-                            <StatusBadge status={sol.status} />
-                            {temAnteriores && (
-                              <span className="text-[11px] font-semibold text-gray-400 whitespace-nowrap">
-                                {t("group.previousCount", { count: grupo.anteriores.length })}
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-4 py-4">
-                          {sol.status === "aprovada" && (
-                            <div className="flex justify-end">
-                              <button onClick={(e) => { e.stopPropagation(); setTrackingSol(sol); }}
-                                className="px-3 py-1.5 rounded-lg text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 transition-colors">
-                                {t("actions.track")}
-                              </button>
-                            </div>
-                          )}
                         </td>
                       </tr>
-                      {aberto && grupo.anteriores.map((prev) => (
-                        <tr key={prev.id} className="bg-gray-50/60">
-                          <td className="p-0" style={{ width: "4px", minWidth: "4px" }} />
-                          <td className="pl-14 pr-5 py-2.5">
-                            <span className="text-xs text-gray-400 italic">{t("table.previousAttempt")}</span>
-                          </td>
-                          <td className="px-4 py-2.5 hidden sm:table-cell text-xs text-gray-500 whitespace-nowrap" title={fmtDateTime(prev.criadoEm)}>
-                            {timeAgoFromUTC(prev.criadoEm)}
-                          </td>
-                          <td className="px-4 py-2.5 hidden sm:table-cell text-xs text-gray-500 whitespace-nowrap">
-                            {decisaoDe(prev) ? fmtDateTime(decisaoDe(prev)) : fmtDateTime(prev.expiraEm)}
-                          </td>
-                          <td className="px-4 py-2.5 hidden md:table-cell">
-                            <ResponsavelCell sol={prev} size="w-5 h-5" />
-                          </td>
-                          <td className="px-4 py-2.5"><StatusBadge status={prev.status} /></td>
-                          <td className="px-4 py-2.5">
-                            {prev.status === "aprovada" && (
-                              <div className="flex justify-end">
-                                <button onClick={(e) => { e.stopPropagation(); setTrackingSol(prev); }}
-                                  className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 transition-colors">
-                                  {t("actions.track")}
-                                </button>
-                              </div>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
+                      {tentativas.map((att, i) => {
+                        const isLatest = i === 0;
+                        return (
+                          <tr key={att.id} className={isLatest ? "hover:bg-gray-50/60 transition-colors" : "bg-gray-50/30 hover:bg-gray-50/60 transition-colors"}>
+                            <td className={`p-0 ${STATUS_STYLE[att.status]?.accent || STATUS_STYLE.expirada.accent}`} style={{ width: "4px", minWidth: "4px" }} />
+                            <td className="pl-12 pr-5 py-3">
+                              <span className={`text-xs text-gray-400 ${isLatest ? "" : "italic"}`}>
+                                {isLatest ? t("table.latestAttempt") : t("table.previousAttempt")}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 hidden sm:table-cell text-xs text-gray-500 whitespace-nowrap" title={fmtDateTime(att.criadoEm)}>
+                              {timeAgoFromUTC(att.criadoEm)}
+                            </td>
+                            <td className="px-4 py-3 hidden sm:table-cell text-xs text-gray-500 whitespace-nowrap">
+                              {decisaoDe(att) ? (
+                                <span title={timeAgoFromUTC(decisaoDe(att))}>{fmtDateTime(decisaoDe(att))}</span>
+                              ) : (
+                                <span>{fmtDateTime(att.expiraEm)}</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 hidden md:table-cell">
+                              <ResponsavelCell sol={att} size="w-5 h-5" />
+                            </td>
+                            <td className="px-4 py-3"><StatusBadge status={att.status} /></td>
+                            <td className="px-4 py-3 hidden md:table-cell">
+                              <MaquinaChip info={att.maquinaInfo} />
+                            </td>
+                            <td className="px-4 py-3">
+                              {att.status === "aprovada" && (
+                                <div className="flex justify-end">
+                                  <button onClick={() => setTrackingSol(att)}
+                                    className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 transition-colors">
+                                    {t("actions.track")}
+                                  </button>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </Fragment>
                   );
                 }) : visiveis.map((sol) => {
@@ -537,6 +635,9 @@ export default function AssistenteCriare() {
                       </td>
                       <td className="px-4 py-4">
                         <StatusBadge status={sol.status} />
+                      </td>
+                      <td className="px-4 py-4 hidden md:table-cell">
+                        <MaquinaChip info={sol.maquinaInfo} />
                       </td>
                       <td className="px-4 py-4">
                         {isPendente ? (

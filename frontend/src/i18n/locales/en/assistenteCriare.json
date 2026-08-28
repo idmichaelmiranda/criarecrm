@@ -43,12 +43,14 @@
     "decidedAt": "Decided at",
     "responsible": "Responsible",
     "status": "Status",
+    "machine": "Machine",
     "expiresPrefix": "expires in {{time}}",
-    "previousAttempt": "previous attempt"
+    "previousAttempt": "previous attempt",
+    "latestAttempt": "latest attempt"
   },
   "group": {
-    "previousCount_one": "+{{count}} previous",
-    "previousCount_other": "+{{count}} previous"
+    "attemptsCount_one": "{{count}} attempt",
+    "attemptsCount_other": "{{count}} attempts"
   },
   "actions": {
     "reject": "Reject",
@@ -57,8 +59,21 @@
     "track": "Track"
   },
   "machine": {
+    "noData": "—",
     "diskFree_one": "{{count}}GB free",
-    "diskFree_other": "{{count}}GB free"
+    "diskFree_other": "{{count}}GB free",
+    "warningLabel": "Low space ({{pct}}% free)",
+    "verdictOk": "No alerts on this machine",
+    "verdictWarning": "Warning: low disk space",
+    "hasDataGeneric": "Data available",
+    "storageUsage": "{{free}} GB free of {{total}} GB",
+    "fields": {
+      "os": "OS",
+      "processor": "Processor",
+      "cores": "Cores",
+      "ram": "RAM",
+      "storage": "Storage"
+    }
   },
   "tracking": {
     "title": "Installation progress",
