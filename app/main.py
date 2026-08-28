@@ -318,6 +318,22 @@ def _migrate_postgres() -> None:
         "ALTER TABLE solicitacoes_instalador ADD COLUMN IF NOT EXISTS cancelado_em TIMESTAMP",
         "ALTER TABLE solicitacoes_instalador ADD COLUMN IF NOT EXISTS aprovado_por_id INTEGER REFERENCES usuarios(id)",
         "ALTER TABLE solicitacoes_instalador ADD COLUMN IF NOT EXISTS recusado_por_id INTEGER REFERENCES usuarios(id)",
+        "ALTER TABLE solicitacoes_instalador ADD COLUMN IF NOT EXISTS maquina_info JSON",
+        """CREATE TABLE IF NOT EXISTS solicitacoes_instalador_etapas (
+            id SERIAL PRIMARY KEY,
+            solicitacao_id UUID NOT NULL REFERENCES solicitacoes_instalador(id) ON DELETE CASCADE,
+            indice_etapa INTEGER NOT NULL,
+            nome VARCHAR(200) NOT NULL,
+            total_etapas INTEGER,
+            status VARCHAR(20) NOT NULL DEFAULT 'em_andamento',
+            percentual FLOAT,
+            mensagem VARCHAR(500),
+            iniciado_em TIMESTAMP,
+            concluido_em TIMESTAMP,
+            atualizado_em TIMESTAMP NOT NULL DEFAULT NOW(),
+            UNIQUE(solicitacao_id, indice_etapa)
+        )""",
+        "CREATE INDEX IF NOT EXISTS ix_solicitacoes_instalador_etapas_solicitacao_id ON solicitacoes_instalador_etapas (solicitacao_id)",
         """CREATE TABLE IF NOT EXISTS instalacao_pausas (
             id SERIAL PRIMARY KEY,
             instalacao_id INTEGER NOT NULL REFERENCES instalacoes(id) ON DELETE CASCADE,
@@ -385,7 +401,7 @@ def _migrate_postgres() -> None:
         "grupos_permissao", "implantacao_etapas", "implantacoes", "instalacao_anexos",
         "instalacao_checklist", "instalacao_comentarios", "instalacao_pausas",
         "instalacao_responsaveis", "instalacoes", "notificacoes", "solicitacoes",
-        "solicitacoes_instalador", "template_etapas", "template_tarefas", "templates",
+        "solicitacoes_instalador", "solicitacoes_instalador_etapas", "template_etapas", "template_tarefas", "templates",
         "timeline_eventos", "usuarios",
     ]
     rls_statements = []
