@@ -163,12 +163,20 @@ function EtapaRow({ etapa }) {
 
 // ── Abas do painel lateral (QuickViewPanel) ─────────────────────────────────────
 
-function MaquinaTab({ info }) {
+// Specs da máquina — não é mais uma aba própria, faz parte da Visão Geral: quem
+// abre o painel já vê tudo da tentativa em foco (status, responsável e máquina)
+// sem precisar trocar de aba pra isso.
+function MaquinaSection({ info }) {
   const { t } = useTranslation("assistenteCriare");
   const avaliacao = avaliarMaquina(info);
 
   if (avaliacao.nivel === "unknown") {
-    return <p className="text-sm text-gray-300 text-center py-10">{t("machine.noDataFull")}</p>;
+    return (
+      <div>
+        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">{t("quickView.machine")}</p>
+        <p className="text-sm text-gray-300">{t("machine.noDataFull")}</p>
+      </div>
+    );
   }
 
   const isWarning = avaliacao.nivel === "warning";
@@ -177,12 +185,15 @@ function MaquinaTab({ info }) {
   const pctUsado = temUso ? Math.round(((disco.espacoTotalGb - disco.espacoLivreGb) / disco.espacoTotalGb) * 100) : null;
 
   return (
-    <>
-      <div className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border ${isWarning ? "bg-amber-50 border-amber-200" : "bg-green-50 border-green-200"}`}>
-        <span className={`w-2 h-2 rounded-full shrink-0 ${isWarning ? "bg-amber-400" : "bg-green-500"}`} />
-        <span className={`text-sm font-semibold ${isWarning ? "text-amber-700" : "text-green-700"}`}>
-          {isWarning ? t("machine.verdictWarning") : t("machine.verdictOk")}
-        </span>
+    <div className="space-y-5">
+      <div>
+        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">{t("quickView.machine")}</p>
+        <div className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border ${isWarning ? "bg-amber-50 border-amber-200" : "bg-green-50 border-green-200"}`}>
+          <span className={`w-2 h-2 rounded-full shrink-0 ${isWarning ? "bg-amber-400" : "bg-green-500"}`} />
+          <span className={`text-sm font-semibold ${isWarning ? "text-amber-700" : "text-green-700"}`}>
+            {isWarning ? t("machine.verdictWarning") : t("machine.verdictOk")}
+          </span>
+        </div>
       </div>
 
       <div>
@@ -198,7 +209,7 @@ function MaquinaTab({ info }) {
         <div className="space-y-2 text-xs">
           <div className="flex items-center justify-between gap-3">
             <span className="text-gray-400 shrink-0">{t("machine.fields.processor")}</span>
-            <span className="text-gray-700 font-medium text-right truncate" title={info.processador || ""}>{info.processador || "—"}</span>
+            <span className="text-gray-700 font-medium text-right" title={info.processador || ""}>{info.processador || "—"}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-gray-400">{t("machine.fields.cores")}</span>
@@ -231,7 +242,7 @@ function MaquinaTab({ info }) {
           <p className="text-xs text-gray-300">—</p>
         )}
       </div>
-    </>
+    </div>
   );
 }
 
@@ -315,15 +326,13 @@ function TentativasTab({ tentativas, currentId, onSelect }) {
               </div>
               <span className="text-[11px] text-gray-400 shrink-0">{timeAgoFromUTC(att.criadoEm)}</span>
             </div>
-            <div className="flex items-center justify-between gap-2">
-              <ResponsavelCell sol={att} size="w-5 h-5" />
-              {resumo && (
-                <span className="inline-flex items-center gap-1.5 text-[11px] text-gray-500 shrink-0 max-w-[130px]">
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${resumo.dotColor}`} />
-                  <span className="truncate">{resumo.label}</span>
-                </span>
-              )}
-            </div>
+            <ResponsavelCell sol={att} size="w-5 h-5" />
+            {resumo && (
+              <span className="inline-flex items-center gap-1.5 text-[11px] text-gray-500 mt-1.5">
+                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${resumo.dotColor}`} />
+                <span>{resumo.label}</span>
+              </span>
+            )}
           </div>
         );
       })}
@@ -353,14 +362,13 @@ function QuickViewPanel({ solId, solicitacoes, onClose, navigate, onAprovar, onR
 
   const tabs = [
     { id: "geral", label: t("quickView.tabs.geral") },
-    { id: "maquina", label: t("quickView.tabs.maquina") },
     ...(sol.status === "aprovada" ? [{ id: "progresso", label: t("quickView.tabs.progresso") }] : []),
     ...(tentativas.length > 1 ? [{ id: "tentativas", label: t("quickView.tabs.tentativas") }] : []),
   ];
 
   return (
     <div
-      className="w-full max-w-sm shrink-0 sticky top-4 bg-white rounded-2xl border border-gray-100 shadow-lg flex flex-col"
+      className="w-full max-w-md shrink-0 sticky top-4 bg-white rounded-2xl border border-gray-100 shadow-lg flex flex-col"
       style={{ maxHeight: "calc(100vh - 2rem)" }}
     >
       {/* Header */}
@@ -428,10 +436,11 @@ function QuickViewPanel({ solId, solicitacoes, onClose, navigate, onAprovar, onR
                 </div>
               </div>
             </div>
+
+            <MaquinaSection info={sol.maquinaInfo} />
           </>
         )}
 
-        {tab === "maquina" && <MaquinaTab info={sol.maquinaInfo} />}
         {tab === "progresso" && <ProgressoTab solId={sol.id} />}
         {tab === "tentativas" && <TentativasTab tentativas={tentativas} currentId={sol.id} onSelect={onSelectAttempt} />}
       </div>
@@ -695,7 +704,7 @@ export default function AssistenteCriare() {
                     <th className="text-left px-4 py-3 hidden sm:table-cell">
                       {tab === "pendentes" ? t("table.expiresAt") : t("table.decidedAt")}
                     </th>
-                    <th className="text-left px-4 py-3">{t("table.status")}</th>
+                    <th className="text-left px-4 py-3">{agrupar ? t("table.lastAttemptStatus") : t("table.status")}</th>
                     <th className="px-4 py-3 w-52" />
                   </tr>
                 </thead>

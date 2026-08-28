@@ -42,6 +42,7 @@
     "expiresAt": "Expires at",
     "decidedAt": "Decided at",
     "status": "Status",
+    "lastAttemptStatus": "Latest Attempt",
     "expiresPrefix": "expires in {{time}}"
   },
   "group": {
@@ -78,7 +79,6 @@
   "quickView": {
     "tabs": {
       "geral": "Overview",
-      "maquina": "Machine",
       "progresso": "Progress",
       "tentativas": "Attempts"
     },
@@ -88,6 +88,7 @@
     "information": "Information",
     "createdAt": "Created at",
     "cnpj": "CNPJ",
+    "machine": "Machine",
     "viewClient": "View client",
     "actions": "Actions",
     "current": "current"
