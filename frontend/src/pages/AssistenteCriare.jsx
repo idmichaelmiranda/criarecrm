@@ -64,8 +64,26 @@ function decisaoDe(sol) {
   return sol.aprovadoEm || sol.recusadoEm || sol.canceladoEm || null;
 }
 
+// Resumo compacto da máquina que pediu a instalação, pro setor de implantações ver
+// antes de aprovar (ex.: "Windows 11 Pro · 16GB RAM · SSD 210GB livres"). Todo campo é
+// best-effort (via WMI no instalador) — qualquer um pode faltar, por isso os checks.
+function formatMaquinaResumo(info, t) {
+  if (!info) return null;
+  const partes = [];
+  if (info.windows?.versao) partes.push(info.windows.versao);
+  if (info.memoriaRamGb) partes.push(`${info.memoriaRamGb}GB RAM`);
+  if (info.disco?.tipo && info.disco.tipo !== "desconhecido") {
+    const livre = info.disco.espacoLivreGb != null
+      ? ` ${t("machine.diskFree", { count: Math.round(info.disco.espacoLivreGb) })}`
+      : "";
+    partes.push(`${info.disco.tipo}${livre}`);
+  }
+  return partes.length ? partes.join(" · ") : null;
+}
+
 function ClienteCell({ sol, navigate }) {
   const { t } = useTranslation("assistenteCriare");
+  const maquinaResumo = formatMaquinaResumo(sol.maquinaInfo, t);
   return (
     <div className="min-w-0">
       {sol.clienteId ? (
@@ -79,6 +97,11 @@ function ClienteCell({ sol, navigate }) {
         <p className="text-sm font-semibold text-gray-400 italic truncate">{t("clientCell.noRecord")}</p>
       )}
       <p className="text-xs text-gray-400 mt-0.5 font-mono">{formatCnpj(sol.cnpj)}</p>
+      {maquinaResumo && (
+        <p className="text-[11px] text-gray-400 mt-0.5 truncate" title={maquinaResumo}>
+          🖥️ {maquinaResumo}
+        </p>
+      )}
     </div>
   );
 }
@@ -89,6 +112,101 @@ function ResponsavelCell({ sol, size }) {
     <div className="flex items-center gap-2">
       <Avatar nome={sol.responsavelNome} avatarUrl={sol.responsavelAvatarUrl} size={size} />
       <span className="text-sm text-gray-600 truncate max-w-[120px]">{sol.responsavelNome}</span>
+    </div>
+  );
+}
+
+const ETAPA_TRACK_POLL_MS = 3000;
+
+function EtapaRow({ etapa }) {
+  const isDone = etapa.status === "concluida";
+  const isFailed = etapa.status === "falhou";
+  const isActive = etapa.status === "em_andamento";
+  const dotColor = isFailed ? "bg-red-500" : isDone ? "bg-green-500" : isActive ? "bg-orange-400 animate-pulse" : "bg-gray-300";
+  const horaFim = etapa.concluidoEm ? parseUTC(etapa.concluidoEm).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : null;
+
+  return (
+    <li className="flex gap-3">
+      <span className={`w-2.5 h-2.5 rounded-full shrink-0 mt-1 ${dotColor}`} />
+      <div className="flex-1 min-w-0 pb-1">
+        <div className="flex items-center justify-between gap-2">
+          <span className={`text-sm font-semibold truncate ${isFailed ? "text-red-600" : "text-gray-800"}`}>{etapa.nome}</span>
+          {horaFim && <span className="text-[11px] text-gray-400 shrink-0">{horaFim}</span>}
+        </div>
+        {isActive && (
+          <div className="mt-1.5">
+            {etapa.percentual != null && (
+              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full bg-orange-400 transition-all" style={{ width: `${Math.min(100, Math.max(0, etapa.percentual))}%` }} />
+              </div>
+            )}
+            {etapa.mensagem && <p className="text-xs text-gray-500 mt-1 truncate" title={etapa.mensagem}>{etapa.mensagem}</p>}
+          </div>
+        )}
+        {isFailed && etapa.mensagem && <p className="text-xs text-red-500 mt-1 truncate" title={etapa.mensagem}>{etapa.mensagem}</p>}
+      </div>
+    </li>
+  );
+}
+
+function EtapasModal({ sol, onClose }) {
+  const { t } = useTranslation("assistenteCriare");
+  const [etapas, setEtapas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const timerRef = useRef(null);
+
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    try {
+      const { data } = await solicitacoesInstaladorApi.etapas(sol.id);
+      setEtapas(data);
+    } catch {
+      // silencioso — o próximo poll tenta de novo, igual ao resto da tela
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  }, [sol.id]);
+
+  useEffect(() => {
+    load();
+    timerRef.current = setInterval(() => load(true), ETAPA_TRACK_POLL_MS);
+    return () => clearInterval(timerRef.current);
+  }, [load]);
+
+  const atual = etapas.find((e) => e.status === "em_andamento");
+  const total = atual?.totalEtapas || etapas.at(-1)?.totalEtapas;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
+          <div className="min-w-0">
+            <h3 className="text-sm font-bold text-gray-900">{t("tracking.title")}</h3>
+            <p className="text-xs text-gray-400 mt-0.5 truncate">
+              {sol.clienteNome || formatCnpj(sol.cnpj)}
+              {atual && total ? ` · ${t("tracking.stepOf", { atual: atual.indiceEtapa + 1, total })}` : ""}
+            </p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 shrink-0">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-5">
+          {loading ? (
+            <div className="flex justify-center py-10">
+              <div className="w-5 h-5 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" />
+            </div>
+          ) : etapas.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-10">{t("tracking.empty")}</p>
+          ) : (
+            <ol className="space-y-4">
+              {etapas.map((e) => <EtapaRow key={e.indiceEtapa} etapa={e} />)}
+            </ol>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -105,6 +223,7 @@ export default function AssistenteCriare() {
   const [expandidos, setExpandidos]     = useState(new Set());
   const [actingId, setActingId]         = useState(null);
   const [toast, setToast]               = useState(null);
+  const [trackingSol, setTrackingSol]   = useState(null);
   const timerRef = useRef(null);
 
   const load = useCallback(async (silent = false) => {
@@ -352,7 +471,16 @@ export default function AssistenteCriare() {
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-4" />
+                        <td className="px-4 py-4">
+                          {sol.status === "aprovada" && (
+                            <div className="flex justify-end">
+                              <button onClick={(e) => { e.stopPropagation(); setTrackingSol(sol); }}
+                                className="px-3 py-1.5 rounded-lg text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 transition-colors">
+                                {t("actions.track")}
+                              </button>
+                            </div>
+                          )}
+                        </td>
                       </tr>
                       {aberto && grupo.anteriores.map((prev) => (
                         <tr key={prev.id} className="bg-gray-50/60">
@@ -370,7 +498,16 @@ export default function AssistenteCriare() {
                             <ResponsavelCell sol={prev} size="w-5 h-5" />
                           </td>
                           <td className="px-4 py-2.5"><StatusBadge status={prev.status} /></td>
-                          <td className="px-4 py-2.5" />
+                          <td className="px-4 py-2.5">
+                            {prev.status === "aprovada" && (
+                              <div className="flex justify-end">
+                                <button onClick={(e) => { e.stopPropagation(); setTrackingSol(prev); }}
+                                  className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 transition-colors">
+                                  {t("actions.track")}
+                                </button>
+                              </div>
+                            )}
+                          </td>
                         </tr>
                       ))}
                     </Fragment>
@@ -402,7 +539,7 @@ export default function AssistenteCriare() {
                         <StatusBadge status={sol.status} />
                       </td>
                       <td className="px-4 py-4">
-                        {isPendente && (
+                        {isPendente ? (
                           <div className="flex items-center gap-2 justify-end">
                             <button onClick={() => handleRecusar(sol)} disabled={actingId === sol.id}
                               className="px-3 py-1.5 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 transition-colors disabled:opacity-50">
@@ -411,6 +548,13 @@ export default function AssistenteCriare() {
                             <button onClick={() => handleAprovar(sol)} disabled={actingId === sol.id}
                               className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-green-600 hover:bg-green-700 transition-colors disabled:opacity-50 shadow-sm">
                               {actingId === sol.id ? t("actions.waiting") : t("actions.approve")}
+                            </button>
+                          </div>
+                        ) : sol.status === "aprovada" && (
+                          <div className="flex justify-end">
+                            <button onClick={() => setTrackingSol(sol)}
+                              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 transition-colors">
+                              {t("actions.track")}
                             </button>
                           </div>
                         )}
@@ -442,6 +586,8 @@ export default function AssistenteCriare() {
           {toast.text}
         </div>
       )}
+
+      {trackingSol && <EtapasModal sol={trackingSol} onClose={() => setTrackingSol(null)} />}
     </Layout>
   );
 }

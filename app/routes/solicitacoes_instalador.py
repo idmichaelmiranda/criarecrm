@@ -12,6 +12,28 @@ import app.services.storage_service as storage
 router = APIRouter(prefix="/solicitacoes-instalador", tags=["solicitacoes-instalador"])
 
 
+def _serializar_maquina(info: dict | None) -> dict | None:
+    if not info:
+        return None
+    disco = info.get("disco") or {}
+    windows = info.get("windows") or {}
+    return {
+        "processador": info.get("processador"),
+        "nucleos": info.get("nucleos"),
+        "memoriaRamGb": info.get("memoria_ram_gb"),
+        "disco": {
+            "tipo": disco.get("tipo"),
+            "espacoTotalGb": disco.get("espaco_total_gb"),
+            "espacoLivreGb": disco.get("espaco_livre_gb"),
+        },
+        "windows": {
+            "versao": windows.get("versao"),
+            "build": windows.get("build"),
+            "arquitetura": windows.get("arquitetura"),
+        },
+    }
+
+
 def _serializar(sol: SolicitacaoInstalador, db: Session) -> dict:
     status = sol_service.status_efetivo(sol, db)
     responsavel = sol.aprovado_por or sol.recusado_por
@@ -28,6 +50,20 @@ def _serializar(sol: SolicitacaoInstalador, db: Session) -> dict:
         "canceladoEm": sol_service.formatar_iso(sol.cancelado_em) if sol.cancelado_em else None,
         "responsavelNome": responsavel.nome if responsavel else None,
         "responsavelAvatarUrl": storage.avatar_url(responsavel.avatar_path) if responsavel else None,
+        "maquinaInfo": _serializar_maquina(sol.maquina_info),
+    }
+
+
+def _serializar_etapa(etapa) -> dict:
+    return {
+        "indiceEtapa": etapa.indice_etapa,
+        "nome": etapa.nome,
+        "totalEtapas": etapa.total_etapas,
+        "status": etapa.status,
+        "percentual": etapa.percentual,
+        "mensagem": etapa.mensagem,
+        "iniciadoEm": sol_service.formatar_iso(etapa.iniciado_em) if etapa.iniciado_em else None,
+        "concluidoEm": sol_service.formatar_iso(etapa.concluido_em) if etapa.concluido_em else None,
     }
 
 
@@ -46,6 +82,19 @@ def listar(
     if status is not None:
         resultado = [r for r in resultado if r["status"] == status]
     return resultado
+
+
+@router.get("/{solicitacao_id}/etapas")
+def listar_etapas(
+    solicitacao_id: str,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    """Alimenta a tela de acompanhamento (polling) depois que a solicitação foi
+    aprovada e o instalador começa a reportar progresso via PUT .../etapas/{indice}."""
+    sol = sol_service.obter_ou_404(solicitacao_id, db)
+    etapas = sol_service.listar_etapas(sol.id, db)
+    return [_serializar_etapa(e) for e in etapas]
 
 
 @router.post("/{solicitacao_id}/aprovar")

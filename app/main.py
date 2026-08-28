@@ -241,6 +241,21 @@ def _migrate_sqlite():
             duracao_segundos INTEGER,
             motivo VARCHAR(50)
         )""",
+        "ALTER TABLE solicitacoes_instalador ADD COLUMN maquina_info JSON",
+        """CREATE TABLE solicitacoes_instalador_etapas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            solicitacao_id CHAR(32) NOT NULL REFERENCES solicitacoes_instalador(id) ON DELETE CASCADE,
+            indice_etapa INTEGER NOT NULL,
+            nome VARCHAR(200) NOT NULL,
+            total_etapas INTEGER,
+            status VARCHAR(20) NOT NULL DEFAULT 'em_andamento',
+            percentual FLOAT,
+            mensagem VARCHAR(500),
+            iniciado_em DATETIME,
+            concluido_em DATETIME,
+            atualizado_em DATETIME NOT NULL,
+            UNIQUE(solicitacao_id, indice_etapa)
+        )""",
     ]
     with engine.connect() as conn:
         for ddl in new_cols:

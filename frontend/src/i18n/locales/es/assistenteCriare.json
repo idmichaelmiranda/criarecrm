@@ -53,7 +53,18 @@
   "actions": {
     "reject": "Rechazar",
     "approve": "Aprobar",
-    "waiting": "Espera…"
+    "waiting": "Espera…",
+    "track": "Seguimiento"
+  },
+  "machine": {
+    "diskFree_one": "{{count}}GB libre",
+    "diskFree_other": "{{count}}GB libres"
+  },
+  "tracking": {
+    "title": "Seguimiento de la instalación",
+    "empty": "Ninguna etapa reportada todavía.",
+    "loadError": "Error al cargar el progreso.",
+    "stepOf": "Etapa {{atual}} de {{total}}"
   },
   "loadMore": {
     "button": "Cargar más ({{count}} restantes)"

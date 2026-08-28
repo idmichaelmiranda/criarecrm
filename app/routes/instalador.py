@@ -3,8 +3,10 @@ from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.database.connection import get_db
-from app.dependencies.instalador_auth import get_cliente_autenticado
+from app.dependencies.instalador_auth import get_cliente_autenticado, get_solicitacao_autenticada
 from app.models.cliente import Cliente
+from app.models.solicitacao_instalador import SolicitacaoInstalador
+from app.schemas.instalador import SolicitarInstalacaoPayload, EtapaProgressoPayload
 from app.services import sql_generator_service
 from app.services.api_key_service import buscar_cliente_por_cnpj
 from app.services import solicitacao_instalador_service as sol_service
@@ -44,8 +46,11 @@ def preview_cliente(cnpj: str, db: Session = Depends(get_db)):
 
 
 @router.post("/{cnpj}/solicitar-instalacao")
-def solicitar_instalacao(cnpj: str, db: Session = Depends(get_db)):
-    sol = sol_service.criar_ou_reaproveitar(cnpj, db)
+def solicitar_instalacao(cnpj: str, payload: SolicitarInstalacaoPayload | None = None, db: Session = Depends(get_db)):
+    # payload é opcional pra manter compatibilidade com versões do instalador que ainda
+    # não enviam corpo nenhum nessa rota.
+    maquina_info = payload.maquina.model_dump() if payload and payload.maquina else None
+    sol = sol_service.criar_ou_reaproveitar(cnpj, db, maquina_info=maquina_info)
     return {"solicitacaoId": str(sol.id), "expiraEm": sol_service.formatar_iso(sol.expira_em)}
 
 
@@ -58,6 +63,22 @@ def status_solicitacao(solicitacao_id: str, db: Session = Depends(get_db)):
         "apiKey": sol.api_key if status == "aprovada" else None,
         "nome": sol.nome_cliente_snapshot if status == "aprovada" else None,
     }
+
+
+@router_solicitacoes.put("/{solicitacao_id}/etapas/{indice_etapa}")
+def atualizar_etapa(
+    indice_etapa: int,
+    data: EtapaProgressoPayload,
+    sol: SolicitacaoInstalador = Depends(get_solicitacao_autenticada),
+    db: Session = Depends(get_db),
+):
+    """UPSERT chamado repetidamente pelo instalador durante a execução de uma etapa —
+    precisa ser barato: resposta mínima, sem reserializar a solicitação inteira."""
+    sol_service.upsert_etapa(
+        sol.id, indice_etapa, data.nome, data.total_etapas,
+        data.status, data.percentual, data.mensagem, db,
+    )
+    return {"ok": True}
 
 
 @router_solicitacoes.post("/{solicitacao_id}/cancelar")
