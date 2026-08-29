@@ -853,6 +853,13 @@ export default function AssistenteCriare() {
     : lista.map((s) => ({ sol: s, attemptsCount: 0 }));
   const visiveis = itens.slice(0, visibleCount);
 
+  // Pra destacar a linha correspondente ao painel aberto: em modo agrupado, uma
+  // linha representa "o cliente" (a última tentativa), então continua destacada
+  // mesmo se dentro do painel você trocar pra uma tentativa anterior do mesmo
+  // CNPJ (aba Tentativas) — compara por CNPJ. Fora do modo agrupado, cada linha
+  // é uma solicitação específica, então compara pelo id exato.
+  const openSol = quickViewId ? solicitacoes.find((s) => s.id === quickViewId) : null;
+
   return (
     <Layout>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
@@ -957,10 +964,11 @@ export default function AssistenteCriare() {
                 <tbody className="divide-y divide-gray-100">
                   {visiveis.map(({ sol, attemptsCount }) => {
                     const isPendente = sol.status === "pendente";
+                    const isSelected = agrupar ? openSol?.cnpj === sol.cnpj : sol.id === quickViewId;
                     return (
                       <tr key={sol.id} onClick={() => { setAutoProgressId(null); setQuickViewId(sol.id); }}
-                        className="group hover:bg-gray-50/60 transition-colors cursor-pointer">
-                        <td className={`p-0 ${STATUS_STYLE[sol.status]?.accent || STATUS_STYLE.expirada.accent}`} style={{ width: "4px", minWidth: "4px" }} />
+                        className={`group transition-colors cursor-pointer ${isSelected ? "bg-orange-50 hover:bg-orange-50" : "hover:bg-gray-50/60"}`}>
+                        <td className={`p-0 ${isSelected ? "bg-orange-500" : STATUS_STYLE[sol.status]?.accent || STATUS_STYLE.expirada.accent}`} style={{ width: "4px", minWidth: "4px" }} />
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-2">
                             <ClienteCell sol={sol} navigate={navigate} />
@@ -1000,7 +1008,7 @@ export default function AssistenteCriare() {
                             </div>
                           ) : (
                             <div className="flex justify-end">
-                              <svg className="w-4 h-4 text-gray-200 group-hover:text-orange-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <svg className={`w-4 h-4 transition-colors ${isSelected ? "text-orange-400" : "text-gray-200 group-hover:text-orange-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                               </svg>
                             </div>
