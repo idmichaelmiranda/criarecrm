@@ -84,6 +84,7 @@
     "releasedBy": "Aprobada por {{nome}}",
     "stepsCount": "{{done}} de {{total}} etapas",
     "liveUpdate": "Actualizando en vivo",
+    "completedIn": "Completado en {{duracao}}",
     "failedTitle": "Falla en: {{nome}}",
     "steps": {
       "mysql": "Instalando MySQL",

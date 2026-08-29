@@ -33,6 +33,13 @@ function formatDuracao(iniciadoEm, concluidoEm) {
   return rem > 0 ? `${min}min ${rem}s` : `${min}min`;
 }
 
+// Jornada completa = todas as 6 etapas do molde já concluídas — usado tanto pra
+// parar o polling (nada mais vai mudar) quanto pra trocar "atualizando ao vivo"
+// por "concluído em X".
+function jornadaCompleta(data) {
+  return ETAPAS_TEMPLATE.every(({ indice }) => data.find((e) => e.indiceEtapa === indice)?.status === "concluida");
+}
+
 const STATUS_HISTORICO = [
   { value: "", labelKey: "all" },
   { value: "aprovada", labelKey: "aprovada" },
@@ -411,6 +418,11 @@ function ProgressoTab({ sol }) {
     try {
       const { data } = await solicitacoesInstaladorApi.etapas(sol.id);
       setEtapas(data);
+      // Jornada acabou — nada mais vai mudar, para de gastar request à toa.
+      if (jornadaCompleta(data) && timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     } catch {
       // silencioso — o próximo poll tenta de novo, igual ao resto da tela
     } finally {
@@ -460,6 +472,13 @@ function ProgressoTab({ sol }) {
   const pctGeral = Math.round((concluidasDoMolde / ETAPAS_TEMPLATE.length) * 100);
   const etapaComFalha = linha.find((e) => e.status === "falhou");
 
+  // Tempo total do processo (da liberação até a última etapa do molde concluir)
+  // — só existe quando a jornada inteira terminou; até lá mostra "ao vivo".
+  const etapaFinal = doMolde[doMolde.length - 1];
+  const duracaoTotal = concluidasDoMolde === ETAPAS_TEMPLATE.length
+    ? formatDuracao(sol.aprovadoEm, etapaFinal.concluidoEm)
+    : null;
+
   // Total reportado pelo instalador (última chamada é a fonte mais confiável) —
   // mostrado sempre, não só quando algo está em andamento, pra um descompasso
   // (ex.: instalador pulando/reaproveitando índice) ficar visível na hora, sem
@@ -474,9 +493,18 @@ function ProgressoTab({ sol }) {
           <p className="text-sm font-semibold text-gray-800">
             {t("tracking.stepsCount", { done: concluidasDoMolde, total: ETAPAS_TEMPLATE.length })}
           </p>
-          <p className="text-[11px] text-gray-400 mt-0.5 flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" />
-            {t("tracking.liveUpdate")}
+          <p className="text-[11px] mt-0.5 flex items-center gap-1.5">
+            {duracaoTotal ? (
+              <>
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
+                <span className="text-green-600 font-medium">{t("tracking.completedIn", { duracao: duracaoTotal })}</span>
+              </>
+            ) : (
+              <>
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" />
+                <span className="text-gray-400">{t("tracking.liveUpdate")}</span>
+              </>
+            )}
           </p>
           {totalEtapas != null && totalEtapas !== etapas.length && (
             <p className="text-[11px] text-amber-600 mt-0.5">{t("tracking.reportedOf", { count: etapas.length, total: totalEtapas })}</p>
@@ -548,12 +576,20 @@ function TentativasTab({ tentativas, currentId, onSelect }) {
 // ── Painel lateral — mesmo padrão do QuickViewPanel de Implantações: docado ao
 // lado do conteúdo (não sobrepõe), sticky, com abas. Aqui as abas são condicionais
 // (Progresso só se aprovada, Histórico só se há outras tentativas do mesmo CNPJ).
-function QuickViewPanel({ solId, solicitacoes, onClose, navigate, onAprovar, onRecusar, onSelectAttempt, actingId }) {
+function QuickViewPanel({ solId, solicitacoes, onClose, navigate, onAprovar, onRecusar, onSelectAttempt, actingId, autoProgressId }) {
   const { t } = useTranslation("assistenteCriare");
   const [tab, setTab] = useState("geral");
   const [showAcoes, setShowAcoes] = useState(false);
 
-  useEffect(() => { setTab("geral"); setShowAcoes(false); }, [solId]);
+  // Acabou de aprovar essa solicitação (autoProgressId === solId, setado uma
+  // única vez pelo próprio handleAprovar) — pula direto pro acompanhamento ao
+  // vivo em vez de abrir na Visão Geral. Um clique comum numa linha zera
+  // autoProgressId antes de abrir, então isso nunca dispara por engano ao só
+  // navegar pelo histórico.
+  useEffect(() => {
+    setTab(solId === autoProgressId ? "progresso" : "geral");
+    setShowAcoes(false);
+  }, [solId, autoProgressId]);
 
   const sol = solicitacoes.find((s) => s.id === solId);
   if (!sol) return null;
@@ -707,7 +743,8 @@ export default function AssistenteCriare() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [actingId, setActingId]         = useState(null);
   const [toast, setToast]               = useState(null);
-  const [quickViewId, setQuickViewId]   = useState(null);
+  const [quickViewId, setQuickViewId]     = useState(null);
+  const [autoProgressId, setAutoProgressId] = useState(null);
   const timerRef = useRef(null);
 
   const load = useCallback(async (silent = false) => {
@@ -746,6 +783,10 @@ export default function AssistenteCriare() {
       await solicitacoesInstaladorApi.aprovar(sol.id);
       setToast({ type: "success", text: t("toast.approveSuccess", { nome: sol.clienteNome || formatCnpj(sol.cnpj) }) });
       await load(true);
+      // Acabou de aprovar — abre (ou mantém aberto) o painel já direto no
+      // acompanhamento ao vivo, sem precisar clicar em nada depois.
+      setQuickViewId(sol.id);
+      setAutoProgressId(sol.id);
     } catch (err) {
       tratarErro(err, "errorApprove");
     } finally {
@@ -917,7 +958,7 @@ export default function AssistenteCriare() {
                   {visiveis.map(({ sol, attemptsCount }) => {
                     const isPendente = sol.status === "pendente";
                     return (
-                      <tr key={sol.id} onClick={() => setQuickViewId(sol.id)}
+                      <tr key={sol.id} onClick={() => { setAutoProgressId(null); setQuickViewId(sol.id); }}
                         className="group hover:bg-gray-50/60 transition-colors cursor-pointer">
                         <td className={`p-0 ${STATUS_STYLE[sol.status]?.accent || STATUS_STYLE.expirada.accent}`} style={{ width: "4px", minWidth: "4px" }} />
                         <td className="px-5 py-4">
@@ -988,12 +1029,13 @@ export default function AssistenteCriare() {
         <QuickViewPanel
           solId={quickViewId}
           solicitacoes={solicitacoes}
-          onClose={() => setQuickViewId(null)}
+          onClose={() => { setQuickViewId(null); setAutoProgressId(null); }}
           navigate={navigate}
           onAprovar={handleAprovar}
           onRecusar={handleRecusar}
-          onSelectAttempt={setQuickViewId}
+          onSelectAttempt={(id) => { setAutoProgressId(null); setQuickViewId(id); }}
           actingId={actingId}
+          autoProgressId={autoProgressId}
         />
       )}
       </div>
