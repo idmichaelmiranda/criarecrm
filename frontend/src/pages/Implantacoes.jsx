@@ -307,7 +307,7 @@ function LocationRegimeTags({ cidade, estado, regimeCode, t }) {
 
 // ── Card (usado na tabela e no Kanban) ──────────────────────────────────────────
 
-function ImplCard({ impl, onClick }) {
+function ImplCard({ impl, onClick, selected }) {
   const { t } = useTranslation("implantacoes");
   const sla = slaRelativo(impl);
   const isAtrasada = isSlaVencido(impl);
@@ -315,8 +315,8 @@ function ImplCard({ impl, onClick }) {
   return (
     <div
       onClick={onClick}
-      className={`rounded-xl border bg-white p-3.5 cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5 ${
-        isAtrasada ? "border-red-200" : "border-gray-100"
+      className={`rounded-xl border p-3.5 cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5 ${
+        selected ? "bg-orange-50 border-orange-400 ring-1 ring-orange-200" : isAtrasada ? "bg-white border-red-200" : "bg-white border-gray-100"
       }`}
     >
       <div className="flex items-center gap-1.5 mb-1.5">
@@ -356,7 +356,7 @@ function ImplCard({ impl, onClick }) {
 
 const KANBAN_PREVIEW = 3;
 
-function KanbanColumn({ title, dotClass, items, onCardClick, onVerTodas }) {
+function KanbanColumn({ title, dotClass, items, onCardClick, onVerTodas, selectedId }) {
   const { t } = useTranslation("implantacoes");
   const preview = items.slice(0, KANBAN_PREVIEW);
   return (
@@ -370,7 +370,7 @@ function KanbanColumn({ title, dotClass, items, onCardClick, onVerTodas }) {
         {preview.length === 0 ? (
           <p className="text-xs text-gray-300 text-center py-6">{t("kanban.empty")}</p>
         ) : (
-          preview.map((impl) => <ImplCard key={impl.id} impl={impl} onClick={() => onCardClick(impl)} />)
+          preview.map((impl) => <ImplCard key={impl.id} impl={impl} onClick={() => onCardClick(impl)} selected={impl.id === selectedId} />)
         )}
       </div>
       {items.length > KANBAN_PREVIEW && (
@@ -1027,6 +1027,7 @@ export default function Implantacoes() {
             dotClass="bg-blue-500"
             items={kanbanBuckets.em_andamento}
             onCardClick={(impl) => setQuickViewId(impl.id)}
+            selectedId={quickViewId}
             onVerTodas={() => handleVerTodas("em_andamento")}
           />
           <KanbanColumn
@@ -1034,6 +1035,7 @@ export default function Implantacoes() {
             dotClass="bg-indigo-500"
             items={kanbanBuckets.conversao}
             onCardClick={(impl) => setQuickViewId(impl.id)}
+            selectedId={quickViewId}
             onVerTodas={() => handleVerTodas("conversao")}
           />
           <KanbanColumn
@@ -1041,6 +1043,7 @@ export default function Implantacoes() {
             dotClass="bg-red-500"
             items={kanbanBuckets.sla_vencido}
             onCardClick={(impl) => setQuickViewId(impl.id)}
+            selectedId={quickViewId}
             onVerTodas={() => handleVerTodas("sla_vencido")}
           />
           <KanbanColumn
@@ -1048,6 +1051,7 @@ export default function Implantacoes() {
             dotClass="bg-green-500"
             items={kanbanBuckets.concluida}
             onCardClick={(impl) => setQuickViewId(impl.id)}
+            selectedId={quickViewId}
             onVerTodas={() => handleVerTodas("concluida")}
           />
         </div>
@@ -1072,6 +1076,7 @@ export default function Implantacoes() {
                   const isAtiva = (impl.status === "em_andamento" || impl.status === "pausada") && !impl.data_go_live;
                   const isAtrasada = isAtiva && impl.sla_status === "atrasada";
                   const isCritico  = isAtiva && impl.sla_status === "critico";
+                  const isSelected = impl.id === quickViewId;
 
                   const stripeColor =
                     sla?.level === "expired" ? "bg-red-500" :
@@ -1085,12 +1090,13 @@ export default function Implantacoes() {
                       key={impl.id}
                       onClick={() => setQuickViewId(impl.id)}
                       className={`cursor-pointer group transition-colors ${
+                        isSelected ? "bg-orange-50 hover:bg-orange-50" :
                         isAtrasada ? "bg-red-50/50 hover:bg-red-50/80" :
                         isCritico  ? "bg-amber-50/40 hover:bg-amber-50/70" :
                         "hover:bg-orange-50/40"
                       }`}
                     >
-                      <td className={`p-0 ${stripeColor}`} style={{ width: "4px", minWidth: "4px" }}></td>
+                      <td className={`p-0 ${isSelected ? "bg-orange-500" : stripeColor}`} style={{ width: "4px", minWidth: "4px" }}></td>
 
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-1.5 mb-1">
