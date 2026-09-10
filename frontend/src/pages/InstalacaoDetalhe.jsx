@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Layout } from "../components/layout/Layout";
 import { WhatsAppButton, CallButton } from "../components/ui/ContactActions";
 import { instalacaosApi, clientesApi, usuariosApi, templatesApi } from "../services/api";
+import { maskPhone } from "../hooks/useCnpj";
 import { fmtDate, fmtDateTime, fmtDateOnly } from "../utils/dateUtils";
 import i18n from "../i18n";
 
@@ -60,7 +61,7 @@ function ContatoLinha({ nome, telefone, t, onRemove, removing }) {
       {telefone && (
         <>
           <a href={`tel:${telefone.replace(/\D/g, "")}`} className="text-xs text-orange-600 hover:underline truncate">
-            {telefone}
+            {maskPhone(telefone) || telefone}
           </a>
           <WhatsAppButton telefone={telefone} title={t("whatsappTitle")} />
           <CallButton telefone={telefone} title={t("callTitle")} />
@@ -1166,8 +1167,10 @@ export default function InstalacaoDetalhe() {
                   />
                   <input
                     type="text"
+                    inputMode="tel"
+                    maxLength={15}
                     value={novoContato.telefone}
-                    onChange={(e) => setNovoContato((c) => ({ ...c, telefone: e.target.value }))}
+                    onChange={(e) => setNovoContato((c) => ({ ...c, telefone: maskPhone(e.target.value) }))}
                     placeholder={t("contatos.telefonePlaceholder")}
                     onKeyDown={(e) => { if (e.key === "Enter") handleAdicionarContato(); }}
                     className="w-full text-xs px-2 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-400"
