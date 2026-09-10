@@ -147,6 +147,17 @@
     "removeTitle": "Quitar colaborador",
     "assignPrompt": "Asignar responsable…"
   },
+  "contatos": {
+    "title": "Contactos",
+    "empty": "Ningún contacto indicado",
+    "add": "Añadir contacto",
+    "nomePlaceholder": "Nombre del contacto",
+    "telefonePlaceholder": "Teléfono",
+    "save": "Guardar",
+    "saving": "Guardando…",
+    "cancel": "Cancelar",
+    "remove": "Eliminar contacto"
+  },
   "createdBy": "Creado por",
   "dates": {
     "createdAt": "Creado el",

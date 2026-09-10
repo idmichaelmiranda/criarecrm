@@ -22,6 +22,7 @@ from app.schemas.instalacao import (
     ChecklistItemCreate, ChecklistItemUpdate, ChecklistItemResponse, ChecklistItemToggleResponse,
     ComentarioCreate, ComentarioResponse,
     TipoInstalacaoInfo, AnexoResponse, PausaResponse,
+    ContatosExtrasPayload,
 )
 
 router = APIRouter(prefix="/instalacoes", tags=["instalacoes"])
@@ -748,6 +749,39 @@ def download_anexo(instalacao_id: int, anexo_id: int, db: Session = Depends(get_
         media_type=anexo.content_type or "application/octet-stream",
         headers={"Content-Disposition": f'attachment; filename="{anexo.filename}"'},
     )
+
+
+# ── Contatos adicionais ───────────────────────────────────────────────────────
+
+@router.put("/{instalacao_id}/contatos-extras", response_model=InstalacaoFullResponse)
+def atualizar_contatos_extras(
+    instalacao_id: int,
+    data: ContatosExtrasPayload,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    """Substitui a lista de contatos adicionais da instalação.
+
+    O contato principal (contato_nome / contato_telefone), vindo do lançamento
+    comercial, não é afetado por este endpoint.
+    """
+    inst = db.get(Instalacao, instalacao_id)
+    if not inst:
+        raise HTTPException(404, "Instalação não encontrada")
+
+    limpos: list[dict] = []
+    for c in data.contatos:
+        nome = (c.nome or "").strip()[:150]
+        telefone = (c.telefone or "").strip()[:30]
+        if nome or telefone:
+            limpos.append({"nome": nome, "telefone": telefone})
+    if len(limpos) > 20:
+        raise HTTPException(400, "Máximo de 20 contatos adicionais por instalação.")
+
+    inst.contatos_extras = limpos
+    inst.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    return _to_full_response(_load(instalacao_id, db), db)
 
 
 # ── Responsáveis (multi) ───────────────────────────────────────────────────────

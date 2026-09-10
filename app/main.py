@@ -201,6 +201,7 @@ def _migrate_sqlite():
         "ALTER TABLE instalacoes ADD COLUMN tipos_json TEXT",
         "ALTER TABLE instalacoes ADD COLUMN contato_nome VARCHAR(150)",
         "ALTER TABLE instalacoes ADD COLUMN contato_telefone VARCHAR(30)",
+        "ALTER TABLE instalacoes ADD COLUMN contatos_extras JSON",
         "ALTER TABLE instalacoes ADD COLUMN tipos_nomes_json TEXT",
         "ALTER TABLE instalacao_checklist ADD COLUMN tipo VARCHAR(50)",
         "ALTER TABLE clientes ADD COLUMN origem VARCHAR(20) NOT NULL DEFAULT 'triagem'",
@@ -366,6 +367,7 @@ def _migrate_postgres() -> None:
         )""",
         "CREATE INDEX IF NOT EXISTS ix_notificacoes_usuario_id ON notificacoes (usuario_id)",
         "ALTER TABLE instalacoes ADD COLUMN IF NOT EXISTS observacao_conclusao TEXT",
+        "ALTER TABLE instalacoes ADD COLUMN IF NOT EXISTS contatos_extras JSONB",
         "ALTER TABLE solicitacoes ADD COLUMN IF NOT EXISTS responsavel_triagem_id INTEGER REFERENCES usuarios(id)",
         """CREATE TABLE IF NOT EXISTS instalacao_responsaveis (
             id SERIAL PRIMARY KEY,

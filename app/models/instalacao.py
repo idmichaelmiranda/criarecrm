@@ -1,5 +1,5 @@
 from datetime import datetime, date, timezone
-from sqlalchemy import String, Text, Integer, Boolean, Date, DateTime, ForeignKey
+from sqlalchemy import String, Text, Integer, Boolean, Date, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database.connection import Base
 
@@ -32,6 +32,10 @@ class Instalacao(Base):
 
     contato_nome: Mapped[str] = mapped_column(String(150), nullable=True)
     contato_telefone: Mapped[str] = mapped_column(String(30), nullable=True)
+    # Contatos adicionais registrados pela equipe durante o atendimento
+    # (ex.: o cliente redireciona a ligação para outro colaborador).
+    # Lista de dicts: [{"nome": str, "telefone": str}]
+    contatos_extras: Mapped[list | None] = mapped_column(JSON, nullable=True)
 
     data_agendada: Mapped[date] = mapped_column(Date, nullable=True)
     data_conclusao: Mapped[date] = mapped_column(Date, nullable=True)

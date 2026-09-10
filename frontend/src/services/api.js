@@ -187,6 +187,7 @@ export const instalacaosApi = {
   deletarAnexo: (instId, anexoId) => api.delete(`/instalacoes/${instId}/anexos/${anexoId}`),
   downloadAnexo: (instId, anexoId) =>
     api.get(`/instalacoes/${instId}/anexos/${anexoId}/download`, { responseType: "blob" }),
+  atualizarContatosExtras: (instId, payload) => api.put(`/instalacoes/${instId}/contatos-extras`, payload),
   adicionarResponsavel: (instId, payload) => api.post(`/instalacoes/${instId}/responsaveis`, payload),
   removerResponsavel: (instId, usuarioId) => api.delete(`/instalacoes/${instId}/responsaveis/${usuarioId}`),
 };

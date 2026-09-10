@@ -1,12 +1,21 @@
 import json
 from datetime import datetime, date
 from typing import Literal
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, model_validator, field_validator
 
 TipoInstalacaoType = str  # aceita qualquer slug de template de instalação
 StatusInstalacaoType = Literal["agendada", "em_execucao", "concluida", "cancelada"]
 PrioridadeType = Literal["normal", "alta", "urgente"]
 StatusItemType = Literal["pendente", "concluido", "nao_aplicavel"]
+
+class ContatoExtra(BaseModel):
+    nome: str | None = None
+    telefone: str | None = None
+
+
+class ContatosExtrasPayload(BaseModel):
+    contatos: list[ContatoExtra] = []
+
 
 class TipoInstalacaoInfo(BaseModel):
     id: int
@@ -246,6 +255,7 @@ class InstalacaoFullResponse(BaseModel):
     observacao_conclusao: str | None = None
     contato_nome: str | None = None
     contato_telefone: str | None = None
+    contatos_extras: list[ContatoExtra] = []
     data_agendada: date | None
     data_conclusao: date | None
     iniciado_em: datetime | None = None
@@ -277,3 +287,8 @@ class InstalacaoFullResponse(BaseModel):
             data.__dict__.setdefault("tipos", _parse_tipos(data))
             data.__dict__.setdefault("tipos_nomes", _parse_tipos_nomes(data))
         return data
+
+    @field_validator("contatos_extras", mode="before")
+    @classmethod
+    def _contatos_extras_default(cls, v):
+        return v or []

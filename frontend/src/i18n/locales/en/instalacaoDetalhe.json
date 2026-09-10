@@ -147,6 +147,17 @@
     "removeTitle": "Remove collaborator",
     "assignPrompt": "Assign an owner…"
   },
+  "contatos": {
+    "title": "Contacts",
+    "empty": "No contact provided",
+    "add": "Add contact",
+    "nomePlaceholder": "Contact name",
+    "telefonePlaceholder": "Phone",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "remove": "Remove contact"
+  },
   "createdBy": "Created by",
   "dates": {
     "createdAt": "Created at",

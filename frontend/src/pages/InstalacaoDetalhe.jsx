@@ -47,6 +47,46 @@ function initials(nome) {
   return nome.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 }
 
+// Linha de contato reutilizável — nome · telefone + botões WhatsApp/Ligar.
+// `onRemove` presente apenas para contatos adicionais (o principal não é removível aqui).
+function ContatoLinha({ nome, telefone, t, onRemove, removing }) {
+  return (
+    <div className="flex items-center gap-1.5 group/ct">
+      <svg className="w-3 h-3 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>
+      {nome && <span className="text-xs text-gray-600 font-medium truncate">{nome}</span>}
+      {nome && telefone && <span className="text-gray-300 text-xs">·</span>}
+      {telefone && (
+        <>
+          <a href={`tel:${telefone.replace(/\D/g, "")}`} className="text-xs text-orange-600 hover:underline truncate">
+            {telefone}
+          </a>
+          <WhatsAppButton telefone={telefone} title={t("whatsappTitle")} />
+          <CallButton telefone={telefone} title={t("callTitle")} />
+        </>
+      )}
+      {onRemove && (
+        <button
+          type="button"
+          onClick={onRemove}
+          disabled={removing}
+          title={t("contatos.remove")}
+          className="ml-auto p-0.5 rounded text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover/ct:opacity-100"
+        >
+          {removing ? (
+            <div className="w-3 h-3 rounded-full border-2 border-red-400 border-t-transparent animate-spin" />
+          ) : (
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          )}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function toUtcMs(s) {
   return new Date(
     s.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(s) ? s : s + "Z"
@@ -633,6 +673,10 @@ export default function InstalacaoDetalhe() {
   const [addingResp, setAddingResp] = useState(false);
   const [removingRespId, setRemovingRespId] = useState(null);
   const [addRespBusca, setAddRespBusca] = useState("");
+  const [showAddContato, setShowAddContato] = useState(false);
+  const [novoContato, setNovoContato] = useState({ nome: "", telefone: "" });
+  const [savingContato, setSavingContato] = useState(false);
+  const [removingContatoIdx, setRemovingContatoIdx] = useState(null);
   const [showEditarModal, setShowEditarModal] = useState(false);
   const [editarError, setEditarError] = useState("");
   const [editarSaving, setEditarSaving] = useState(false);
@@ -707,6 +751,35 @@ export default function InstalacaoDetalhe() {
       setInst(data);
     } catch {}
     finally { setRemovingRespId(null); }
+  }
+
+  async function handleAdicionarContato() {
+    const nome = novoContato.nome.trim();
+    const telefone = novoContato.telefone.trim();
+    if (!nome && !telefone) return;
+    setSavingContato(true);
+    try {
+      const atuais = inst.contatos_extras || [];
+      const { data } = await instalacaosApi.atualizarContatosExtras(id, {
+        contatos: [...atuais, { nome, telefone }],
+      });
+      setInst(data);
+      setNovoContato({ nome: "", telefone: "" });
+      setShowAddContato(false);
+    } catch {}
+    finally { setSavingContato(false); }
+  }
+
+  async function handleRemoverContato(idx) {
+    setRemovingContatoIdx(idx);
+    try {
+      const atuais = inst.contatos_extras || [];
+      const { data } = await instalacaosApi.atualizarContatosExtras(id, {
+        contatos: atuais.filter((_, i) => i !== idx),
+      });
+      setInst(data);
+    } catch {}
+    finally { setRemovingContatoIdx(null); }
   }
 
   const elapsed = useElapsed(
@@ -1021,28 +1094,6 @@ export default function InstalacaoDetalhe() {
                   {cliente?.razao_social || `Cliente #${inst.cliente_id}`}
                 </h1>
                 {cliente?.cnpj && <p className="text-xs text-gray-400 mt-0.5">{cliente.cnpj}</p>}
-                {(inst.contato_nome || inst.contato_telefone) && (
-                  <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-gray-100">
-                    <svg className="w-3 h-3 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    {inst.contato_nome && (
-                      <span className="text-xs text-gray-600 font-medium">{inst.contato_nome}</span>
-                    )}
-                    {inst.contato_nome && inst.contato_telefone && (
-                      <span className="text-gray-300 text-xs">·</span>
-                    )}
-                    {inst.contato_telefone && (
-                      <>
-                        <a href={`tel:${inst.contato_telefone.replace(/\D/g, "")}`} className="text-xs text-orange-600 hover:underline">
-                          {inst.contato_telefone}
-                        </a>
-                        <WhatsAppButton telefone={inst.contato_telefone} title={t("whatsappTitle")} />
-                        <CallButton telefone={inst.contato_telefone} title={t("callTitle")} />
-                      </>
-                    )}
-                  </div>
-                )}
               </div>
               <div className="flex flex-col items-end gap-1.5 shrink-0">
                 {/* Multi-type badges */}
@@ -1081,6 +1132,76 @@ export default function InstalacaoDetalhe() {
                   </button>
                 )}
               </div>
+            </div>
+
+            {/* Contatos — principal (comercial) + adicionais registrados pela equipe */}
+            <div className="mb-4 pt-3 border-t border-gray-100 space-y-1.5">
+              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">{t("contatos.title")}</p>
+              {(inst.contato_nome || inst.contato_telefone) && (
+                <ContatoLinha nome={inst.contato_nome} telefone={inst.contato_telefone} t={t} />
+              )}
+              {(inst.contatos_extras || []).map((c, i) => (
+                <ContatoLinha
+                  key={i}
+                  nome={c.nome}
+                  telefone={c.telefone}
+                  t={t}
+                  onRemove={() => handleRemoverContato(i)}
+                  removing={removingContatoIdx === i}
+                />
+              ))}
+              {!inst.contato_nome && !inst.contato_telefone && (inst.contatos_extras || []).length === 0 && !showAddContato && (
+                <p className="text-xs text-gray-400 italic">{t("contatos.empty")}</p>
+              )}
+
+              {showAddContato ? (
+                <div className="space-y-1.5 pt-1">
+                  <input
+                    autoFocus
+                    type="text"
+                    value={novoContato.nome}
+                    onChange={(e) => setNovoContato((c) => ({ ...c, nome: e.target.value }))}
+                    placeholder={t("contatos.nomePlaceholder")}
+                    className="w-full text-xs px-2 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-400"
+                  />
+                  <input
+                    type="text"
+                    value={novoContato.telefone}
+                    onChange={(e) => setNovoContato((c) => ({ ...c, telefone: e.target.value }))}
+                    placeholder={t("contatos.telefonePlaceholder")}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleAdicionarContato(); }}
+                    className="w-full text-xs px-2 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-400"
+                  />
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleAdicionarContato}
+                      disabled={savingContato || (!novoContato.nome.trim() && !novoContato.telefone.trim())}
+                      className="px-3 py-1 rounded-lg text-[11px] font-semibold text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50 transition-colors"
+                    >
+                      {savingContato ? t("contatos.saving") : t("contatos.save")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setShowAddContato(false); setNovoContato({ nome: "", telefone: "" }); }}
+                      className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      {t("contatos.cancel")}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowAddContato(true)}
+                  className="flex items-center gap-1 text-[11px] font-medium text-orange-600 hover:text-orange-700 transition-colors"
+                >
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                  {t("contatos.add")}
+                </button>
+              )}
             </div>
 
             <div className="flex flex-wrap gap-2 mb-4">
