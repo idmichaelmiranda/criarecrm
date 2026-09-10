@@ -89,8 +89,8 @@ def triar(sol_id: int, db: Session = Depends(get_db), current_user: Usuario = De
 
 
 @router.put("/{sol_id}", response_model=SolicitacaoResponse)
-def atualizar(sol_id: int, data: SolicitacaoCreate, db: Session = Depends(get_db), _: Usuario = _auth):
-    return solicitacao_service.atualizar(db, sol_id, data)
+def atualizar(sol_id: int, data: SolicitacaoCreate, db: Session = Depends(get_db), current_user: Usuario = _auth):
+    return solicitacao_service.atualizar(db, sol_id, data, usuario=current_user.nome)
 
 
 @router.post("/{sol_id}/atribuir", response_model=SolicitacaoResponse)
@@ -105,16 +105,16 @@ def atribuir_responsavel(
 
 @router.put("/{sol_id}/produtos-contratados", response_model=SolicitacaoResponse)
 def atualizar_produtos_contratados(
-    sol_id: int, data: ProdutosContratadosPayload, db: Session = Depends(get_db), _: Usuario = _auth,
+    sol_id: int, data: ProdutosContratadosPayload, db: Session = Depends(get_db), current_user: Usuario = _auth,
 ):
-    return solicitacao_service.atualizar_produtos_contratados(db, sol_id, data)
+    return solicitacao_service.atualizar_produtos_contratados(db, sol_id, data, usuario=current_user.nome)
 
 
 @router.put("/{sol_id}/conversao-dados", response_model=SolicitacaoResponse)
 def atualizar_conversao_dados(
-    sol_id: int, data: ConversaoDadosPayload, db: Session = Depends(get_db), _: Usuario = _auth,
+    sol_id: int, data: ConversaoDadosPayload, db: Session = Depends(get_db), current_user: Usuario = _auth,
 ):
-    return solicitacao_service.atualizar_conversao_dados(db, sol_id, data.conversao_dados)
+    return solicitacao_service.atualizar_conversao_dados(db, sol_id, data.conversao_dados, usuario=current_user.nome)
 
 
 @router.post("/{sol_id}/aprovar", response_model=ImplantacaoListResponse)
@@ -153,10 +153,10 @@ def recusar(sol_id: int, data: TriagemRecusar, db: Session = Depends(get_db), cu
 
 
 @router.post("/{sol_id}/cancelar", response_model=SolicitacaoResponse)
-def cancelar(sol_id: int, data: TriagemCancelar, db: Session = Depends(get_db), _: Usuario = _auth):
-    return solicitacao_service.cancelar(db, sol_id, data.motivo)
+def cancelar(sol_id: int, data: TriagemCancelar, db: Session = Depends(get_db), current_user: Usuario = _auth):
+    return solicitacao_service.cancelar(db, sol_id, data.motivo, usuario=current_user.nome)
 
 
 @router.post("/{sol_id}/reenviar-email", response_model=SolicitacaoResponse)
-def reenviar_email(sol_id: int, db: Session = Depends(get_db), _: Usuario = _auth):
-    return solicitacao_service.reenviar_email_correcao(db, sol_id)
+def reenviar_email(sol_id: int, db: Session = Depends(get_db), current_user: Usuario = _auth):
+    return solicitacao_service.reenviar_email_correcao(db, sol_id, usuario=current_user.nome)

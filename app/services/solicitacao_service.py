@@ -51,7 +51,7 @@ def create_solicitacao(db: Session, data: SolicitacaoCreate) -> Solicitacao:
     return sol
 
 
-def atualizar(db: Session, solicitacao_id: int, data: SolicitacaoCreate) -> Solicitacao:
+def atualizar(db: Session, solicitacao_id: int, data: SolicitacaoCreate, usuario: str | None = None) -> Solicitacao:
     sol = get_by_id(db, solicitacao_id)
     if sol.status == "aprovada":
         raise HTTPException(400, "Solicitação já aprovada não pode ser editada")
@@ -74,17 +74,18 @@ def atualizar(db: Session, solicitacao_id: int, data: SolicitacaoCreate) -> Soli
     sol.updated_at = datetime.now()
 
     timeline_service.log(
-        db, tipo="dados_editados", titulo="Dados editados pelo administrador",
-        descricao="Dados da solicitação corrigidos diretamente pelo administrador.",
+        db, tipo="dados_editados", titulo="Dados editados",
+        descricao="Dados da solicitação corrigidos diretamente no painel.",
         icone="edit", cor="#6366f1",
         solicitacao_id=sol.id,
+        usuario=usuario or "Sistema",
     )
     db.commit()
     db.refresh(sol)
     return sol
 
 
-def atualizar_produtos_contratados(db: Session, solicitacao_id: int, data: ProdutosContratadosPayload) -> Solicitacao:
+def atualizar_produtos_contratados(db: Session, solicitacao_id: int, data: ProdutosContratadosPayload, usuario: str | None = None) -> Solicitacao:
     sol = get_by_id(db, solicitacao_id)
     if sol.status in ("aprovada", "recusada", "cancelada"):
         raise HTTPException(400, "Não é possível editar produtos de uma solicitação encerrada")
@@ -95,16 +96,17 @@ def atualizar_produtos_contratados(db: Session, solicitacao_id: int, data: Produ
 
     timeline_service.log(
         db, tipo="produtos_contratados_atualizados", titulo="Produtos contratados atualizados",
-        descricao="Comercial registrou/atualizou os produtos contratados pelo cliente.",
+        descricao="Produtos contratados pelo cliente registrados/atualizados.",
         icone="package", cor="#6366f1",
         solicitacao_id=sol.id,
+        usuario=usuario or "Sistema",
     )
     db.commit()
     db.refresh(sol)
     return sol
 
 
-def atualizar_conversao_dados(db: Session, solicitacao_id: int, conversao_dados: bool) -> Solicitacao:
+def atualizar_conversao_dados(db: Session, solicitacao_id: int, conversao_dados: bool, usuario: str | None = None) -> Solicitacao:
     sol = get_by_id(db, solicitacao_id)
     if sol.status in ("aprovada", "recusada", "cancelada"):
         raise HTTPException(400, "Não é possível editar uma solicitação encerrada")
@@ -117,6 +119,7 @@ def atualizar_conversao_dados(db: Session, solicitacao_id: int, conversao_dados:
         descricao=f"Marcado como: {'com' if conversao_dados else 'sem'} conversão de dados.",
         icone="database", cor="#6366f1",
         solicitacao_id=sol.id,
+        usuario=usuario or "Sistema",
     )
     db.commit()
     db.refresh(sol)
@@ -151,8 +154,9 @@ def iniciar_triagem(db: Session, solicitacao_id: int, iniciado_por: str | None =
     sol.triagem_iniciada_em = sol.triagem_iniciada_em or sol.updated_at
     timeline_service.log(
         db, tipo="triagem_iniciada", titulo="Triagem iniciada",
-        descricao="Revisão da solicitação iniciada pela equipe.", icone="search", cor="#f59e0b",
+        descricao="Revisão da solicitação iniciada.", icone="search", cor="#f59e0b",
         solicitacao_id=sol.id,
+        usuario=iniciado_por or "Sistema",
     )
     db.commit()
     db.refresh(sol)
@@ -180,9 +184,10 @@ def atribuir_responsavel(db: Session, solicitacao_id: int, responsavel_id: int |
 
         timeline_service.log(
             db, tipo="responsavel_atribuido", titulo="Responsável atribuído",
-            descricao=f"{current_user_nome} atribuiu a triagem a {nome_resp}.",
+            descricao=f"Triagem atribuída a {nome_resp}.",
             icone="user-check", cor="#6366f1",
             solicitacao_id=sol.id,
+            usuario=current_user_nome or "Sistema",
         )
 
         if responsavel_id != anterior_id:
@@ -197,9 +202,10 @@ def atribuir_responsavel(db: Session, solicitacao_id: int, responsavel_id: int |
     else:
         timeline_service.log(
             db, tipo="responsavel_removido", titulo="Responsável removido",
-            descricao=f"{current_user_nome} removeu o responsável da triagem.",
+            descricao="Responsável da triagem removido.",
             icone="user-x", cor="#6b7280",
             solicitacao_id=sol.id,
+            usuario=current_user_nome or "Sistema",
         )
 
     db.commit()
@@ -270,7 +276,7 @@ def recusar(db: Session, solicitacao_id: int, motivo: str, campos_correcao: list
     return sol
 
 
-def reenviar_email_correcao(db: Session, solicitacao_id: int) -> Solicitacao:
+def reenviar_email_correcao(db: Session, solicitacao_id: int, usuario: str | None = None) -> Solicitacao:
     sol = get_by_id(db, solicitacao_id)
     if sol.status != "aguardando_correcao":
         raise HTTPException(400, "Solicitação não está aguardando correção.")
@@ -290,6 +296,7 @@ def reenviar_email_correcao(db: Session, solicitacao_id: int) -> Solicitacao:
         descricao=f"Link de correção reenviado para {sol.email}. Novo prazo: 7 dias.",
         icone="mail", cor="#f59e0b",
         solicitacao_id=sol.id,
+        usuario=usuario or "Sistema",
     )
     db.commit()
     db.refresh(sol)
@@ -297,7 +304,7 @@ def reenviar_email_correcao(db: Session, solicitacao_id: int) -> Solicitacao:
     return sol
 
 
-def cancelar(db: Session, solicitacao_id: int, motivo: str | None = None) -> Solicitacao:
+def cancelar(db: Session, solicitacao_id: int, motivo: str | None = None, usuario: str | None = None) -> Solicitacao:
     sol = get_by_id(db, solicitacao_id)
     if sol.status == "aprovada":
         raise HTTPException(400, "Solicitação já aprovada não pode ser cancelada — cancele a implantação diretamente.")
@@ -313,6 +320,7 @@ def cancelar(db: Session, solicitacao_id: int, motivo: str | None = None) -> Sol
         descricao=descricao,
         icone="ban", cor="#6b7280",
         solicitacao_id=sol.id,
+        usuario=usuario or "Sistema",
     )
     db.commit()
     db.refresh(sol)
