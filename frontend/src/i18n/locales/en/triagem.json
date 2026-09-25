@@ -117,7 +117,11 @@
     "cnpjLabel": "Tax ID",
     "emailLabel": "Email",
     "back": "Back",
-    "useExistingClient": "Use existing client"
+    "useExistingClient": "Use existing client",
+    "emailExistsTitle": "Email already used by another client",
+    "emailExistsDesc": "This request's email is already registered to another company. If it's the same group/chain of stores, you can continue normally; otherwise, fix the email before approving.",
+    "emailExistsFix": "Fix email",
+    "emailExistsConfirm": "Same group, continue"
   },
   "refuseModal": {
     "title": "Reject Request",

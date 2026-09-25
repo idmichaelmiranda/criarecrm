@@ -117,7 +117,11 @@
     "cnpjLabel": "CNPJ",
     "emailLabel": "E-mail",
     "back": "Voltar",
-    "useExistingClient": "Usar cliente existente"
+    "useExistingClient": "Usar cliente existente",
+    "emailExistsTitle": "E-mail já usado por outro cliente",
+    "emailExistsDesc": "O e-mail desta solicitação já está cadastrado em outra empresa. Se for do mesmo grupo/rede de lojas, pode continuar normalmente; caso contrário, corrija o e-mail antes de aprovar.",
+    "emailExistsFix": "Corrigir e-mail",
+    "emailExistsConfirm": "Mesmo grupo, continuar"
   },
   "refuseModal": {
     "title": "Recusar Solicitação",

@@ -265,6 +265,36 @@ def _migrate_sqlite():
                 conn.commit()
             except Exception:
                 pass  # coluna ou tabela já existe
+        # Remove o UNIQUE de clientes.email (mesma razão do Postgres, ver
+        # _migrate_postgres). SQLite não suporta DROP CONSTRAINT — para tirar
+        # o índice único implícito da coluna é preciso recriar a tabela.
+        # Detecta se a tabela ainda tem esse índice antes de mexer, pra rodar
+        # só uma vez (create_all() já cria sem UNIQUE em bancos novos).
+        try:
+            indices = conn.execute(text("PRAGMA index_list('clientes')")).fetchall()
+            idx_email = None
+            for idx in indices:
+                if not idx[2]:  # coluna "unique"
+                    continue
+                cols = conn.execute(text(f'PRAGMA index_info("{idx[1]}")')).fetchall()
+                if len(cols) == 1 and cols[0][2] == "email":
+                    idx_email = idx[1]
+                    break
+            if idx_email:
+                conn.execute(text("ALTER TABLE clientes RENAME TO clientes_old_email_unique"))
+                conn.commit()
+                from app.models.cliente import Cliente as _Cliente
+                _Cliente.__table__.create(bind=engine)
+                cols_novas = [c.name for c in _Cliente.__table__.columns]
+                cols_antigas = {
+                    r[1] for r in conn.execute(text("PRAGMA table_info('clientes_old_email_unique')")).fetchall()
+                }
+                col_list = ", ".join(c for c in cols_novas if c in cols_antigas)
+                conn.execute(text(f"INSERT INTO clientes ({col_list}) SELECT {col_list} FROM clientes_old_email_unique"))
+                conn.execute(text("DROP TABLE clientes_old_email_unique"))
+                conn.commit()
+        except Exception:
+            conn.rollback()
         # Corrige sub-itens criados com etapa_id incorreto (devem ter etapa_id=NULL)
         try:
             conn.execute(text("UPDATE checklist_itens SET etapa_id = NULL WHERE parent_id IS NOT NULL"))
@@ -422,6 +452,28 @@ def _migrate_postgres() -> None:
                 conn.commit()
             except Exception:
                 pass
+        # Remove o UNIQUE de clientes.email — lojas do mesmo grupo/rede podem
+        # compartilhar o mesmo e-mail de contato (a aprovação agora avisa e
+        # pede confirmação em vez de bloquear no banco). Busca o nome real da
+        # constraint em vez de supor "clientes_email_key" (nome padrão do
+        # Postgres), pra não depender de como ela foi de fato criada.
+        try:
+            row = conn.execute(text("""
+                SELECT tc.constraint_name
+                FROM information_schema.table_constraints tc
+                JOIN information_schema.constraint_column_usage ccu
+                  ON tc.constraint_name = ccu.constraint_name
+                 AND tc.table_schema = ccu.table_schema
+                WHERE tc.table_name = 'clientes'
+                  AND tc.constraint_type = 'UNIQUE'
+                  AND ccu.column_name = 'email'
+                LIMIT 1
+            """)).fetchone()
+            if row:
+                conn.execute(text(f'ALTER TABLE clientes DROP CONSTRAINT "{row[0]}"'))
+                conn.commit()
+        except Exception:
+            conn.rollback()
         for ddl in rls_statements:
             try:
                 conn.execute(text(ddl))

@@ -14,7 +14,10 @@ class Cliente(Base):
     nome_fantasia: Mapped[str] = mapped_column(String(200), nullable=True)
     cnpj: Mapped[str] = mapped_column(String(18), unique=True, nullable=False, index=True)
     ie: Mapped[str] = mapped_column(String(30), nullable=True)
-    email: Mapped[str] = mapped_column(String(150), unique=True, nullable=False)
+    # Não é unique: lojas do mesmo grupo/rede podem compartilhar o mesmo e-mail
+    # de contato. A aprovação de triagem avisa e pede confirmação quando o
+    # e-mail já pertence a outra empresa (ver Triagem.jsx / AprovarModal).
+    email: Mapped[str] = mapped_column(String(150), nullable=False, index=True)
     telefone_fixo: Mapped[str] = mapped_column(String(20), nullable=True)
     telefone_celular: Mapped[str] = mapped_column(String(20), nullable=False)
     responsavel: Mapped[str] = mapped_column(String(150), nullable=True)

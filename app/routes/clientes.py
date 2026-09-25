@@ -48,8 +48,15 @@ def buscar_por_email(
     db: Session = Depends(get_db),
     _: Usuario = _auth,
 ):
-    """Verifica se já existe um cliente cadastrado com o e-mail informado."""
-    c = db.execute(select(Cliente).where(Cliente.email == email)).scalar_one_or_none()
+    """Verifica se já existe cliente cadastrado com o e-mail informado.
+
+    O e-mail não é mais unique (lojas do mesmo grupo podem compartilhar o
+    mesmo contato) — pode haver mais de um cliente com esse e-mail; retorna
+    o mais recente como referência para a tela de confirmação.
+    """
+    c = db.execute(
+        select(Cliente).where(Cliente.email == email).order_by(Cliente.id.desc())
+    ).scalars().first()
     if not c:
         raise HTTPException(404, "Nenhum cliente encontrado com este e-mail")
     return c
