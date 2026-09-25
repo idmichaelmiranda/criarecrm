@@ -133,6 +133,12 @@ def aprovar(sol_id: int, data: TriagemAprovar, db: Session = Depends(get_db), cu
             )
         elif "clientes.cnpj" in orig:
             msg = "Este CNPJ já está cadastrado. Feche este modal e tente novamente — o sistema perguntará se deseja usar o cliente existente."
+        elif "implantacoes.codigo" in orig:
+            msg = (
+                "Essa solicitação pode já ter sido aprovada em uma tentativa anterior "
+                "(ex.: clique duplo ou instabilidade momentânea do servidor). "
+                "Feche este modal, atualize a página e confira se a implantação já existe antes de tentar novamente."
+            )
         else:
             msg = f"Conflito de dados ao criar implantação. Verifique os dados e tente novamente."
         raise HTTPException(409, msg) from exc

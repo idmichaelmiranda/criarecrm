@@ -1,6 +1,7 @@
+import uuid
 from datetime import datetime, timedelta, date
 from sqlalchemy.orm import Session, selectinload
-from sqlalchemy import select, func
+from sqlalchemy import select
 from fastapi import HTTPException
 
 from app.models.solicitacao import Solicitacao
@@ -66,11 +67,7 @@ def aprovar(db: Session, solicitacao_id: int, data: TriagemAprovar, aprovador_id
         db.add(cliente)
         db.flush()
 
-    # 2. Gerar código único
-    total = db.execute(select(func.count()).select_from(Implantacao)).scalar_one()
-    codigo = f"IMP-{datetime.now().year}-{total + 1:04d}"
-
-    # 3. Criar implantação
+    # 2. Criar implantação
     data_inicio = date.today()
     sla_limite = data_inicio + timedelta(days=data.sla_dias)
 
@@ -79,11 +76,16 @@ def aprovar(db: Session, solicitacao_id: int, data: TriagemAprovar, aprovador_id
         sol.responsavel_triagem_id = aprovador_id
     responsavel_implantacao = sol.responsavel_triagem_id or aprovador_id
 
+    # Código gerado a partir do id definitivo (atribuído pelo banco no flush),
+    # nunca por COUNT(*) — um contador calculado antes do insert colide quando
+    # duas aprovações da mesma solicitação chegam próximas uma da outra (ex.:
+    # reenvio após timeout com o backend instável), violando o UNIQUE de codigo.
+    # Placeholder único só para satisfazer o NOT NULL até o flush devolver o id.
     implantacao = Implantacao(
         cliente_id=cliente.id,
         template_id=data.template_ids[0],
         solicitacao_id=sol.id,
-        codigo=codigo,
+        codigo=f"TMP-{uuid.uuid4().hex[:12]}",
         nome=f"Implantação — {sol.razao_social}",
         status="em_andamento",
         consultor=data.consultor,
@@ -98,6 +100,9 @@ def aprovar(db: Session, solicitacao_id: int, data: TriagemAprovar, aprovador_id
         responsavel_id=responsavel_implantacao,
     )
     db.add(implantacao)
+    db.flush()
+    codigo = f"IMP-{datetime.now().year}-{implantacao.id:04d}"
+    implantacao.codigo = codigo
     db.flush()
 
     # 4. Gerar etapas + checklist a partir dos templates selecionados
