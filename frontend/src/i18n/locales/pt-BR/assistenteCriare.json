@@ -93,7 +93,11 @@
       "baixarErp": "Baixando ERP",
       "instalarErp": "Instalando ERP",
       "concluido": "Instalação concluída"
-    }
+    },
+    "manualCompleteLink": "A instalação já terminou na máquina do cliente e não está atualizando aqui?",
+    "manualCompleteConfirm": "Marca as etapas restantes como concluídas manualmente. Use só se a instalação já terminou de verdade na máquina do cliente (ex.: o técnico contornou uma falha do instalador automático).",
+    "manualCompleteYes": "Sim, concluir",
+    "manualCompleteCancel": "Cancelar"
   },
   "quickView": {
     "tabs": {

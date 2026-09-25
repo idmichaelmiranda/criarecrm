@@ -97,6 +97,24 @@ def listar_etapas(
     return [_serializar_etapa(e) for e in etapas]
 
 
+@router.post("/{solicitacao_id}/etapas/concluir-manualmente")
+def concluir_etapas_manualmente(
+    solicitacao_id: str,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    """Fecha manualmente as etapas do molde que ficaram travadas — usado quando
+    o técnico contorna uma falha do instalador automático (ex.: baixa o
+    instalador do ERP manualmente) e a instalação termina na máquina do
+    cliente, mas o app não reporta os últimos passos pro CRM."""
+    sol = sol_service.obter_ou_404(solicitacao_id, db)
+    if sol_service.status_efetivo(sol, db) != "aprovada":
+        raise HTTPException(400, "Só é possível concluir manualmente uma solicitação aprovada.")
+    sol_service.concluir_manualmente(sol.id, db)
+    etapas = sol_service.listar_etapas(sol.id, db)
+    return [_serializar_etapa(e) for e in etapas]
+
+
 @router.post("/{solicitacao_id}/aprovar")
 def aprovar(
     solicitacao_id: str,

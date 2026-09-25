@@ -120,6 +120,7 @@ export const solicitacoesInstaladorApi = {
   aprovar: (id) => api.post(`/solicitacoes-instalador/${id}/aprovar`),
   recusar: (id) => api.post(`/solicitacoes-instalador/${id}/recusar`),
   etapas: (id) => api.get(`/solicitacoes-instalador/${id}/etapas`),
+  concluirEtapasManualmente: (id) => api.post(`/solicitacoes-instalador/${id}/etapas/concluir-manualmente`),
 };
 
 // ── Templates ─────────────────────────────────────────────────────────────────

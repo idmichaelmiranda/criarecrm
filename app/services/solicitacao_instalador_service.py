@@ -153,3 +153,41 @@ def listar_etapas(solicitacao_id, db: Session) -> list[SolicitacaoInstaladorEtap
         .where(SolicitacaoInstaladorEtapa.solicitacao_id == solicitacao_id)
         .order_by(SolicitacaoInstaladorEtapa.indice_etapa)
     ).scalars().all()
+
+
+# Contrato de índices combinado com o instalador (0=MySQL ... 5=concluída) —
+# usado só como rótulo de fallback quando a etapa nunca chegou a ser reportada.
+ETAPAS_NOMES_PADRAO = {
+    0: "Instalando o MySQL",
+    1: "Baixando base do CRM",
+    2: "Importando a base do cliente",
+    3: "Baixando ERP",
+    4: "Instalando ERP",
+    5: "Instalação concluída",
+}
+
+
+def concluir_manualmente(solicitacao_id, db: Session) -> None:
+    """Fecha manualmente as etapas do molde (0-5) que ainda não estão concluídas.
+
+    Cobre o caso em que o técnico contorna uma falha do instalador automático
+    (ex.: download do instalador do ERP falha e ele seleciona o arquivo na mão)
+    — a instalação termina de verdade na máquina do cliente, mas o app não
+    chega a reportar os últimos passos pro CRM, e a etapa fica travada em
+    "em_andamento" pra sempre.
+    """
+    existentes = {e.indice_etapa: e for e in listar_etapas(solicitacao_id, db)}
+    for indice, nome_padrao in ETAPAS_NOMES_PADRAO.items():
+        etapa = existentes.get(indice)
+        if etapa and etapa.status == "concluida":
+            continue
+        upsert_etapa(
+            solicitacao_id=solicitacao_id,
+            indice_etapa=indice,
+            nome=etapa.nome if etapa else nome_padrao,
+            total_etapas=etapa.total_etapas if etapa else len(ETAPAS_NOMES_PADRAO),
+            status="concluida",
+            percentual=100.0,
+            mensagem=(etapa.mensagem if etapa else None) or "Concluído manualmente pela equipe.",
+            db=db,
+        )

@@ -93,7 +93,11 @@
       "baixarErp": "Downloading ERP",
       "instalarErp": "Installing ERP",
       "concluido": "Installation complete"
-    }
+    },
+    "manualCompleteLink": "Installation already finished on the client's machine and it's not updating here?",
+    "manualCompleteConfirm": "Marks the remaining steps as complete manually. Only use this if the installation has really finished on the client's machine (e.g. the technician worked around a failure in the automatic installer).",
+    "manualCompleteYes": "Yes, mark complete",
+    "manualCompleteCancel": "Cancel"
   },
   "quickView": {
     "tabs": {

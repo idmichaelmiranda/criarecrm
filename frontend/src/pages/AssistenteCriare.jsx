@@ -411,6 +411,8 @@ function ProgressoTab({ sol }) {
   const { t } = useTranslation("assistenteCriare");
   const [etapas, setEtapas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [confirmandoManual, setConfirmandoManual] = useState(false);
+  const [concluindoManual, setConcluindoManual] = useState(false);
   const timerRef = useRef(null);
 
   const load = useCallback(async (silent = false) => {
@@ -435,6 +437,16 @@ function ProgressoTab({ sol }) {
     timerRef.current = setInterval(() => load(true), ETAPA_TRACK_POLL_MS);
     return () => clearInterval(timerRef.current);
   }, [load]);
+
+  async function handleConcluirManualmente() {
+    setConcluindoManual(true);
+    try {
+      await solicitacoesInstaladorApi.concluirEtapasManualmente(sol.id);
+      await load();
+      setConfirmandoManual(false);
+    } catch {}
+    finally { setConcluindoManual(false); }
+  }
 
   if (loading) {
     return (
@@ -525,6 +537,41 @@ function ProgressoTab({ sol }) {
       <ol>
         {linha.map((e, i) => <StepperRow key={e.indiceEtapa} etapa={e} isLast={i === linha.length - 1} />)}
       </ol>
+
+      {/* Escape hatch: o técnico às vezes contorna uma falha do instalador
+          automático (ex.: baixa o instalador do ERP manualmente) e a instalação
+          termina de verdade na máquina do cliente, mas o app não reporta os
+          últimos passos — aqui fica travado em "em_andamento" pra sempre. */}
+      {concluidasDoMolde < ETAPAS_TEMPLATE.length && (
+        <div className="pt-1">
+          {confirmandoManual ? (
+            <div className="flex items-start gap-2.5 px-3.5 py-2.5 rounded-xl bg-amber-50 border border-amber-200">
+              <svg className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-amber-700 leading-relaxed">{t("tracking.manualCompleteConfirm")}</p>
+                <div className="flex items-center gap-2 mt-2">
+                  <button type="button" onClick={handleConcluirManualmente} disabled={concluindoManual}
+                    className="px-3 py-1 rounded-lg text-[11px] font-semibold text-white bg-amber-500 hover:bg-amber-600 disabled:opacity-50 transition-colors flex items-center gap-1.5">
+                    {concluindoManual && <span className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />}
+                    {t("tracking.manualCompleteYes")}
+                  </button>
+                  <button type="button" onClick={() => setConfirmandoManual(false)} disabled={concluindoManual}
+                    className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors">
+                    {t("tracking.manualCompleteCancel")}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <button type="button" onClick={() => setConfirmandoManual(true)}
+              className="text-[11px] font-medium text-gray-400 hover:text-amber-600 transition-colors">
+              {t("tracking.manualCompleteLink")}
+            </button>
+          )}
+        </div>
+      )}
     </>
   );
 }
