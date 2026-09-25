@@ -8,7 +8,12 @@ IS_SQLITE = DATABASE_URL.startswith("sqlite")
 if IS_SQLITE:
     engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 else:
-    engine = create_engine(make_url(DATABASE_URL))
+    # Normaliza o driver para psycopg2 (o único instalado via requirements.txt),
+    # independente de como a connection string vier configurada (ex.: Supabase
+    # às vezes fornece "postgresql+psycopg://", que é psycopg v3 — não instalado
+    # aqui e derruba o servidor inteiro no boot com ModuleNotFoundError).
+    _pg_url = make_url(DATABASE_URL).set(drivername="postgresql+psycopg2")
+    engine = create_engine(_pg_url)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
