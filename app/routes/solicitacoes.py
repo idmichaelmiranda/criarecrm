@@ -126,21 +126,30 @@ def aprovar(sol_id: int, data: TriagemAprovar, db: Session = Depends(get_db), cu
     except IntegrityError as exc:
         db.rollback()
         orig = str(exc.orig)
-        if "clientes.email" in orig:
+        # psycopg2 (Postgres) expõe o nome da constraint violada em .diag —
+        # muito mais confiável do que casar substring na mensagem, cujo formato
+        # muda entre SQLite ("UNIQUE constraint failed: clientes.email") e
+        # Postgres ("duplicate key value violates unique constraint \"clientes_email_key\"").
+        constraint = getattr(getattr(exc.orig, "diag", None), "constraint_name", None) or ""
+        alvo = f"{constraint} {orig}".lower()
+        print(f"[APROVAR] IntegrityError na aprovação da solicitação {sol_id} — constraint={constraint!r} orig={orig!r}")
+
+        if "cliente" in alvo and "email" in alvo:
             msg = (
                 "O e-mail desta solicitação já está cadastrado em outro cliente. "
                 "Edite a solicitação e corrija o e-mail antes de aprovar."
             )
-        elif "clientes.cnpj" in orig:
+        elif "cliente" in alvo and "cnpj" in alvo:
             msg = "Este CNPJ já está cadastrado. Feche este modal e tente novamente — o sistema perguntará se deseja usar o cliente existente."
-        elif "implantacoes.codigo" in orig:
+        elif "implantac" in alvo and "codigo" in alvo:
             msg = (
                 "Essa solicitação pode já ter sido aprovada em uma tentativa anterior "
                 "(ex.: clique duplo ou instabilidade momentânea do servidor). "
                 "Feche este modal, atualize a página e confira se a implantação já existe antes de tentar novamente."
             )
         else:
-            msg = f"Conflito de dados ao criar implantação. Verifique os dados e tente novamente."
+            detalhe = constraint or orig[:200]
+            msg = f"Conflito de dados ao criar implantação ({detalhe}). Verifique os dados e tente novamente."
         raise HTTPException(409, msg) from exc
     except Exception as exc:
         db.rollback()
