@@ -190,6 +190,21 @@ function KpiCard({ icon, label, value, sub, accent, active, onClick }) {
   );
 }
 
+// Mesma janela usada no Dashboard pra "Go Lives da semana" (app/routes/
+// dashboard.py: week_start = today - timedelta(days=7)) — 7 dias corridos
+// pra trás, não a semana do calendário. Depois disso o selo some sozinho:
+// Go Live não é uma marca permanente, é o período de acompanhamento logo
+// após a virada.
+function isGoLiveNoPrazo(dataGoLive) {
+  if (!dataGoLive) return false;
+  const [y, m, d] = dataGoLive.split("-").map(Number);
+  const goLive = new Date(y, m - 1, d);
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  const diffDias = Math.round((hoje - goLive) / 86400000);
+  return diffDias >= 0 && diffDias <= 7;
+}
+
 // Selo de Go Live — mesma cor/estilo do badge já usado em ImplantacaoDetalhe,
 // reaproveitado aqui pra não criar uma linguagem visual nova. data_go_live é
 // independente da coluna do Kanban (pode acontecer com o card ainda "Em
@@ -343,7 +358,7 @@ function ImplCard({ impl, onClick, selected }) {
           </span>
           {impl.prioridade !== "normal" && <PrioridadePill prioridade={impl.prioridade} />}
         </div>
-        {impl.data_go_live && <GoLiveBadge date={impl.data_go_live} />}
+        {isGoLiveNoPrazo(impl.data_go_live) && <GoLiveBadge date={impl.data_go_live} />}
       </div>
       <p className="font-semibold text-gray-900 text-sm leading-tight truncate">{impl.cliente_nome}</p>
       <p className="text-[11px] font-mono text-gray-400 mt-0.5">{impl.cliente_cnpj}</p>
@@ -1156,7 +1171,7 @@ export default function Implantacoes() {
                               {t("page.dataConversionBadge")}
                             </span>
                           )}
-                          {impl.data_go_live && <GoLiveBadge date={impl.data_go_live} />}
+                          {isGoLiveNoPrazo(impl.data_go_live) && <GoLiveBadge date={impl.data_go_live} />}
                         </div>
                       </td>
 
