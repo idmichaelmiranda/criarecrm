@@ -58,7 +58,8 @@
     "baixa": "Low"
   },
   "card": {
-    "concludedOn": "Completed on {{date}}"
+    "concludedOn": "Completed on {{date}}",
+    "goLive": "Go live on {{date}}"
   },
   "kanban": {
     "empty": "No implementations here.",

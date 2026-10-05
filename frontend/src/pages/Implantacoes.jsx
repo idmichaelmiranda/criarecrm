@@ -5,7 +5,7 @@ import { Layout } from "../components/layout/Layout";
 import { Badge } from "../components/ui/Badge";
 import { implantacoesApi } from "../services/api";
 import { ImplantacaoEditForm } from "../components/implantacoes/EditPanel";
-import { fmtDate, fmtDateTime } from "../utils/dateUtils";
+import { fmtDate, fmtDateTime, fmtDateOnly } from "../utils/dateUtils";
 import i18n from "../i18n";
 
 // Cidade chega em CAIXA ALTA do cadastro — normaliza pra não competir
@@ -190,6 +190,23 @@ function KpiCard({ icon, label, value, sub, accent, active, onClick }) {
   );
 }
 
+// Selo de Go Live — mesma cor/estilo do badge já usado em ImplantacaoDetalhe,
+// reaproveitado aqui pra não criar uma linguagem visual nova. data_go_live é
+// independente da coluna do Kanban (pode acontecer com o card ainda "Em
+// Andamento" ou "Com Conversão"), então é um selo e não uma 4ª coluna.
+function GoLiveBadge({ date, className = "" }) {
+  const { t } = useTranslation("implantacoes");
+  return (
+    <span
+      title={t("card.goLive", { date: fmtDateOnly(date) })}
+      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700 border border-green-200 whitespace-nowrap shrink-0 ${className}`}
+    >
+      <span aria-hidden="true">🚀</span>
+      {fmtDateOnly(date)}
+    </span>
+  );
+}
+
 function PrioridadePill({ prioridade }) {
   const { t } = useTranslation("implantacoes");
   const cfg = {
@@ -319,11 +336,14 @@ function ImplCard({ impl, onClick, selected }) {
         selected ? "bg-orange-50 border-orange-400 ring-1 ring-orange-200" : isAtrasada ? "bg-white border-red-200" : "bg-white border-gray-100"
       }`}
     >
-      <div className="flex items-center gap-1.5 mb-1.5">
-        <span className="font-mono text-[10px] font-semibold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded whitespace-nowrap">
-          {impl.codigo}
-        </span>
-        {impl.prioridade !== "normal" && <PrioridadePill prioridade={impl.prioridade} />}
+      <div className="flex items-center justify-between gap-1.5 mb-1.5">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="font-mono text-[10px] font-semibold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded whitespace-nowrap">
+            {impl.codigo}
+          </span>
+          {impl.prioridade !== "normal" && <PrioridadePill prioridade={impl.prioridade} />}
+        </div>
+        {impl.data_go_live && <GoLiveBadge date={impl.data_go_live} />}
       </div>
       <p className="font-semibold text-gray-900 text-sm leading-tight truncate">{impl.cliente_nome}</p>
       <p className="text-[11px] font-mono text-gray-400 mt-0.5">{impl.cliente_cnpj}</p>
@@ -1136,6 +1156,7 @@ export default function Implantacoes() {
                               {t("page.dataConversionBadge")}
                             </span>
                           )}
+                          {impl.data_go_live && <GoLiveBadge date={impl.data_go_live} />}
                         </div>
                       </td>
 

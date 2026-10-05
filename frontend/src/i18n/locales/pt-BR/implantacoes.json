@@ -58,7 +58,8 @@
     "baixa": "Baixa"
   },
   "card": {
-    "concludedOn": "Concluído em {{date}}"
+    "concludedOn": "Concluído em {{date}}",
+    "goLive": "Go Live em {{date}}"
   },
   "kanban": {
     "empty": "Nenhuma implantação aqui.",
